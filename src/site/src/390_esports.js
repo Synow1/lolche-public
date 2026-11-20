@@ -122,6 +122,7 @@
     sc.appendChild(el("h3", "dc-vt", title)); if (sub) sc.appendChild(el("p", "dc-vm", sub));
     v.appendChild(sc); document.body.appendChild(v); document.body.classList.add("dc-open");
     function close() { v.remove(); if (!document.querySelector(".dc-view")) document.body.classList.remove("dc-open"); }
+    v._navClose = function (afterFn) { navBack("fs", close, afterFn); };
     back.addEventListener("click", function () { navBack("fs", close); });
     navPush("fs", close);
     build(sc);

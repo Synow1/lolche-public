@@ -208,7 +208,7 @@
     if (current === "rank") { rkProfile(id); window.scrollTo(0, 0); return; }
     var prev = current, y = window.scrollY, wasBoard = !document.getElementById("rk-board").hidden, prevId = rkCur, prevSea = RK_SEASON;
     navPush("tab", function () {
-      showTab(prev, false); window.scrollTo(0, y);
+      applyTab(prev, false, y);
       if (wasBoard) rkView("board"); else if (prevId) rkProfile(prevId, prevSea);
     });
     showTab("rank", false);

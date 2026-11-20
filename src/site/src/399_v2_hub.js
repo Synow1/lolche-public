@@ -209,9 +209,10 @@
     ov.hidden = true;
     document.body.classList.remove("spot-open");
   }
-  function spotCloseUI() {
+  function spotCloseUI(afterFn) {
     var ov = document.getElementById("spot-ov");
-    if (ov && !ov.hidden) navBack("spot", spotClose);
+    if (ov && !ov.hidden) navBack("spot", spotClose, afterFn);
+    else if (afterFn) afterFn();
   }
   function spotGroup(box, title, rows) {
     if (!rows.length) return;
@@ -230,10 +231,7 @@
       if (r.sub) m.appendChild(el("small", null, r.sub));
       b.appendChild(m);
       if (r.tag) b.appendChild(el("span", "spot-tag" + (r.tagCls ? " " + r.tagCls : ""), r.tag));
-      b.addEventListener("click", function () {
-        spotCloseUI();
-        setTimeout(r.go, 90);
-      });
+      b.addEventListener("click", function () { spotCloseUI(r.go); });
       box.appendChild(b);
     });
   }

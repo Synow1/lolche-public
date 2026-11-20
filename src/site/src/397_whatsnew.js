@@ -40,7 +40,7 @@
       order.forEach(function (k) {
         var t = byTab[k], s2 = el("section", "wn-tab");
         var go = el("button", "wn-go", t.name); go.type = "button";
-        go.addEventListener("click", function () { close(); location.hash = "#" + k; });
+        go.addEventListener("click", function () { closeUI(function () { goTab(k); }); });
         s2.appendChild(go);
         var u2 = el("ul"); t.lines.slice(0, 10).forEach(function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
         body.appendChild(s2);
@@ -51,8 +51,10 @@
     if (sep && !data.length) body.appendChild(el("p", "sub", "최근 데이터 변화는 아직 없어요"));
     var ok = el("button", "wn-ok", "확인"); ok.type = "button"; card.appendChild(ok);
     function close() { mark(); ov.remove(); }
-    ok.addEventListener("click", close);
-    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    function closeUI(afterFn) { navBack("wn", close, afterFn); }
+    navPush("wn", close);
+    ok.addEventListener("click", function () { closeUI(); });
+    ov.addEventListener("click", function (e) { if (e.target === ov) closeUI(); });
     document.body.appendChild(ov);
   }
   var wnAgain = document.getElementById("wn-again"); if (wnAgain) wnAgain.addEventListener("click", function () { whatsNew("again"); });

@@ -1,18 +1,54 @@
+  var navAfterPop = null;
+  try { history.scrollRestoration = "manual"; history.replaceState({ nav: 0 }, ""); } catch (e) {}
   function navPush(k, undo) {
     if (navQuiet) return;
     NAV.push({ k: k, f: undo });
     try { history.pushState({ nav: NAV.length }, ""); } catch (e) {}
   }
-  function navBack(k, direct) {  // 화면 안의 닫기·뒤로 버튼: 기록 맨 위가 그거면 뒤로가기와 같게, 아니면 바로 닫고 기록은 건너뛰게 표시
+  function navBack(k, direct, afterFn) {  // 화면 안의 닫기·뒤로 버튼: 기록 맨 위가 그거면 뒤로가기와 같게, 완료 후 afterFn 직렬 실행
     var top = NAV[NAV.length - 1];
-    if (top && top.k === k && !top.dead) { history.back(); return; }
+    if (top && top.k === k && !top.dead) {
+      if (afterFn) navAfterPop = afterFn;
+      history.back();
+      return;
+    }
     for (var i = NAV.length - 1; i >= 0; i--) if (NAV[i].k === k && !NAV[i].dead) { NAV[i].dead = true; break; }
     direct();
+    if (afterFn) afterFn();
   }
-  window.addEventListener("popstate", function () {
-    var t = NAV.pop(); if (!t) return;
-    if (t.dead) { if (NAV.length) history.back(); return; }
-    navQuiet = true; try { t.f(); } finally { navQuiet = false; }
+  function navUnwind(keys, direct, afterFn) {  // 시트 다단계처럼 연속된 기록을 한 번에 정확히 되감고 afterFn 실행
+    var cnt = 0;
+    for (var i = NAV.length - 1; i >= 0; i--) {
+      if (keys.indexOf(NAV[i].k) >= 0 && !NAV[i].dead) cnt++;
+      else break;
+    }
+    if (cnt > 0) {
+      if (afterFn) navAfterPop = afterFn;
+      history.go(-cnt);
+      return;
+    }
+    for (var j = NAV.length - 1; j >= 0; j--) if (keys.indexOf(NAV[j].k) >= 0 && !NAV[j].dead) NAV[j].dead = true;
+    direct();
+    if (afterFn) afterFn();
+  }
+  window.addEventListener("popstate", function (ev) {
+    var st = ev && ev.state;
+    var target = (st && typeof st.nav === "number") ? st.nav : (st == null && NAV.length ? NAV.length - 1 : 0);
+    if (target >= NAV.length) return;
+    var runAfter = navAfterPop;
+    navAfterPop = null;
+    var ran = false;
+    while (NAV.length > target) {
+      var t = NAV.pop();
+      if (!t || t.dead) continue;
+      ran = true;
+      navQuiet = true; try { t.f(); } finally { navQuiet = false; }
+    }
+    if (!ran && !runAfter && NAV.some(function (x) { return !x.dead; })) {
+      history.back();
+      return;
+    }
+    if (runAfter) { try { runAfter(); } catch (e) {} }
   });
   var sheetStack = [];
   function sheetEls() {
@@ -21,30 +57,38 @@
     bg = el("div", "sheet-bg"); bg.id = "sheet-bg"; bg.hidden = true;
     var sh = el("div", "sheet"); sh.id = "sheet"; sh.hidden = true;
     sh.setAttribute("role", "dialog"); sh.setAttribute("aria-modal", "true");
-    bg.addEventListener("click", closeSheetUI);
+    bg.addEventListener("click", function () { closeSheetUI(); });
     document.body.appendChild(bg); document.body.appendChild(sh);
     return [bg, sh];
   }
   function closeSheet() {
     var e = sheetEls(); e[0].hidden = true; e[1].hidden = true; sheetStack = [];
   }
-  function closeSheetUI() { if (!sheetEls()[1].hidden) navBack("sheet", closeSheet); }
+  function closeSheetUI(afterFn) {
+    if (!sheetEls()[1].hidden) navUnwind(["sheet", "sheet-step"], closeSheet, afterFn);
+    else if (afterFn) afterFn();
+  }
+  function stepSheetBack() {
+    if (sheetStack.length > 1) { sheetStack.pop(); var p = sheetStack[sheetStack.length - 1]; openSheet(p[0], p[1], false); }
+    else closeSheet();
+  }
   function openSheet(kind, name, push) {
     var body = kind === "u" ? unitSheet(name) : kind === "i" ? itemSheet(name) : kind === "t" ? traitSheet(name) : augSheet(name);
     if (!body) return false;
     var e = sheetEls(), sh = e[1];
     if (sh.hidden) navPush("sheet", closeSheet);
+    else if (push !== false) navPush("sheet-step", stepSheetBack);
     if (push !== false) sheetStack.push([kind, name]);
     sh.innerHTML = "";
     var top = el("div", "sh-top");
     if (sheetStack.length > 1) {
       var bk = el("button", "sh-btn", "←"); bk.type = "button"; bk.setAttribute("aria-label", "뒤로");
-      bk.addEventListener("click", function () { sheetStack.pop(); var p = sheetStack[sheetStack.length - 1]; openSheet(p[0], p[1], false); });
+      bk.addEventListener("click", function () { navBack("sheet-step", stepSheetBack); });
       top.appendChild(bk);
     }
     top.appendChild(el("span", "sh-grab"));
     var x = el("button", "sh-btn", "✕"); x.type = "button"; x.setAttribute("aria-label", "닫기");
-    x.addEventListener("click", closeSheetUI); top.appendChild(x);
+    x.addEventListener("click", function () { closeSheetUI(); }); top.appendChild(x);
     sh.appendChild(top); sh.appendChild(body);
     e[0].hidden = false; sh.hidden = false; sh.scrollTop = 0;
     return true;
@@ -63,7 +107,7 @@
   function traitChip(name) { var s = el("span", "tchip", name); s.dataset.trait = name; return s; }
   function shAction(label, fn) {
     var b = el("button", "sh-act", label); b.type = "button";
-    b.addEventListener("click", function () { navBack("sheet", closeSheet); setTimeout(fn, 150); });
+    b.addEventListener("click", function () { closeSheetUI(fn); });
     return b;
   }
 
@@ -281,9 +325,15 @@
   var nav = document.querySelector("nav.tabs");
   var TAB_KEY = /overlay=1/.test(location.search) ? "tft-guide-tab-overlay" : "tft-guide-tab";
   var current = null;
-  function goTab(id) {  // 버튼으로 탭을 옮길 때: 뒤로가기로 돌아올 수 있게
+  function goTab(id) {  // 버튼·링크로 탭을 옮길 때: 뒤로가기로 직전 탭·스크롤 위치로 정확히 복원
+    if (current === id) {
+      if (id === "meta" && !document.getElementById("mt-detail").hidden) { navBack("deck", metaBack); return; }
+      if (id === "tfa" && !document.getElementById("tfa-detail").hidden) { navBack("tfa", tfaBack); return; }
+      window.scrollTo(0, 0);
+      return;
+    }
     var prev = current, y = window.scrollY;
-    if (prev && prev !== id) navPush("tab", function () { showTab(prev, false); window.scrollTo(0, y); });
+    if (prev && prev !== id) navPush("tab", function () { applyTab(prev, false, y); });
     showTab(id, true);
   }
   var DECK_TABS = ["meta", "tfa", "parts", "emb"], DECK_KEY = "tft-guide-decktab", deckLast = "meta";
@@ -291,7 +341,7 @@
   try { var dl = localStorage.getItem(DECK_KEY); if (DECK_TABS.indexOf(dl) >= 0) deckLast = dl; } catch (e) {}
   try { var rl = localStorage.getItem(RANK_KEY); if (RANK_TABS.indexOf(rl) >= 0) rankLast = rl; } catch (e) {}
   var TAB_Y = {};
-  function applyTab(id, scroll) {
+  function applyTab(id, scroll, restoreY) {
     if (!secs.some(function (s) { return s && s.id === id; })) id = secs[0].id;
     var same = current === id;
     if (current && !same) TAB_Y[current] = window.scrollY;
@@ -303,7 +353,8 @@
       a.setAttribute("aria-selected", on ? "true" : "false");
       if (on && a.scrollIntoView) a.scrollIntoView({ block: "nearest", inline: "center" });
     });
-    if (scroll) window.scrollTo(0, same ? 0 : TAB_Y[id] || 0);  // 다른 탭에서 돌아오면 보던 위치, 같은 탭을 다시 누르면 맨 위
+    if (restoreY != null) window.scrollTo(0, restoreY);
+    else if (scroll) window.scrollTo(0, same ? 0 : TAB_Y[id] || 0);  // 다른 탭에서 돌아오면 보던 위치, 같은 탭을 다시 누르면 맨 위
     if (id === "home") { setTimeout(homeRender, 0); if (window.v2PrismKick) setTimeout(window.v2PrismKick, 60); }
     if (id === "tfa") setTimeout(tfaRender, 0);
     if (id === "s19") setTimeout(s19Render, 0);
@@ -326,11 +377,11 @@
     if (id === "power") setTimeout(pwRender, 0);
     if (id === "parts") setTimeout(ptRender, 0);
   }
-  function showTab(id, scroll) {
-    if (!reduce && !navigator.webdriver && current && current !== id && document.startViewTransition) {
+  function showTab(id, scroll, restoreY) {
+    if (restoreY == null && !reduce && !navigator.webdriver && current && current !== id && document.startViewTransition) {
       try { document.startViewTransition(function () { applyTab(id, scroll); }); return; } catch (e) {}
     }
-    applyTab(id, scroll);
+    applyTab(id, scroll, restoreY);
   }
   // 아래 탭·더보기·서브 전환·글 속 링크 모두 같은 탭 전환으로
   document.addEventListener("click", function (e) {
@@ -339,12 +390,11 @@
     var id = a.getAttribute("href").slice(1);
     if (document.getElementById(id) && document.getElementById(id).tagName === "SECTION") {
       e.preventDefault();
-      var prev = current, y = window.scrollY;
-      if (prev && prev !== id) navPush("tab", function () { showTab(prev, false); window.scrollTo(0, y); });
-      showTab(id, true);
+      goTab(id);
     }
   });
   window.addEventListener("hashchange", function () {
+    if (navQuiet) return;
     var h = (location.hash || "").slice(1);
     if (h && h !== current) showTab(h, true);
   });

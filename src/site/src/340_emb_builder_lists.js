@@ -31,7 +31,7 @@
     var prev = current, y = window.scrollY, was = !document.getElementById("mt-detail").hidden ? mtCurId : null;
     navPush("tab", function () {
       if (was) metaShow(was, true); else metaBack();
-      showTab(prev, false); window.scrollTo(0, y);
+      applyTab(prev, false, y);
     });
     showTab("meta", false); metaShow(id, true); window.scrollTo(0, 0);
   }

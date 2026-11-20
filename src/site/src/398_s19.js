@@ -44,6 +44,18 @@
     return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) { S19 = d; if (typeof homeRender === "function") homeRender(); return d; });
   }
   function s19Jump(view, opts) {
+    var nextV = view || "home";
+    var prevTab = current, prevV = s19St.v, py = window.scrollY;
+    if (prevTab && prevTab !== "s19") {
+      navPush("tab", function () {
+        s19St.v = prevV; s19Save();
+        applyTab(prevTab, false, py);
+      });
+    } else if (prevTab === "s19" && prevV !== nextV) {
+      navPush("s19v", function () {
+        s19St.v = prevV; s19Save(); s19Render(); window.scrollTo(0, py);
+      });
+    }
     if (opts) {
       if (opts.tf != null) s19St.tf = opts.tf;
       if (opts.cf != null) s19St.cf = opts.cf;
@@ -52,9 +64,9 @@
     } else {
       s19St.q = "";
     }
-    s19St.v = view || "home";
+    s19St.v = nextV;
     s19Save();
-    goTab("s19");
+    showTab("s19", false, 0);
     s19Render();
   }
   function s19Render() {
@@ -71,7 +83,13 @@
     tools.innerHTML = ""; out.innerHTML = "";
     views[s19St.v](out, tools);
   }
-  function s19Go(v) { s19St.v = v; s19Save(); s19Render(); window.scrollTo(0, 0); }
+  function s19Go(v) {
+    if (s19St.v !== v) {
+      var prevV = s19St.v, py = window.scrollY;
+      navPush("s19v", function () { s19St.v = prevV; s19Save(); s19Render(); window.scrollTo(0, py); });
+    }
+    s19St.v = v; s19Save(); s19Render(); window.scrollTo(0, 0);
+  }
   function s19Search(tools, ph) {
     var i = el("input", "s19-q"); i.type = "search"; i.placeholder = ph; i.value = s19St.q;
     i.addEventListener("input", function () { s19St.q = i.value; var pos = i.selectionStart; s19Render(); var j = document.querySelector("#s19-tools .s19-q"); if (j) { j.focus(); try { j.setSelectionRange(pos, pos); } catch (e) {} } });
@@ -227,10 +245,9 @@
       loadBtn.addEventListener("click", function () {
         s19Sq = d.u.map(function (x) { return x.k; }).slice(0, 10);
         s19SqSave();
-        var bk = b.closest(".fs-view") && b.closest(".fs-view").querySelector(".dc-back");
-        if (bk) bk.click();
-        s19Jump("builder");
-        toast(d.n + " 스쿼드를 빌더에 불러왔어요");
+        var fv = b.closest(".fs-view");
+        var goB = function () { s19Jump("builder"); toast(d.n + " 스쿼드를 빌더에 불러왔어요"); };
+        if (fv && fv._navClose) fv._navClose(goB); else goB();
       });
       b.appendChild(loadBtn);
       if (d.a && d.a.length) {
@@ -245,9 +262,9 @@
           if (ag && ag.tier) sp.appendChild(el("small", null, S19_TIER[ag.tier] || ""));
           bt.appendChild(sp);
           bt.addEventListener("click", function () {
-            var bk = b.closest(".fs-view") && b.closest(".fs-view").querySelector(".dc-back");
-            if (bk) bk.click();
-            s19Jump("augs", { q: anm, an: false });
+            var fv = b.closest(".fs-view");
+            var goA = function () { s19Jump("augs", { q: anm, an: false }); };
+            if (fv && fv._navClose) fv._navClose(goA); else goA();
           });
           aw.appendChild(bt);
         });
