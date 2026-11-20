@@ -33,12 +33,13 @@
       if (upd) upd.textContent = updAt(S19.pbe || S19.updated);
       var kpi = document.getElementById("hm-s19-kpi");
       if (kpi) {
+        var dlen = (S19.decks || []).length;
         kpi.innerHTML = "";
         [
+          [dlen || S19.augs.filter(function (a) { return a.new; }).length, dlen ? "추천 덱" : "신규 증강", dlen ? "decks" : "augs"],
           [S19.units.length, "챔피언", "units"],
           [S19.traits.filter(function (t) { return !t.uniq; }).length, "시너지", "traits"],
-          [S19.units.filter(function (u) { return u.unl; }).length, "해금", "unlock"],
-          [S19.augs.filter(function (a) { return a.new; }).length, "새 증강", "augs"]
+          [S19.units.filter(function (u) { return u.unl; }).length, "해금", "unlock"]
         ].forEach(function (x) {
           var b = el("button", "hm-k"); b.type = "button";
           b.appendChild(el("b", null, String(x[0])));
@@ -46,6 +47,12 @@
           b.addEventListener("click", function () { s19Jump(x[2], x[2] === "augs" ? { an: true } : null); });
           kpi.appendChild(b);
         });
+      }
+      var dw = document.getElementById("hm-s19-decks-wrap"), dr = document.getElementById("hm-s19-decks"), ds = document.getElementById("hm-s19-dsub");
+      if (dw && dr && S19.decks && S19.decks.length) {
+        dw.hidden = false; dr.innerHTML = "";
+        if (ds) ds.textContent = "롤체지지 PBE · " + (S19.decksPlays ? Math.round(S19.decksPlays / 10000) + "만판" : S19.decks.length + "개");
+        S19.decks.slice(0, 4).forEach(function (d) { dr.appendChild(s19DeckRow(d, "avg")); });
       }
       var seven = S19.units.filter(function (u) { return u.c === 7 || (u.c === 5 && u.unl); })
         .sort(function (a, b) { return b.c - a.c || (b.unl ? 1 : 0) - (a.unl ? 1 : 0); })
@@ -237,9 +244,10 @@
     if (!q) {
       spotGroup(box, "빠른 이동", [
         { badge: "19", title: "19시즌 프리즘 투어", sub: "시너지 · 7코스트 · 해금 · 스쿼드 빌더", tag: "PBE", tagCls: "cyan", go: function () { s19Jump("home"); } },
+        { badge: "19", title: "19시즌 PBE 추천 덱", sub: "롤체지지 PBE 통계 · 평균 등수·승률·추천 아이템", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("decks"); } },
         { badge: "빌", title: "19시즌 스쿼드 빌더", sub: "챔피언 조합 시너지·해금 실시간 계산", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("builder"); } },
         { badge: "해", title: "19시즌 해금 조건", sub: "조건별 검색 · 암기 체크리스트", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("unlock"); } },
-        { badge: "덱", title: "18시즌 메타 덱", sub: "에메+ 평균 등수 · 순방률 · 선택률", tag: "라이브", tagCls: "gold", go: function () { goTab("meta"); } },
+        { badge: "덱", title: "18시즌 메타 덱", sub: "에메+ 평균 등수 · 승률 · 선택률", tag: "라이브", tagCls: "gold", go: function () { goTab("meta"); } },
         { badge: "재", title: "재료 → 덱", sub: "보유 재료 기반 추천 덱", tag: "도구", go: function () { goTab("parts"); } },
         { badge: "템", title: "아이템 티어표 · 조합표", sub: "조합템 · 찬란한 · 유물 · 상징", tag: "도감", go: function () { goTab("items"); } }
       ]);
@@ -247,8 +255,22 @@
     }
     var want19 = spotScope !== "live", wantLive = spotScope !== "s19";
     var total = 0;
-    // 1) 19시즌 챔피언·시너지·증강
+    // 1) 19시즌 추천 덱·챔피언·시너지·증강
     if (want19 && S19) {
+      var d19 = (S19.decks || []).filter(function (d) {
+        return matches(d.n, q) || d.t.some(function (t) { return matches(t[0], q); }) || d.u.some(function (x) { var u = s19Unit(x.k); return u && matches(u.n, q); });
+      }).slice(0, 5).map(function (d) {
+        var mcu = s19Unit(d.mc);
+        return {
+          icon: mcu && mcu.img, title: d.n,
+          sub: "PBE 평균 " + d.avg.toFixed(2) + " · 승률 " + d.win.toFixed(1) + "% · " + d.plays.toLocaleString() + "판",
+          tag: d.tier + "티어", tagCls: "cyan",
+          go: function () { s19OpenDeck(d); }
+        };
+      });
+      total += d19.length;
+      spotGroup(box, "19시즌 추천 덱", d19);
+
       var u19 = S19.units.filter(function (u) {
         return matches(u.n, q) || u.t.some(function (t) { return matches(t, q); }) || (u.unl && u.unl.c.some(function (c) { return matches(c, q); }));
       }).slice(0, 6).map(function (u) {

@@ -602,24 +602,29 @@
     var real = board.filter(function (b) { return !b.plant; });
     return real.filter(function (b) { return b.i && b.i.length; }).concat(real.filter(function (b) { return !b.i || !b.i.length; }).sort(function (a, b) { return (IDX.units[b.u] || {}).cost - (IDX.units[a.u] || {}).cost; }));
   }
-  // 덱 지표 연속 그라데이션 색: 0(약함·코랄 레드) → 0.25(오렌지) → 0.5(골드) → 0.75(그린) → 1(최상·에메랄드 민트)
-  var DK_STOPS = [[2, 84, 67, 46], [25, 86, 64, 43], [44, 82, 62, 37], [128, 68, 61, 34], [160, 74, 58, 33]];
+  // 덱 지표 선택적 현저성(Selective Salience) RGB 연속 스케일:
+  // 약함(코랄 레드) → 주의(오렌지) → 평균(차분한 쿨그레이) → 강함(에메랄드 민트) → 사기/최상위(아이스 시안 + OP 강조)
+  var DK_RGB_D = [[248, 113, 113], [245, 158, 86], [186, 198, 214], [52, 211, 153], [56, 217, 255]];
+  var DK_RGB_L = [[220, 38, 38], [194, 65, 12], [71, 85, 105], [5, 150, 105], [2, 132, 199]];
+  function dkLerpRgb(stops, t) {
+    var v = Math.max(0, Math.min(1, t)), p = v * (stops.length - 1);
+    var i = Math.min(stops.length - 2, Math.floor(p)), f = p - i;
+    var a = stops[i], b = stops[i + 1];
+    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * f) + "," + Math.round(a[1] + (b[1] - a[1]) * f) + "," + Math.round(a[2] + (b[2] - a[2]) * f) + ")";
+  }
   function dkGrad(node, t) {
-    var v = Math.max(0, Math.min(1, t)), p = v * (DK_STOPS.length - 1);
-    var i = Math.min(DK_STOPS.length - 2, Math.floor(p)), f = p - i;
-    var a = DK_STOPS[i], b = DK_STOPS[i + 1];
-    var h = Math.round(a[0] + (b[0] - a[0]) * f);
-    var s = Math.round(a[1] + (b[1] - a[1]) * f);
-    var ld = Math.round(a[2] + (b[2] - a[2]) * f);
-    var ll = Math.round(a[3] + (b[3] - a[3]) * f);
+    var v = Math.max(0, Math.min(1, t));
     node.classList.add("dk-grad");
-    node.style.setProperty("--gd", "hsl(" + h + " " + s + "% " + ld + "%)");
-    node.style.setProperty("--gl", "hsl(" + h + " " + s + "% " + ll + "%)");
+    if (v >= 0.84) node.classList.add("dk-op");
+    node.style.setProperty("--gd", dkLerpRgb(DK_RGB_D, v));
+    node.style.setProperty("--gl", dkLerpRgb(DK_RGB_L, v));
     return node;
   }
-  function dkAvgT(avg) { return (4.95 - avg) / 0.9; }
-  function dkWinT(win) { return win >= 11.5 ? 0.5 + (win - 11.5) / 15 : (win - 5) / 13; }
+  function dkAvgT(avg) { return (4.92 - avg) / 0.86; }
+  function dkWinT(win) { return win >= 11.5 ? 0.5 + (win - 11.5) / 14 : (win - 5) / 13; }
   function dkTop4T(t4) { return (t4 - 40) / 20; }
+  function s19AvgT(avg) { return (4.85 - avg) / 1.75; }
+  function s19WinT(win) { return win >= 14 ? 0.5 + (win - 14) / 24 : (win - 5) / 18; }
 
   /* ---- 재료 → 덱: 가진 재료(초반 크립·첫 초밥)로 갈 만한 덱. MetaTFT 덱 통계(meta.json)의 캐리 템 빌드 판수로 계산 ---- */
   var PARTS = ["B.F. 대검", "곡궁", "쓸데없이 큰 지팡이", "여신의 눈물", "쇠사슬 조끼", "음전자 망토", "거인의 허리띠", "연습용 장갑", "뒤집개", "프라이팬"];

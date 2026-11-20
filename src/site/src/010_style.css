@@ -608,8 +608,14 @@ td .row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .dk-kpi2 .dk-top4-hi { font-size: 19px; font-weight: 800; line-height: 1.1; letter-spacing: -.4px; color: var(--accent2); }
 .dk-kpi2 .dk-avg-sub { font-size: var(--fs-xs); font-weight: 700; line-height: 1.2; color: var(--accent); white-space: nowrap; }
 .dk-kpi2 .dk-grad, .dk-kpi b.dk-grad { color: var(--gl, var(--accent)); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dk-kpi2 .dk-grad, :root:not([data-theme="light"]) .dk-kpi b.dk-grad { color: var(--gd, var(--accent)); } }
+.dk-kpi2 .dk-op { padding: 1px 6px; border-radius: 7px; background: color-mix(in srgb, var(--gl, var(--accent2)) 13%, transparent); border: 1px solid color-mix(in srgb, var(--gl, var(--accent2)) 34%, transparent); }
+.dk-kpi2 b.dk-op { padding: 1px 7px; border-radius: 8px; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .dk-kpi2 .dk-grad, :root:not([data-theme="light"]) .dk-kpi b.dk-grad { color: var(--gd, var(--accent)); }
+  :root:not([data-theme="light"]) .dk-kpi2 .dk-op { background: color-mix(in srgb, var(--gd, var(--accent2)) 14%, transparent); border-color: color-mix(in srgb, var(--gd, var(--accent2)) 38%, transparent); }
+}
 :root[data-theme="dark"] .dk-kpi2 .dk-grad, :root[data-theme="dark"] .dk-kpi b.dk-grad { color: var(--gd, var(--accent)); }
+:root[data-theme="dark"] .dk-kpi2 .dk-op { background: color-mix(in srgb, var(--gd, var(--accent2)) 14%, transparent); border-color: color-mix(in srgb, var(--gd, var(--accent2)) 38%, transparent); }
 /* 덱 상세 머리 */
 .dk-hero { position: relative; overflow: hidden; display: flex; gap: 14px; align-items: center; padding: 18px 16px; border-radius: 22px; background: var(--elev2); margin: 4px 0 10px; --tc: var(--c1); }
 .dk-hero .art { position: absolute; right: -24px; top: -30px; width: 210px; height: 210px; object-fit: cover; opacity: .3; filter: blur(1.5px); -webkit-mask-image: linear-gradient(90deg, transparent, #000 70%); mask-image: linear-gradient(90deg, transparent, #000 70%); pointer-events: none; }
@@ -1643,6 +1649,22 @@ body.dc-open { overflow: hidden; }
 .s19-tier { font-size: var(--fs-2xs); font-weight: 800; padding: 2px 7px; border-radius: 6px; background: var(--raise); color: var(--muted); }
 .s19-tier.t1 { background: color-mix(in srgb, #c8d0da 22%, var(--raise)); color: var(--ink); } .s19-tier.t2 { background: color-mix(in srgb, var(--accent) 28%, var(--raise)); color: var(--ink); } .s19-tier.t3 { background: linear-gradient(110deg, var(--accent), var(--accent2)); color: #080B12; }
 .s19-nb { font-size: var(--fs-2xs); font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #ff4d8d; color: #fff; }
+.s19-dtop { margin: 2px 0 8px; }
+.s19-drows { margin-bottom: 12px; }
+.s19-strip img.c7 { border-color: #ff4d8d; }
+.s19-dk-kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 10px 0 12px; }
+.s19-dk-kpi > div { padding: 10px 4px; text-align: center; }
+.s19-dk-kpi b { font-size: 16.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.s19-dk-unl { margin: 0 0 10px; }
+.s19-dk-list { display: grid; gap: 6px; }
+.s19-dk-u { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--raise); cursor: pointer; }
+.s19-dk-u:active { transform: scale(.985); }
+.s19-dk-um { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.s19-dk-um b { display: flex; align-items: center; gap: 5px; font-size: var(--fs-b); color: var(--ink); }
+.s19-dk-um small { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s19-dk-core { font-style: normal; font-size: var(--fs-2xs); font-weight: 800; padding: 1px 6px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); }
+.s19-dk-its { display: flex; gap: 3px; flex: none; }
+.s19-dk-its img { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--sunk); }
 .s19-promo { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-decoration: none; color: var(--ink); border-radius: var(--r-card); padding: 15px 16px; margin-bottom: 14px; background: linear-gradient(125deg, color-mix(in srgb, var(--accent2) 15%, var(--elev2)), var(--elev2) 55%, color-mix(in srgb, var(--accent) 14%, var(--elev2))); border: 1px solid var(--border-elev2); box-shadow: var(--shadow); }
 .s19-promo small { display: block; font-size: var(--fs-xs); color: var(--accent2); font-weight: 800; } .s19-promo b { font-size: var(--fs-xl); font-weight: 800; }
 .s19-promo i { font-style: normal; font-size: var(--fs-s); font-weight: 700; color: var(--accent); text-align: right; white-space: nowrap; }

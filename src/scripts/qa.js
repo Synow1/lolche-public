@@ -571,13 +571,18 @@ function fresh(file, key, hours) {
     const errs = []; pg.on('pageerror', e => errs.push(String(e)));
     await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(2500);
     await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#s19'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(1200);
-    for (const [v, sel, min] of [['home', '.s19-k', 4], ['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['builder', '.s19-bpick', 60], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
+    for (const [v, sel, min] of [['home', '.s19-k', 4], ['decks', '.mt-row.dk', 15], ['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['builder', '.s19-bpick', 60], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
       await pg.evaluate((v) => document.querySelector('#s19-view [data-v=' + v + ']').click(), v); await pg.waitForTimeout(500);
       const r = await pg.evaluate((sel) => ({ n: document.querySelectorAll('#s19-out ' + sel).length, sw: document.documentElement.scrollWidth, seg: [...document.querySelectorAll('#s19-view button')].some(b => b.getBoundingClientRect().height > 44) }), sel);
       if (r.n < min) fail(`19시즌 ${v}: 항목 ${r.n}개 (최소 ${min})`);
       if (r.sw > 360) fail(`19시즌 ${v}: 화면보다 넓음 ${r.sw}px`);
       if (r.seg) fail('19시즌: 보기 버튼 글자가 두 줄로 꺾임');
     }
+    // 19시즌 추천 덱 상세 열기 확인
+    await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]').click()); await pg.waitForTimeout(400);
+    await pg.evaluate(() => document.querySelector('#s19-out .mt-row.dk')?.click()); await pg.waitForTimeout(400);
+    if (!(await pg.evaluate(() => document.querySelectorAll('.fs-view .s19-dk-u').length >= 5))) fail('19시즌 추천 덱: 덱을 눌러도 상세 챔피언·아이템 화면이 안 열림');
+    await pg.evaluate(() => document.querySelector('.fs-view .dc-back')?.click()); await pg.waitForTimeout(300);
     // 19시즌 스쿼드 빌더: 챔피언 2명 추가 → 시너지 계산 칩 표시 → 비우기
     await pg.evaluate(() => document.querySelector('#s19-view [data-v=builder]').click()); await pg.waitForTimeout(400);
     await pg.evaluate(() => { const p = document.querySelectorAll('#s19-out .s19-bpick'); if (p[0]) p[0].click(); if (p[1]) p[1].click(); }); await pg.waitForTimeout(400);

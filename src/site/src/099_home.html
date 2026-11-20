@@ -16,21 +16,26 @@
       </div>
       <div class="hm-kpi" id="hm-s19-kpi"></div>
       <div class="hm-pills" id="hm-s19-pills">
+        <button type="button" data-s19="decks" class="hi">추천 덱</button>
+        <button type="button" data-s19="builder" class="hi">스쿼드 빌더</button>
         <button type="button" data-s19="traits">시너지</button>
         <button type="button" data-s19="units">챔피언</button>
         <button type="button" data-s19="unlock">해금 조건</button>
-        <button type="button" data-s19="builder" class="hi">스쿼드 빌더</button>
-        <button type="button" data-s19="augs">새 증강</button>
-        <button type="button" data-s19="items">상징·퀘스트</button>
+        <button type="button" data-s19="augs">신규 증강</button>
       </div>
     </div>
   </div>
 
   <button type="button" class="hm-searchbar" id="hm-search-trig">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16.2 16.2 4.3 4.3"/></svg>
-    <span>19시즌 챔피언·시너지·메타 덱·아이템 통합 검색</span>
+    <span>19시즌 추천 덱·챔피언·시너지·18시즌 메타 통합 검색</span>
     <kbd>검색</kbd>
   </button>
+
+  <div class="hm-block" id="hm-s19-decks-wrap" hidden>
+    <div class="hm-bh"><h3>19시즌 PBE 추천 덱 <small id="hm-s19-dsub"></small></h3><button type="button" class="hm-more" data-s19="decks">전체 덱 ›</button></div>
+    <div class="hm-decks" id="hm-s19-decks"></div>
+  </div>
 
   <div class="hm-block" id="hm-s19-seven-wrap" hidden>
     <div class="hm-bh"><h3>19시즌 7코스트 · 핵심 해금</h3><button type="button" class="hm-more" data-s19="unlock">전체 해금 ›</button></div>

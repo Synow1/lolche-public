@@ -256,16 +256,88 @@ def main():
                       "img": icon("items", "i", i["apiName"])})
     items.sort(key=lambda i: (["emb", "quest", "set"].index(i["kind"]), not i["craft"], i["n"]))
 
+    # 19시즌 PBE 추천 덱 (롤체지지 PBE 메타 덱 통계: lolchess.gg/decks?queue=pbe)
+    decks, decks_plays, decks_upd = [], 0, ""
+    try:
+        pbe_req = urllib.request.Request("https://lolchess.gg/decks?queue=pbe",
+                                         headers={"User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36", "Accept-Language": "ko"})
+        with urllib.request.urlopen(pbe_req, timeout=30) as r:
+            pbe_html = r.read().decode("utf-8", "ignore")
+        m_nd = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', pbe_html, re.S)
+        if m_nd:
+            qs = json.loads(m_nd.group(1))["props"]["pageProps"]["dehydratedState"]["queries"]
+            md = next((q["state"]["data"] for q in qs if isinstance(q["state"].get("data"), dict) and "metaDeckList" in q["state"]["data"]), None)
+            if md and md.get("season") == "set19":
+                ml = md["metaDeckList"]
+                refs = md.get("refs") or {}
+                ch_ref = {c["key"]: c["name"] for c in refs.get("champions") or []}
+                tr_ref = {t["key"]: t["name"] for t in refs.get("traits") or []}
+                it_ref = {i["key"]: i["name"] for i in refs.get("items") or []}
+                u_by_k = {u["k"]: u["k"] for u in units}
+                u_by_n = {u["n"]: u["k"] for u in units}
+                u_by_base = {re.sub(r" \([^)]+\)$", "", u["n"]): u["k"] for u in units}
+                def map_uk(ck):
+                    if ck in u_by_k: return ck
+                    nm = ch_ref.get(ck, "")
+                    return u_by_n.get(nm) or u_by_base.get(nm) or ""
+                decks_plays = int(ml.get("plays") or 0)
+                if ml.get("updatedAt"):
+                    decks_upd = datetime.fromtimestamp(ml["updatedAt"] / 1000, timezone.utc).isoformat(timespec="minutes")
+                raw_decks = [x for x in (ml.get("metaDecks") or []) if (x.get("plays") or 0) >= 200 and (x.get("deck") or {}).get("champions")]
+                raw_decks.sort(key=lambda x: x.get("avgPlacement", 9))
+                n_raw = len(raw_decks)
+                name_cnt = Counter((x.get("deckNameKo") or "").strip() for x in raw_decks)
+                for idx_d, x in enumerate(raw_decks):
+                    st_map = {}
+                    for cs in x.get("championStats") or []:
+                        p3 = next((t.get("plays", 0) for t in cs.get("championTierStats") or [] if t.get("key") == 3), 0)
+                        st_map[cs["key"]] = 3 if cs.get("plays") and (p3 / cs["plays"]) >= 0.45 else 2
+                    champs = []
+                    for c in sorted(x["deck"]["champions"], key=lambda z: (z.get("coreRank", 99), -(len(z.get("items") or [])))):
+                        uk = map_uk(c["key"])
+                        if not uk: continue
+                        its = [it_ref.get(ik, ik) for ik in (c.get("items") or []) if it_ref.get(ik)]
+                        champs.append({"k": uk, "r": int(c.get("coreRank", 99)), "s": st_map.get(c["key"], 2), "i": its[:3]})
+                    if not champs: continue
+                    mc = map_uk(x.get("deckChampionKey") or "") or champs[0]["k"]
+                    base_nm = (x.get("deckNameKo") or "").strip()
+                    if not base_nm:
+                        dk0 = (x.get("deckKey") or "").split("|")[0].split("-")[0]
+                        base_nm = (tr_ref.get(dk0, "") + " " + uname.get(mc, "")).strip()
+                    if name_cnt[base_nm] > 1:
+                        sec_u = next((uname.get(c["k"], "") for c in champs if c["k"] != mc and uname.get(c["k"], "") not in base_nm), "")
+                        if sec_u: base_nm = f"{base_nm} {sec_u.split(' ')[0]}"
+                    trs = []
+                    for t0 in sorted(x["deck"].get("traits") or [], key=lambda z: (-(z.get("style") or 0), -(z.get("numUnits") or 0))):
+                        tn = tname.get(t0["key"]) or tr_ref.get(t0["key"])
+                        if tn and (t0.get("style") or 0) > 0:
+                            trs.append([tn, int(t0.get("numUnits") or 0), int(t0.get("style") or 1)])
+                    ratio = idx_d / max(n_raw, 1)
+                    tier = "S" if (ratio < 0.2 and x["plays"] >= 1000) else "A" if ratio < 0.5 else "B" if ratio < 0.8 else "C"
+                    decks.append({"n": base_nm, "mc": mc, "tier": tier, "avg": round(float(x["avgPlacement"]), 2),
+                                  "win": round(float(x["winRate"]), 1), "top4": round(float(x["topRate"]), 1),
+                                  "pick": round(float(x.get("pickRate") or 0), 2), "plays": int(x["plays"]),
+                                  "u": champs, "t": trs[:6]})
+    except Exception as ex:
+        if OUT.exists():
+            try:
+                prev = json.loads(OUT.read_text(encoding="utf-8"))
+                decks, decks_plays, decks_upd = prev.get("decks", []), prev.get("decksPlays", 0), prev.get("decksUpdated", "")
+            except Exception:
+                pass
+        print(f"19시즌 PBE 덱 생략 ({ex})", file=sys.stderr)
+
     meta = mk.get("_metadata") or {}
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "pbe": meta.get("generated", ""), "release": "2026-12-01",
            "name": "프리즘 투어", "units": units, "traits": traits, "augs": augs, "items": items,
+           "decks": decks, "decksPlays": decks_plays, "decksUpdated": decks_upd,
            "src": "MetaTFT PBE 원문 · 롤체지지 · 라이엇 패치 노트"}
     if "--missing" in sys.argv:
         print(json.dumps(sorted(set(missing)), ensure_ascii=False, indent=0)); return
     if len(units) < 60 or len(traits) < 20:
         sys.exit(f"19시즌 데이터 이상: 유닛 {len(units)} · 시너지 {len(traits)}")
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)} · 시너지 {len(traits)} · 증강 {len(augs)} · 아이템 {len(items)} · 번역 없는 글 {len(set(missing))} · {OUT.stat().st_size // 1024}KB")
+    print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)} · 시너지 {len(traits)} · 증강 {len(augs)} · 아이템 {len(items)} · 추천 덱 {len(decks)} · 번역 없는 글 {len(set(missing))} · {OUT.stat().st_size // 1024}KB")
 
 
 if __name__ == "__main__":
