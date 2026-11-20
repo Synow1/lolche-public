@@ -138,7 +138,7 @@
     return Promise.all([dakGet(base + "/profile?season=" + season), logsFrom(1, []).catch(function () { return []; }), dakGet(base + "/matches?season=" + season + "&page=1" + q).catch(function () { return null; }), mt])
       .then(function (r) {
         var pf = r[0], logs = r[1], m1 = r[2], mtp = r[3];
-        if (!pf || !pf.summoner) throw new Error("못 찾았어요");
+        if (!pf || !pf.summoner) throw new Error("소환사를 찾을 수 없어요");
         var puuid = pf.summoner.puuid, L = (pf.summonerLeagues || []).filter(function (x) { return x.queueId === 1100; })[0];
         var lg = logs.map(function (x) { return [x[0], dakNum(x[1], x[2], x[3]), x[4]]; }).filter(function (x) { return x[1] != null; }).sort(function (a, b) { return a[0] - b[0]; });
         var cur = L ? dakNum(L.tier, L.rank, L.leaguePoints) : null, peak = lg.reduce(function (a, x) { return Math.max(a, x[1]); }, cur || 0);

@@ -88,9 +88,9 @@
     // MetaTFT 덱은 상징 단 판 평균이 4.6 안쪽만 (나머지는 그 상징을 넣어도 약한 덱)
     var ms = rows.filter(function (r) { return !r.guide && r.score <= 4.6; }).slice(0, 8);
     var list = rows.filter(function (r) { return r.guide || ms.indexOf(r) >= 0; });
-    var dsec = sec("갈 덱", "상징을 단 판의 평균 등수");
+    var dsec = sec("추천 덱", "상징 장착 기준 평균 등수");
     var box = el("div", "emb-decks");
-    if (!list.length) box.appendChild(el("p", "empty", "이 상징을 주로 쓰는 덱이 없어요. 재조합기로 바꾸거나 메인 딜러·탱커 시너지를 올리는 데 쓰세요."));
+    if (!list.length) box.appendChild(el("p", "empty", "선택한 상징의 주요 추천 덱이 없어요. 재조합기로 변환하거나 메인 캐리·탱커 시너지 보강에 활용해 보세요"));
     list.forEach(function (r) {
       var b = el("button", "mt-row"); b.type = "button";
       b.appendChild(el("span", "tierb " + r.tier, r.tier));

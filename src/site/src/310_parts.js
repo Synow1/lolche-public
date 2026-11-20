@@ -55,13 +55,13 @@
         b.addEventListener("click", function () { ptHeld.splice(i, 1); ptSave(); ptRender(); });
         tray.appendChild(b);
       });
-      var clr = el("button", "pt-clear", "비우기"); clr.type = "button";
+      var clr = el("button", "pt-clear", "초기화"); clr.type = "button";
       clr.addEventListener("click", function () { ptHeld = []; ptSave(); ptRender(); });
       tray.appendChild(clr);
     }
     document.querySelectorAll("#pt-basis button").forEach(function (b) { b.classList.toggle("on", b.dataset.b === ptBasis); });
     out.innerHTML = "";
-    if (!ptHeld.length) { out.appendChild(el("p", "empty", "위에서 가진 재료를 눌러 주세요")); return; }
+    if (!ptHeld.length) { out.appendChild(el("p", "empty", "위에서 보유한 재료를 선택해 주세요")); return; }
     var N = ptNeed(), held = ptCount(ptHeld), total = ptHeld.length, made = ptBuildable(ptHeld);
     var decks = META.decks.map(function (d) {
       var st = basisSt(d, ptBasis); if (!st) return null;
@@ -75,18 +75,18 @@
     // 바로 만들 수 있는 템: 잘 맞는 덱 상위 15개 중 몇 개가 쓰는지
     var top = decks.slice(0, 15);
     if (made.length) {
-      var sm = sec("바로 만들 수 있는 템", "잘 맞는 덱 15개 중 쓰는 덱 수"), w = el("div", "pt-made");
+      var sm = sec("바로 만들 수 있는 템", "상위 추천 덱 15개 기준 활용 수"), w = el("div", "pt-made");
       made.map(function (n) { return [n, top.filter(function (x) { return (N[x.d.id].items[n] || 0) >= 0.25; }).length]; })
         .sort(function (a, b) { return b[1] - a[1]; }).forEach(function (x) {
           var c = el("span", "pt-mi" + (x[1] ? "" : " dim")); c.dataset.item = x[0];
           var it = IDX.items[x[0]]; if (it) c.appendChild(img(it.icon, ""));
-          var t = el("span"); t.appendChild(el("b", null, x[0])); t.appendChild(el("small", null, x[1] ? x[1] + "개 덱" : "쓰는 덱 적음")); c.appendChild(t);
+          var t = el("span"); t.appendChild(el("b", null, x[0])); t.appendChild(el("small", null, x[1] ? x[1] + "개 덱" : "사용률 낮음")); c.appendChild(t);
           w.appendChild(c);
         });
       sm.appendChild(w); out.appendChild(sm);
     }
-    var sd = sec("갈 만한 덱", "재료 궁합과 " + BASIS_LABEL[ptBasis] + " 평균 등수로 정렬");
-    if (!decks.length) sd.appendChild(el("p", "empty", "이 재료를 많이 쓰는 덱이 없어요"));
+    var sd = sec("추천 덱", "재료 궁합과 " + BASIS_LABEL[ptBasis] + " 평균 등수 기준");
+    if (!decks.length) sd.appendChild(el("p", "empty", "선택한 재료 조합에 맞는 추천 덱이 없어요"));
     var rows = el("div", "mt-rows");
     decks.slice(0, 12).forEach(function (x) {
       var d = x.d, bt = basisTier(d, ptBasis), mc = mainOf(d), r = el("button", "mt-row dk t-" + bt); r.type = "button";

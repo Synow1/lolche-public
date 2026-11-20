@@ -91,22 +91,22 @@
     out.appendChild(kp);
     var cta = el("button", "s19-bcta"); cta.type = "button";
     var ct = el("span"); ct.appendChild(el("b", null, "19시즌 스쿼드 빌더")); ct.appendChild(el("small", null, "챔피언을 고르면 시너지 단계와 해금 조건을 바로 계산해요"));
-    cta.appendChild(ct); cta.appendChild(el("i", null, (s19Sq.length ? s19Sq.length + "/10 배치됨 ›" : "조합 짜기 ›")));
+    cta.appendChild(ct); cta.appendChild(el("i", null, (s19Sq.length ? s19Sq.length + "/10 배치됨 ›" : "조합 만들기 ›")));
     cta.addEventListener("click", function () { s19Go("builder"); });
     out.appendChild(cta);
     var seven = U.filter(function (u) { return u.c === 7; });
     if (seven.length) {
       var c7 = el("div", "s19-card"); c7.appendChild(el("h3", null, "7코스트 챔피언"));
-      c7.appendChild(el("p", "sub", "이번 시즌에 새로 생긴 가장 비싼 칸이에요. 대부분 해금 조건이 있어요"));
+      c7.appendChild(el("p", "sub", "19시즌에 추가된 최상위 7코스트 유닛이에요. 대부분 해금 조건이 필요해요"));
       var r7 = el("div", "s19-urow"); seven.forEach(function (u) { r7.appendChild(s19UnitBtn(u)); }); c7.appendChild(r7); out.appendChild(c7);
     }
-    var how = el("div", "s19-card"); how.appendChild(el("h3", null, "공부 순서"));
+    var how = el("div", "s19-card"); how.appendChild(el("h3", null, "학습 순서"));
     var ol = el("ol", "s19-steps");
-    [["계열 시너지부터", "시너지 보기에서 '계열'만 골라 이름과 마지막 단계 효과를 훑어요. 덱의 뼈대예요", "traits"],
-     ["코스트별 캐리", "챔피언 보기에서 4·5·7코스트 스킬과 1~3성 수치를 봐요. 캐리 후보가 보여요", "units"],
-     ["해금 조건", "이번 시즌 핵심이에요. 조건을 채워야 상점에 나오는 챔피언이 있어요", "unlock"],
-     ["스쿼드 빌더로 조합 테스트", "관심 있는 시너지 기물을 담아 활성 단계와 해금 조건을 바로 확인해요", "builder"],
-     ["새 증강 · 상징", "프리즘·골드부터 '새 증강'과 조합 가능한 상징을 확인해요", "augs"]].forEach(function (x, i) {
+    [["계열 시너지부터", "시너지 탭에서 '계열' 필터로 핵심 효과와 최종 구간을 먼저 익혀 보세요", "traits"],
+     ["코스트별 캐리", "챔피언 탭에서 4·5·7코스트 스킬과 성급별 수치를 확인해 보세요", "units"],
+     ["해금 조건", "19시즌 핵심 시스템이에요. 조건을 달성해야 상점에 등장하는 챔피언이 있어요", "unlock"],
+     ["스쿼드 빌더로 조합 테스트", "원하는 챔피언을 배치해 활성 시너지와 필요한 해금 조건을 바로 계산해요", "builder"],
+     ["신규 증강 · 상징", "프리즘·골드부터 신규 증강과 조합 가능한 상징을 확인해 보세요", "augs"]].forEach(function (x, i) {
       var li = el("li"); var b = el("button", "s19-step"); b.type = "button";
       b.appendChild(el("b", null, (i + 1) + ". " + x[0])); b.appendChild(el("small", null, x[1]));
       b.addEventListener("click", function () { if (x[2] === "traits") s19St.tf = "ORIGIN"; if (x[2] === "augs") s19St.an = true; s19Go(x[2]); });
@@ -115,17 +115,17 @@
     how.appendChild(ol); out.appendChild(how);
     var back = S19.traits.filter(function (t) { return t.back && t.back.length && !t.uniq; });
     if (back.length) {
-      var cb = el("div", "s19-card"); cb.appendChild(el("h3", null, "돌아온 시너지"));
-      cb.appendChild(el("p", "sub", "예전 세트에 있던 이름이에요. 효과는 새로 바뀌었을 수 있어요"));
+      var cb = el("div", "s19-card"); cb.appendChild(el("h3", null, "복각 시너지"));
+      cb.appendChild(el("p", "sub", "이전 시즌에서 복각된 시너지예요. 세부 효과는 달라졌을 수 있어요"));
       var rb = el("div", "s19-tchips");
       back.forEach(function (t) { var b = el("button", "s19-tchip"); b.type = "button"; b.appendChild(s19Ti(t, 18)); b.appendChild(el("span", null, t.n)); b.appendChild(el("small", null, "세트 " + t.back.join("·"))); b.addEventListener("click", function () { s19OpenTrait(t); }); rb.appendChild(b); });
       cb.appendChild(rb); out.appendChild(cb);
     }
-    var rules = el("div", "s19-card"); rules.appendChild(el("h3", null, "알아 둘 새 규칙"));
+    var rules = el("div", "s19-card"); rules.appendChild(el("h3", null, "19시즌 핵심 규칙"));
     var ul = el("ul", "s19-rules");
-    [["해금", "일부 챔피언은 조건(시너지 별 레벨 총합, 아이템 장착, 연승 등)을 채워야 상점에 나와요. 알리스타·징크스처럼 7레벨부터 조건을 세는 챔피언도 있어요"],
-     ["프리즘 퀘스트", "K/DA·HEARTSTEEL·펜타킬·Ionic Spark는 상징 말고도 프리즘 퀘스트 아이템이 있어요"],
-     ["고유 시너지", "챔피언 한 명만 가진 시너지가 많아요. 그 챔피언을 넣는 순간 켜져요"],
+    [["해금", "일부 챔피언은 조건(시너지 별 레벨 총합, 아이템 장착, 연승 등)을 달성해야 상점에 등장해요. 알리스타·징크스처럼 7레벨부터 조건이 집계되는 챔피언도 있어요"],
+     ["프리즘 퀘스트", "K/DA·HEARTSTEEL·펜타킬·Ionic Spark는 상징 외에도 프리즘 퀘스트 아이템이 있어요"],
+     ["고유 시너지", "챔피언 1명만 보유한 전용 시너지예요. 필드에 배치하는 즉시 활성화돼요"],
      ["출처", "MetaTFT PBE 원문과 롤체지지 한국어 데이터예요"]].forEach(function (x) { var li = el("li"); li.appendChild(el("b", null, x[0])); li.appendChild(document.createTextNode(" " + x[1])); ul.appendChild(li); });
     rules.appendChild(ul); out.appendChild(rules);
   }
@@ -191,12 +191,12 @@
       var tr = el("div", "s19-tchips"); u.t.forEach(function (n) { var t = s19Trait(n); var x = el("button", "s19-tchip"); x.type = "button"; if (t) x.appendChild(s19Ti(t, 18)); x.appendChild(el("span", null, n)); if (t) x.addEventListener("click", function () { s19OpenTrait(t); }); tr.appendChild(x); });
       top.appendChild(tr); b.appendChild(top);
       var inSq = s19Sq.indexOf(u.k) >= 0;
-      var sqb = el("button", "s19-sqact" + (inSq ? " on" : ""), inSq ? "19시즌 빌더에서 빼기" : "19시즌 빌더에 담기"); sqb.type = "button";
+      var sqb = el("button", "s19-sqact" + (inSq ? " on" : ""), inSq ? "스쿼드에서 제외" : "스쿼드에 추가"); sqb.type = "button";
       sqb.addEventListener("click", function () {
         var idx = s19Sq.indexOf(u.k);
-        if (idx >= 0) { s19Sq.splice(idx, 1); sqb.classList.remove("on"); sqb.textContent = "19시즌 빌더에 담기"; toast(u.n + " 뺐어요"); }
-        else if (s19Sq.length < 10) { s19Sq.push(u.k); sqb.classList.add("on"); sqb.textContent = "19시즌 빌더에서 빼기"; toast("19시즌 빌더에 " + u.n + " 넣었어요 · " + s19Sq.length + "/10"); }
-        else { toast("최대 10명까지 담을 수 있어요"); }
+        if (idx >= 0) { s19Sq.splice(idx, 1); sqb.classList.remove("on"); sqb.textContent = "스쿼드에 추가"; toast(u.n + " 제외했어요"); }
+        else if (s19Sq.length < 10) { s19Sq.push(u.k); sqb.classList.add("on"); sqb.textContent = "스쿼드에서 제외"; toast("스쿼드에 " + u.n + " 추가했어요 · " + s19Sq.length + "/10"); }
+        else { toast("최대 10명까지 배치할 수 있어요"); }
         s19SqSave();
       });
       b.appendChild(sqb);
@@ -257,7 +257,7 @@
     var top = el("div", "s19-bcard");
     var hd = el("div", "s19-bhd");
     hd.appendChild(el("b", null, "내 19시즌 스쿼드 " + s19Sq.length + "/10"));
-    var clr = el("button", "s19-bclr", "비우기"); clr.type = "button"; clr.disabled = !s19Sq.length;
+    var clr = el("button", "s19-bclr", "초기화"); clr.type = "button"; clr.disabled = !s19Sq.length;
     clr.addEventListener("click", function () { s19Sq = []; s19SqSave(); s19Render(); });
     hd.appendChild(clr); top.appendChild(hd);
     var slots = el("div", "s19-bslots");

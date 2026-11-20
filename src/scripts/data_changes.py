@@ -64,17 +64,16 @@ def digest():
 
 
 def tier_moves(old, new, label, only_top=True):
-    """티어가 바뀐 것·새로 생긴 것·빠진 것. only_top이면 S·A가 끼는 변화만 (너무 길어지지 않게)."""
+    """티어 변동·신규 진입·제외. only_top이면 S·A가 걸린 변화만."""
     out = []
     for k, t in new.items():
         o = old.get(k)
         if o is None:
-            if not only_top or t in ("S", "A"): out.append(f"{label} {k} 새로 {t}티어")
+            if not only_top or t in ("S", "A"): out.append(f"{label} {k} {t}티어 진입")
         elif o != t and (not only_top or "S" in (o, t) or "A" in (o, t)):
-            up = TIER_ORDER.get(t, 9) < TIER_ORDER.get(o, 9)
-            out.append(f"{label} {k} {o}→{t}티어" + (" 상승" if up else " 하락"))
+            out.append(f"{label} {k} {o} → {t}티어")
     for k, o in old.items():
-        if k not in new and (not only_top or o in ("S", "A")): out.append(f"{label} {k} 빠짐 (전에 {o}티어)")
+        if k not in new and (not only_top or o in ("S", "A")): out.append(f"{label} {k} 티어표 제외 (이전 {o}티어)")
     return out
 
 
@@ -83,12 +82,12 @@ def diff(old, new):
     def add(tab, name, lines, cap=8):
         if not lines: return
         more = len(lines) - cap
-        items.append({"tab": tab, "name": name, "lines": lines[:cap] + ([f"외 {more}개"] if more > 0 else [])})
+        items.append({"tab": tab, "name": name, "lines": lines[:cap] + ([f"외 {more}건"] if more > 0 else [])})
     om, nm = str(old.get("patch", "")).split(".")[0], str(new.get("patch", "")).split(".")[0]
     if om and nm and om != nm:  # 새 세트: 덱·템이 통째로 바뀌니 줄줄이 말고 요약만
         lines = [f"시즌 {nm} 시작 · 패치 {new['patch']}", f"덱 탭: 새 시즌 덱 {len(new.get('meta', {}))}개"]
         lines.append(f"아카데미: 덱 {len(new.get('tfa', {}))}개" if new.get("tfa") != old.get("tfa") else "아카데미: 새 시즌 티어표가 올라오면 보여요")
-        lines.append("수호령·패치 노트 같은 지난 시즌 공략은 숨겼어요")
+        lines.append("지난 시즌 전용 공략을 정리했어요")
         return [{"tab": "meta", "name": "새 시즌", "lines": lines}]
     if old.get("patch") and new.get("patch") and old["patch"] != new["patch"]:
         add("patch", "패치", [f"패치 {old['patch']} → {new['patch']}"])
@@ -97,7 +96,7 @@ def diff(old, new):
     for k, parts in npts.items():
         if k not in op: continue
         ch = [p for p, v in parts.items() if op[k].get(p) != v]
-        if ch: tl.append(f"{k}: {', '.join(ch)} 바뀜")
+        if ch: tl.append(f"{k} · {', '.join(ch)} 변경")
     add("tfa", "아카데미", tl, cap=12)
     add("augments", "증강", tier_moves(old.get("tfa_aug", {}), new.get("tfa_aug", {}), "", only_top=True))
     add("meta", "덱", tier_moves(old.get("meta", {}), new.get("meta", {}), "", only_top=True))

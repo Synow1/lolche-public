@@ -240,7 +240,7 @@
         { badge: "빌", title: "19시즌 스쿼드 빌더", sub: "챔피언 조합 시너지·해금 실시간 계산", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("builder"); } },
         { badge: "해", title: "19시즌 해금 조건", sub: "조건별 검색 · 암기 체크리스트", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("unlock"); } },
         { badge: "덱", title: "18시즌 메타 덱", sub: "에메+ 평균 등수 · 순방률 · 선택률", tag: "라이브", tagCls: "gold", go: function () { goTab("meta"); } },
-        { badge: "재", title: "재료 → 덱", sub: "가진 재료로 갈 만한 덱 추천", tag: "도구", go: function () { goTab("parts"); } },
+        { badge: "재", title: "재료 → 덱", sub: "보유 재료 기반 추천 덱", tag: "도구", go: function () { goTab("parts"); } },
         { badge: "템", title: "아이템 티어표 · 조합표", sub: "조합템 · 찬란한 · 유물 · 상징", tag: "도감", go: function () { goTab("items"); } }
       ]);
       return;

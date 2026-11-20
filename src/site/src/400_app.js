@@ -101,10 +101,10 @@
     }
     var acts = el("div", "sh-acts");
     if (u) acts.appendChild(shAction("템·상성 자세히", function () { goTab("find"); setFindMode("u"); findShow("u", base, false); }));
-    if (u) acts.appendChild(shAction(tbUnits.indexOf(base) >= 0 ? "팀 빌더에서 빼기" : "팀 빌더에 넣기", function () {
+    if (u) acts.appendChild(shAction(tbUnits.indexOf(base) >= 0 ? "팀 빌더에서 제외" : "팀 빌더에 추가", function () {
       var i = tbUnits.indexOf(base);
       if (i >= 0) tbUnits.splice(i, 1); else if (tbUnits.length < 10) tbUnits.push(base);
-      tbSave(); tbRender(); toast(i >= 0 ? base + " 뺐어요" : "팀 빌더에 " + base + " 넣었어요 · " + tbUnits.length + "/10");
+      tbSave(); tbRender(); toast(i >= 0 ? base + " 제외했어요" : "팀 빌더에 " + base + " 추가했어요 · " + tbUnits.length + "/10");
     }));
     if (META) acts.appendChild(shAction("이 유닛 쓰는 덱", function () { goTab("meta"); metaBack(); document.getElementById("mt-q").value = base; metaList(); }));
     box.appendChild(acts);
