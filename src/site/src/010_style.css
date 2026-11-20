@@ -607,13 +607,15 @@ td .row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .dk-kpi2 .dk-top4 { font-size: var(--fs-xs); font-weight: 700; line-height: 1.2; color: var(--accent2); white-space: nowrap; }
 .dk-kpi2 .dk-top4-hi { font-size: 19px; font-weight: 800; line-height: 1.1; letter-spacing: -.4px; color: var(--accent2); }
 .dk-kpi2 .dk-avg-sub { font-size: var(--fs-xs); font-weight: 700; line-height: 1.2; color: var(--accent); white-space: nowrap; }
-.dk-kpi2 .dk-grad, .dk-kpi b.dk-grad { color: var(--gl, var(--accent)); }
+.dk-pl { font-weight: 800; font-variant-numeric: tabular-nums; }
+.dk-kpi2 .dk-grad, .dk-kpi b.dk-grad, .dk-pl.dk-grad { color: var(--gl, var(--accent)); }
 .dk-kpi2 .dk-op, .dk-kpi b.dk-op { font-weight: 900; text-shadow: 0 0 12px color-mix(in srgb, var(--gl, var(--accent2)) 28%, transparent); }
+.dk-pl.dk-hot, .dk-kpi b.dk-hot { font-weight: 900; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .dk-kpi2 .dk-grad, :root:not([data-theme="light"]) .dk-kpi b.dk-grad { color: var(--gd, var(--accent)); }
+  :root:not([data-theme="light"]) .dk-kpi2 .dk-grad, :root:not([data-theme="light"]) .dk-kpi b.dk-grad, :root:not([data-theme="light"]) .dk-pl.dk-grad { color: var(--gd, var(--accent)); }
   :root:not([data-theme="light"]) .dk-kpi2 .dk-op, :root:not([data-theme="light"]) .dk-kpi b.dk-op { text-shadow: 0 0 14px color-mix(in srgb, var(--gd, var(--accent2)) 48%, transparent); }
 }
-:root[data-theme="dark"] .dk-kpi2 .dk-grad, :root[data-theme="dark"] .dk-kpi b.dk-grad { color: var(--gd, var(--accent)); }
+:root[data-theme="dark"] .dk-kpi2 .dk-grad, :root[data-theme="dark"] .dk-kpi b.dk-grad, :root[data-theme="dark"] .dk-pl.dk-grad { color: var(--gd, var(--accent)); }
 :root[data-theme="dark"] .dk-kpi2 .dk-op, :root[data-theme="dark"] .dk-kpi b.dk-op { text-shadow: 0 0 14px color-mix(in srgb, var(--gd, var(--accent2)) 48%, transparent); }
 /* 덱 상세 머리 */
 .dk-hero { position: relative; overflow: hidden; display: flex; gap: 14px; align-items: center; padding: 18px 16px; border-radius: 22px; background: var(--elev2); margin: 4px 0 10px; --tc: var(--c1); }

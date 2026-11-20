@@ -90,7 +90,7 @@
         var mtxt = el("span", "dk-sub");
         if (d && d.style) mtxt.appendChild(document.createTextNode(styleKo(d.style)));
         var pl = perLobby(d, "emer");
-        if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dk-pl", "선택률 " + pl)); }
+        if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
         if (mtxt.textContent) meta.appendChild(mtxt);
         mid.appendChild(meta);
         mid.appendChild(el("div", "mt-name", deckName(v)));

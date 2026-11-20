@@ -145,7 +145,8 @@
     var sub = el("span", "dk-sub");
     var has3 = d.u.some(function (x) { return x.s >= 3; });
     var hasPos = d.u.some(function (x) { return x.pos && x.pos.length === 2; });
-    sub.appendChild(document.createTextNode((has3 ? "리롤" : "운영") + (hasPos ? " · 배치" : "") + (d.plays ? " · " + d.plays.toLocaleString() + "판" : "")));
+    sub.appendChild(document.createTextNode((has3 ? "리롤" : "운영") + (hasPos ? " · 배치" : "")));
+    if (d.pick) { sub.appendChild(document.createTextNode(" · ")); sub.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + d.pick.toFixed(2)), d.pick)); }
     meta.appendChild(sub); mid.appendChild(meta);
     mid.appendChild(el("div", "mt-name", d.n));
     var st = el("div", "mt-strip s19-strip");
@@ -207,9 +208,10 @@
     fsOpen(d.n, subTxt, function (b) {
       if (d.avg != null) {
         var kpi = el("div", "dk-kpi s19-dk-kpi");
-        [["평균 등수", d.avg.toFixed(2), s19AvgT(d.avg)], ["승률", d.win.toFixed(1) + "%", s19WinT(d.win)], ["순방률", d.top4.toFixed(1) + "%", dkTop4T(d.top4)], ["선택률", d.pick ? d.pick.toFixed(2) : "-", null]].forEach(function (x) {
+        [["평균 등수", d.avg.toFixed(2), s19AvgT(d.avg)], ["승률", d.win.toFixed(1) + "%", s19WinT(d.win)], ["순방률", d.top4.toFixed(1) + "%", dkTop4T(d.top4)], ["선택률", d.pick ? d.pick.toFixed(2) : "-", d.pick ? "pick" : null]].forEach(function (x) {
           var box = el("div"), bv = el("b", null, x[1]);
-          if (x[2] != null) dkGrad(bv, x[2]);
+          if (x[2] === "pick") dkPickGrad(bv, d.pick);
+          else if (x[2] != null) dkGrad(bv, x[2]);
           box.appendChild(bv); box.appendChild(el("span", null, x[0])); kpi.appendChild(box);
         });
         b.appendChild(kpi);
