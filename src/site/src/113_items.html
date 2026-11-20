@@ -1,0 +1,101 @@
+<section id="items">
+  <h2 class="sr-title">아이템</h2>
+  <div class="mt-upd" id="it-upd"><span id="it-upd-t"></span><button type="button" id="it-upd-btn" hidden>새로고침</button></div>
+  <div class="seg" id="it-seg" role="group" aria-label="보기">
+    <button type="button" data-v="tier" class="on" aria-pressed="true">티어표</button>
+    <button type="button" data-v="guide" aria-pressed="false">조합표·공략</button>
+  </div>
+  <div id="it-tier">
+    <div class="mt-bar">
+      <div class="mt-chips" id="it-grp" role="group" aria-label="종류">
+        <button type="button" data-g="조합템" class="on">조합템</button>
+        <button type="button" data-g="찬란한">찬란한</button>
+        <button type="button" data-g="유물">유물</button>
+        <button type="button" data-g="상징">상징</button>
+      </div>
+      <div class="mt-tools">
+        <input id="it-q" type="search" placeholder="템·챔피언 검색" autocomplete="off" aria-label="템이나 챔피언으로 찾기">
+        <select id="it-rank" aria-label="티어">
+          <option value="emer" selected>에메+</option>
+          <option value="all">플래+</option>
+          <option value="low">플래 미만</option>
+          <option value="dia">다이아+</option>
+          <option value="top">마스터+</option>
+        </select>
+        <select id="it-sort" aria-label="정렬">
+          <option value="grade">등급순</option>
+          <option value="avg">평균 등수</option>
+          <option value="top4">순방</option>
+          <option value="win">승률</option>
+          <option value="n">많이 쓴</option>
+        </select>
+      </div>
+      <div class="it-head"><span></span><span>템 · 잘 쓰는 챔피언</span><span>평균</span><span>순방</span><span>승률</span><span>빈도</span></div>
+    </div>
+    <div class="it-rows" id="it-rows"><p class="sub">불러오는 중</p></div>
+    <p class="fnote" id="it-note"></p>
+  </div>
+  <div id="it-guide" hidden>
+
+  <h3>조합표</h3>
+  <div class="grid-wrap"><div class="rgrid" id="rgrid" role="grid" aria-label="아이템 조합표"></div></div>
+  <div class="picked" id="picked" aria-live="polite"></div>
+
+  <h3>재료별로 보면</h3>
+  <p class="sub">초밥에서 뭘 집을지 고를 때. 내 덱 핵심템의 재료를 먼저.</p>
+  <div class="recipes" id="comp-list"></div>
+
+  <h3>상징 조합표</h3>
+  <p class="sub">재료에 <span class="it">뒤집개</span>나 <span class="it">프라이팬</span>을 합치면 상징이에요. 숫자는 그 상징을 쓴 판의 에메+ 평균 등수예요.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>재료</th><th>+ 뒤집개</th><th>+ 프라이팬</th></tr></thead>
+    <tbody id="emblems"></tbody>
+  </table></div>
+  <ul class="plain" data-set="18">
+    <li><span class="it">달빛 상징</span> → 일월식 케일 (햇빛 3 + 달빛 3)</li>
+    <li><span class="it">나무정령 상징</span> → 나무정령 이즈리얼·아펠리오스 덱, 아펠리오스나 릴리아한테</li>
+    <li><span class="it">싸움꾼 상징</span> → 적응가 마스터 이의 3템</li>
+    <li><span class="it">처형자 상징</span> → 처형 시너지 쓰는 소라카·카르마·카직스 덱</li>
+    <li><span class="it">기원자 상징</span> → 아리 덱에서 효과가 가장 커요</li>
+    <li><span class="it">선봉대 상징</span> → 탱커한테 달아서 선봉대 단계 올리기</li>
+  </ul>
+  <p class="sub" style="margin-top:8px">전쟁기계·엄호대·치명적인 꽃 상징은 조합식이 없어요. 증강 등 다른 경로로만 얻어요.</p>
+
+  <h3>원칙</h3>
+  <ul class="plain">
+    <li><b>메인 딜러 3템에 집착</b>하고 나머지는 탱템으로 빼기. 템은 몰아줄수록 세져요</li>
+    <li>뼈대는 <b>메인탱(탱템 3) + 메인딜 + 서브딜</b>. 전투가 길어서 원맨 캐리가 잘 안 돼요</li>
+    <li><b>치유 감소와 방깎·마저깎은 필수.</b> 치유 감소: <span class="it">태양불꽃 망토</span> <span class="it">모렐로노미콘</span> · 깎기: <span class="it">최후의 속삭임</span> <span class="it">이온 충격기</span> <span class="it">저녁갑주</span></li>
+    <li>재료템이 5개 넘게 쌓이면 지금 가장 센 기물한테 만들어 주세요</li>
+    <li>좋은 템이 나오면 덱을 템에 맞추세요</li>
+  </ul>
+  <div class="note warn"><b>하지 말 것.</b> <span class="it">구인수의 격노검</span>이랑 <span class="it">크라켄의 분노</span> 같이 쓰기 (자야·케이틀린·드레이븐 빼고) · <span class="u">조약돌</span>한테 <span class="it">적응형 투구</span> · <span class="u">다이애나</span>한테 <span class="it">대천사의 지팡이</span></div>
+
+  <div data-set="18">
+  <h3>유닛별 추천템</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>유닛</th><th>3템</th></tr></thead>
+    <tbody>
+      <tr><td><span class="u">덩굴정령</span></td><td><div class="row"><span class="it">구인수의 격노검</span><span class="it">밤의 끝자락</span><span class="it">정의의 손길</span></div></td></tr>
+      <tr><td><span class="u">모르가나</span></td><td><div class="row"><span class="it">공허의 지팡이</span><span class="it">모렐로노미콘</span><span class="it">라바돈의 죽음모자</span></div></td></tr>
+      <tr><td><span class="u">티모</span></td><td><div class="row"><span class="it">보석 건틀릿</span><span class="it">쇼진의 창</span><span class="it">타격대의 철퇴</span></div></td></tr>
+      <tr><td><span class="u">아펠리오스</span></td><td><div class="row"><span class="it">구인수의 격노검</span><span class="it">크라켄의 분노</span><span class="it">무한의 대검</span></div></td></tr>
+      <tr><td><span class="u">이즈리얼</span></td><td><div class="row"><span class="it">쇼진의 창</span><span class="it">최후의 속삭임</span><span class="it">죽음의 검</span></div></td></tr>
+      <tr><td><span class="u">카직스</span></td><td><div class="row"><span class="it">정의의 손길</span><span class="it">라바돈의 죽음모자</span><span class="it">밤의 끝자락</span></div></td></tr>
+      <tr><td><span class="u">아리</span></td><td><div class="row"><span class="it">보석 건틀릿</span><span class="it">쇼진의 창</span><span class="it">타격대의 철퇴</span></div></td></tr>
+      <tr><td><span class="u">소라카</span></td><td><div class="row"><span class="it">쇼진의 창</span><span class="it">라바돈의 죽음모자</span><span class="it">보석 건틀릿</span></div></td></tr>
+      <tr><td><span class="u">니달리</span></td><td><div class="row"><span class="it">무한의 대검</span><span class="it">스테락의 도전</span><span class="it">쇼진의 창</span></div></td></tr>
+      <tr><td><span class="u">아지르</span></td><td><div class="row"><span class="it">구인수의 격노검</span><span class="it">마법공학 총검</span><span class="it">라바돈의 죽음모자</span></div></td></tr>
+      <tr><td><span class="u">마스터 이</span></td><td><div class="row"><span class="it">구인수의 격노검</span><span class="it">밤의 끝자락</span><span class="it">싸움꾼 상징</span></div></td></tr>
+      <tr><td><span class="u">베이가</span></td><td><div class="row"><span class="it">보석 건틀릿</span><span class="it">푸른 파수꾼</span><span class="it">마법공학 총검</span></div></td></tr>
+      <tr><td><span class="u">알룬</span></td><td><div class="row"><span class="it">쇼진의 창</span><span class="it">보석 건틀릿</span><span class="it">푸른 파수꾼</span></div></td></tr>
+      <tr><td><span class="u">장로 드래곤</span></td><td><div class="row"><span class="it">무한의 대검</span><span class="it">최후의 속삭임</span><span class="it">죽음의 검</span></div></td></tr>
+      <tr><td><span class="u">감시자</span></td><td><div class="row"><span class="it">수호자의 맹세</span><span class="it">가고일 돌갑옷</span><span class="it">워모그의 갑옷</span></div></td></tr>
+      <tr><td>메인 탱커</td><td><div class="row"><span class="it">가고일 돌갑옷</span><span class="it">워모그의 갑옷</span><span class="it">정령의 형상</span></div></td></tr>
+    </tbody>
+  </table></div>
+  </div>
+  <p class="sub">평균 등수 상위 템은 <span class="it">도적의 장갑</span> <span class="it">저녁갑주</span> <span class="it">이온 충격기</span> <span class="it">적응형 투구</span> <span class="it">수은</span> 같은 유틸·깎기 템이에요.</p>
+</div>
+</section>
+

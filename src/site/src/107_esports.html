@@ -1,0 +1,88 @@
+<section id="esports">
+  <div class="seg2" id="esp-view" role="tablist" aria-label="이스포츠 보기">
+    <button type="button" data-v="events">대회</button><button type="button" data-v="points">포인트</button><button type="button" data-v="guide">안내</button>
+  </div>
+
+  <!-- 이번 월즈 실시간 순위·진출자: 목록의 월즈 카드를 누르면 전체 화면 안으로 옮겨 붙인다 -->
+  <div id="esp-stash" hidden><div id="esp-live" hidden></div><div id="esp-crown" hidden></div><div id="esp-worlds" hidden></div></div>
+
+  <div class="esp-pane" data-v="events">
+  <div class="esp-nowbox" id="esp-now"></div>
+
+  <div class="mt-chips" id="esp-reg" role="group" aria-label="지역">
+    <button type="button" data-r="" class="on">전체</button><button type="button" data-r="APAC">APAC</button><button type="button" data-r="AMER">AMER</button><button type="button" data-r="EMEA">EMEA</button><button type="button" data-r="CN">CN</button><button type="button" data-r="WORLD">월즈</button>
+  </div>
+  <div id="esp-list"></div>
+
+  </div>
+
+  <div class="esp-pane" data-v="points" hidden>
+  <p class="esp-ptnote">프로 포인트 <small id="esp-upd"></small></p>
+    <div class="mt-chips" id="esp-ptreg" role="group" aria-label="지역">
+      <button type="button" data-r="APAC" class="on">APAC</button><button type="button" data-r="AMER">AMER</button><button type="button" data-r="EMEA">EMEA</button>
+    </div>
+    <div id="esp-pts"></div>
+  </div>
+
+  <div class="esp-pane" data-v="guide" hidden>
+  <details class="ig-wrap">
+    <summary>대회 진행 구조 <small>신비의 숲 · 한국</small></summary>
+    <div class="ig2">
+      <p class="ig2-hint">색은 진출 경로예요. 아래에서 위로 진행돼요.</p>
+      <div class="ig2-crown"><b>전략가의 왕관 (월즈)</b><span>11/13~15 · 40명 · $470,000 · APAC 7자리</span></div>
+      <div class="ig2-into">
+        <span class="ig2-up">▲</span>
+        <span class="c pc">컵 우승 3명 · 포인트 1위</span><span class="c rf">결승 상위권</span>
+      </div>
+      <div class="ig2-rf">
+        <div class="ig2-rft">지역별 결승 <small>지역마다 64명 · 2주</small></div>
+        <div class="ig2-st fin"><div class="in"></div><div class="box"><b>결승 8명</b><small>11/1 · 20점 넘고 1등하면 우승</small></div></div>
+        <div class="ig2-adv">▲ 8명</div>
+        <div class="ig2-st"><div class="in"><span class="c pc">프로 서킷 1~16위</span></div><div class="box"><b>2주차 32명</b><small>10/30~31</small></div></div>
+        <div class="ig2-adv">▲ 16명</div>
+        <div class="ig2-st"><div class="in"><span class="c pc">프로 서킷 17~28위</span><span class="c tt">시험마다 상위 8명</span><span class="c ld">한국 랭크 1위</span></div><div class="box"><b>1주차 40명</b><small>10/24~25</small></div></div>
+        <div class="ig2-adv">▲ 8명</div>
+        <div class="ig2-st"><div class="in"><span class="c pc">프로 서킷 29~32위</span><span class="c tt">선발전 포인트 상위 4명</span><span class="c ld">한국 랭크 2위</span></div><div class="box"><b>플레이인 16명</b><small>10/23</small></div></div>
+        <div class="ig2-loop">2주차 진출 32명은 <b>다음 세트 프로 서킷</b>에 초대돼요</div>
+      </div>
+      <div class="ig2-src">
+        <div class="card pc"><b>프로 서킷</b><small>초대 32명 · 컵 3번 · 컵마다 $30,200</small>
+          <ul data-set="18"><li>9/4~6 협곡야수 컵</li><li>9/18~20 나무정령 컵</li><li>10/2~4 개화 컵</li></ul>
+          <small>컵 성적으로 쌓은 프로 포인트 순위에 따라 결승 시작 단계가 정해져요</small></div>
+        <div class="card tt"><b>전략가의 시험 1 · 2</b><small>시험마다 $12,500</small>
+          <ul><li>1: 9/19~20 → 9/25~27</li><li>2: 10/10~11 → 10/16~18</li></ul>
+          <small>1주차 112명 → 28명, 2주차 128명 → 64 → 32 → <b>8명</b>. 9~16위는 선발전 포인트</small></div>
+      </div>
+      <div class="ig2-into"><span class="ig2-up">▲</span><span class="c ld">1~10위 → 시험 2주차부터</span><span class="c ld">11~122위 → 시험 1주차부터</span></div>
+      <div class="ig2-ld card ld"><b>한국 랭크 순위</b><small>시험은 정해진 날의 순위표로, 결승 직행은 세트 마지막 순위로 정해요. 아마추어 대회 상위 2명도 시험 2주차에 나가요</small></div>
+      <p class="ig2-hint">일반 유저는 한국 랭크 상위권에서 전략가의 시험과 지역별 결승을 거쳐 월즈에 갈 수 있어요.</p>
+    </div>
+  </details>
+  <details class="esp-guide">
+    <summary>시즌 구조 · 포인트 규칙</summary>
+    <div class="esp-info">
+      <p class="about">라이엇 공식 인포그래픽이에요. 대회 구조는 세트 16부터 같아요.</p>
+      <figure><img src="img/esp/structure.jpg" alt="대회 구조" loading="lazy"><figcaption>대회 구조</figcaption></figure>
+      <figure><img src="img/esp/roadmap_s18.jpg" alt="신비의 숲 대회 로드맵" loading="lazy"><figcaption>신비의 숲 대회 로드맵</figcaption></figure>
+      <figure><img src="img/esp/prize_s18.jpg" alt="지역 총상금" loading="lazy"><figcaption>지역별 상금</figcaption></figure>
+    </div>
+    <div class="esp-flow">
+      <div class="esp-step"><div class="esp-k">1</div><div><b>예선</b>
+        <ul><li>랭크 래더: 한국 1위 지역별 결승 1주차, 2위 플레이인</li><li>전략가의 시험 1·2: 각 상위 8명 1주차, 선발전 포인트 상위 4명 플레이인</li></ul>
+        <details class="esp-sub"><summary>전략가의 시험 참가 자격 · 한국</summary>
+        <ul><li><b>정해진 날의 랭크 순위표</b>로 뽑아요. 한국은 <b>1~10위</b>가 2주차 3일차부터, <b>11~122위</b> 112명이 1주차 1일차부터 나가요</li>
+        <li>한국 아마추어 대회 상위 2명도 2주차로</li>
+        <li>1주차: 하루 6판씩 이틀. 첫날 상위 56명, 둘째 날 상위 28명이 2주차로 가요. 점수는 매일 새로 시작해요</li>
+        <li>2주차: 128명에서 64명, 32명으로 줄고, 마지막 날 8명씩 떨어져 <b>남은 8명이 지역별 결승 1주차</b>에 가요. 9~16위는 선발전 포인트와 다음 시험 3일차 직행권을 받아요</li></ul></details></div></div>
+      <div class="esp-step"><div class="esp-k">2</div><div><b>프로 서킷 (TPC)</b> · 지난 지역별 결승 상위 32명, 대회 3번
+        <ul><li>32명 스위스 → 8명 결승 (체크메이트)</li><li>프로 포인트 = 스위스 순위 (1위 32 → 24위 9, 25위 7 → 32위 0) + 결승 보너스 (1·2번째 컵 1등 +10 / 2등 +7 / 3등 +6 / 4등 +5 / 5등 +3 / 6등 +2 / 7등 +1, 3번째 컵 결승 진출 +4)</li><li>포인트 1위 왕관(월즈) 직행 · 1~16위 결승 2주차, 17~28위 1주차, 29~32위 플레이인</li></ul></div></div>
+      <div class="esp-step"><div class="esp-k">3</div><div><b>지역별 결승</b> · 지역당 64명, 2주, 상금 $50,000
+        <ul><li>플레이인 16명 → 1주차 40명 → 2주차 32명 → 그랜드 파이널 8명</li><li>1주차 32위 안: 다음 세트 TPC 자격</li><li>왕관(월즈) 자리: APAC 7 · AMER 5 · EMEA 5 · CN 8</li></ul></div></div>
+      <div class="esp-step crown"><div class="esp-k">★</div><div><b>전략가의 왕관</b> (월즈) · 40명, 상금 $470,000 (우승 $150,000)
+        <ul><li>선수 드래프트로 첫 로비 → 1~2일차 스위스 → 8명 결승 (체크메이트 20점, 최대 8게임)</li></ul></div></div>
+    </div>
+    <p class="about"><b>체크메이트</b> 게임마다 1등 8점 … 8등 1점. 20점을 넘긴 상태에서 1등을 하면 우승.<br><b>한국어 중계</b> SOOP tft · 치지직 · 유튜브 TeamFightTacticsKR</p>
+  </details>
+  </div>
+</section>
+

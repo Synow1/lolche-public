@@ -1,0 +1,35 @@
+<section id="meta">
+  <div class="mt-list" id="mt-list-view">
+    <div class="mt-upd" id="mt-upd"><span id="mt-upd-t"></span><button type="button" id="mt-upd-btn" hidden>새로고침</button></div>
+    <div class="mt-bar">
+      <div class="seg2" id="mt-src" role="group" aria-label="덱 목록">
+        <button type="button" data-s="guide" class="on">추천 덱</button><button type="button" data-s="stat">전체 통계</button>
+      </div>
+      <div class="mt-frow">
+        <div class="mt-chips" id="mt-filter" role="group" aria-label="덱 거르기">
+          <button type="button" data-f="all" class="on">전체</button>
+          <button type="button" data-f="reroll">리롤</button>
+          <button type="button" data-f="8">8렙</button>
+          <button type="button" data-f="9">9렙+</button>
+        </div>
+        <select id="mt-sort" aria-label="정렬"><option value="avg">평균 등수순</option><option value="win">승률순</option><option value="top4">순방순</option><option value="pick">선택률순</option></select>
+      </div>
+      <div class="mt-tools">
+        <button type="button" class="emb-go" id="mt-emb">상징으로</button>
+        <button type="button" class="emb-go" id="mt-parts">재료로</button>
+        <input id="mt-q" type="search" placeholder="챔피언 검색" autocomplete="off" aria-label="챔피언으로 덱 찾기">
+        <select id="mt-basis" aria-label="통계 기준">
+          <option value="all">플래+</option>
+          <option value="emer" selected>에메+</option>
+          <option value="dia">다이아</option>
+          <option value="top">마스터+</option>
+          <option value="gmc">그마·챌</option>
+          <option value="low">플래 미만</option>
+        </select>
+      </div>
+    </div>
+    <div class="mt-rows" id="mt-rows"></div>
+  </div>
+  <div class="mt-detail" id="mt-detail" hidden></div>
+</section>
+

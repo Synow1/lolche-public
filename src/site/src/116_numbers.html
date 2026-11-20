@@ -1,0 +1,51 @@
+<section id="numbers">
+  <h2 class="sr-title">외울 숫자</h2>
+  
+  <h3>돈 끊는 구간</h3>
+  <div class="ladder"><span>0</span><span>10</span><span>20</span><span>33</span><span>41</span><span>50</span></div>
+  <p>롤은 이 구간마다 한 번씩 멈추고 더 칠지 판단하세요. <b>30골이 기준선</b>이에요. 30골부터 50골은 쉽게 모이고, 10골에서 맴돌면 돈이 말라요.</p>
+  <div class="grid2">
+    <div class="tbl"><table>
+      <thead><tr><th>골드</th><th class="n">값</th></tr></thead>
+      <tbody>
+        <tr><td>기본 (2-2부터)</td><td class="n">+5</td></tr>
+        <tr><td>PvP 승리</td><td class="n">+1</td></tr>
+        <tr><td>이자 (10골당)</td><td class="n">+1, 최대 5</td></tr>
+        <tr><td>2~4연승·연패</td><td class="n">+1</td></tr>
+        <tr><td>5연승·연패</td><td class="n">+2</td></tr>
+        <tr><td>6연승·연패 이상</td><td class="n">+3</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tbl"><table>
+      <thead><tr><th>레벨업 필요 XP</th><th class="n">XP</th></tr></thead>
+      <tbody>
+        <tr><td>4렙 / 5렙</td><td class="n">6 / 10</td></tr>
+        <tr><td>6렙 / 7렙</td><td class="n">20 / 36</td></tr>
+        <tr><td>8렙</td><td class="n">56</td></tr>
+        <tr><td>9렙 / 10렙</td><td class="n">68 / 68</td></tr>
+        <tr><td colspan="2" style="color:var(--muted);font-size:var(--fs-s)">라운드마다 +2 XP. 경험치 구매는 4골에 4 XP</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <h3>레벨별 상점 확률</h3>
+  <div class="legend"><span><i class="k1"></i>1코</span><span><i class="k2"></i>2코</span><span><i class="k3"></i>3코</span><span><i class="k4"></i>4코</span><span><i class="k5"></i>5코</span></div>
+  <div class="odds" id="odds"></div>
+  <p class="sub">2코는 6렙(40%), 3코는 7렙(40%), 4코는 8렙(30%), 5코는 9렙(15%)에서 제일 잘 떠요.</p>
+  <h3>기물 장수 <small>8명 공용</small></h3>
+  <div class="tbl"><table>
+    <thead><tr><th>코스트</th><th class="n">종류당</th><th>메모</th></tr></thead>
+    <tbody>
+      <tr><td>1코</td><td class="n">30</td><td>3성까지 9장</td></tr>
+      <tr><td>2코</td><td class="n">25</td><td></td></tr>
+      <tr><td>3코</td><td class="n">18</td><td>두 명이 3성 노리면 위험</td></tr>
+      <tr><td>4코</td><td class="n">10</td><td>두 명이 노리면 2성도 위험</td></tr>
+      <tr><td>5코</td><td class="n">9</td><td></td></tr>
+    </tbody>
+  </table></div>
+  <h3>다음 라운드 돈 계산 예시</h3>
+  <ul class="plain">
+    <li><span class="num">40골, 1연패</span>: 져도 2연패 +1, 기본 +5, 이자 +4 → <b>50골 확정</b></li>
+    <li><span class="num">20골, 4연승</span>에서 또 이김: 기본 5 + 이자 2 + 5연승 2 + 승리 1 → <b>30골 확정</b></li>
+  </ul>
+</section>
+

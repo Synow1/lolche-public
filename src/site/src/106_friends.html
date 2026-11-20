@@ -1,0 +1,24 @@
+<section id="friends">
+  <h2 class="sr-title">친구 티어 비교</h2>
+  <div class="mt-upd" id="fr-upd"><span id="fr-note"></span><button type="button" id="fr-refresh">갱신</button></div>
+  <div class="seg2" id="fr-view" role="group" aria-label="보기"><button type="button" data-v="lp" class="on">티어 비교</button><button type="button" data-v="top">고점 판</button></div>
+  <div id="fr-lp">
+  <div class="fr-bar">
+    <div class="mt-chips" id="fr-x" role="group" aria-label="가로축"><button type="button" data-x="game" class="on">판수</button><button type="button" data-x="date">날짜</button></div>
+    <div class="mt-chips" id="fr-zoom" role="group" aria-label="범위"></div>
+  </div>
+  <div class="fcard fr-chartbox"><div id="fr-chart"></div></div>
+  <div class="fr-cards" id="fr-cards"></div>
+  </div>
+  <div id="fr-top" hidden>
+    <div class="fr-bar"><div class="mt-chips" id="fr-tn" role="group" aria-label="판 수"></div></div>
+    <div class="mt-chips" id="fr-tw" role="group" aria-label="친구"></div>
+    <div id="fr-tlist"></div>
+  </div>
+  <div class="fr-add" id="fr-add" hidden>
+    <input id="fr-q" type="search" placeholder="친구 추가: 이름#태그" autocomplete="off" enterkeyhint="done" aria-label="친구 추가">
+    <button type="button" class="tb-clear" id="fr-addbtn">추가</button>
+  </div>
+  <div id="fr-sug"></div>
+</section>
+
