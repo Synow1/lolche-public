@@ -608,14 +608,13 @@ td .row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .dk-kpi2 .dk-top4-hi { font-size: 19px; font-weight: 800; line-height: 1.1; letter-spacing: -.4px; color: var(--accent2); }
 .dk-kpi2 .dk-avg-sub { font-size: var(--fs-xs); font-weight: 700; line-height: 1.2; color: var(--accent); white-space: nowrap; }
 .dk-kpi2 .dk-grad, .dk-kpi b.dk-grad { color: var(--gl, var(--accent)); }
-.dk-kpi2 .dk-op { padding: 1px 6px; border-radius: 7px; background: color-mix(in srgb, var(--gl, var(--accent2)) 13%, transparent); border: 1px solid color-mix(in srgb, var(--gl, var(--accent2)) 34%, transparent); }
-.dk-kpi2 b.dk-op { padding: 1px 7px; border-radius: 8px; }
+.dk-kpi2 .dk-op, .dk-kpi b.dk-op { font-weight: 900; text-shadow: 0 0 12px color-mix(in srgb, var(--gl, var(--accent2)) 28%, transparent); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .dk-kpi2 .dk-grad, :root:not([data-theme="light"]) .dk-kpi b.dk-grad { color: var(--gd, var(--accent)); }
-  :root:not([data-theme="light"]) .dk-kpi2 .dk-op { background: color-mix(in srgb, var(--gd, var(--accent2)) 14%, transparent); border-color: color-mix(in srgb, var(--gd, var(--accent2)) 38%, transparent); }
+  :root:not([data-theme="light"]) .dk-kpi2 .dk-op, :root:not([data-theme="light"]) .dk-kpi b.dk-op { text-shadow: 0 0 14px color-mix(in srgb, var(--gd, var(--accent2)) 48%, transparent); }
 }
 :root[data-theme="dark"] .dk-kpi2 .dk-grad, :root[data-theme="dark"] .dk-kpi b.dk-grad { color: var(--gd, var(--accent)); }
-:root[data-theme="dark"] .dk-kpi2 .dk-op { background: color-mix(in srgb, var(--gd, var(--accent2)) 14%, transparent); border-color: color-mix(in srgb, var(--gd, var(--accent2)) 38%, transparent); }
+:root[data-theme="dark"] .dk-kpi2 .dk-op, :root[data-theme="dark"] .dk-kpi b.dk-op { text-shadow: 0 0 14px color-mix(in srgb, var(--gd, var(--accent2)) 48%, transparent); }
 /* 덱 상세 머리 */
 .dk-hero { position: relative; overflow: hidden; display: flex; gap: 14px; align-items: center; padding: 18px 16px; border-radius: 22px; background: var(--elev2); margin: 4px 0 10px; --tc: var(--c1); }
 .dk-hero .art { position: absolute; right: -24px; top: -30px; width: 210px; height: 210px; object-fit: cover; opacity: .3; filter: blur(1.5px); -webkit-mask-image: linear-gradient(90deg, transparent, #000 70%); mask-image: linear-gradient(90deg, transparent, #000 70%); pointer-events: none; }
@@ -1665,6 +1664,17 @@ body.dc-open { overflow: hidden; }
 .s19-dk-core { font-style: normal; font-size: var(--fs-2xs); font-weight: 800; padding: 1px 6px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); }
 .s19-dk-its { display: flex; gap: 3px; flex: none; }
 .s19-dk-its img { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--sunk); }
+.s19-dmode { margin: 0 0 2px; }
+.s19-bwrap { padding: 12px 10px 10px; }
+.s19-bwrap h3 { padding-left: 4px; }
+.s19-hex { margin: 4px 0 0; }
+.s19-hx7 { background: #ff4d8d; }
+.s19-dk-augs { display: flex; flex-wrap: wrap; gap: 6px; }
+.s19-dk-aug { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px 6px 6px; border-radius: 10px; background: var(--raise); cursor: pointer; }
+.s19-dk-aug img { width: 26px; height: 26px; border-radius: 7px; flex: none; object-fit: cover; background: var(--sunk); }
+.s19-dk-aug span { display: grid; }
+.s19-dk-aug b { font-size: var(--fs-s); color: var(--ink); line-height: 1.2; }
+.s19-dk-aug small { font-size: var(--fs-2xs); color: var(--muted); }
 .s19-promo { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-decoration: none; color: var(--ink); border-radius: var(--r-card); padding: 15px 16px; margin-bottom: 14px; background: linear-gradient(125deg, color-mix(in srgb, var(--accent2) 15%, var(--elev2)), var(--elev2) 55%, color-mix(in srgb, var(--accent) 14%, var(--elev2))); border: 1px solid var(--border-elev2); box-shadow: var(--shadow); }
 .s19-promo small { display: block; font-size: var(--fs-xs); color: var(--accent2); font-weight: 800; } .s19-promo b { font-size: var(--fs-xl); font-weight: 800; }
 .s19-promo i { font-style: normal; font-size: var(--fs-s); font-weight: 700; color: var(--accent); text-align: right; white-space: nowrap; }

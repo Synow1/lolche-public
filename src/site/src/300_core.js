@@ -615,7 +615,7 @@
   function dkGrad(node, t) {
     var v = Math.max(0, Math.min(1, t));
     node.classList.add("dk-grad");
-    if (v >= 0.84) node.classList.add("dk-op");
+    if (v >= 0.88) node.classList.add("dk-op");
     node.style.setProperty("--gd", dkLerpRgb(DK_RGB_D, v));
     node.style.setProperty("--gl", dkLerpRgb(DK_RGB_L, v));
     return node;
@@ -623,8 +623,8 @@
   function dkAvgT(avg) { return (4.92 - avg) / 0.86; }
   function dkWinT(win) { return win >= 11.5 ? 0.5 + (win - 11.5) / 14 : (win - 5) / 13; }
   function dkTop4T(t4) { return (t4 - 40) / 20; }
-  function s19AvgT(avg) { return (4.85 - avg) / 1.75; }
-  function s19WinT(win) { return win >= 14 ? 0.5 + (win - 14) / 24 : (win - 5) / 18; }
+  function s19AvgT(avg) { return (4.75 - avg) / 1.85; }
+  function s19WinT(win) { return win >= 14 ? 0.5 + (win - 14) / 28 : (win - 5) / 18; }
 
   /* ---- 재료 → 덱: 가진 재료(초반 크립·첫 초밥)로 갈 만한 덱. MetaTFT 덱 통계(meta.json)의 캐리 템 빌드 판수로 계산 ---- */
   var PARTS = ["B.F. 대검", "곡궁", "쓸데없이 큰 지팡이", "여신의 눈물", "쇠사슬 조끼", "음전자 망토", "거인의 허리띠", "연습용 장갑", "뒤집개", "프라이팬"];

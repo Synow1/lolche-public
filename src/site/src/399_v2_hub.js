@@ -32,8 +32,9 @@
       var upd = document.getElementById("hm-s19-upd");
       if (upd) upd.textContent = updAt(S19.pbe || S19.updated);
       var kpi = document.getElementById("hm-s19-kpi");
+      var s19List = (S19.guides && S19.guides.length) ? S19.guides : (S19.decks || []);
       if (kpi) {
-        var dlen = (S19.decks || []).length;
+        var dlen = s19List.length;
         kpi.innerHTML = "";
         [
           [dlen || S19.augs.filter(function (a) { return a.new; }).length, dlen ? "추천 덱" : "신규 증강", dlen ? "decks" : "augs"],
@@ -49,10 +50,10 @@
         });
       }
       var dw = document.getElementById("hm-s19-decks-wrap"), dr = document.getElementById("hm-s19-decks"), ds = document.getElementById("hm-s19-dsub");
-      if (dw && dr && S19.decks && S19.decks.length) {
+      if (dw && dr && s19List.length) {
         dw.hidden = false; dr.innerHTML = "";
-        if (ds) ds.textContent = "롤체지지 PBE · " + (S19.decksPlays ? Math.round(S19.decksPlays / 10000) + "만판" : S19.decks.length + "개");
-        S19.decks.slice(0, 4).forEach(function (d) { dr.appendChild(s19DeckRow(d, "avg")); });
+        if (ds) ds.textContent = "롤체지지 배치 · PBE " + (S19.decksPlays ? Math.round(S19.decksPlays / 10000) + "만판" : s19List.length + "개");
+        s19List.slice().sort(function (a, b) { return (a.avg || 9) - (b.avg || 9); }).slice(0, 4).forEach(function (d) { dr.appendChild(s19DeckRow(d, "avg")); });
       }
       var seven = S19.units.filter(function (u) { return u.c === 7 || (u.c === 5 && u.unl); })
         .sort(function (a, b) { return b.c - a.c || (b.unl ? 1 : 0) - (a.unl ? 1 : 0); })
@@ -257,14 +258,18 @@
     var total = 0;
     // 1) 19시즌 추천 덱·챔피언·시너지·증강
     if (want19 && S19) {
-      var d19 = (S19.decks || []).filter(function (d) {
-        return matches(d.n, q) || d.t.some(function (t) { return matches(t[0], q); }) || d.u.some(function (x) { var u = s19Unit(x.k); return u && matches(u.n, q); });
+      var seen19 = {};
+      var d19 = (S19.guides || []).concat(S19.decks || []).filter(function (d) {
+        if (seen19[d.n]) return false;
+        var ok = matches(d.n, q) || (d.t || []).some(function (t) { return matches(t[0], q); }) || d.u.some(function (x) { var u = s19Unit(x.k); return u && matches(u.n, q); });
+        if (ok) seen19[d.n] = 1;
+        return ok;
       }).slice(0, 5).map(function (d) {
         var mcu = s19Unit(d.mc);
         return {
           icon: mcu && mcu.img, title: d.n,
-          sub: "PBE 평균 " + d.avg.toFixed(2) + " · 승률 " + d.win.toFixed(1) + "% · " + d.plays.toLocaleString() + "판",
-          tag: d.tier + "티어", tagCls: "cyan",
+          sub: (d.avg != null ? "PBE 평균 " + d.avg.toFixed(2) + " · 승률 " + d.win.toFixed(1) + "%" : "추천 배치") + (d.guide ? " · 배치" : ""),
+          tag: (d.tier || "19") + (d.tier ? "티어" : "시즌"), tagCls: "cyan",
           go: function () { s19OpenDeck(d); }
         };
       });

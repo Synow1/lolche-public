@@ -256,8 +256,16 @@ def main():
                       "img": icon("items", "i", i["apiName"])})
     items.sort(key=lambda i: (["emb", "quest", "set"].index(i["kind"]), not i["craft"], i["n"]))
 
-    # 19시즌 PBE 추천 덱 (롤체지지 PBE 메타 덱 통계: lolchess.gg/decks?queue=pbe)
-    decks, decks_plays, decks_upd = [], 0, ""
+    # 19시즌 PBE 추천 덱:
+    # 1) 롤체지지 PBE 메타 덱 통계 (lolchess.gg/decks?queue=pbe, ~29만 판) -> pbe_decks
+    # 2) 롤체지지 19시즌 추천 가이드 덱 (tft.dakgg.io/api/v1/guide-decks?hl=ko&q=new-set) -> guides (4x7 육각 배치 + 추천 증강 3개)
+    # 둘을 유닛 겹침으로 교차 매칭해 가이드엔 PBE 통계를, PBE 통계엔 배치·증강을 붙인다.
+    decks, guides, decks_plays, decks_upd = [], [], 0, ""
+    u_by_k = {u["k"]: u["k"] for u in units}
+    u_by_n = {u["n"]: u["k"] for u in units}
+    u_by_base = {re.sub(r" \([^)]+\)$", "", u["n"]): u["k"] for u in units}
+    u_by_cost = {u["k"]: u["c"] for u in units}
+    u_traits = {u["k"]: u["t"] for u in units}
     try:
         pbe_req = urllib.request.Request("https://lolchess.gg/decks?queue=pbe",
                                          headers={"User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36", "Accept-Language": "ko"})
@@ -273,9 +281,6 @@ def main():
                 ch_ref = {c["key"]: c["name"] for c in refs.get("champions") or []}
                 tr_ref = {t["key"]: t["name"] for t in refs.get("traits") or []}
                 it_ref = {i["key"]: i["name"] for i in refs.get("items") or []}
-                u_by_k = {u["k"]: u["k"] for u in units}
-                u_by_n = {u["n"]: u["k"] for u in units}
-                u_by_base = {re.sub(r" \([^)]+\)$", "", u["n"]): u["k"] for u in units}
                 def map_uk(ck):
                     if ck in u_by_k: return ck
                     nm = ch_ref.get(ck, "")
@@ -327,17 +332,84 @@ def main():
                 pass
         print(f"19시즌 PBE 덱 생략 ({ex})", file=sys.stderr)
 
+    # 2) 롤체지지 19시즌 추천 가이드 덱 (육각 보드 배치 + 추천 증강)
+    try:
+        gd_raw = get("https://tft.dakgg.io/api/v1/guide-decks?hl=ko&q=new-set")
+        dk_it = {i["key"]: i["name"] for i in get(DAK.format("items")).get("items", [])}
+        dk_au = {a["key"]: a["name"] for a in dk.get("augments", [])}
+        dk_ch = {}
+        for c in dk.get("champions", []):
+            uk = c.get("ingameKey", "")
+            if uk not in u_by_k:
+                nm = c.get("name", "")
+                uk = u_by_n.get(nm) or u_by_base.get(nm) or ""
+            if uk: dk_ch[c["key"]] = uk
+        t_steps = {t["n"]: t.get("steps") or [] for t in traits}
+        t_uniq = {t["n"]: t.get("uniq", False) for t in traits}
+        for g in gd_raw.get("guideDecks") or []:
+            slots = (g.get("data") or {}).get("slots") or []
+            if not slots: continue
+            champs = []
+            for s in slots:
+                uk = dk_ch.get(s.get("champion", ""))
+                if not uk: continue
+                idx_pos = int(s.get("index", 0))
+                its = [dk_it.get(ik, ik) for ik in (s.get("items") or []) if dk_it.get(ik)]
+                champs.append({"k": uk, "s": int(s.get("star") or 2), "i": its[:3], "pos": [idx_pos // 7, idx_pos % 7]})
+            if not champs: continue
+            champs.sort(key=lambda c: (-(len(c["i"])), -(c["s"]), -(u_by_cost.get(c["k"], 1))))
+            gn = (g.get("name") or "").strip()
+            mc = next((c["k"] for c in champs if uname.get(c["k"], "").split(" ")[0] in gn and c["i"]), champs[0]["k"])
+            # 활성 시너지 계산
+            tc = Counter()
+            for c in champs:
+                for tn in u_traits.get(c["k"], []): tc[tn] += 1
+            trs = []
+            for tn, cnt in tc.items():
+                st_lv = 4 if t_uniq.get(tn) else 0
+                for stp in t_steps.get(tn, []):
+                    if stp.get("m") and cnt >= stp["m"]: st_lv = stp.get("s") or 1
+                if st_lv > 0: trs.append([tn, cnt, st_lv])
+            trs.sort(key=lambda x: (-x[2], -x[1]))
+            augs_g = [dk_au[a] for a in (g.get("data") or {}).get("augments") or [] if a in dk_au]
+            # PBE 통계 덱과 자동 교차 매칭 (유닛 겹침 >= 4명 이상)
+            gset = {c["k"] for c in champs}
+            best_d, best_sc = None, 0.0
+            for d0 in decks:
+                dset = {c["k"] for c in d0["u"]}
+                ov = len(gset & dset)
+                sc = ov / max(len(gset | dset), 1) + (0.15 if d0["mc"] == mc else 0)
+                if ov >= 4 and sc > best_sc:
+                    best_sc, best_d = sc, d0
+            entry = {"n": gn, "mc": mc, "u": champs, "t": trs[:6], "a": augs_g, "guide": True}
+            if best_d:
+                entry.update({"tier": best_d["tier"], "avg": best_d["avg"], "win": best_d["win"],
+                              "top4": best_d["top4"], "pick": best_d["pick"], "plays": best_d["plays"]})
+                # 반대로 PBE 통계 덱에도 배치도가 없으면 가이드 배치·증강을 연결
+                if not best_d.get("pos"):
+                    pos_map = {c["k"]: c["pos"] for c in champs}
+                    for cu in best_d["u"]:
+                        if cu["k"] in pos_map: cu["pos"] = pos_map[cu["k"]]
+                    best_d["pos"] = True
+                    if augs_g and not best_d.get("a"): best_d["a"] = augs_g
+            guides.append(entry)
+    except Exception as ex:
+        if OUT.exists():
+            try: guides = json.loads(OUT.read_text(encoding="utf-8")).get("guides", [])
+            except Exception: pass
+        print(f"19시즌 가이드 덱 생략 ({ex})", file=sys.stderr)
+
     meta = mk.get("_metadata") or {}
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "pbe": meta.get("generated", ""), "release": "2026-12-01",
            "name": "프리즘 투어", "units": units, "traits": traits, "augs": augs, "items": items,
-           "decks": decks, "decksPlays": decks_plays, "decksUpdated": decks_upd,
+           "guides": guides, "decks": decks, "decksPlays": decks_plays, "decksUpdated": decks_upd,
            "src": "MetaTFT PBE 원문 · 롤체지지 · 라이엇 패치 노트"}
     if "--missing" in sys.argv:
         print(json.dumps(sorted(set(missing)), ensure_ascii=False, indent=0)); return
     if len(units) < 60 or len(traits) < 20:
         sys.exit(f"19시즌 데이터 이상: 유닛 {len(units)} · 시너지 {len(traits)}")
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)} · 시너지 {len(traits)} · 증강 {len(augs)} · 아이템 {len(items)} · 추천 덱 {len(decks)} · 번역 없는 글 {len(set(missing))} · {OUT.stat().st_size // 1024}KB")
+    print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)} · 시너지 {len(traits)} · 증강 {len(augs)} · 아이템 {len(items)} · 가이드 {len(guides)} · PBE덱 {len(decks)} · 번역 없는 글 {len(set(missing))} · {OUT.stat().st_size // 1024}KB")
 
 
 if __name__ == "__main__":

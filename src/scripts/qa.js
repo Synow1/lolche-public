@@ -578,10 +578,11 @@ function fresh(file, key, hours) {
       if (r.sw > 360) fail(`19시즌 ${v}: 화면보다 넓음 ${r.sw}px`);
       if (r.seg) fail('19시즌: 보기 버튼 글자가 두 줄로 꺾임');
     }
-    // 19시즌 추천 덱 상세 열기 확인
+    // 19시즌 추천 덱 상세 열기 확인 (육각 보드 배치 + 챔피언·아이템)
     await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]').click()); await pg.waitForTimeout(400);
     await pg.evaluate(() => document.querySelector('#s19-out .mt-row.dk')?.click()); await pg.waitForTimeout(400);
-    if (!(await pg.evaluate(() => document.querySelectorAll('.fs-view .s19-dk-u').length >= 5))) fail('19시즌 추천 덱: 덱을 눌러도 상세 챔피언·아이템 화면이 안 열림');
+    const s19d = await pg.evaluate(() => ({ u: document.querySelectorAll('.fs-view .s19-dk-u').length, hex: document.querySelectorAll('.fs-view .s19-hex .hx img').length }));
+    if (s19d.u < 5 || s19d.hex < 5) fail(`19시즌 추천 덱: 상세 배치(${s19d.hex}) 또는 챔피언(${s19d.u})이 안 열림`);
     await pg.evaluate(() => document.querySelector('.fs-view .dc-back')?.click()); await pg.waitForTimeout(300);
     // 19시즌 스쿼드 빌더: 챔피언 2명 추가 → 시너지 계산 칩 표시 → 비우기
     await pg.evaluate(() => document.querySelector('#s19-view [data-v=builder]').click()); await pg.waitForTimeout(400);
