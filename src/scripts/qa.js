@@ -57,7 +57,7 @@ function fresh(file, key, hours) {
   }
 
   const b = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
-  const TABS = ['meta', 'tfa', 'dc', 'rank', 'augments', 'items', 'more', 'traits', 'find', 'builder', 'esports', 'friends', 'power', 'parts', 'emb', 'flow', 'wisps', 'numbers', 'scout', 'patch'];
+  const TABS = ['home', 's19', 'meta', 'tfa', 'dc', 'rank', 'augments', 'items', 'more', 'traits', 'find', 'builder', 'esports', 'friends', 'power', 'parts', 'emb', 'flow', 'wisps', 'numbers', 'scout', 'patch'];
   for (const [W, scheme] of [[360, 'dark'], [412, 'light']]) {
     const pg = await b.newPage({ viewport: { width: W, height: 860 }, colorScheme: scheme });
     const errs = []; pg.on('pageerror', e => errs.push(e.message));
@@ -100,6 +100,25 @@ function fresh(file, key, hours) {
     // ---- 2·3. 탭별 내용과 기능
     // 버튼이 없어서 누르기가 실패해도 멈추지 말고 실패로 적고 계속 (있어야 할 버튼이 없는 것도 고장)
     const q = async (fn, arg) => { try { return await pg.evaluate(fn, arg); } catch (e) { fail('동작 실패: ' + String(e.message).split('\n')[0].slice(0, 120)); return null; } };
+    // v2.0.0 홈 허브 + 통합 스포트라이트 검색 + 5탭(홈·19시즌·덱·전적·더보기)
+    await go('home'); await pg.waitForTimeout(800);
+    if (await q(() => document.querySelectorAll('#hm-s19-kpi .hm-k').length) !== 4) fail('홈: 19시즌 KPI 4칸이 안 보임');
+    if (await q(() => document.querySelectorAll('#hm-decks .mt-row.dk').length) < 3) fail('홈: 18시즌 상위 덱 카드가 안 보임');
+    {
+      const navs = await q(() => [...document.querySelectorAll('.bnav a')].map(a => a.dataset.nav));
+      if (!navs || navs.join(',') !== 'home,s19,decks,rank,more') fail('아래 메뉴: v2.0 5탭(home,s19,decks,rank,more)이 아님 (' + (navs || []).join(',') + ')');
+      // 통합 스포트라이트 검색 (초성 포함)
+      await q(() => document.getElementById('spot-btn').click()); await pg.waitForTimeout(300);
+      await q(() => { const i = document.getElementById('spot-q'); i.value = 'ㅌㅁ'; i.dispatchEvent(new Event('input')); }); await pg.waitForTimeout(300);
+      if (await q(() => document.querySelectorAll('#spot-res .spot-row').length) < 2) fail('통합 검색: 초성("ㅌㅁ") 검색 결과가 안 나옴');
+      await q(() => document.getElementById('spot-x').click()); await pg.waitForTimeout(300);
+      if (await q(() => !document.getElementById('spot-ov').hidden)) fail('통합 검색: 닫기 버튼으로 안 닫힘');
+      // 테마 전환 확인
+      await go('more'); await pg.waitForTimeout(300);
+      await q(() => document.querySelector('#theme-seg [data-th=light]').click()); await pg.waitForTimeout(150);
+      if (await q(() => document.documentElement.getAttribute('data-theme')) !== 'light') fail('테마 전환: 라이트 모드 미반영');
+      await q(() => document.querySelector('#theme-seg [data-th=auto]').click()); await pg.waitForTimeout(150);
+    }
     await go('meta'); await pg.waitForTimeout(800);
     for (const s of ['guide', 'stat']) {
       await q((s) => document.querySelector('#mt-src [data-s=' + s + ']').click(), s); await pg.waitForTimeout(600);
@@ -108,30 +127,15 @@ function fresh(file, key, hours) {
       const bad = await q(() => [...document.querySelectorAll('#meta .mt-row.dk')].filter(x => x.offsetParent && !x.querySelector('.dk-hex img')).length);
       if (bad) fail(`덱 탭 ${s}: 메인 캐리 그림 없는 줄 ${bad}개`);
     }
-    // 덱 탭: 선택률(로비 평균 인원) + v3 상단 메타 줄(.dk-meta .dk-tbadge) + 2단 KPI(.dk-kpi2 평균/순방)
+    // 덱 탭: 선택률(로비 평균 인원) + 상단 메타 줄(.dk-meta .dk-tbadge) + 2단 KPI(.dk-kpi2 평균/순방)
     await go('meta'); await pg.waitForTimeout(600);
     if (await q(() => [...document.querySelectorAll('#mt-rows .mt-row')].filter(r => /선택률 [\d.]+/.test(r.textContent)).length) < 10) fail('덱: 줄마다 "선택률"이 안 보임');
     if (await q(() => document.querySelectorAll('#mt-rows .mt-row.dk .dk-meta .dk-tbadge').length) < 10) fail('덱: 상단 메타 줄에 티어 배지(.dk-tbadge)가 안 보임');
     if (await q(() => [...document.querySelectorAll('#mt-rows .mt-row.dk .dk-kpi2')].filter(k => /순방 \d+%/.test(k.textContent)).length) < 10) fail('덱: 오른쪽 2단 KPI에 순방률이 안 보임');
-    // 하단 플로팅 독 5탭(덱·아카데미·전적·도감·더보기) 및 도감 전환(아이템·증강·시너지) 검사
-    {
-      const navs = await q(() => [...document.querySelectorAll('.bnav a')].map(a => a.dataset.nav));
-      if (!navs || navs.join(',') !== 'meta,tfa,rank,codex,more') fail('아래 메뉴: 5탭 구조(meta,tfa,rank,codex,more)가 아님 (' + (navs || []).join(',') + ')');
-      for (const ct of ['items', 'augments', 'traits']) {
-        await go(ct); await pg.waitForTimeout(300);
-        if (await q(() => !document.querySelector('.bnav a[data-nav=codex]').classList.contains('on'))) fail(`도감(${ct}): 아래 메뉴 '도감' 표시가 안 켜짐`);
-        if (await q((ct) => !document.querySelector(`#${ct} .codex-seg a[href="#${ct}"].on`), ct)) fail(`도감(${ct}): 상단 전환 바 활성 표시가 안 켜짐`);
-      }
-      await go('meta'); await pg.waitForTimeout(300);
-      await q(() => document.querySelector('.bnav a[data-nav=codex]').click()); await pg.waitForTimeout(400);
-      if (await q(() => document.querySelector('section:not([hidden])').id) !== 'traits') fail('도감: 마지막 본 하위 탭(traits)으로 복원되지 않음');
-      await q(() => document.querySelector('#traits .codex-seg a[href="#items"]').click()); await pg.waitForTimeout(400);
-      if (await q(() => document.querySelector('section:not([hidden])').id) !== 'items') fail('도감: 상단 전환 바에서 아이템으로 안 넘어감');
-    }
-    // TFT 아카데미는 따로 탭 (v1.51.0): 덱 탭 상세를 열어 둔 채 오가도 서로 상태가 남아야 한다
+    // 덱 통합 서브탭(메타·아카데미·재료·상징) 및 아래 메뉴 활성 표시
     await go('tfa'); await pg.waitForTimeout(600);
     if (await q(() => document.querySelectorAll('#tfa-out .mt-row').length) < 15) soft('TFT 아카데미: 덱 줄 15개 미만');
-    if (await q(() => !document.querySelector('.bnav a[data-nav=tfa]').classList.contains('on'))) soft('TFT 아카데미: 아래 메뉴 표시가 안 켜짐');
+    if (await q(() => !document.querySelector('.bnav a[data-nav=decks]').classList.contains('on'))) soft('TFT 아카데미: 아래 메뉴 덱 표시가 안 켜짐');
     await q(() => document.querySelector('#tfa-out .mt-row')?.click()); await pg.waitForTimeout(500);
     if (await q(() => document.querySelectorAll('#tfa-detail .hx[data-c]').length) < 6) soft('TFT 아카데미 상세: 배치판 유닛 6개 미만');
     await q(() => document.querySelector('#tfa-detail .back')?.click()); await pg.waitForTimeout(400);
@@ -567,13 +571,25 @@ function fresh(file, key, hours) {
     const errs = []; pg.on('pageerror', e => errs.push(String(e)));
     await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(2500);
     await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#s19'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(1200);
-    for (const [v, sel, min] of [['home', '.s19-k', 4], ['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
+    for (const [v, sel, min] of [['home', '.s19-k', 4], ['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['builder', '.s19-bpick', 60], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
       await pg.evaluate((v) => document.querySelector('#s19-view [data-v=' + v + ']').click(), v); await pg.waitForTimeout(500);
       const r = await pg.evaluate((sel) => ({ n: document.querySelectorAll('#s19-out ' + sel).length, sw: document.documentElement.scrollWidth, seg: [...document.querySelectorAll('#s19-view button')].some(b => b.getBoundingClientRect().height > 44) }), sel);
       if (r.n < min) fail(`19시즌 ${v}: 항목 ${r.n}개 (최소 ${min})`);
       if (r.sw > 360) fail(`19시즌 ${v}: 화면보다 넓음 ${r.sw}px`);
       if (r.seg) fail('19시즌: 보기 버튼 글자가 두 줄로 꺾임');
     }
+    // 19시즌 스쿼드 빌더: 챔피언 2명 추가 → 시너지 계산 칩 표시 → 비우기
+    await pg.evaluate(() => document.querySelector('#s19-view [data-v=builder]').click()); await pg.waitForTimeout(400);
+    await pg.evaluate(() => { const p = document.querySelectorAll('#s19-out .s19-bpick'); if (p[0]) p[0].click(); if (p[1]) p[1].click(); }); await pg.waitForTimeout(400);
+    const bld = await pg.evaluate(() => ({ slots: document.querySelectorAll('#s19-out .s19-bslot.full').length, pills: document.querySelectorAll('#s19-out .s19-bspill').length }));
+    if (bld.slots < 2 || !bld.pills) fail(`19시즌 빌더: 챔피언 추가(${bld.slots}) 또는 시너지 계산(${bld.pills}) 실패`);
+    await pg.evaluate(() => document.querySelector('#s19-out .s19-bclr')?.click()); await pg.waitForTimeout(300);
+    // 19시즌 해금 체크리스트: 체크 토글 → 진척도 증가 → 해제
+    await pg.evaluate(() => document.querySelector('#s19-view [data-v=unlock]').click()); await pg.waitForTimeout(350);
+    await pg.evaluate(() => document.querySelector('#s19-out .s19-ul-chk')?.click()); await pg.waitForTimeout(300);
+    const ulDone = await pg.evaluate(() => (document.querySelector('#s19-out .s19-prog-h b') || {}).textContent || '');
+    if (!/^1\s*\//.test(ulDone)) fail('19시즌 해금 체크: 진척도 갱신 안 됨 (' + ulDone + ')');
+    await pg.evaluate(() => document.querySelector('#s19-out .s19-ul-chk')?.click()); await pg.waitForTimeout(250);
     await pg.evaluate(() => document.querySelector('#s19-view [data-v=units]').click()); await pg.waitForTimeout(400);
     await pg.evaluate(() => document.querySelector('#s19-out .s19-uc').click()); await pg.waitForTimeout(500);
     const un = await pg.evaluate(() => { const v = document.querySelector('.fs-view'); return v ? { kv: v.querySelectorAll('.s19-kv b').length, tc: v.querySelectorAll('.s19-tchip').length } : null; });

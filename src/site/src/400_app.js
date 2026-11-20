@@ -286,10 +286,12 @@
     if (prev && prev !== id) navPush("tab", function () { showTab(prev, false); window.scrollTo(0, y); });
     showTab(id, true);
   }
-  var CODEX = ["items", "augments", "traits"], CODEX_KEY = "tft-guide-codex", codexLast = "items";
-  try { var cl = localStorage.getItem(CODEX_KEY); if (CODEX.indexOf(cl) >= 0) codexLast = cl; } catch (e) {}
+  var DECK_TABS = ["meta", "tfa", "parts", "emb"], DECK_KEY = "tft-guide-decktab", deckLast = "meta";
+  var RANK_TABS = ["rank", "friends", "power"], RANK_KEY = "tft-guide-ranktab", rankLast = "rank";
+  try { var dl = localStorage.getItem(DECK_KEY); if (DECK_TABS.indexOf(dl) >= 0) deckLast = dl; } catch (e) {}
+  try { var rl = localStorage.getItem(RANK_KEY); if (RANK_TABS.indexOf(rl) >= 0) rankLast = rl; } catch (e) {}
   var TAB_Y = {};
-  function showTab(id, scroll) {
+  function applyTab(id, scroll) {
     if (!secs.some(function (s) { return s && s.id === id; })) id = secs[0].id;
     var same = current === id;
     if (current && !same) TAB_Y[current] = window.scrollY;
@@ -302,19 +304,19 @@
       if (on && a.scrollIntoView) a.scrollIntoView({ block: "nearest", inline: "center" });
     });
     if (scroll) window.scrollTo(0, same ? 0 : TAB_Y[id] || 0);  // 다른 탭에서 돌아오면 보던 위치, 같은 탭을 다시 누르면 맨 위
+    if (id === "home") { setTimeout(homeRender, 0); if (window.v2PrismKick) setTimeout(window.v2PrismKick, 60); }
     if (id === "tfa") setTimeout(tfaRender, 0);
     if (id === "s19") setTimeout(s19Render, 0);
-    var MAIN = ["meta", "tfa", "rank"];
-    var isCodex = CODEX.indexOf(id) >= 0;
-    if (isCodex) {
-      codexLast = id;
-      try { localStorage.setItem(CODEX_KEY, id); } catch (e) {}
-    }
-    var codexLink = document.querySelector('.bnav a[data-nav="codex"]');
-    if (codexLink) codexLink.setAttribute("href", "#" + codexLast);
-    var navId = isCodex ? "codex" : MAIN.indexOf(id) >= 0 ? id : "more";
+    var isDeck = DECK_TABS.indexOf(id) >= 0, isRank = RANK_TABS.indexOf(id) >= 0;
+    if (isDeck) { deckLast = id; try { localStorage.setItem(DECK_KEY, id); } catch (e) {} }
+    if (isRank) { rankLast = id; try { localStorage.setItem(RANK_KEY, id); } catch (e) {} }
+    var dLink = document.querySelector('.bnav a[data-nav="decks"]');
+    if (dLink) dLink.setAttribute("href", "#" + deckLast);
+    var rLink = document.querySelector('.bnav a[data-nav="rank"]');
+    if (rLink) rLink.setAttribute("href", "#" + rankLast);
+    var navId = id === "home" ? "home" : id === "s19" ? "s19" : isDeck ? "decks" : isRank ? "rank" : "more";
     var lab = links.filter(function (a) { return a.getAttribute("href") === "#" + id; })[0];
-    document.getElementById("ab-title").textContent = id === "meta" ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
+    document.getElementById("ab-title").textContent = (id === "home" || id === "meta") ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
     document.querySelectorAll(".bnav a").forEach(function (a) { a.classList.toggle("on", a.dataset.nav === navId); });
     try { localStorage.setItem(TAB_KEY, id); } catch (e) {}
     if (id === "esports") setTimeout(function () { apacLiveIfDue(false); lvIfDue(false); }, 0);
@@ -324,7 +326,13 @@
     if (id === "power") setTimeout(pwRender, 0);
     if (id === "parts") setTimeout(ptRender, 0);
   }
-  // 아래 탭·더보기 타일·도감 전환·글 속 링크 모두 같은 탭 전환으로
+  function showTab(id, scroll) {
+    if (!reduce && !navigator.webdriver && current && current !== id && document.startViewTransition) {
+      try { document.startViewTransition(function () { applyTab(id, scroll); }); return; } catch (e) {}
+    }
+    applyTab(id, scroll);
+  }
+  // 아래 탭·더보기·서브 전환·글 속 링크 모두 같은 탭 전환으로
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest('a[href^="#"]');
     if (!a || a.closest("nav.tabs")) return;
@@ -347,9 +355,14 @@
   });
   var start = (location.hash || "").slice(1);
   if (!start) { try { start = localStorage.getItem(TAB_KEY) || ""; } catch (e) {} }
+  v2ThemeInit();
   setupApp();
   setupInspect();
-  showTab(start || secs[0].id, false);
+  homeInit();
+  spotInit();
+  v2SheetGesture();
+  showTab(start || "home", false);
+  v2PrismInit();
   setupMetaRefresh();
   rkUpdSetup();
 
@@ -363,7 +376,7 @@
     fetch("esports.json").then(function (r) { return r.json(); }).then(buildEsports).catch(function () {
       document.getElementById("esp-list").textContent = "불러오지 못했어요. 앱을 다시 열어 주세요";
     });
-    fetch("guides.json").then(function (r) { return r.json(); }).then(buildGuides).catch(function () {});
+    fetch("guides.json").then(function (r) { return r.json(); }).then(function (g) { buildGuides(g); homeRender(); }).catch(function () {});
     fetch("version.json").then(function (r) { return r.json(); }).then(buildVersion).catch(function () {});
     fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); }).catch(function () {
       var b = document.getElementById("tfa-out"); if (b) b.innerHTML = '<p class="empty">불러오지 못했어요. 앱을 다시 열어 주세요</p>';
@@ -388,7 +401,7 @@
         if (Object.keys(h).length) { CUTH = CUTH || {}; CUTH[dakSeason()] = h; }
       }).catch(function () {});
     });
-    fetch("meta.json").then(function (r) { return r.json(); }).then(buildMeta).catch(function () {
+    fetch("meta.json").then(function (r) { return r.json(); }).then(function (m) { buildMeta(m); homeRender(); }).catch(function () {
       document.getElementById("mt-rows").textContent = "불러오지 못했어요. 앱을 다시 열어 주세요";
     });
     var dbReady = fetch("db.json").then(function (r) { return r.json(); }).then(buildFind).catch(function () {
