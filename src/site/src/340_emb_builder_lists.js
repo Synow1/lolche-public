@@ -136,7 +136,11 @@
     document.getElementById("vlog").hidden = false;
   }
   function setPatch() {
-    var p = (GUIDES && (/v?(\d+\.\d+[a-z]?)/.exec(GUIDES.patch) || [])[1]) || (META && META.patch);
+    var cands = [META && META.patch, DB && DB.patch, GUIDES && GUIDES.patch].map(function (s) {
+      var m = s && /v?(\d+)\.(\d+)([a-z]?)/i.exec(String(s));
+      return m ? { txt: m[1] + "." + m[2] + (m[3] || "").toLowerCase(), a: +m[1], b: +m[2], c: (m[3] || "").toLowerCase() } : null;
+    }).filter(Boolean).sort(function (x, y) { return (y.a - x.a) || (y.b - x.b) || (y.c > x.c ? 1 : y.c < x.c ? -1 : 0); });
+    var p = cands.length ? cands[0].txt : "";
     var b = document.getElementById("patch-badge"); if (p) { b.textContent = p; b.hidden = false; }
     var about = document.getElementById("about");
     var ver = VER ? "<b>롤체 노트 v" + VER.version + "</b>" + (APP && window.LolcheApp.built ? " · 빌드 " + window.LolcheApp.built() : "") + "<br>" : "";
