@@ -1,4 +1,4 @@
-  function frList() { try { var f = JSON.parse(localStorage.getItem(FR_KEY) || "null"); if (f && f.length) return f; } catch (e) {} return FRIENDS.slice(); }
+  function frList() { try { var f = JSON.parse(localStorage.getItem(FR_KEY) || "null"); if (f && Array.isArray(f) && (WEB || f.length)) return f; } catch (e) {} return WEB ? [] : FRIENDS.slice(); }
   function frSave(f) { try { localStorage.setItem(FR_KEY, JSON.stringify(f)); } catch (e) {} }
   // 판수별 LP: 시즌 랭크 판수에 맞춰 번호를 매긴다 (MetaTFT에 없는 옛날 판이 있으면 그만큼 밀어서)
   function frSeries(d) {
@@ -92,7 +92,7 @@
       nm.addEventListener("click", function () { openProfile(f.id); });
       top.appendChild(nm);
       top.appendChild(tierBadge(f.d.ranked.rating_text));
-      if (APP && f.id !== "Synow#KR1") {
+      if (LIVE && (WEB || f.id !== "Synow#KR1")) {
         var x = el("button", "fr-x", "✕"); x.type = "button"; x.setAttribute("aria-label", f.id + " 빼기");
         x.addEventListener("click", function () { frSave(frList().filter(function (y) { return y !== f.id; })); frLoad(); });
         top.appendChild(x);
@@ -131,10 +131,23 @@
     if (frView === "top") frTop();
   }
   function frLoad(synced) {
-    var note = document.getElementById("fr-note"), ids = frList();
+    var note = document.getElementById("fr-note"), ids = frList(), rf = document.getElementById("fr-refresh");
+    var cbox = document.querySelector("#friends .fr-chartbox");
+    if (rf) rf.hidden = !LIVE || !ids.length;
+    if (LIVE && !ids.length) {
+      frData = [];
+      if (cbox) cbox.hidden = true;
+      document.getElementById("fr-chart").innerHTML = "";
+      var cards = document.getElementById("fr-cards"); cards.innerHTML = "";
+      cards.appendChild(el("p", "empty", "소환사 이름#태그를 추가하면 티어 그래프와 고점 판을 함께 비교할 수 있어요"));
+      note.textContent = "소환사를 추가해 보세요 · 출처 롤체지지";
+      if (frView === "top") frTop();
+      return;
+    }
+    if (cbox) cbox.hidden = false;
     if (!synced) { document.getElementById("fr-chart").innerHTML = ""; document.getElementById("fr-cards").innerHTML = ""; note.textContent = "불러오는 중"; }
     var p;
-    if (APP) p = Promise.all(ids.map(function (id) {
+    if (LIVE) p = Promise.all(ids.map(function (id) {
       return dakProfile(id, { queue: "1100" }).then(function (d) { return { id: id, d: d }; }).catch(function () { return null; });
     })).then(function (r) { return { list: r.filter(Boolean), note: "" }; });
     else p = fetch("friends.json").then(function (r) { return r.json(); }).then(function (j) {
@@ -142,16 +155,17 @@
     });
     p.then(function (r) {
       frData = r.list.map(function (x) { x.d.ranked = x.d.ranked || {}; x.s = frSeries(x.d); return x; });
-      note.textContent = APP ? (frSyncing ? "갱신 중" : updAt(new Date())) + " · 출처 롤체지지" : r.note;
+      note.textContent = LIVE ? (frSyncing ? "갱신 중" : updAt(new Date())) + " · 출처 롤체지지" : r.note;
       frDraw();
     }).catch(function (e) { note.textContent = "불러오지 못했어요. 잠시 후 다시 시도해 주세요"; });
   }
   // 친구 전원 롤체지지 갱신 (라이엇 갱신처럼 한 번에) -> 끝나면 다시 그림. 탭에 들어올 때마다 (2분 간격), '갱신' 버튼은 바로
   var frSyncAt = 0, frSyncing = false;
   function frSyncAll(force) {
-    if (!APP || frSyncing || (!force && Date.now() - frSyncAt < 120000)) return;
+    var ids = frList();
+    if (!LIVE || !ids.length || frSyncing || (!force && Date.now() - frSyncAt < 120000)) return;
     frSyncing = true; frSyncAt = Date.now();
-    var rf = document.getElementById("fr-refresh"), note = document.getElementById("fr-note"), ids = frList(), done = 0;
+    var rf = document.getElementById("fr-refresh"), note = document.getElementById("fr-note"), done = 0;
     rf.disabled = true; rf.textContent = "갱신 중 0/" + ids.length;
     Promise.all(ids.map(function (id) { return dakSync(id).then(function () { rf.textContent = "갱신 중 " + (++done) + "/" + ids.length; }); })).then(function () {
       frSyncing = false; rf.disabled = false; rf.textContent = "갱신"; frLoad(true);
@@ -171,7 +185,7 @@
       b.addEventListener("click", function () { frTopWho = id; frTop(); }); wb.appendChild(b);
     });
     box.innerHTML = "";
-    if (!frData.length) { box.appendChild(el("p", "empty", "불러오는 중")); return; }
+    if (!frData.length) { box.appendChild(el("p", "empty", LIVE && !frList().length ? "소환사를 추가하면 최근 고점 판을 비교할 수 있어요" : "불러오는 중")); return; }
     if (!POWER) { box.appendChild(el("p", "empty", "불러오는 중")); return; }
     var need = frData.filter(function (f) { return f.d._canMore && f.d._canMore(frTopN) && (!frTopWho || f.id === frTopWho); });
     if (need.length) {
@@ -204,7 +218,7 @@
     document.querySelectorAll("#fr-view button").forEach(function (b) { b.addEventListener("click", function () { frSetView(b.dataset.v); }); });
     document.querySelectorAll("#fr-x button").forEach(function (b) { b.addEventListener("click", function () { frX = b.dataset.x; frZoom = 0; frDraw(); }); });
     var add = document.getElementById("fr-add"), inp = document.getElementById("fr-q");
-    add.hidden = !APP;
+    add.hidden = !LIVE;
     function doAdd() {
       var v = inp.value.trim(); if (v.indexOf("#") < 1) { inp.focus(); return; }
       var f = frList(); if (f.indexOf(v) < 0) f.push(v); frSave(f); inp.value = ""; frLoad();
@@ -213,10 +227,10 @@
     inp.addEventListener("keydown", function (e) { if (e.key === "Enter") doAdd(); });
     var sug = document.getElementById("fr-sug");
     var frPick = function (id) { inp.value = id; sug.innerHTML = ""; doAdd(); inp.blur(); };
-    var frSug = function () { whoList(sug, inp.value, { me: true, pick: frPick, skip: frList() }); };
+    var frSug = function () { whoList(sug, inp.value, { me: !WEB, pick: frPick, skip: frList() }); };
     inp.addEventListener("focus", frSug); inp.addEventListener("input", frSug);
     inp.addEventListener("blur", function () { setTimeout(function () { sug.innerHTML = ""; }, 200); });
-    var rf = document.getElementById("fr-refresh"); rf.hidden = !APP;
+    var rf = document.getElementById("fr-refresh"); rf.hidden = !LIVE || !frList().length;
     rf.addEventListener("click", function () { frSyncAll(true); });
     frLoad();
   }

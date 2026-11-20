@@ -74,11 +74,27 @@
       dcObs.observe(box);
     }
   }
+  function dcDrawWeb() {
+    var secEl = document.getElementById("dc"), bar = secEl && secEl.querySelector(".dc-bar"), ab = secEl && secEl.querySelector(".about");
+    if (bar) bar.hidden = true;
+    if (ab) ab.hidden = true;
+    var ul = document.getElementById("dc-list"), box = document.getElementById("dc-more");
+    if (ul) { ul.innerHTML = ""; ul.hidden = true; }
+    if (!box) return;
+    box.innerHTML = "";
+    var card = el("div", "fcard dc-web");
+    card.appendChild(el("h3", null, "디시인사이드 롤체 갤러리"));
+    card.appendChild(el("p", "sub", "실시간 목록 자동 갱신과 앱 내 글 보기는 안드로이드 앱에서 볼 수 있어요. 브라우저에서는 갤러리로 바로 이동해 보세요."));
+    var a = el("a", "codebtn big", "롤체갤 열기");
+    a.href = DC_URL; a.target = "_blank"; a.rel = "noopener";
+    card.appendChild(a);
+    box.appendChild(card);
+  }
   function dcLoadMore() {
     if (DC.more || DC.end || !APP || current !== "dc" || !DC.rows.length) return;
     DC.more = true; dcMoreBox();
     var mode = DC.mode, page = DC.page + 1;
-    fetch("/proxy?u=" + encodeURIComponent(dcUrl(page))).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); }).then(function (h) {
+    viaAppText(dcUrl(page)).then(function (h) {
       if (mode !== DC.mode) return;
       var rows = dcParse(h);
       DC.page = page;
@@ -92,7 +108,7 @@
   function dcStat() {
     var s = document.getElementById("dc-stat"), dot = document.getElementById("dc-dot");
     var t = DC.at ? new Date(DC.at).toTimeString().slice(0, 8) : "";
-    s.textContent = !APP ? "앱에서만 볼 수 있어요" : DC.iv === 0 ? (t ? t + " 갱신 · 멈춤" : "멈춤") : DC.fail ? "연결이 불안정해요 · " + Math.round(dcWait() / 1000) + "초 뒤 다시" : (t ? t + " 갱신" : "불러오는 중");
+    s.textContent = !APP ? "앱에서 볼 수 있어요" : DC.iv === 0 ? (t ? t + " 갱신 · 멈춤" : "멈춤") : DC.fail ? "연결이 불안정해요 · " + Math.round(dcWait() / 1000) + "초 뒤 다시" : (t ? t + " 갱신" : "불러오는 중");
     dot.className = "dc-dot" + (APP && DC.iv && !DC.fail ? " on" : "");
   }
   function dcWait() { return DC.fail ? Math.min(30000, Math.max(DC.iv || 1000, 1000) * Math.pow(2, DC.fail)) : DC.iv; }
@@ -102,17 +118,21 @@
     if (!dcOn() || DC.busy) return;
     DC.busy = true;
     var mode = DC.mode;
-    fetch("/proxy?u=" + encodeURIComponent(dcUrl(1))).then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.text();
-    }).then(function (h) {
+    viaAppText(dcUrl(1)).then(function (h) {
       var rows = dcParse(h);
       if (!rows.length) throw new Error("빈 목록");
       if (mode === DC.mode) { dcMerge(rows, true); DC.fail = 0; DC.at = Date.now(); dcDraw(); }
     }).catch(function () { DC.fail = Math.min(DC.fail + 1, 5); if (!DC.rows.length) dcDraw(); })
       .then(function () { DC.busy = false; dcStat(); if (dcOn() && DC.iv) DC.timer = setTimeout(dcTick, dcWait()); });
   }
-  function dcStart() { dcStat(); if (!DC.rows.length) dcDraw(); if (dcOn()) dcTick(); }
+  function dcStart() {
+    if (!APP) { dcDrawWeb(); return; }
+    var secEl = document.getElementById("dc"), bar = secEl && secEl.querySelector(".dc-bar"), ab = secEl && secEl.querySelector(".about"), ul = document.getElementById("dc-list");
+    if (bar) bar.hidden = false;
+    if (ab) ab.hidden = false;
+    if (ul) ul.hidden = false;
+    dcStat(); if (!DC.rows.length) dcDraw(); if (dcOn()) dcTick();
+  }
   function buildDc() {
     document.querySelectorAll("#dc-mode button").forEach(function (b) {
       b.classList.toggle("on", b.dataset.m === DC.mode);
@@ -196,7 +216,7 @@
   function dcFillWebp(box, no) {  // 움직이는 사진: PC 글 화면에서 data-fileno가 같은 img의 주소를 찾아 넣는다
     var wait = box.querySelectorAll("img.dc-wait");
     if (!wait.length) return;
-    fetch("/proxy?u=" + encodeURIComponent("https://gall.dcinside.com/mgallery/board/view/?id=tft&no=" + no)).then(function (x) { return x.text(); }).then(function (h) {
+    viaAppText("https://gall.dcinside.com/mgallery/board/view/?id=tft&no=" + no).then(function (h) {
       var map = {}, re = /<img[^>]*src="(https:\/\/dcimg\d*\.dcinside\.co\.kr\/viewimage\.php[^"]+)"[^>]*data-fileno="(\d+)"/g, m;
       while ((m = re.exec(h))) map[m[2]] = m[1].replace(/&amp;/g, "&");
       [].forEach.call(wait, function (im) {
@@ -221,7 +241,7 @@
     back.addEventListener("click", function () { navBack("dcview", close); });
     navPush("dcview", close);
     function load() {
-      return fetch("/proxy?u=" + encodeURIComponent(r.href.replace(/\?.*$/, ""))).then(function (x) { if (!x.ok) throw new Error(); return x.text(); }).then(function (h) {
+      return viaAppText(r.href.replace(/\?.*$/, "")).then(function (h) {
         var p = dcParsePost(h);
         if (!p) throw new Error();
         if (DC.view !== v) return;

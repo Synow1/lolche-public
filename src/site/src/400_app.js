@@ -273,9 +273,13 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheetUI(); });
   }
 
-  /* ---- 안드로이드 앱(android/)에서 열렸을 때 ---- */
+  /* ---- 실행 환경 구분: 안드로이드 앱(APP / OVERLAY) · PC 웹(WEB) ---- */
   var APP = location.hostname === "lolche.local" && !!window.LolcheApp;
   var OVERLAY = APP && /overlay=1/.test(location.search);
+  var WEB = !APP && !(window.claude && window.claude.use);
+  var LIVE = APP || WEB;
+  function isWide() { return !OVERLAY && window.innerWidth >= 1024; }
+  function reloadErr() { return WEB ? "불러오지 못했어요. 페이지를 새로고침해 주세요" : "불러오지 못했어요. 앱을 다시 열어 주세요"; }
   // 받은 업데이트보다 옛 페이지가 떠 있으면 (업데이트를 갈아 끼우는 순간 열린 경우 등) 다시 연다. 무한 반복은 2번까지
   if (APP) try {
     var myWeb = (document.querySelector('meta[name="lolche-web"]') || {}).content, curWeb = window.LolcheApp.webVersion ? window.LolcheApp.webVersion() : "";
@@ -294,6 +298,7 @@
   var QUEUE = { 1090: "일반", 1100: "랭크", 1130: "초고속", 1160: "더블업" };
 
   function setupApp() {
+    if (WEB) { document.body.classList.add("web"); return; }
     if (!APP) return;
     document.body.classList.add(OVERLAY ? "overlay" : "app");
     if (OVERLAY) return;  // 떠있는 창은 앱 쪽 윗줄에 옮기기·크기·접기 버튼이 있다
@@ -308,15 +313,26 @@
     });
   }
 
-  // my_games.py의 board / deck_label / diagnose 를 줄여서 옮긴 것. 코칭은 Claude가 따로 쓴다.
+  // 외부 요청 통합: 앱은 안드로이드 프록시(/proxy?u=), PC 웹은 브라우저가 직접 fetch
+  function fetchUrl(u) {
+    return fetch(APP ? "/proxy?u=" + encodeURIComponent(u) : u);
+  }
   function viaApp(u) {
-    return fetch("/proxy?u=" + encodeURIComponent(u)).then(function (r) {
+    if (!LIVE) return Promise.reject(new Error("앱이나 PC 웹에서 이용할 수 있어요"));
+    return fetchUrl(u).then(function (r) {
       if (!r.ok) return r.text().then(function (t) { throw new Error(t || ("HTTP " + r.status)); });
       return r.json();
     });
   }
+  function viaAppText(u) {
+    if (!LIVE) return Promise.reject(new Error("앱이나 PC 웹에서 이용할 수 있어요"));
+    return fetchUrl(u).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    });
+  }
 
-  // 작업 세션 (claude.ai 페이지의 '갱신 요청' 버튼이 Claude Code Remote 커넥터로 메시지를 보냄)
+  // 작업 세션 (claude.ai 페이지의 '갱신 요청' 버튼이 Claude Code Remote 커넥터로 메시지를 보냄. WEB에서는 미사용)
   var SESSION = "session_01VCcDCEg6hT8M9R4abL4j3G";
 
 
@@ -327,8 +343,8 @@
   var current = null;
   function goTab(id) {  // 버튼·링크로 탭을 옮길 때: 뒤로가기로 직전 탭·스크롤 위치로 정확히 복원
     if (current === id) {
-      if (id === "meta" && !document.getElementById("mt-detail").hidden) { navBack("deck", metaBack); return; }
-      if (id === "tfa" && !document.getElementById("tfa-detail").hidden) { navBack("tfa", tfaBack); return; }
+      if (!isWide() && id === "meta" && !document.getElementById("mt-detail").hidden) { navBack("deck", metaBack); return; }
+      if (!isWide() && id === "tfa" && !document.getElementById("tfa-detail").hidden) { navBack("tfa", tfaBack); return; }
       window.scrollTo(0, 0);
       return;
     }
@@ -356,6 +372,7 @@
     if (restoreY != null) window.scrollTo(0, restoreY);
     else if (scroll) window.scrollTo(0, same ? 0 : TAB_Y[id] || 0);  // 다른 탭에서 돌아오면 보던 위치, 같은 탭을 다시 누르면 맨 위
     if (id === "home") { setTimeout(homeRender, 0); if (window.v2PrismKick) setTimeout(window.v2PrismKick, 60); }
+    if (id === "meta" && isWide() && META) setTimeout(metaEnsureWide, 0);
     if (id === "tfa") setTimeout(tfaRender, 0);
     if (id === "s19") setTimeout(s19Render, 0);
     var isDeck = DECK_TABS.indexOf(id) >= 0, isRank = RANK_TABS.indexOf(id) >= 0;
@@ -369,6 +386,7 @@
     var lab = links.filter(function (a) { return a.getAttribute("href") === "#" + id; })[0];
     document.getElementById("ab-title").textContent = (id === "home" || id === "meta") ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
     document.querySelectorAll(".bnav a").forEach(function (a) { a.classList.toggle("on", a.dataset.nav === navId); });
+    document.querySelectorAll(".pc-side-extra a").forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + id); });
     try { localStorage.setItem(TAB_KEY, id); } catch (e) {}
     if (id === "esports") setTimeout(function () { apacLiveIfDue(false); lvIfDue(false); }, 0);
     if (id === "dc") setTimeout(dcStart, 0);
@@ -398,6 +416,25 @@
     var h = (location.hash || "").slice(1);
     if (h && h !== current) showTab(h, true);
   });
+  // PC(1024px+) ↔ 모바일 폭 전환 시 덱 목록·상세 2단 레이아웃 동기화
+  if (window.matchMedia) {
+    var wideMQ = window.matchMedia("(min-width: 1024px)");
+    var onWideChange = function () {
+      var ml = document.getElementById("mt-list-view"), md = document.getElementById("mt-detail");
+      var tl = document.getElementById("tfa-list"), td = document.getElementById("tfa-detail");
+      if (isWide()) {
+        if (ml) ml.hidden = false;
+        if (META) metaEnsureWide();
+        if (tl) tl.hidden = false;
+        if (TFA && tfaView === "comps") tfaRender();
+      } else {
+        if (ml && md && !ml.hidden && !md.hidden) md.hidden = true;
+        if (tl && td && !tl.hidden && !td.hidden) td.hidden = true;
+      }
+    };
+    if (wideMQ.addEventListener) wideMQ.addEventListener("change", onWideChange);
+    else if (wideMQ.addListener) wideMQ.addListener(onWideChange);
+  }
   function mark() { if (current) showTab(current, false); }
   links.forEach(function (a) {
     a.setAttribute("role", "tab");
@@ -424,12 +461,12 @@
   fetch("icons/index.json").then(function (r) { return r.json(); }).then(function (d) {
     IDX = d; decorate(); buildGrid(); buildCompList(); buildEmblems(); mark();
     fetch("esports.json").then(function (r) { return r.json(); }).then(buildEsports).catch(function () {
-      document.getElementById("esp-list").textContent = "불러오지 못했어요. 앱을 다시 열어 주세요";
+      document.getElementById("esp-list").textContent = reloadErr();
     });
     fetch("guides.json").then(function (r) { return r.json(); }).then(function (g) { buildGuides(g); homeRender(); }).catch(function () {});
     fetch("version.json").then(function (r) { return r.json(); }).then(buildVersion).catch(function () {});
     fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); }).catch(function () {
-      var b = document.getElementById("tfa-out"); if (b) b.innerHTML = '<p class="empty">불러오지 못했어요. 앱을 다시 열어 주세요</p>';
+      var b = document.getElementById("tfa-out"); if (b) b.innerHTML = '<p class="empty">' + reloadErr() + '</p>';
     });
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.addEventListener("click", function () { tfaView = b.dataset.v; tfaSave(); tfaRender(); }); });
     fetch("dist.json").then(function (r) { return r.json(); }).then(function (d) { DISTH = d; }).catch(function () {});
@@ -441,7 +478,7 @@
       var h = d[dakSeason()] || {}, ks = Object.keys(h).sort().filter(function (k) { return h[k][1] != null; }), k = ks[ks.length - 1];
       if (k && !CUT_NOW) { CUT_NOW = { c: h[k][0], g: h[k][1], t: Date.parse(k + "T12:00:00+09:00") }; if (rkCut) rkCutoff(rkCut); }
     }).catch(function () {}).then(function () {
-      if (!APP) return;  // 앱은 롤체지지에서 시즌 컷 기록을 바로 받는다 (롤체지지 티어 그래프 점선과 같은 값)
+      if (!LIVE) return;  // 앱·웹 모두 롤체지지에서 시즌 컷 기록을 바로 받는다 (롤체지지 티어 그래프 점선과 같은 값)
       dakGet("data/summoner-tier-cutoffs?shard=kr&season=" + dakSeason()).then(function (r) {
         var h = {};
         (r.summonerTierCutoffs || []).forEach(function (x) {
@@ -452,15 +489,15 @@
       }).catch(function () {});
     });
     fetch("meta.json").then(function (r) { return r.json(); }).then(function (m) { buildMeta(m); homeRender(); }).catch(function () {
-      document.getElementById("mt-rows").textContent = "불러오지 못했어요. 앱을 다시 열어 주세요";
+      document.getElementById("mt-rows").textContent = reloadErr();
     });
     var dbReady = fetch("db.json").then(function (r) { return r.json(); }).then(buildFind).catch(function () {
-      document.getElementById("find-sub").textContent = "불러오지 못했어요. 앱을 다시 열어 주세요";
+      document.getElementById("find-sub").textContent = reloadErr();
     });
     Promise.all([fetch("items.json").then(function (r) { return r.json(); }), dbReady]).then(function (x) { buildItems(x[0]); }).catch(function () {
-      document.getElementById("it-rows").textContent = "불러오지 못했어요. 앱을 다시 열어 주세요";
+      document.getElementById("it-rows").textContent = reloadErr();
     });
   }).catch(function () {
-    document.getElementById("picked").textContent = "불러오지 못했어요. 앱을 다시 열어 주세요";
+    document.getElementById("picked").textContent = reloadErr();
   });
 })();

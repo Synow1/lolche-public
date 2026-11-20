@@ -50,10 +50,13 @@
       return y - x || ((IDX.units[b.u] || {}).cost || 0) - ((IDX.units[a.u] || {}).cost || 0);
     });
   }
+  var tfaCurSlug = null;
   function tfaRender() {
-    var box = document.getElementById("tfa-out"), tools = document.getElementById("tfa-tools");
+    var box = document.getElementById("tfa-out"), tools = document.getElementById("tfa-tools"), secEl = document.getElementById("tfa");
     if (!box) return;
+    if (secEl) secEl.classList.toggle("tfa-wide-single", tfaView !== "comps");
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === tfaView); });
+    if (tfaView !== "comps") { document.getElementById("tfa-detail").hidden = true; document.getElementById("tfa-list").hidden = false; }
     if (!TFA || !IDX) { box.innerHTML = '<p class="empty">불러오는 중</p>'; return; }
     document.getElementById("tfa-note").textContent = updAt(TFA.updated) + " · " + ago(Date.parse(TFA.updated)) + " · 출처 TFT Academy";
     tools.innerHTML = ""; box.innerHTML = "";
@@ -73,6 +76,7 @@
           if (c.tier === "X") box.appendChild(el("p", "emb-sub tfa-sub", "상징·증강·유물처럼 조건이 맞을 때만 하는 덱이에요. 글자는 조건이 맞았을 때의 티어예요"));
         }
         var tl = c.tier === "X" ? c.sub || "X" : c.tier, r = el("button", "mt-row dk t-" + tl); r.type = "button";
+        r.dataset.slug = c.slug;
         var mb = c.board.filter(function (x) { return x.u === c.main; })[0] || { u: c.main, s: 1, i: [] }, pt = dkPortrait(mb, null);
         r.appendChild(pt);
         var mid = el("div", "mt-mid");
@@ -92,7 +96,13 @@
         r.addEventListener("click", function () { tfaShow(c.slug); });
         box.appendChild(r);
       });
-      if (!list.length) box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
+      if (!list.length) {
+        box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
+        if (isWide()) document.getElementById("tfa-detail").hidden = true;
+      } else if (isWide()) {
+        var hasCur = tfaCurSlug && list.some(function (x) { return x.slug === tfaCurSlug || (x.tabs || []).indexOf(tfaCurSlug) >= 0; });
+        tfaShow(hasCur ? tfaCurSlug : list[0].slug, true);
+      }
     } else if (tfaView === "augs") {
       tfaChips(tools, TFA_RAR, tfaRar, function (v) { tfaRar = v; tfaSave(); tfaRender(); }, "tfa-rar");
       tfaChips(tools, TFA_STAGE, tfaStage, function (v) { tfaStage = v; tfaSave(); tfaRender(); });
@@ -135,8 +145,9 @@
   }
   function tfaShow(slug, noScroll) {
     var c = TFA && TFA.comps.filter(function (x) { return x.slug === slug; })[0]; if (!c) return;
-    var box = document.getElementById("tfa-detail");
-    if (!noScroll && box.hidden) { var ly = window.scrollY; navPush("tfa", function () { tfaBack(); window.scrollTo(0, ly); }); }
+    tfaCurSlug = slug;
+    var box = document.getElementById("tfa-detail"), wide = isWide();
+    if (!wide && !noScroll && box.hidden) { var ly = window.scrollY; navPush("tfa", function () { tfaBack(); window.scrollTo(0, ly); }); }
     box.innerHTML = "";
     var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("tfa", tfaBack); }); box.appendChild(back);
     var tabs = tfaTabs(c);
@@ -145,7 +156,7 @@
       tabs.forEach(function (x) {
         var xl = x.tier === "X" ? x.sub || "X" : x.tier, b = el("button", "tfa-tab" + (x.slug === c.slug ? " on" : "")); b.type = "button"; b.setAttribute("role", "tab");
         b.appendChild(el("span", "tierb " + xl, xl)); b.appendChild(el("span", null, x.title));
-        b.addEventListener("click", function () { if (x.slug !== c.slug) { tfaShow(x.slug, true); window.scrollTo(0, 0); } });
+        b.addEventListener("click", function () { if (x.slug !== c.slug) { tfaShow(x.slug, true); if (isWide()) box.scrollTop = 0; else window.scrollTo(0, 0); } });
         tb.appendChild(b);
       });
       box.appendChild(tb);
@@ -221,10 +232,13 @@
     }
     if (c.updated) B.appendChild(el("p", "fnote", "출처 TFT Academy · " + updAt(c.updated)));
     cols.appendChild(A); cols.appendChild(B); box.appendChild(cols);
-    document.getElementById("tfa-list").hidden = true; box.hidden = false;
-    if (!noScroll) window.scrollTo(0, 0);
+    document.getElementById("tfa-list").hidden = !wide; box.hidden = false;
+    var rootSlug = c.var ? c.parent : c.slug;
+    document.querySelectorAll("#tfa-out .mt-row").forEach(function (row) { row.classList.toggle("sel", row.dataset.slug === rootSlug); });
+    if (!noScroll) { if (wide) box.scrollTop = 0; else window.scrollTo(0, 0); }
   }
   function tfaBack() {
+    if (isWide()) { document.getElementById("tfa-list").hidden = false; return; }
     document.getElementById("tfa-detail").hidden = true;
     document.getElementById("tfa-list").hidden = false;
   }

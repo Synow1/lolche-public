@@ -1,0 +1,1288 @@
+{
+ "units": {
+  "아리": {
+   "icon": "icons/u/tft18_ahri.webp",
+   "cost": 4
+  },
+  "아칼리": {
+   "icon": "icons/u/tft18_akali.webp",
+   "cost": 1
+  },
+  "알리스타": {
+   "icon": "icons/u/tft18_alistar.webp",
+   "cost": 2
+  },
+  "알룬": {
+   "icon": "icons/u/tft18_alune.webp",
+   "cost": 5
+  },
+  "아무무": {
+   "icon": "icons/u/tft18_amumu.webp",
+   "cost": 4
+  },
+  "아펠리오스": {
+   "icon": "icons/u/tft18_aphelios.webp",
+   "cost": 4
+  },
+  "애쉬": {
+   "icon": "icons/u/tft18_ashe.webp",
+   "cost": 5
+  },
+  "아지르": {
+   "icon": "icons/u/tft18_azir.webp",
+   "cost": 3
+  },
+  "덩굴정령": {
+   "icon": "icons/u/tft18_brambleback.webp",
+   "cost": 4
+  },
+  "케이틀린": {
+   "icon": "icons/u/tft18_caitlyn.webp",
+   "cost": 2
+  },
+  "카밀": {
+   "icon": "icons/u/tft18_camille.webp",
+   "cost": 1
+  },
+  "카시오페아": {
+   "icon": "icons/u/tft18_cassiopeia.webp",
+   "cost": 3
+  },
+  "불타는 묘목": {
+   "icon": "icons/u/tft18_cinderling.webp",
+   "cost": 1
+  },
+  "어미 부리": {
+   "icon": "icons/u/tft18_mamabeak.webp",
+   "cost": 3
+  },
+  "다이애나": {
+   "icon": "icons/u/tft18_diana.webp",
+   "cost": 3
+  },
+  "드레이븐": {
+   "icon": "icons/u/tft18_draven.webp",
+   "cost": 5
+  },
+  "장로 드래곤": {
+   "icon": "icons/u/tft18_elderdragon.webp",
+   "cost": 5
+  },
+  "엘리스": {
+   "icon": "icons/u/tft18_elisespider.webp",
+   "cost": 2
+  },
+  "이즈리얼": {
+   "icon": "icons/u/tft18_ezreal.webp",
+   "cost": 4
+  },
+  "피들스틱": {
+   "icon": "icons/u/tft18_fiddlesticks.webp",
+   "cost": 3
+  },
+  "나르": {
+   "icon": "icons/u/tft18_gnar.webp",
+   "cost": 5
+  },
+  "심술두꺼비": {
+   "icon": "icons/u/tft18_gromp.webp",
+   "cost": 2
+  },
+  "헤카림": {
+   "icon": "icons/u/tft18_hecarim.webp",
+   "cost": 3
+  },
+  "아이번": {
+   "icon": "icons/u/tft18_ivern.webp",
+   "cost": 5
+  },
+  "카르마": {
+   "icon": "icons/u/tft18_karma.webp",
+   "cost": 1
+  },
+  "케일": {
+   "icon": "icons/u/tft18_kayle.webp",
+   "cost": 2
+  },
+  "케넨": {
+   "icon": "icons/u/tft18_kennen.webp",
+   "cost": 5
+  },
+  "카직스": {
+   "icon": "icons/u/tft18_khazix.webp",
+   "cost": 3
+  },
+  "코부코": {
+   "icon": "icons/u/tft18_kobuko.webp",
+   "cost": 1
+  },
+  "코그모": {
+   "icon": "icons/u/tft18_kogmaw.webp",
+   "cost": 3
+  },
+  "돌거북": {
+   "icon": "icons/u/tft18_krug.webp",
+   "cost": 3
+  },
+  "르블랑": {
+   "icon": "icons/u/tft18_leblanc.webp",
+   "cost": 2
+  },
+  "레오나": {
+   "icon": "icons/u/tft18_leona.webp",
+   "cost": 1
+  },
+  "릴리아": {
+   "icon": "icons/u/tft18_lillia.webp",
+   "cost": 4
+  },
+  "럭스": {
+   "icon": "icons/u/tft18_lux_base.webp",
+   "cost": 5
+  },
+  "말파이트": {
+   "icon": "icons/u/tft18_malphite.webp",
+   "cost": 4
+  },
+  "마오카이": {
+   "icon": "icons/u/tft18_maokai.webp",
+   "cost": 5
+  },
+  "마스터 이": {
+   "icon": "icons/u/tft18_masteryi.webp",
+   "cost": 3
+  },
+  "모르가나": {
+   "icon": "icons/u/tft18_morgana.webp",
+   "cost": 4
+  },
+  "어스름늑대": {
+   "icon": "icons/u/tft18_murkwolf.webp",
+   "cost": 2
+  },
+  "니달리": {
+   "icon": "icons/u/tft18_nidalee.webp",
+   "cost": 4
+  },
+  "오른": {
+   "icon": "icons/u/tft18_ornn.webp",
+   "cost": 1
+  },
+  "라칸": {
+   "icon": "icons/u/tft18_rakan.webp",
+   "cost": 1
+  },
+  "람머스": {
+   "icon": "icons/u/tft18_rammus.webp",
+   "cost": 3
+  },
+  "렉사이": {
+   "icon": "icons/u/tft18_reksai.webp",
+   "cost": 1
+  },
+  "렝가": {
+   "icon": "icons/u/tft18_rengar.webp",
+   "cost": 3
+  },
+  "바위 게": {
+   "icon": "icons/u/tft18_scuttlecrab.webp",
+   "cost": 2
+  },
+  "세주아니": {
+   "icon": "icons/u/tft18_sejuani.webp",
+   "cost": 2
+  },
+  "감시자": {
+   "icon": "icons/u/tft18_sentinel.webp",
+   "cost": 4
+  },
+  "조약돌": {
+   "icon": "icons/u/tft18_pebbles.webp",
+   "cost": 1
+  },
+  "세트": {
+   "icon": "icons/u/tft18_sett.webp",
+   "cost": 4
+  },
+  "쉔": {
+   "icon": "icons/u/tft18_shen.webp",
+   "cost": 2
+  },
+  "시비르": {
+   "icon": "icons/u/tft18_sivir.webp",
+   "cost": 4
+  },
+  "소라카": {
+   "icon": "icons/u/tft18_soraka.webp",
+   "cost": 4
+  },
+  "타릭": {
+   "icon": "icons/u/tft18_taric.webp",
+   "cost": 5
+  },
+  "티모": {
+   "icon": "icons/u/tft18_teemo.webp",
+   "cost": 2
+  },
+  "트리스타나": {
+   "icon": "icons/u/tft18_tristana.webp",
+   "cost": 3
+  },
+  "바루스": {
+   "icon": "icons/u/tft18_varus.webp",
+   "cost": 1
+  },
+  "베이가": {
+   "icon": "icons/u/tft18_veigar.webp",
+   "cost": 1
+  },
+  "바이": {
+   "icon": "icons/u/tft18_vi.webp",
+   "cost": 3
+  },
+  "워윅": {
+   "icon": "icons/u/tft18_warwick.webp",
+   "cost": 2
+  },
+  "자야": {
+   "icon": "icons/u/tft18_xayah.webp",
+   "cost": 1
+  },
+  "요릭": {
+   "icon": "icons/u/tft18_yorick.webp",
+   "cost": 1
+  },
+  "유나라": {
+   "icon": "icons/u/tft18_yunara.webp",
+   "cost": 2
+  },
+  "자이라": {
+   "icon": "icons/u/tft18_zyra.webp",
+   "cost": 4
+  },
+  "돌껍질 나무": {
+   "icon": "icons/u/x_stonebarktree.webp",
+   "cost": 0
+  },
+  "생명꽃": {
+   "icon": "icons/u/x_lifebloom.webp",
+   "cost": 0
+  },
+  "깊은숲 수호자": {
+   "icon": "icons/u/x_deepwoodprotector.webp",
+   "cost": 0
+  }
+ },
+ "items": {
+  "적응형 투구": {
+   "icon": "icons/i/da_adaptivehelm.webp",
+   "recipe": [
+    "여신의 눈물",
+    "음전자 망토"
+   ]
+  },
+  "대천사의 지팡이": {
+   "icon": "icons/i/da_archangelsstaff.webp",
+   "recipe": [
+    "쓸데없이 큰 지팡이",
+    "여신의 눈물"
+   ]
+  },
+  "피바라기": {
+   "icon": "icons/i/da_bloodthirster.webp",
+   "recipe": [
+    "B.F. 대검",
+    "음전자 망토"
+   ]
+  },
+  "푸른 파수꾼": {
+   "icon": "icons/i/da_bluebuff.webp",
+   "recipe": [
+    "여신의 눈물",
+    "여신의 눈물"
+   ]
+  },
+  "덤불 조끼": {
+   "icon": "icons/i/da_bramblevest.webp",
+   "recipe": [
+    "쇠사슬 조끼",
+    "쇠사슬 조끼"
+   ]
+  },
+  "B.F. 대검": {
+   "icon": "icons/i/da_component_bfsword.webp",
+   "recipe": []
+  },
+  "쇠사슬 조끼": {
+   "icon": "icons/i/da_component_chainvest.webp",
+   "recipe": []
+  },
+  "프라이팬": {
+   "icon": "icons/i/da_component_fryingpan.webp",
+   "recipe": []
+  },
+  "거인의 허리띠": {
+   "icon": "icons/i/da_component_giantsbelt.webp",
+   "recipe": []
+  },
+  "쓸데없이 큰 지팡이": {
+   "icon": "icons/i/da_component_needlesslylargerod.webp",
+   "recipe": []
+  },
+  "음전자 망토": {
+   "icon": "icons/i/da_component_negatroncloak.webp",
+   "recipe": []
+  },
+  "곡궁": {
+   "icon": "icons/i/da_component_recurvebow.webp",
+   "recipe": []
+  },
+  "연습용 장갑": {
+   "icon": "icons/i/da_component_sparringgloves.webp",
+   "recipe": []
+  },
+  "뒤집개": {
+   "icon": "icons/i/da_component_spatula.webp",
+   "recipe": []
+  },
+  "여신의 눈물": {
+   "icon": "icons/i/da_component_tearofthegoddess.webp",
+   "recipe": []
+  },
+  "크라운가드": {
+   "icon": "icons/i/da_crownguard.webp",
+   "recipe": [
+    "쓸데없이 큰 지팡이",
+    "쇠사슬 조끼"
+   ]
+  },
+  "죽음의 검": {
+   "icon": "icons/i/da_deathblade.webp",
+   "recipe": [
+    "B.F. 대검",
+    "B.F. 대검"
+   ]
+  },
+  "용의 발톱": {
+   "icon": "icons/i/da_dragonsclaw.webp",
+   "recipe": [
+    "음전자 망토",
+    "음전자 망토"
+   ]
+  },
+  "밤의 끝자락": {
+   "icon": "icons/i/da_edgeofnight.webp",
+   "recipe": [
+    "B.F. 대검",
+    "쇠사슬 조끼"
+   ]
+  },
+  "저녁갑주": {
+   "icon": "icons/i/da_evenshroud.webp",
+   "recipe": [
+    "음전자 망토",
+    "거인의 허리띠"
+   ]
+  },
+  "가고일 돌갑옷": {
+   "icon": "icons/i/da_gargoylestoneplate.webp",
+   "recipe": [
+    "쇠사슬 조끼",
+    "음전자 망토"
+   ]
+  },
+  "거인 학살자": {
+   "icon": "icons/i/da_giantslayer.webp",
+   "recipe": [
+    "곡궁",
+    "B.F. 대검"
+   ]
+  },
+  "구인수의 격노검": {
+   "icon": "icons/i/da_guinsoosrageblade.webp",
+   "recipe": [
+    "곡궁",
+    "쓸데없이 큰 지팡이"
+   ]
+  },
+  "정의의 손길": {
+   "icon": "icons/i/da_handofjustice.webp",
+   "recipe": [
+    "여신의 눈물",
+    "연습용 장갑"
+   ]
+  },
+  "마법공학 총검": {
+   "icon": "icons/i/da_hextechgunblade.webp",
+   "recipe": [
+    "B.F. 대검",
+    "쓸데없이 큰 지팡이"
+   ]
+  },
+  "무한의 대검": {
+   "icon": "icons/i/da_infinityedge.webp",
+   "recipe": [
+    "B.F. 대검",
+    "연습용 장갑"
+   ]
+  },
+  "이온 충격기": {
+   "icon": "icons/i/da_ionicspark.webp",
+   "recipe": [
+    "쓸데없이 큰 지팡이",
+    "음전자 망토"
+   ]
+  },
+  "보석 건틀릿": {
+   "icon": "icons/i/da_jeweledgauntlet.webp",
+   "recipe": [
+    "연습용 장갑",
+    "쓸데없이 큰 지팡이"
+   ]
+  },
+  "크라켄의 분노": {
+   "icon": "icons/i/da_krakensfury.webp",
+   "recipe": [
+    "곡궁",
+    "음전자 망토"
+   ]
+  },
+  "최후의 속삭임": {
+   "icon": "icons/i/da_lastwhisper.webp",
+   "recipe": [
+    "곡궁",
+    "연습용 장갑"
+   ]
+  },
+  "모렐로노미콘": {
+   "icon": "icons/i/da_morellonomicon.webp",
+   "recipe": [
+    "거인의 허리띠",
+    "쓸데없이 큰 지팡이"
+   ]
+  },
+  "내셔의 이빨": {
+   "icon": "icons/i/da_nashorstooth.webp",
+   "recipe": [
+    "곡궁",
+    "거인의 허리띠"
+   ]
+  },
+  "수호자의 맹세": {
+   "icon": "icons/i/da_protectorsvow.webp",
+   "recipe": [
+    "쇠사슬 조끼",
+    "여신의 눈물"
+   ]
+  },
+  "수은": {
+   "icon": "icons/i/da_quicksilver.webp",
+   "recipe": [
+    "음전자 망토",
+    "연습용 장갑"
+   ]
+  },
+  "라바돈의 죽음모자": {
+   "icon": "icons/i/da_rabadonsdeathcap.webp",
+   "recipe": [
+    "쓸데없이 큰 지팡이",
+    "쓸데없이 큰 지팡이"
+   ]
+  },
+  "붉은 덩굴정령": {
+   "icon": "icons/i/da_redbuff.webp",
+   "recipe": [
+    "곡궁",
+    "곡궁"
+   ]
+  },
+  "쇼진의 창": {
+   "icon": "icons/i/da_spearofshojin.webp",
+   "recipe": [
+    "여신의 눈물",
+    "B.F. 대검"
+   ]
+  },
+  "정령의 형상": {
+   "icon": "icons/i/da_spiritvisage.webp",
+   "recipe": [
+    "거인의 허리띠",
+    "여신의 눈물"
+   ]
+  },
+  "굳건한 심장": {
+   "icon": "icons/i/da_steadfastheart.webp",
+   "recipe": [
+    "쇠사슬 조끼",
+    "연습용 장갑"
+   ]
+  },
+  "스테락의 도전": {
+   "icon": "icons/i/da_steraksgage.webp",
+   "recipe": [
+    "B.F. 대검",
+    "거인의 허리띠"
+   ]
+  },
+  "타격대의 철퇴": {
+   "icon": "icons/i/da_strikersflail.webp",
+   "recipe": [
+    "거인의 허리띠",
+    "연습용 장갑"
+   ]
+  },
+  "태양불꽃 망토": {
+   "icon": "icons/i/da_sunfirecape.webp",
+   "recipe": [
+    "쇠사슬 조끼",
+    "거인의 허리띠"
+   ]
+  },
+  "전략가의 망토": {
+   "icon": "icons/i/da_tacticianscape.webp",
+   "recipe": [
+    "뒤집개",
+    "프라이팬"
+   ]
+  },
+  "전략가의 왕관": {
+   "icon": "icons/i/da_tacticianscrown.webp",
+   "recipe": [
+    "뒤집개",
+    "뒤집개"
+   ]
+  },
+  "전략가의 방패": {
+   "icon": "icons/i/da_tacticiansshield.webp",
+   "recipe": [
+    "프라이팬",
+    "프라이팬"
+   ]
+  },
+  "도적의 장갑": {
+   "icon": "icons/i/da_thiefsgloves.webp",
+   "recipe": [
+    "연습용 장갑",
+    "연습용 장갑"
+   ]
+  },
+  "거인의 결의": {
+   "icon": "icons/i/da_titansresolve.webp",
+   "recipe": [
+    "곡궁",
+    "쇠사슬 조끼"
+   ]
+  },
+  "공허의 지팡이": {
+   "icon": "icons/i/da_voidstaff.webp",
+   "recipe": [
+    "곡궁",
+    "여신의 눈물"
+   ]
+  },
+  "워모그의 갑옷": {
+   "icon": "icons/i/da_warmogsarmor.webp",
+   "recipe": [
+    "거인의 허리띠",
+    "거인의 허리띠"
+   ]
+  },
+  "검은 가시 상징": {
+   "icon": "icons/i/da_18_emblemblackthorn.webp",
+   "recipe": [
+    "뒤집개",
+    "거인의 허리띠"
+   ]
+  },
+  "개화 상징": {
+   "icon": "icons/i/da_18_emblemblossom.webp",
+   "recipe": [
+    "뒤집개",
+    "쓸데없이 큰 지팡이"
+   ]
+  },
+  "싸움꾼 상징": {
+   "icon": "icons/i/da_18_emblembrawler.webp",
+   "recipe": [
+    "프라이팬",
+    "거인의 허리띠"
+   ]
+  },
+  "나무정령 상징": {
+   "icon": "icons/i/da_18_emblemelderwood.webp",
+   "recipe": [
+    "뒤집개",
+    "쇠사슬 조끼"
+   ]
+  },
+  "처형자 상징": {
+   "icon": "icons/i/da_18_emblemexecutioner.webp",
+   "recipe": [
+    "프라이팬",
+    "연습용 장갑"
+   ]
+  },
+  "요정 상징": {
+   "icon": "icons/i/da_18_emblemfae.webp",
+   "recipe": [
+    "뒤집개",
+    "B.F. 대검"
+   ]
+  },
+  "사냥꾼 상징": {
+   "icon": "icons/i/da_18_emblemhunter.webp",
+   "recipe": [
+    "프라이팬",
+    "B.F. 대검"
+   ]
+  },
+  "지옥불 상징": {
+   "icon": "icons/i/da_18_embleminferno.webp",
+   "recipe": [
+    "뒤집개",
+    "곡궁"
+   ]
+  },
+  "기원자 상징": {
+   "icon": "icons/i/da_18_embleminvoker.webp",
+   "recipe": [
+    "프라이팬",
+    "여신의 눈물"
+   ]
+  },
+  "달빛 상징": {
+   "icon": "icons/i/da_18_emblemlunar.webp",
+   "recipe": [
+    "뒤집개",
+    "여신의 눈물"
+   ]
+  },
+  "원시 상징": {
+   "icon": "icons/i/da_18_emblemprimal.webp",
+   "recipe": [
+    "뒤집개",
+    "연습용 장갑"
+   ]
+  },
+  "속사포 상징": {
+   "icon": "icons/i/da_18_emblemrapidfire.webp",
+   "recipe": [
+    "프라이팬",
+    "곡궁"
+   ]
+  },
+  "약탈자 상징": {
+   "icon": "icons/i/da_18_emblemslayer.webp",
+   "recipe": [
+    "프라이팬",
+    "음전자 망토"
+   ]
+  },
+  "주문술사 상징": {
+   "icon": "icons/i/da_18_emblemspellweaver.webp",
+   "recipe": [
+    "프라이팬",
+    "쓸데없이 큰 지팡이"
+   ]
+  },
+  "날렵이 상징": {
+   "icon": "icons/i/da_18_emblemsprykin.webp",
+   "recipe": [
+    "뒤집개",
+    "음전자 망토"
+   ]
+  },
+  "선봉대 상징": {
+   "icon": "icons/i/da_18_emblemvanguard.webp",
+   "recipe": [
+    "프라이팬",
+    "쇠사슬 조끼"
+   ]
+  },
+  "찬란한 적응형 투구": {
+   "icon": "icons/i/da_adaptivehelm_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 대천사의 지팡이": {
+   "icon": "icons/i/da_archangelsstaffradiant.webp",
+   "recipe": []
+  },
+  "새벽의 방패": {
+   "icon": "icons/i/da_artifact_aegisofdawn.webp",
+   "recipe": []
+  },
+  "황혼의 방패": {
+   "icon": "icons/i/da_artifact_aegisofdusk.webp",
+   "recipe": []
+  },
+  "역병의 보석": {
+   "icon": "icons/i/da_artifact_blightingjewel.webp",
+   "recipe": []
+  },
+  "새벽심장": {
+   "icon": "icons/i/da_artifact_dawncore.webp",
+   "recipe": []
+  },
+  "영원한 서약": {
+   "icon": "icons/i/da_artifact_eternalpact.webp",
+   "recipe": []
+  },
+  "생선대가리": {
+   "icon": "icons/i/da_artifact_fishbones.webp",
+   "recipe": []
+  },
+  "금지된 우상": {
+   "icon": "icons/i/da_artifact_forbiddenidol.webp",
+   "recipe": []
+  },
+  "도박꾼의 칼날": {
+   "icon": "icons/i/da_artifact_gamblersblade.webp",
+   "recipe": []
+  },
+  "황금 징수의 총": {
+   "icon": "icons/i/da_artifact_goldcollector.webp",
+   "recipe": []
+  },
+  "지옥불 손도끼": {
+   "icon": "icons/i/da_artifact_hellfirehatchet.webp",
+   "recipe": []
+  },
+  "지평선의 초점": {
+   "icon": "icons/i/da_artifact_horizonfocus.webp",
+   "recipe": []
+  },
+  "선체분쇄자": {
+   "icon": "icons/i/da_artifact_hullcrusher.webp",
+   "recipe": []
+  },
+  "무한한 삼위일체": {
+   "icon": "icons/i/da_artifact_infinityforce.webp",
+   "recipe": []
+  },
+  "리치베인": {
+   "icon": "icons/i/da_artifact_lichbane.webp",
+   "recipe": []
+  },
+  "라이트실드 문장": {
+   "icon": "icons/i/da_artifact_lightshieldcrest.webp",
+   "recipe": []
+  },
+  "루덴의 폭풍": {
+   "icon": "icons/i/da_artifact_ludenstempest.webp",
+   "recipe": []
+  },
+  "마나자네": {
+   "icon": "icons/i/da_artifact_manazane.webp",
+   "recipe": []
+  },
+  "방한 장갑": {
+   "icon": "icons/i/da_artifact_mittens.webp",
+   "recipe": []
+  },
+  "거물의 갑옷": {
+   "icon": "icons/i/da_artifact_mogulsmail.webp",
+   "recipe": []
+  },
+  "명멸검": {
+   "icon": "icons/i/da_artifact_navoriflickerblade.webp",
+   "recipe": []
+  },
+  "고속 연사포": {
+   "icon": "icons/i/da_artifact_rapidfirecannon.webp",
+   "recipe": []
+  },
+  "추적자의 팔목 보호대": {
+   "icon": "icons/i/da_artifact_seekersarmguard.webp",
+   "recipe": []
+  },
+  "은빛 여명": {
+   "icon": "icons/i/da_artifact_silvermeredawn.webp",
+   "recipe": []
+  },
+  "스태틱의 단검": {
+   "icon": "icons/i/da_artifact_statikkshiv.webp",
+   "recipe": []
+  },
+  "승천의 부적": {
+   "icon": "icons/i/da_item_artifact_talismanofascension.webp",
+   "recipe": []
+  },
+  "불굴": {
+   "icon": "icons/i/da_artifact_theindomitable.webp",
+   "recipe": []
+  },
+  "거대한 히드라": {
+   "icon": "icons/i/da_artifact_titanichydra.webp",
+   "recipe": []
+  },
+  "공허 건틀릿": {
+   "icon": "icons/i/da_artifact_voidgauntlet.webp",
+   "recipe": []
+  },
+  "마법사의 최후": {
+   "icon": "icons/i/da_artifact_witsend.webp",
+   "recipe": []
+  },
+  "존야의 역설": {
+   "icon": "icons/i/da_artifact_zhonyasparadox.webp",
+   "recipe": []
+  },
+  "찬란한 피바라기": {
+   "icon": "icons/i/da_bloodthirsterradiant.webp",
+   "recipe": []
+  },
+  "찬란한 푸른 파수꾼": {
+   "icon": "icons/i/da_bluebuffradiant.webp",
+   "recipe": []
+  },
+  "찬란한 덤불 조끼": {
+   "icon": "icons/i/da_bramblevestradiant.webp",
+   "recipe": []
+  },
+  "찬란한 크라운가드": {
+   "icon": "icons/i/da_crownguardradiant.webp",
+   "recipe": []
+  },
+  "찬란한 죽음의 검": {
+   "icon": "icons/i/da_deathbladeradiant.webp",
+   "recipe": []
+  },
+  "찬란한 용의 발톱": {
+   "icon": "icons/i/da_dragonsclawradiant.webp",
+   "recipe": []
+  },
+  "찬란한 밤의 끝자락": {
+   "icon": "icons/i/da_edgeofnightradiant.webp",
+   "recipe": []
+  },
+  "찬란한 저녁갑주": {
+   "icon": "icons/i/da_evenshroudradiant.webp",
+   "recipe": []
+  },
+  "찬란한 가고일 돌갑옷": {
+   "icon": "icons/i/da_gargoylestoneplate_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 거인 학살자": {
+   "icon": "icons/i/da_giantslayer_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 구인수의 격노검": {
+   "icon": "icons/i/da_guinsoosragebladeradiant.webp",
+   "recipe": []
+  },
+  "찬란한 정의의 손길": {
+   "icon": "icons/i/da_handofjusticeradiant.webp",
+   "recipe": []
+  },
+  "찬란한 마법공학 총검": {
+   "icon": "icons/i/da_hextechgunbladeradiant.webp",
+   "recipe": []
+  },
+  "찬란한 무한의 대검": {
+   "icon": "icons/i/da_infinityedgeradiant.webp",
+   "recipe": []
+  },
+  "찬란한 이온 충격기": {
+   "icon": "icons/i/da_ionicsparkradiant.webp",
+   "recipe": []
+  },
+  "찬란한 보석 건틀릿": {
+   "icon": "icons/i/da_jeweledgauntletradiant.webp",
+   "recipe": []
+  },
+  "찬란한 크라켄의 분노": {
+   "icon": "icons/i/da_krakensfury_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 최후의 속삭임": {
+   "icon": "icons/i/da_lastwhisperradiant.webp",
+   "recipe": []
+  },
+  "찬란한 모렐로노미콘": {
+   "icon": "icons/i/da_morellonomiconradiant.webp",
+   "recipe": []
+  },
+  "찬란한 내셔의 이빨": {
+   "icon": "icons/i/da_nashorstoothradiant.webp",
+   "recipe": []
+  },
+  "찬란한 수호자의 맹세": {
+   "icon": "icons/i/da_protectorsvowradiant.webp",
+   "recipe": []
+  },
+  "찬란한 수은": {
+   "icon": "icons/i/da_quicksilverradiant.webp",
+   "recipe": []
+  },
+  "찬란한 라바돈의 죽음모자": {
+   "icon": "icons/i/da_rabadonsdeathcap_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 붉은 덩굴정령": {
+   "icon": "icons/i/da_redbuffradiant.webp",
+   "recipe": []
+  },
+  "찬란한 쇼진의 창": {
+   "icon": "icons/i/da_spearofshojinradiant.webp",
+   "recipe": []
+  },
+  "찬란한 정령의 형상": {
+   "icon": "icons/i/da_spiritvisage_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 굳건한 심장": {
+   "icon": "icons/i/da_steadfastheartradiant.webp",
+   "recipe": []
+  },
+  "찬란한 스테락의 도전": {
+   "icon": "icons/i/da_steraksgageradiant.webp",
+   "recipe": []
+  },
+  "찬란한 타격대의 철퇴": {
+   "icon": "icons/i/da_strikersflailradiant.webp",
+   "recipe": []
+  },
+  "찬란한 태양불꽃 망토": {
+   "icon": "icons/i/da_sunfirecape_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 도적의 장갑": {
+   "icon": "icons/i/da_thiefsglovesradiant.webp",
+   "recipe": []
+  },
+  "찬란한 거인의 결의": {
+   "icon": "icons/i/da_titansresolve_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 공허의 지팡이": {
+   "icon": "icons/i/da_voidstaffradiant.webp",
+   "recipe": []
+  },
+  "찬란한 워모그의 갑옷": {
+   "icon": "icons/i/da_warmogsarmorradiant.webp",
+   "recipe": []
+  },
+  "찬란한 폭발 물약": {
+   "icon": "icons/i/da_blastpotion18_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 체력 물약": {
+   "icon": "icons/i/da_healthpotion18_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 마나 물약": {
+   "icon": "icons/i/da_manapotion18_radiant.webp",
+   "recipe": []
+  },
+  "악의 여단 상징": {
+   "icon": "icons/i/da_18_emblemcoven.webp",
+   "recipe": []
+  },
+  "엄호대 상징": {
+   "icon": "icons/i/da_18_emblemdefender.webp",
+   "recipe": []
+  },
+  "치명적인 꽃 상징": {
+   "icon": "icons/i/da_18_emblemflorafatalisaugment.webp",
+   "recipe": []
+  },
+  "전쟁기계 상징": {
+   "icon": "icons/i/da_18_emblemjuggernaut.webp",
+   "recipe": []
+  }
+ },
+ "traits": {
+  "조율": "icons/t/da_aluneuniquetrait18.webp",
+  "현상금 추적자": "icons/t/da_dravenuniquetrait18.webp",
+  "최상위 포식자": "icons/t/da_18_apexpredator.webp",
+  "자연의 아버지": "icons/t/da_18_greenfather.webp",
+  "화신": "icons/t/da_18_luxuniquetrait.webp",
+  "고목": "icons/t/da_18_maokai_uniquetrait.webp",
+  "가시의 여인": "icons/t/da_18_zyrauniquetrait.webp",
+  "적응가": "icons/t/da_18_adaptor.webp",
+  "거석": "icons/t/da_18_battlemage.webp",
+  "검은 가시": "icons/t/da_18_blackthorn.webp",
+  "개화": "icons/t/da_18_blossom.webp",
+  "싸움꾼": "icons/t/da_18_brawler.webp",
+  "부식": "icons/t/da_18_caustic.webp",
+  "악의 여단": "icons/t/da_18_coven.webp",
+  "엄호대": "icons/t/da_18_defender.webp",
+  "일월식": "icons/t/da_18_eclipse.webp",
+  "나무정령": "icons/t/da_18_elderwood.webp",
+  "에메랄드 성위": "icons/t/da_emerald18.webp",
+  "처형자": "icons/t/da_18_executioner.webp",
+  "요정": "icons/t/da_18_fae.webp",
+  "치명적인 꽃": "icons/t/da_florafatalis18.webp",
+  "사냥꾼": "icons/t/da_18_hunter.webp",
+  "지옥불": "icons/t/da_18_inferno.webp",
+  "기원자": "icons/t/da_18_invoker.webp",
+  "전쟁기계": "icons/t/da_juggernaut18.webp",
+  "달빛": "icons/t/da_18_lunar.webp",
+  "원시": "icons/t/da_primal18.webp",
+  "속사포": "icons/t/da_18_rapidfire.webp",
+  "협곡야수": "icons/t/da_riftbeast18.webp",
+  "경쟁자": "icons/t/da_18_rival.webp",
+  "약탈자": "icons/t/da_18_slayer.webp",
+  "햇빛": "icons/t/da_18_solar.webp",
+  "주문술사": "icons/t/da_18_spellweaver.webp",
+  "날렵이": "icons/t/da_18_sprykin.webp",
+  "소환사": "icons/t/da_18_summoner.webp",
+  "선봉대": "icons/t/da_18_vanguard.webp"
+ },
+ "augments": {
+  "판도라의 대기석": "icons/a/t_augmenticon_pandorasbench.webp",
+  "계산된 패배": "icons/a/t_augmenticon_calculatedloss_gold_big.webp",
+  "서사적 새로고침": "icons/a/t_augmenticon_epicrolldown.webp",
+  "뻗어가는 뿌리": "icons/a/t_augmenticon_spreadingroots.webp",
+  "뻗어가는 뿌리+": "icons/a/t_augmenticon_spreadingroots.webp",
+  "남작의 소굴": "icons/a/t_augmenticon_thebaronslair.webp",
+  "전략가의 주방": "icons/a/t_augmenticon_tacticians-kitchen.webp",
+  "특성 나무": "icons/a/t_augmenticon_thetraittree.webp",
+  "특성 나무+": "icons/a/t_augmenticon_thetraittree.webp",
+  "새로고침의 날": "icons/a/t_augmenticon_rollingfordays_gold_big.webp",
+  "폭발적인 성장": "icons/a/t_augmenticon_explosive-growth.webp",
+  "마법 주사위": "icons/a/t_augmenticon_magicalroll.webp",
+  "아이템 추출": "icons/a/t_augmenticon_eldritchaugment.webp",
+  "부스터 팩++": "icons/a/t_augmenticon_boosterpack2.webp",
+  "등급 상승": "icons/a/t_augmenticon_starringup.webp",
+  "프리즘 티켓": "icons/a/t_augmenticon_prismaticticket_big.webp",
+  "U.R.F": "icons/a/t_augmenticon_ultrarapidfire.webp",
+  "영원한 브론즈 II": "icons/a/t_augmenticon_bronzeforlife.webp",
+  "고단수 II": "icons/a/t_augmenticon_verticality.webp",
+  "고단수 III": "icons/a/t_augmenticon_verticality.webp",
+  "고단수 I": "icons/a/t_augmenticon_verticality.webp",
+  "유연함": "icons/a/t_augmenticon_flexible.webp",
+  "진형 유지": "icons/a/t_augmenticon_holdtheline.webp",
+  "종결자 협곡야수": "icons/a/t_augmenticon_riftbeastaugment.webp",
+  "가지 뻗기": "icons/a/t_augmenticon_branchingout.webp",
+  "챔피언 배달++": "icons/a/t_augmenticon_champdelivery.webp",
+  "수호자의 친구": "icons/a/t_augmenticon_caretakersally.webp",
+  "챔피언 배달+": "icons/a/t_augmenticon_champdelivery.webp",
+  "챔피언 배달": "icons/a/t_augmenticon_champdelivery.webp",
+  "입맛대로 고르는 부품": "icons/a/t_augmenticon_componentbuffet_silver_big.webp",
+  "단체 포옹 I": "icons/a/t_augmenticon_group-hug-1_tft_set17.webp",
+  "불완전한 초월": "icons/a/t_augmenticon_ascension.webp",
+  "유용한 금속": "icons/a/t_augmenticon_ironassets_silver_big.webp",
+  "아이템 꾸러미 I": "icons/a/t_augmenticon_itemgrabbag_gold_big.webp",
+  "은빛 운명+": "icons/a/t_augmenticon_destiny.webp",
+  "참는 자에게 복을": "icons/a/t_augmenticon_patienceisavirtue.webp",
+  "시동 걸기": "icons/a/t_augmenticon_kickstart.webp",
+  "연결 불가": "icons/a/t_augmenticon_missedconnections_gold_big.webp",
+  "판도라의 아이템 I": "icons/a/t_augmenticon_pandorasitems.webp",
+  "일상물": "icons/a/t_augmenticon_sliceoflife.webp",
+  "작은 꾸러미": "icons/a/t_augmenticon_smallgrabbag.webp",
+  "경호대 훈련": "icons/a/t_augmenticon_bodyguardtraining.webp",
+  "금빛 운명": "icons/a/t_augmenticon_destiny.webp",
+  "어수선한 마음": "icons/a/t_augmenticon_clutteredmind_gold_big.webp",
+  "사이버네틱 이식술": "icons/a/t_augmenticon_cybernetic_gold_big.webp",
+  "사이버네틱 통신": "icons/a/t_augmenticon_cyberneticuplink.webp",
+  "조기 교육": "icons/a/t_augmenticon_earlylearning.webp",
+  "폭발적인 성장+": "icons/a/t_augmenticon_explosive-growth.webp",
+  "금빛 운명+": "icons/a/t_augmenticon_destiny.webp",
+  "영웅 꾸러미": "icons/a/t_augmenticon_heroicgrabbag.webp",
+  "영웅 꾸러미+": "icons/a/t_augmenticon_heroicgrabbag.webp",
+  "영웅 꾸러미++": "icons/a/t_augmenticon_heroicgrabbag.webp",
+  "검 제작자": "icons/a/t_augmenticon_swordsmith.webp",
+  "극대화 빌드": "icons/a/t_augmenticon_maxbuild.webp",
+  "돈독": "icons/a/t_augmenticon_money-hungry-1.webp",
+  "끈질긴 연구": "icons/a/t_augmenticon_patientstudy_gold_big.webp",
+  "복제": "icons/a/t_augmenticon_replication.webp",
+  "재활용 쓰레기통": "icons/a/t_augmenticon_salvage1.webp",
+  "교환의 장": "icons/a/t_augmenticon_tradesector_big.webp",
+  "재빠른 무장+": "icons/a/t_augmenticon_slammin.webp",
+  "내면의 야수": "icons/a/t_augmenticon_primalaugment.webp",
+  "지팡이 제작자": "icons/a/t_augmenticon_staffsmith.webp",
+  "거래 중심지": "icons/a/t_augmenticon_commercecore.webp",
+  "레벨 업!": "icons/a/t_augmenticon_levelup_gold_big.webp",
+  "경품 추첨+": "icons/a/t_augmenticon_goldengamble.webp",
+  "경품 추첨++": "icons/a/t_augmenticon_goldengamble.webp",
+  "마트료시카 모루+": "icons/a/t_augmenticon_nestinganvils.webp",
+  "은빛 운명": "icons/a/t_augmenticon_destiny.webp",
+  "마트료시카 모루": "icons/a/t_augmenticon_nestinganvils.webp",
+  "약간 신비한 주사위": "icons/a/t_augmenticon_slightlymagicroll_silver.webp",
+  "탐사": "icons/a/t_augmenticon_expedition.webp",
+  "시간 건너뛰기": "icons/a/t_augmenticon_timeskip.webp",
+  "특별 맞춤 설정": "icons/a/t_augmenticon_exclusivecustomization.webp",
+  "자본 이익 I": "icons/a/t_augmenticon_capitalgains.webp",
+  "고위천사의 지팡이": "icons/a/t_augmenticon_seraphimsstaff.webp",
+  "후반 성장": "icons/a/t_augmenticon_lategamescaling.webp",
+  "국왕시해자": "icons/a/t_augmenticon_kingslayer_silver.webp",
+  "은빛 운명++": "icons/a/t_augmenticon_destiny.webp",
+  "길을 내라": "icons/a/t_augmenticon_carve-a-path.webp",
+  "후반 전문가": "icons/a/t_augmenticon_lategamespecialist.webp",
+  "수완가": "icons/a/t_augmenticon_hustler.webp",
+  "추가 선물": "icons/a/t_augmenticon_bonusgift.webp",
+  "고독한 방패": "icons/a/t_augmenticon_soloplate.webp",
+  "생일 모임": "icons/a/t_augmenticon_birthdayreunion.webp",
+  "투자++": "icons/a/t_augmenticon_invested.webp",
+  "기다림의 미학 II": "icons/a/t_augmenticon_worththewait.webp",
+  "예상된 예상 밖의 결과": "icons/a/t_augmenticon_expectedunexpectedness.webp",
+  "내면의 야수+": "icons/a/t_augmenticon_primalaugment.webp",
+  "영원한 브론즈 I": "icons/a/t_augmenticon_bronzeforlife.webp",
+  "조합 아이템 퀘스트": "icons/a/t_augmenticon_componentquest.webp",
+  "파묻힌 보물 III": "icons/a/t_augmenticon_buriedtreasures_gold_big.webp",
+  "넘치는 대검": "icons/a/t_augmenticon_bladeoverflow.webp",
+  "넘치는 지팡이": "icons/a/t_augmenticon_wandoverflow.webp",
+  "프리즘 운명+": "icons/a/t_augmenticon_destiny.webp",
+  "전방의 토대": "icons/a/t_augmenticon_frontlinefoundation.webp",
+  "계열의 대가": "icons/a/t_augmenticon_masterofallorigins.webp",
+  "약속된 보호": "icons/a/t_augmenticon_promisedprotection_ii.webp",
+  "쌍둥이 수호자": "icons/a/t_augmenticon_twinguardians.webp",
+  "도둑 무리": "icons/a/t_augmenticon_bandofthieves.webp",
+  "화력 집중": "icons/a/t_augmenticon_focusedfire.webp",
+  "추가 버클": "icons/a/t_augmenticon_extrabuckles_silver.webp",
+  "탑": "icons/a/t_augmenticon_thetower.webp",
+  "주인공 버프": "icons/a/t_augmenticon_plotarmor.webp",
+  "3단계 군단": "icons/a/t_augmenticon_legionofthrees.webp",
+  "나 혼자 레벨업": "icons/a/t_augmenticon_sololeveling.webp",
+  "구원의 영혼": "icons/a/t_augmenticon_spirit-of-redemption.webp",
+  "부스터 팩": "icons/a/t_augmenticon_boosterpack1.webp",
+  "부스터 팩+": "icons/a/t_augmenticon_boosterpack3.webp",
+  "엄청나게 이로운 효과!": "icons/a/t_augmenticon_tonsofstats.webp",
+  "권투 교습": "icons/a/t_augmenticon_boxinglessons.webp",
+  "큰 꾸러미": "icons/a/t_augmenticon_biggrabbag_gold_big.webp",
+  "판도라의 아이템 II": "icons/a/t_augmenticon_pandorasitems.webp",
+  "판도라의 아이템 II+": "icons/a/t_augmenticon_pandorasitems.webp",
+  "천상의 축복 I": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
+  "인지세": "icons/a/t_augmenticon_cognitive-tax_tft_set17.webp",
+  "인지세+": "icons/a/t_augmenticon_cognitive-tax_tft_set17.webp",
+  "수호령 환급+": "icons/a/t_augmenticon_wisprebate.webp",
+  "부식": "icons/a/t_augmenticon_corrosion.webp",
+  "은수저": "icons/a/t_augmenticon_silverspoon_gold_big.webp",
+  "정교한 공예": "icons/a/t_augmenticon_craftedcrafting.webp",
+  "끈끈한 우정": "icons/a/t_augmenticon_teambuilding_silver.webp",
+  "훈련 봇 변환": "icons/a/t_augmenticon_dummify.webp",
+  "젊음, 광란, 자유": "icons/a/t_augmenticon_youngandwildandfree.webp",
+  "행운의 기운": "icons/a/t_augmenticon_feelinglucky.webp",
+  "중심 잡기": "icons/a/t_augmenticon_findyourcenter_silver.webp",
+  "신중한 제작": "icons/a/t_augmenticon_latentforge_gold_big.webp",
+  "임시변통 방어구 I": "icons/a/t_augmenticon_makeshiftarmor.webp",
+  "대격변 생성기": "icons/a/t_augmenticon_recombobulator.webp",
+  "미래 집중": "icons/a/t_augmenticon_futurefocused.webp",
+  "잔류 마법 ++": "icons/a/t_augmenticon_residual_magic.webp",
+  "잔류 마법 +": "icons/a/t_augmenticon_residual_magic.webp",
+  "흐르는 눈물": "icons/a/t_augmenticon_flowingtears_i.webp",
+  "전기 충전 I": "icons/a/t_augmenticon_electrocharge-i.webp",
+  "유리 대포 I": "icons/a/t_augmenticon_glasscannon.webp",
+  "회복의 구 I": "icons/a/t_augmenticon_healingorbs_gold_big.webp",
+  "사기 주사위": "icons/a/t_augmenticon_loaded_dice.webp",
+  "대출 선지급": "icons/a/t_augmenticon_advancedloan.webp",
+  "대출 선지급+": "icons/a/t_augmenticon_advancedloanplus.webp",
+  "아케인 빅토르이!": "icons/a/t_augmenticon_arcaneviktory_augmentmasks.webp",
+  "교환의 장+": "icons/a/t_augmenticon_tradesector_big.webp",
+  "황금 드래곤": "icons/a/t_augmenticon_thegoldendragon_ii.webp",
+  "악의 여단 수행사제": "icons/a/t_augmenticon_covenaugment.webp",
+  "초월": "icons/a/t_augmenticon_ascension.webp",
+  "유리한 조건": "icons/a/t_augmenticon_hardbargain.webp",
+  "2인조": "icons/a/t_augmenticon_duoqueue.webp",
+  "단체 포옹 II": "icons/a/t_augmenticon_grouphug_gold.webp",
+  "자본 이익 II": "icons/a/t_augmenticon_capitalgains.webp",
+  "천상의 축복 II": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
+  "도전자의 은총": "icons/a/t_augmenticon_challengersgrace.webp",
+  "흡수하는 꽃": "icons/a/t_augmenticon_floraaugment2.webp",
+  "투자 전략 I": "icons/a/t_augmenticon_investmentstrategy.webp",
+  "악의적 수익 창출": "icons/a/t_augmenticon_maliciousmonetization.webp",
+  "시계태엽 윤활유": "icons/a/t_augmenticon_clockworkaccelerator.webp",
+  "인지 과부하": "icons/a/t_augmenticon_cognitiveoverload.webp",
+  "유리 대포 II": "icons/a/t_augmenticon_glasscannon.webp",
+  "동료 제작": "icons/a/t_augmenticon_constructacompanion.webp",
+  "새로운 시대": "icons/a/t_augmenticon_epoch.webp",
+  "새로운 시대+": "icons/a/t_augmenticon_epoch.webp",
+  "21골드 획득": "icons/a/t_augmenticon_gaingold.webp",
+  "휴대용 대장간": "icons/a/t_augmenticon_portableforge_gold_big.webp",
+  "요리용 냄비": "icons/a/t_augmenticon_cookingpot.webp",
+  "강철의 심장": "icons/a/t_augmenticon_heartofsteel.webp",
+  "보석 연꽃 I": "icons/a/t_augmenticon_jeweledlotus.webp",
+  "단일 조합 사수": "icons/a/t_augmenticon_noscoutnopivot_ii_tft_set13.webp",
+  "수호자의 호의": "icons/a/t_augmenticon_caretakersally.webp",
+  "돈독+": "icons/a/t_augmenticon_money-hungry-2.webp",
+  "재활용 쓰레기통+": "icons/a/t_augmenticon_salvage1.webp",
+  "재빠른 무장": "icons/a/t_augmenticon_slammin.webp",
+  "슬쩍하기": "icons/a/t_augmenticon_pilfer.webp",
+  "재빠른 더블 킬": "icons/a/t_augmenticon_speedydoublekill_ii.webp",
+  "넘치는 허리띠": "icons/a/t_augmenticon_beltoverflow.webp",
+  "혼돈의 부름": "icons/a/t_augmenticon_calltochaos.webp",
+  "거대하고 강력한": "icons/a/t_augmenticon_giantandmighty.webp",
+  "투자+": "icons/a/t_augmenticon_invested.webp",
+  "보석 연꽃 II": "icons/a/t_augmenticon_jeweledlotus.webp",
+  "행운의 장갑": "icons/a/t_augmenticon_luckygloves.webp",
+  "행운의 장갑+": "icons/a/t_augmenticon_luckygloves.webp",
+  "돈 폭풍": "icons/a/t_augmenticon_money-hungry-1.webp",
+  "프리즘 운명": "icons/a/t_augmenticon_destiny.webp",
+  "붉고 푸른 효과": "icons/a/t_augmenticon_onebufftwobuff.webp",
+  "판도라의 아이템 III": "icons/a/t_augmenticon_pandorasitems.webp",
+  "찬란한 유물": "icons/a/t_augmenticon_radiantrelics_gold_big.webp",
+  "응징": "icons/a/t_augmenticon_retribution.webp",
+  "영혼 각성": "icons/a/t_augmenticon_soul-awakening.webp",
+  "달콤한 간식": "icons/a/t_augmenticon_sweettreats.webp",
+  "우르프의 꾸러미": "icons/a/t_augmenticon_urfsgrabbag.webp",
+  "도둑 무리 II+": "icons/a/t_augmenticon_bandofthieves.webp",
+  "치명적인 칼날": "icons/a/t_augmenticon_deadlierblades.webp",
+  "추가 선물+": "icons/a/t_augmenticon_bonusgift.webp",
+  "자연의 안식처": "icons/a/t_augmenticon_elderwoodaugment.webp",
+  "미학의 기다림": "icons/a/t_augmenticon_weight_the_worth_2.webp",
+  "출정": "icons/a/t_augmenticon_warpath.webp",
+  "실컷 울어봐라": "icons/a/t_augmenticon_crymeariver.webp",
+  "얽힌 마법": "icons/a/t_augmenticon_wovenmagic.webp",
+  "흥청망청": "icons/a/t_augmenticon_shoppingspree_big.webp",
+  "잔류 마법": "icons/a/t_augmenticon_residual_magic.webp",
+  "헤지 펀드": "icons/a/t_augmenticon_hedgefund_gold_big.webp",
+  "더욱 치명적인 모자": "icons/a/t_augmenticon_deadliercaps.webp",
+  "힘을 실은 제련": "icons/a/t_augmenticon_forgedinstrength.webp",
+  "역전의 서막": "icons/a/t_augmenticon_comebackstory.webp",
+  "맑은 정신": "icons/a/t_augmenticon_clearmind_gold_big.webp",
+  "회복의 구 II": "icons/a/t_augmenticon_healingorbs_gold_big.webp",
+  "증강된 힘": "icons/a/t_augmenticon_augmentedpower.webp",
+  "수호령 환급": "icons/a/t_augmenticon_wisprebate.webp",
+  "단결된 의지": "icons/a/t_augmenticon_standunited_gold_big.webp",
+  "무한한 보호": "icons/a/t_augmenticon_infinity-protection.webp",
+  "예비 활": "icons/a/t_augmenticon_backupbows.webp",
+  "커져라": "icons/a/t_augmenticon_faeaugment2.webp",
+  "빛비늘 정수": "icons/a/t_augmenticon_shimmerscaleessence.webp",
+  "하나로 뭉치는 거지": "icons/a/t_augmenticon_westicktogeter.webp",
+  "이 몸 등장": "icons/a/t_augmenticon_itsmebaby.webp",
+  "출세가도": "icons/a/t_augmenticon_upwardmobility.webp",
+  "도둑 무리 II++": "icons/a/t_augmenticon_bandofthieves.webp",
+  "경품 추첨": "icons/a/t_augmenticon_goldengamble.webp",
+  "대관식": "icons/a/t_augmenticon_coronation.webp",
+  "임시변통 방어구 II": "icons/a/t_augmenticon_makeshiftarmor.webp",
+  "태양의 부름을 받은 자": "icons/a/t_augmenticon_solaraugment.webp",
+  "친구 만들기": "icons/a/t_augmenticon_constructacompanion.webp",
+  "하나, 둘, 다섯!": "icons/a/t_augmenticon_onetwofive.webp",
+  "빠른 연승 및 연패": "icons/a/t_augmenticon_rapidstreaker.webp",
+  "4단계 집중": "icons/a/t_augmenticon_fourcing.webp",
+  "도금 강철": "icons/a/t_augmenticon_gildedsteel.webp",
+  "어둠의 의식": "icons/a/t_augmenticon_covenaugment2.webp",
+  "기다림의 미학": "icons/a/t_augmenticon_worththewait.webp",
+  "전기 충전 II": "icons/a/t_augmenticon_electrocharge-i.webp",
+  "후방 설계도": "icons/a/t_augmenticon_backlineblueprint.webp",
+  "장기 투자": "icons/a/t_augmenticon_goinglong.webp",
+  "경쟁을 넘어서": "icons/a/t_augmenticon_rivalstofriends.webp",
+  "작은 털뭉치 친구": "icons/a/t_augmenticon_sprykinaugment.webp",
+  "가지 뻗기+": "icons/a/t_augmenticon_branchingout.webp",
+  "다 쓸 데가 있다니까 I": "icons/a/t_augmenticon_goodforsomething.webp",
+  "적을 알라": "icons/a/t_augmenticon_know-your-enemy-ii.webp",
+  "판도라의 아이템 II++": "icons/a/t_augmenticon_pandorasitems.webp",
+  "결과 예측": "icons/a/t_augmenticon_calledshot.webp",
+  "하나, 둘, 셋": "icons/a/t_augmenticon_onetwosthree.webp",
+  "도둑 무리 II": "icons/a/t_augmenticon_bandofthieves.webp",
+  "최적화": "icons/a/t_augmenticon_minmax_prismatic.webp",
+  "극진한 헌신": "icons/a/t_augmenticon_hard-commit_tft_set12.webp",
+  "마트료시카": "icons/a/t_augmenticon_nestingdolls.webp",
+  "구독 서비스": "icons/a/t_augmenticon_subscriptionservice.webp",
+  "황금 알": "icons/a/t_augmenticon_the-golden-egg-iii.webp",
+  "저주받은 왕관": "icons/a/t_augmenticon_cursedcrown.webp",
+  "해와 달+": "icons/a/t_augmenticon_lunaraugment2.webp",
+  "해와 달": "icons/a/t_augmenticon_lunaraugment.webp",
+  "꽃의 부름": "icons/a/t_augmenticon_blossomaugment2.webp",
+  "찬란한 장난꾸러기": "icons/a/t_augmenticon_radiantrascal.webp",
+  "천상의 축복 III": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
+  "투자 전략 II": "icons/a/t_augmenticon_investmentstrategy.webp",
+  "특성 사다리": "icons/a/t_augmenticon_trait_ladder.webp",
+  "간이 대장간": "icons/a/t_augmenticon_livingforge_gold_big.webp",
+  "생일 선물": "icons/a/t_augmenticon_goldengifts.webp",
+  "호화로운 정기 구독": "icons/a/t_augmenticon_luxury-subscription.webp",
+  "화염 점화": "icons/a/t_augmenticon_infernoaugment2.webp"
+ }
+}

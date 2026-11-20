@@ -269,8 +269,8 @@
       list.forEach(function (g, i) { box.appendChild(pwCard(g, i)); });
       return;
     }
-    box.innerHTML = ""; box.appendChild(el("p", "empty", APP ? "불러오는 중" : "그마·챌 최근 1등은 앱에서 볼 수 있어요"));
-    if (!APP) return;
+    box.innerHTML = ""; box.appendChild(el("p", "empty", LIVE ? "불러오는 중" : "그마·챌 최근 1등은 앱이나 PC 웹에서 볼 수 있어요"));
+    if (!LIVE) return;
     winLoad(false).then(function (all) {
       var list = all.map(function (g) { var r = boardPower(g.raw, g.traits, g.level) || {}; return { pw: r.power || 0, who: g.who, tier: (TIER_KO[g.tier] || g.tier), pl: 1, level: g.level, t: g.t, units: g.raw, traits: g.traits }; })
         .sort(function (a, b) { return b.pw - a.pw; });

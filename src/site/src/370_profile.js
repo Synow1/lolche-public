@@ -233,7 +233,7 @@
     rkView("search");
     var out = document.getElementById("rk-prof"); out.innerHTML = "";
     document.getElementById("rk-q").value = riotId; document.getElementById("rk-sug").innerHTML = "";
-    if (!APP) { out.appendChild(el("p", "sub", "전적 검색은 앱에서 돼요")); return; }
+    if (!LIVE) { out.appendChild(el("p", "sub", "전적 검색은 앱이나 PC 웹에서 볼 수 있어요")); return; }
     out.appendChild(el("p", "sub", riotId + " 불러오는 중"));
     var parts = riotId.split("#");
     if (!rkCut) getMT("public/promotion_thresholds/latest").then(function (d) { rkCut = d.filter(function (c) { return c.region.toLowerCase() === "kr"; })[0] || null; }).catch(function () {});
@@ -400,7 +400,7 @@
         function drawHist() {
           ps.querySelectorAll(".rk-ps:not(.now)").forEach(function (c, i) { c.classList.toggle("on", past[i] === sel); });
           tbl.hidden = !sel; tbl.innerHTML = ""; if (!sel) return;
-          if (!sRank && APP) loadRanks();
+          if (!sRank && LIVE) loadRanks();
           var hd = el("div", "rh-row rh-hd"); ["시즌", "최종", "최고", "판"].forEach(function (x) { hd.appendChild(el("span", null, x)); }); tbl.appendChild(hd);
           past.forEach(function (k) {
             var r = hist[k]["1100"], row = el("div", "rh-row" + (k === sel ? " on" : "")), L = sRank && sRank[k];

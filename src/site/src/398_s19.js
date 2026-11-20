@@ -341,7 +341,7 @@
       dm.addEventListener("click", function () { s19Go("decks"); });
       dh.appendChild(dm); out.appendChild(dh);
       var drows = el("div", "mt-rows s19-drows");
-      D.slice().sort(function (a, b) { return (a.avg || 9) - (b.avg || 9); }).slice(0, 3).forEach(function (d) { drows.appendChild(s19DeckRow(d, "avg")); });
+      D.slice().sort(function (a, b) { return (a.avg || 9) - (b.avg || 9); }).slice(0, isWide() ? 4 : 3).forEach(function (d) { drows.appendChild(s19DeckRow(d, "avg")); });
       out.appendChild(drows);
     }
     var cta = el("button", "s19-bcta"); cta.type = "button";

@@ -1807,3 +1807,206 @@ body.overlay .bnav { left: 8px; right: 8px; bottom: calc(6px + env(safe-area-ins
 body.overlay .bnav a { height: 48px; font-size: var(--fs-2xs); gap: 1px; }
 body.overlay .bnav a svg { width: 19px; height: 19px; }
 body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%); }
+
+/* ===== PC 웹 · 데스크톱 반응형 (1024px 이상) ===== */
+.pc-side-extra { display: none; }
+.dc-web { text-align: center; padding: 32px 24px; max-width: 520px; margin: 12px auto 0; display: grid; justify-items: center; gap: 10px; }
+.dc-web h3 { margin: 0; font-size: var(--fs-xl); font-weight: 800; }
+.dc-web .sub { margin: 0; max-width: 400px; }
+.dc-web .codebtn.big { display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 180px; text-decoration: none; margin-top: 8px; padding: 11px 24px; background: var(--on-bg); color: var(--on-ink); border-color: var(--on-bg); border-radius: var(--r-ctl); }
+
+@media (min-width: 1024px) {
+  body:not(.overlay) {
+    padding-left: 224px;
+    padding-bottom: 40px;
+  }
+  body:not(.overlay) .appbar {
+    margin-left: -224px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  body:not(.overlay) .appbar .wrap {
+    max-width: none;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  body:not(.overlay) .ab-search {
+    width: auto;
+    min-width: 240px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--muted);
+    font-size: var(--fs-m);
+    font-weight: 500;
+  }
+  body:not(.overlay) .ab-search svg { width: 17px; height: 17px; flex: none; }
+  body:not(.overlay) .ab-search::after { content: "통합 검색 (/)"; white-space: nowrap; }
+
+  /* 왼쪽 고정 사이드바 (주요 5탭 + 도감·도구 바로가기) */
+  body:not(.overlay) .bnav {
+    top: var(--abh);
+    left: 0;
+    right: auto;
+    bottom: 0;
+    width: 224px;
+    max-width: none;
+    margin: 0;
+    padding: 14px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 3px;
+    border-radius: 0;
+    border: 0;
+    border-right: 1px solid var(--border-subtle);
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+  body:not(.overlay) .bnav a {
+    flex: none;
+    height: 42px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 11px;
+    border-radius: var(--r-ctl);
+    font-size: var(--fs-b);
+    font-weight: 600;
+  }
+  body:not(.overlay) .bnav a svg { width: 20px; height: 20px; flex: none; }
+  body:not(.overlay) .bnav a.on {
+    color: var(--accent);
+    font-weight: 700;
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+  }
+  body:not(.overlay) .bnav a.on::before { display: none; }
+  body:not(.overlay) .bnav a.on svg { transform: none; }
+
+  body:not(.overlay) .pc-side-extra {
+    position: fixed;
+    left: 0;
+    top: calc(var(--abh) + 252px);
+    bottom: 0;
+    width: 224px;
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 12px 24px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border-subtle);
+    scrollbar-width: thin;
+  }
+  body:not(.overlay) .pc-side-h {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--muted);
+    padding: 10px 12px 4px;
+    letter-spacing: .02em;
+  }
+  body:not(.overlay) .pc-side-h:first-child { padding-top: 2px; }
+  body:not(.overlay) .pc-side-extra a {
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: var(--fs-m);
+    font-weight: 600;
+    transition: background .15s, color .15s;
+  }
+  body:not(.overlay) .pc-side-extra a.on {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 11%, transparent);
+    font-weight: 700;
+  }
+
+  /* 본문 최대 폭 제한 */
+  body:not(.overlay) main.wrap {
+    max-width: 1120px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  /* 메타 덱 · TFT 아카데미: 목록 + 상세 2단 마스터-디테일 */
+  body:not(.overlay) #meta:not([hidden]),
+  body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single) {
+    display: grid;
+    grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+  body:not(.overlay) #meta .mt-list,
+  body:not(.overlay) #tfa #tfa-list { min-width: 0; }
+  body:not(.overlay) #meta .mt-rows,
+  body:not(.overlay) #tfa:not(.tfa-wide-single) .mt-rows {
+    grid-template-columns: 1fr;
+  }
+  body:not(.overlay) #meta .mt-bar {
+    position: static;
+    grid-template-columns: 1fr;
+    background: transparent;
+    padding-top: 0;
+  }
+  body:not(.overlay) #meta .mt-detail,
+  body:not(.overlay) #tfa:not(.tfa-wide-single) .mt-detail {
+    position: sticky;
+    top: calc(var(--abh) + 14px);
+    max-height: calc(100vh - var(--abh) - 28px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-card);
+    padding: 18px 20px 24px;
+    scrollbar-width: thin;
+  }
+  body:not(.overlay) #meta .mt-detail .back,
+  body:not(.overlay) #tfa .mt-detail .back { display: none; }
+  body:not(.overlay) #meta .mt-detail .mt-cols,
+  body:not(.overlay) #tfa .mt-detail .mt-cols { grid-template-columns: 1fr; }
+  body:not(.overlay) .mt-row.dk.sel {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  }
+
+  /* 홈 · 19시즌 · 더보기 · 전적·대회 멀티컬럼 보강 */
+  body:not(.overlay) #home .hm-decks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  body:not(.overlay) #home .hm-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body:not(.overlay) #more .more-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  body:not(.overlay) #s19-out .s19-grid { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
+  body:not(.overlay) #s19-out .s19-bpool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+  body:not(.overlay) #friends .fr-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  body:not(.overlay) #power #pw-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  body:not(.overlay) #esports #esp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+  body:not(.overlay) #esports #esp-list .wd-card { grid-column: 1 / -1; }
+
+  /* 전체 화면 상세 · 시트 · 통합 검색 데스크톱 중앙 배치 */
+  body:not(.overlay) .fs-view .dc-vtop { max-width: 960px; width: 100%; margin: 0 auto; }
+  body:not(.overlay) .fs-view .dc-vbody { max-width: 960px; width: 100%; margin: 0 auto; }
+  body:not(.overlay) .sheet-bg { align-items: center; padding: 24px; }
+  body:not(.overlay) .sheet { max-width: 520px; border-radius: 20px; max-height: 82vh; }
+  body:not(.overlay) .spot-box { max-width: 640px; }
+}
+
+@media (hover: hover) {
+  body:not(.overlay) .bnav a:hover:not(.on),
+  body:not(.overlay) .pc-side-extra a:hover:not(.on) {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    color: var(--ink);
+  }
+  body:not(.overlay) .mt-row.dk:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
+  }
+  body:not(.overlay) .ab-search:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+}

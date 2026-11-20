@@ -111,6 +111,7 @@
       tbox.appendChild(espTable(s.table, s.final && !(s.champion || e.champion) ? "live" : s.final, toFinal, tq, s.gaps));
     }
     if (e.live && e.liveAt) box.appendChild(el("p", "esp-cm", updAt(e.liveAt) + " · 출처 공식 사이트"));
+    else if (WEB && t.region === "APAC" && e.slug && evStatus(e) === "live") box.appendChild(el("p", "esp-cm", "진행 중인 APAC 공식 실시간 순위는 앱에서 볼 수 있어요"));
     if (e.stages.length > 1) box.appendChild(chips);
     box.appendChild(tbox); draw(e.stages[e.stages.length - 1]);
   }
@@ -254,7 +255,7 @@
   setInterval(function () { apacLiveIfDue(false); }, 60000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - apacAt > 30000) apacLiveIfDue(true); });
   function apacLive() {
-    if (!APP) return;
+    if (!APP) return;  // set<N>.apactft.com은 CORS 미허용이라 안드로이드 앱 프록시 전용
     ESP.tournaments.forEach(function (t) {
       if (t.region !== "APAC") return;
       t.events.forEach(function (e) {
@@ -262,7 +263,7 @@
         var host = "https://set" + t.set + ".apactft.com/" + e.slug + "/standings?lb=";
         var stages = [];
         (function load(lb) {
-          fetch("/proxy?u=" + encodeURIComponent(host + lb)).then(function (r) { return r.text(); }).then(function (h) {
+          viaAppText(host + lb).then(function (h) {
             h = h.replace(/\\"/g, '"');
             var objs = (h.match(/\{"player_id":"[^"]+","rank":\d+.*?"is_eliminated":(?:true|false)\}/g) || []).map(function (x) { return JSON.parse(x); });
             // 게임 번호가 대회 전체로 이어져서(결승 첫 게임 = 15) 이 단계에서 나온 번호만 쓴다
@@ -283,7 +284,7 @@
       });
     });
   }
-  // 월즈 실시간 순위 (대회 기간, 앱에서만): MetaTFT 대회 게임 기록을 1분마다 받아 바로 계산한다.
+  // 월즈 실시간 순위 (대회 기간, 앱·웹): MetaTFT 대회 게임 기록과 공식 결과 시트(구글 시트 CSV)를 1분마다 받아 바로 계산한다.
   // 1일차 40명 6게임 → 상위 32명, 2일차 32 → 24 → 16 → 8명 결승 (체크메이트: 20점 넘긴 뒤 1등하면 우승). 공식 결과는 다음 날 아침 점검에서 Liquipedia로 맞춘다
   var LV = { at: 0, tour: null, games: null, err: false, pick: null, sheet: null };
   function lvWindow() {
@@ -300,7 +301,7 @@
   }
   function lvLoad() {
     var w = lvWindow();
-    if (!w || !APP) return;
+    if (!w || !LIVE) return;
     LV.at = Date.now();
     lvSheet(w).then(function (sh) { if (sh || LV.sheet) { LV.sheet = sh; lvDraw(); } });
     getMT("public/esports/tournaments").then(function (d) {
@@ -347,20 +348,20 @@
     return out;
   }
   function lvSheet(w) {
-    // 시트 주소: SCHEDULE.sheet(손으로 넣은 공식 시트, 2PACX 키 또는 문서 번호)가 먼저, 없으면 대회 페이지 일차 칸에서 찾는다
+    // 시트 주소: SCHEDULE.sheet(손으로 넣은 공식 시트, 구글 시트는 CORS 허용)가 먼저. competetft.com 자동 탐색은 CORS 미허용이라 앱 전용
     var known = w.sheet ? Promise.resolve('https://docs.google.com/spreadsheets/d/' + (/^2PACX/.test(w.sheet) ? "e/" : "") + w.sheet + "/")
-      : !w.ct ? Promise.resolve("") : fetch("/proxy?u=" + encodeURIComponent("https://competetft.com/en-US/tournament/" + w.ct + "/overview")).then(function (r) { return r.ok ? r.text() : ""; });
+      : (!APP || !w.ct) ? Promise.resolve("") : viaAppText("https://competetft.com/en-US/tournament/" + w.ct + "/overview").catch(function () { return ""; });
     return known.then(function (h) {
       var m = h.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/(e\/)?([A-Za-z0-9_-]{20,})/);
       if (!m) return null;
       var base = "https://docs.google.com/spreadsheets/d/" + (m[1] ? "e/" + m[2] : m[2]);
-      return fetch("/proxy?u=" + encodeURIComponent(base + (m[1] ? "/pubhtml" : "/htmlview"))).then(function (r) { return r.text(); }).then(function (hv) {
+      return viaAppText(base + (m[1] ? "/pubhtml" : "/htmlview")).then(function (hv) {
         var tabs = [], re = /\{name: "([^"]+)", pageUrl: "[^"]*gid=(\d+)/g, x;
         while ((x = re.exec(hv))) tabs.push({ name: x[1].replace(/\\u0026|\\x26/g, "&"), gid: x[2] });
         tabs = tabs.filter(function (t) { return /leaderboard|final|standing|day|round/i.test(t.name) && !/lobb|overview|creator|schedule/i.test(t.name); });
         return Promise.all(tabs.map(function (t) {
           var u = m[1] ? base + "/pub?output=csv&gid=" + t.gid : base + "/export?format=csv&gid=" + t.gid;
-          return fetch("/proxy?u=" + encodeURIComponent(u)).then(function (r) { return r.text(); }).then(function (csv) {
+          return viaAppText(u).then(function (csv) {
             return { name: t.name, rows: sheetTable(csv), final: /grand|final|day\s*3/i.test(t.name) };  // 월즈는 3일차가 결승
           }).catch(function () { return null; });
         }));
@@ -394,7 +395,7 @@
   function lvDraw() {
     var box = document.getElementById("esp-live"), w = lvWindow();
     if (!box) return;
-    if (!w || !APP) { box.hidden = true; return; }
+    if (!w || !LIVE) { box.hidden = true; return; }
     box.hidden = false; box.className = "lv"; box.innerHTML = "";
     var head = el("div", "lv-head"), h = el("h3");
     var any = (LV.games && LV.games.length) || LV.sheet;
@@ -406,7 +407,7 @@
     if (LV.sheet) { lvDrawSheet(box); return; }
     if (!LV.games) { box.appendChild(el("p", "lv-empty", "불러오는 중")); return; }
     if (!any) {
-      box.appendChild(el("p", "lv-empty", LV.err ? "MetaTFT에 연결하지 못했어요. 1분 뒤 다시 확인해요" : "아직 올라온 경기 기록이 없어요. 기록이 올라오면 1분 안에 여기에 보여요"));
+      box.appendChild(el("p", "lv-empty", LV.err ? "MetaTFT에 연결하지 못했어요. 1분 뒤 다시 확인해요" : (WEB && !w.sheet && w.ct ? "공식 결과 시트 자동 조회는 앱에서 볼 수 있어요. 경기 기록이 올라오면 1분 안에 여기에 보여요" : "아직 올라온 경기 기록이 없어요. 기록이 올라오면 1분 안에 여기에 보여요")));
       return;
     }
     var stages = lvStages(), fin = stages.filter(lvIsFinal), pre = stages.filter(function (s) { return !lvIsFinal(s); });

@@ -17,6 +17,7 @@
       // 다시 보기(더보기 탭 버튼, 2026-11-16 사용자: "실수로 끄면 다시 보고 싶은데"): 최근 앱 버전 하나 + 데이터 업데이트 최근 5번을 날짜별로
       if (force) { notes = ver.notes.slice(0, 1); data = log.slice(0, force === "again" ? 5 : 1); }
       var mark = function () { try { localStorage.setItem(WN_KEY, JSON.stringify({ v: ver.version, c: log[0] ? log[0].id : seen.c || "" })); } catch (e) {} };
+      if (WEB && !force && !seen.v) { mark(); return; }
       if (!notes.length && !data.length) { mark(); return; }
       wnShow(notes, data, mark, force === "again");
     });
@@ -28,7 +29,7 @@
     card.appendChild(el("h2", null, "업데이트 소식"));
     var body = el("div", "wn-body"); card.appendChild(body);
     if (notes.length) {
-      var sec = el("section"); sec.appendChild(el("h3", null, "앱 v" + notes[0].v));
+      var sec = el("section"); sec.appendChild(el("h3", null, "롤체 노트 v" + notes[0].v));
       var ul = el("ul"); notes.forEach(function (n) { n.items.forEach(function (t) { ul.appendChild(el("li", null, t)); }); }); sec.appendChild(ul); body.appendChild(sec);
     }
     // 데이터: 탭별로 모아서 (새로 받은 여러 번은 탭마다 한 덩어리). 다시 보기는 날짜별로 따로

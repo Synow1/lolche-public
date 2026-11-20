@@ -7,7 +7,7 @@
 //  4. 데이터 신선도: 덱·아이템·TFT 아카데미·DB 48시간, 월즈 3주 안이면 명단 48시간
 // 지난 실수 목록: guide/kb/corrections.md (각 항목이 여기 검사 하나씩)
 const { chromium } = require('playwright');
-const fs = require('fs'), path = require('path'), cp = require('child_process');
+const fs = require('fs'), path = require('path'), cp = require('child_process'), http = require('http');
 const SITE = path.join(__dirname, '..', 'site');
 const fails = [], notes = [];
 const fail = (m) => fails.push(m);
@@ -661,6 +661,118 @@ function fresh(file, key, hours) {
       if (bad.length) fail(`[게임 위 창] ${t}: 붙는 머리가 맨 위가 아니라 중간에 붙음 (${bad.slice(0, 3).join(', ')})`);
     }
     await pg.close();
+  }
+  // PC 웹 모드 (1280px): 왼쪽 사이드 메뉴, 앱 전용 UI 숨김, 덱 목록·상세 2단, 프록시 없이 직접 CORS fetch(덱 새로고침·랭킹·전적 검색), #dc 링크 전용, 개인 친구/계정 미노출
+  {
+    const WEB_ROOT = fs.existsSync(path.join(__dirname, '..', 'build', 'web', 'index.html')) ? path.join(__dirname, '..', 'build', 'web') : SITE;
+    const MIME = { '.html': 'text/html; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+    const srv = http.createServer((req, res) => {
+      const u = new URL(req.url, 'http://127.0.0.1');
+      let p = decodeURIComponent(u.pathname === '/' ? '/index.html' : u.pathname);
+      if (p === '/index.html' && WEB_ROOT === SITE) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8'));
+        return;
+      }
+      const f = path.join(WEB_ROOT, p);
+      if (!f.startsWith(WEB_ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' });
+      fs.createReadStream(f).pipe(res);
+    });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    const port = srv.address().port;
+    const ctx = await b.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark', ignoreHTTPSErrors: true });
+    const pg = await ctx.newPage();
+    const errs = [], proxyHits = [], directHosts = new Set();
+    pg.on('pageerror', e => errs.push(e.message));
+    pg.on('request', r => {
+      const u = r.url();
+      if (/\/proxy(\?|$)/.test(u)) proxyHits.push(u);
+      if (u.startsWith('https://')) { try { directHosts.add(new URL(u).hostname); } catch (e) {} }
+    });
+    try {
+      await pg.goto(`http://127.0.0.1:${port}/`); await pg.waitForTimeout(3500);
+      const go = (t) => pg.evaluate((t) => { const a = document.createElement('a'); a.href = '#' + t; document.body.appendChild(a); a.click(); a.remove(); window.scrollTo(0, 0); }, t);
+      const init = await pg.evaluate(() => ({
+        web: document.body.classList.contains('web'),
+        bubHid: document.getElementById('ab-bubble').hidden,
+        moreAppHid: document.getElementById('more-app').hidden,
+        mtBtnHid: document.getElementById('mt-upd-btn').hidden,
+        mtBtnTxt: document.getElementById('mt-upd-btn').textContent.trim(),
+        nav: document.querySelector('.bnav').getBoundingClientRect().toJSON(),
+        extra: document.querySelector('.pc-side-extra').getBoundingClientRect().toJSON(),
+      }));
+      if (!init.web) fail('[WEB/1280] body.web 클래스가 안 붙음');
+      if (!init.bubHid || !init.moreAppHid) fail('[WEB/1280] 앱 전용 버튼(떠 있는 버튼·앱 기능)이 숨겨지지 않음');
+      if (init.mtBtnHid || init.mtBtnTxt !== '새로고침') fail(`[WEB/1280] 덱 새로고침 버튼 이상 (hidden=${init.mtBtnHid}, text=${init.mtBtnTxt})`);
+      if (init.nav.left > 1 || init.nav.width > 260 || init.nav.height < 400) fail(`[WEB/1280] 왼쪽 사이드 메뉴 배치 이상 (${Math.round(init.nav.width)}x${Math.round(init.nav.height)})`);
+      if (init.extra.width < 150 || init.extra.height < 100) fail('[WEB/1280] 사이드바 도감·도구 바로가기가 안 보임');
+
+      for (const t of TABS) {
+        errs.length = 0;
+        await go(t); await pg.waitForTimeout(['rank', 'esports', 'power'].includes(t) ? 2500 : 700);
+        const r = await pg.evaluate(() => {
+          const sec = document.querySelector('section:not([hidden])'), o = { sw: document.documentElement.scrollWidth, broken: [], hid: [], text: sec ? sec.innerText.length : 0 };
+          if (!sec) return o;
+          sec.querySelectorAll('*').forEach(e => { if (e.hasAttribute('hidden') && getComputedStyle(e).display !== 'none') o.hid.push(e.id || e.className); });
+          sec.querySelectorAll('img').forEach(i => { if (i.complete && i.naturalWidth === 0 && i.getBoundingClientRect().width) o.broken.push(i.getAttribute('src')); });
+          return o;
+        });
+        if (r.sw > 1280) fail(`[WEB/1280] ${t}: 화면보다 넓음 ${r.sw}px (가로 밀림)`);
+        if (r.broken.length) fail(`[WEB/1280] ${t}: 깨진 이미지 ${[...new Set(r.broken)].slice(0, 3).join(', ')}`);
+        if (r.hid.length) fail(`[WEB/1280] ${t}: 숨겼는데 보임 ${r.hid.slice(0, 3).join(', ')}`);
+        if (r.text < 40 && await pg.evaluate((t) => /새 시즌 내용은 준비 중/.test((document.getElementById(t) || {}).textContent || ''), t)) notes.push(`[WEB/1280] ${t}: 새 시즌 공략 미작성`);
+        else if (r.text < 40) fail(`[WEB/1280] ${t}: 내용이 거의 없음 (${r.text}자)`);
+        if (errs.length) fail(`[WEB/1280] ${t}: 페이지 오류 ${errs.slice(0, 2).join(' ; ')}`);
+      }
+
+      // 덱 목록·상세 2단 보기 + 직접 fetch 새로고침
+      await go('meta'); await pg.waitForTimeout(800);
+      const mt2 = await pg.evaluate(() => {
+        const l = document.getElementById('mt-list-view'), d = document.getElementById('mt-detail');
+        return { lVis: !l.hidden, dVis: !d.hidden, lR: l.getBoundingClientRect().right, dL: d.getBoundingClientRect().left, t0: (d.querySelector('.dk-hero h3') || {}).textContent || '', hex: d.querySelectorAll('.hexboard .hx').length };
+      });
+      if (!mt2.lVis || !mt2.dVis || mt2.dL < mt2.lR - 2 || !mt2.t0 || mt2.hex < 20) fail(`[WEB/1280] 메타 덱 2단 레이아웃 이상 (list=${mt2.lVis}, det=${mt2.dVis}, hex=${mt2.hex})`);
+      await pg.evaluate(() => document.querySelectorAll('#mt-rows .mt-row')[1]?.click()); await pg.waitForTimeout(400);
+      const mt2b = await pg.evaluate(() => ({ lVis: !document.getElementById('mt-list-view').hidden, t1: (document.querySelector('#mt-detail .dk-hero h3') || {}).textContent || '' }));
+      if (!mt2b.lVis || !mt2b.t1 || mt2b.t1 === mt2.t0) fail('[WEB/1280] 메타 덱 2단: 다른 덱을 눌러도 상세가 안 바뀌거나 목록이 숨겨짐');
+      await pg.evaluate(() => document.getElementById('mt-upd-btn')?.click()); await pg.waitForTimeout(3500);
+      if (!directHosts.has('api-hc.metatft.com')) fail('[WEB/1280] 덱 새로고침: api-hc.metatft.com 직접 fetch가 일어나지 않음');
+
+      // TFT 아카데미 2단 보기
+      await go('tfa'); await pg.waitForTimeout(700);
+      const tf2 = await pg.evaluate(() => ({ lVis: !document.getElementById('tfa-list').hidden, dVis: !document.getElementById('tfa-detail').hidden, hex: document.querySelectorAll('#tfa-detail .hexboard .hx').length }));
+      if (!tf2.lVis || !tf2.dVis || tf2.hex < 20) soft(`[WEB/1280] TFT 아카데미 2단 레이아웃 이상 (list=${tf2.lVis}, det=${tf2.dVis}, hex=${tf2.hex})`);
+
+      // 직접 fetch로 한국 랭킹 + 전적 검색 + 개인 계정/친구 미노출 확인
+      await go('rank'); await pg.waitForTimeout(4000);
+      if (await pg.evaluate(() => document.querySelectorAll('#rk-rows .rk-row').length) < 30) soft('[WEB/1280] 한국 랭킹: 직접 fetch로 30줄 미만');
+      if (!directHosts.has('api.metatft.com') || !directHosts.has('tft.dakgg.io')) fail('[WEB/1280] 한국 랭킹: MetaTFT/롤체지지 직접 fetch가 일어나지 않음');
+      await pg.evaluate(() => { document.querySelector('#rk-seg [data-v=search]').click(); }); await pg.waitForTimeout(400);
+      if (await pg.evaluate(() => /내 계정|Synow#KR1/.test(document.getElementById('rk-sug').textContent))) fail('[WEB/1280] 전적 검색: 공개 웹인데 개인 "내 계정(Synow#KR1)"이 노출됨');
+      await pg.evaluate(() => { const i = document.getElementById('rk-q'); i.value = 'Synow#KR1'; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); });
+      await pg.waitForSelector('.rk-gm', { timeout: 45000 }).catch(() => soft('[WEB/1280] 전적 검색: 직접 fetch로 판 카드가 안 나옴'));
+      await pg.waitForTimeout(2000);
+      if (await pg.evaluate(() => document.documentElement.scrollWidth) > 1280) fail('[WEB/1280] 전적 검색: 화면보다 넓음 (가로 밀림)');
+
+      // 친구 탭: 공개 웹에서 개인 기본 친구 목록이 보이지 않아야 함
+      await go('friends'); await pg.waitForTimeout(600);
+      if (await pg.evaluate(() => document.querySelectorAll('#fr-cards .fr-card').length) > 0) fail('[WEB/1280] 친구 탭: 공개 웹인데 기본 친구 목록이 노출됨');
+
+      // #dc: CORS 차단으로 목록 대신 m.dcinside.com/board/tft 링크만 노출
+      await go('dc'); await pg.waitForTimeout(500);
+      const dcw = await pg.evaluate(() => ({
+        barHid: document.querySelector('#dc .dc-bar').hidden,
+        rows: document.querySelectorAll('#dc-list li a').length,
+        link: (document.querySelector('#dc a[href="https://m.dcinside.com/board/tft"]') || {}).href || '',
+      }));
+      if (!dcw.barHid || dcw.rows > 0 || !dcw.link) fail(`[WEB/1280] 롤체갤: 링크 전용 화면이 아님 (barHid=${dcw.barHid}, rows=${dcw.rows}, link=${dcw.link})`);
+
+      if (proxyHits.length) fail(`[WEB/1280] 프록시(/proxy)를 ${proxyHits.length}번 호출함 (${proxyHits[0]})`);
+    } finally {
+      await ctx.close();
+      srv.close();
+    }
   }
   await b.close();
   if (notes.length) console.log('참고:\n  ' + notes.join('\n  '));

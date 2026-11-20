@@ -34,7 +34,7 @@
     var o = OLD && OLD.i[String(i).toLowerCase()]; if (o) { OLD_II[o[0]] = o[1]; return o[0]; }
     return i;
   }
-  function getMT(path) { return APP ? viaApp(MT + path) : Promise.reject(new Error("앱 전용")); }
+  function getMT(path) { return LIVE ? viaApp(MT + path) : Promise.reject(new Error("실시간 조회 불가")); }
   function favs() { try { return JSON.parse(localStorage.getItem(RK_FAV) || "[]"); } catch (e) { return []; } }
   function setFavs(f) { try { localStorage.setItem(RK_FAV, JSON.stringify(f.slice(0, 12))); } catch (e) {} }
 
@@ -126,7 +126,7 @@
   var rkTopsPages = {};
   function rkLoad(more) {
     var btn = document.getElementById("rk-more");
-    if (!APP) {  // 스냅샷
+    if (!LIVE) {  // 스냅샷
       fetch("rank.json").then(function (r) { return r.json(); }).then(function (d) {
         rkRows = d.data; rkCutoff(d.cutoff);
         rkRender(updAt(d.updated));
@@ -146,7 +146,7 @@
         viaApp("https://tft.dakgg.io/api/v1/leaderboards/summoners/kr?page=" + dp + "&queueId=1100&hl=ko").then(function (x) {
           (x.summonerRankings || []).forEach(function (y) { RK_TOPS[(y.gameName + "#" + y.tagLine).toLowerCase()] = [y.tops, y.plays]; });
           applyCutNow(x.summonerTierCutoffs);
-          rkRender(APP ? rkStamp() : "");
+          rkRender(LIVE ? rkStamp() : "");
         }).catch(function () { rkTopsPages[dp] = 0; });
       }
       btn.hidden = rkRows.length >= (d.meta ? d.meta.total : 1000); btn.disabled = false; btn.textContent = "50명 더 보기";
@@ -157,7 +157,7 @@
   var rkAt = 0;
   function rkStamp() { return updAt(rkAt) + " · " + ago(rkAt) + "\n" + (RK_HIST && RK_HIST.date ? "변동은 " + (+RK_HIST.date.slice(5, 7)) + "/" + (+RK_HIST.date.slice(8)) + " 대비 · " : "") + "MetaTFT·롤체지지"; }
   function rkRefresh(force) {
-    if (!APP || !rkPage || document.hidden || current !== "rank" || document.getElementById("rk-board").hidden) return;
+    if (!LIVE || !rkPage || document.hidden || current !== "rank" || document.getElementById("rk-board").hidden) return;
     if (!force && Date.now() - rkAt < 170000) return;
     rkAt = Date.now();
     var ps = []; for (var k = 0; k < rkPage; k++) ps.push(getMT("tft-leaderboard/v2/kr?offset=" + k * 50 + "&limit=50"));
@@ -165,8 +165,8 @@
     getMT("public/promotion_thresholds/latest").then(function (d) { rkCutoff(d.filter(function (c) { return c.region.toLowerCase() === "kr"; })[0]); }).catch(function () {});
   }
   setInterval(function () { rkRefresh(false); }, 60000);
-  function rkUpdSetup() {  // 한국 랭킹 맨 위 새로고침 (앱). APP이 정해진 뒤 시작할 때 부른다
-    var b = document.getElementById("rk-upd-btn"); if (!APP || !b) return;
+  function rkUpdSetup() {  // 한국 랭킹 맨 위 새로고침 (앱·웹). 환경 분기가 정해진 뒤 시작할 때 부른다
+    var b = document.getElementById("rk-upd-btn"); if (!LIVE || !b) return;
     b.hidden = false;
     b.addEventListener("click", function () { b.disabled = true; rkRefresh(true); setTimeout(function () { b.disabled = false; }, 3000); });
   }
@@ -207,7 +207,7 @@
     o = o || {}; q = (q || "").trim(); box.innerHTML = ""; clearTimeout(whoTimers[box.id]);
     var ft = {}; try { ft = JSON.parse(localStorage.getItem(RK_FAVT) || "{}") || {}; } catch (e) {}
     var skip = o.skip || [], redraw = function () { whoList(box, q, o); };
-    var st = stars().filter(function (f) { return skip.indexOf(f) < 0; }), rc = favs().filter(function (f) { return st.indexOf(f) < 0 && skip.indexOf(f) < 0 && f !== "Synow#KR1"; });
+    var st = stars().filter(function (f) { return skip.indexOf(f) < 0; }), rc = favs().filter(function (f) { return st.indexOf(f) < 0 && skip.indexOf(f) < 0 && (WEB || f !== "Synow#KR1"); });
     var low = q.toLowerCase(), hit = function (f) { return !q || f.toLowerCase().indexOf(low) >= 0; };
     function group(title, ids, del, label) {
       ids = ids.filter(hit); if (!ids.length) return;
@@ -215,27 +215,27 @@
       ids.forEach(function (f) { g.appendChild(rkWhoRow(f, ft[f], del ? function () { setFavs(favs().filter(function (x) { return x !== f; })); redraw(); } : null, label && label(f), o.pick, redraw)); });
       box.appendChild(g);
     }
-    if (o.me && skip.indexOf("Synow#KR1") < 0 && !isStar("Synow#KR1")) group("내 계정", ["Synow#KR1"], false, function () { return "나"; });
+    if (!WEB && o.me && skip.indexOf("Synow#KR1") < 0 && !isStar("Synow#KR1")) group("내 계정", ["Synow#KR1"], false, function () { return "나"; });
     group("즐겨찾기", st, false);
     group("최근 검색", rc, true);
     if (!q) return;
-    if (!APP) return;
+    if (!LIVE) return;
     var res = el("div", "rk-list"); res.appendChild(el("h4", null, "검색 결과")); var rb = el("div"); rb.appendChild(el("p", "sub", "불러오는 중")); res.appendChild(rb); box.appendChild(res);
     whoTimers[box.id] = setTimeout(function () {
       getMT("public/search/" + encodeURIComponent(q.indexOf("#") >= 0 ? q : q + "#")).then(function (d) {
         rb.innerHTML = "";
         var list = (d.data || []).filter(function (x) { return x.region === "kr" && skip.indexOf(x.riot_id) < 0; }).slice(0, 8);
-        if (!list.length) rb.appendChild(el("p", "sub", "소환사를 찾지 못했어요. 이름#태그를 확인해 주세요"));
+        if (!list.length) rb.appendChild(el("p", "sub", "소환사를 찾을 수 없어요. 이름#태그를 확인해 주세요"));
         list.forEach(function (x) { rb.appendChild(rkWhoRow(x.riot_id, x.rating, null, null, o.pick, redraw)); });
       }).catch(function () { rb.innerHTML = ""; rb.appendChild(el("p", "sub", "불러오지 못했어요. 다시 시도해 주세요")); });
     }, 250);
   }
   function rkSuggest() {
     var q = document.getElementById("rk-q").value.trim(), box = document.getElementById("rk-sug");
-    if (!APP && q) { box.innerHTML = ""; box.appendChild(el("p", "empty", "전적 검색은 앱에서 돼요")); return; }
-    whoList(box, q, { me: true });
+    if (!LIVE && q) { box.innerHTML = ""; box.appendChild(el("p", "empty", "전적 검색은 앱이나 PC 웹에서 볼 수 있어요")); return; }
+    whoList(box, q, { me: !WEB });
   }
-  function rkFavs() { whoList(document.getElementById("rk-sug"), "", { me: true }); }
+  function rkFavs() { whoList(document.getElementById("rk-sug"), "", { me: !WEB }); }
 
   // ---- 전적: 판마다 LP를 맞춘다. 판 요약의 player_rating은 그 판 '전' 점수, ranked_rating_changes는 판 '뒤' 스냅샷.
   var RK_RANGE = "tft-guide-rkrange2";  // 기본 50판으로 바꾸며 키를 새로 (v1.51.1)

@@ -196,7 +196,7 @@
   function cellsLoad() {
     if (CELLS) return Promise.resolve(CELLS);
     try { var c = JSON.parse(localStorage.getItem(CELLS_KEY) || "null"); if (c && Date.now() - c.at < 864e5 && c.season === dakSeason()) { CELLS = c.d; return Promise.resolve(CELLS); } } catch (e) {}
-    if (!APP) return Promise.reject(new Error("앱 전용"));
+    if (!LIVE) return Promise.reject(new Error("실시간 조회 불가"));
     return dakGet("team-builder-cell-stats?hl=ko&season=" + dakSeason() + "&tier=1").then(function (r) {
       var d = {};
       ((r.teamBuilderCellStat || {}).championCellStats || []).forEach(function (x) {

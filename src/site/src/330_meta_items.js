@@ -1,5 +1,5 @@
   function winLoad(force) {
-    if (!APP) return Promise.reject(new Error("앱에서만 돼요"));
+    if (!LIVE) return Promise.reject(new Error("앱이나 PC 웹에서 이용할 수 있어요"));
     if (WIN && !force && Date.now() - WIN_AT < 120000) return Promise.resolve(WIN);
     return dakGet("recent-win-matches?shard=kr").then(function (r) {
       var lg = {}; (r.summonerLeagues || []).forEach(function (x) { if (x.queueId === 1100) lg[x.puuid] = x; });
@@ -36,6 +36,7 @@
     });
     list.forEach(function (v) {
       var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
+      r.dataset.id = v.id;
       var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
       r.classList.add("dk", "t-" + bt);
       r.appendChild(dkPortrait(mc, null));
@@ -78,7 +79,13 @@
       r.addEventListener("click", function () { metaShow(v.id); });
       box.appendChild(r);
     });
-    if (!list.length) box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
+    if (!list.length) {
+      box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
+      if (isWide()) document.getElementById("mt-detail").hidden = true;
+    } else if (isWide()) {
+      var pick = list.some(function (x) { return x.id === mtCurId; }) ? mtCurId : list[0].id;
+      metaShow(pick, true);
+    }
   }
 
   function hexBoard(board) {
@@ -165,7 +172,8 @@
 
   function metaShow(id, noScroll) {
     var v = deckView(id); if (!v) return;
-    if (!noScroll && document.getElementById("mt-detail").hidden) { var ly = window.scrollY; navPush("deck", function () { metaBack(); window.scrollTo(0, ly); }); }
+    var wide = isWide();
+    if (!wide && !noScroll && document.getElementById("mt-detail").hidden) { var ly = window.scrollY; navPush("deck", function () { metaBack(); window.scrollTo(0, ly); }); }
     mtCurId = id;
     var d = v.st, box = document.getElementById("mt-detail"), basis = document.getElementById("mt-basis").value;
     box.innerHTML = "";
@@ -338,13 +346,25 @@
       }
     }
     cols.appendChild(A); cols.appendChild(B); box.appendChild(cols);
-    document.getElementById("mt-list-view").hidden = true;
+    document.getElementById("mt-list-view").hidden = !wide;
     box.hidden = false;
+    document.querySelectorAll("#mt-rows .mt-row").forEach(function (row) { row.classList.toggle("sel", row.dataset.id === id); });
     try { localStorage.setItem(MT_KEY, JSON.stringify({ id: id, f: mtFilter, b: basis, s: mtSrc, o: mtSort })); } catch (e) {}
-    if (!noScroll) window.scrollTo(0, 0);
+    if (!noScroll) { if (wide) box.scrollTop = 0; else window.scrollTo(0, 0); }
   }
 
   var mtCurId = null;
+  function metaEnsureWide() {
+    if (!isWide() || !META) return;
+    document.getElementById("mt-list-view").hidden = false;
+    var box = document.getElementById("mt-detail");
+    if (mtCurId && deckView(mtCurId)) {
+      if (box.hidden || !box.childNodes.length) metaShow(mtCurId, true);
+      return;
+    }
+    var first = document.querySelector("#mt-rows .mt-row[data-id]");
+    if (first) metaShow(first.dataset.id, true);
+  }
   // 선택률 = 이 덱 판 수 / 전체 판 수 × 8 = 로비 8명 중 이 덱을 하는 평균 인원 (MetaTFT 'Pick Rate'와 같은 정의, 2026-11-14 사용자: 이름은 "선택률"). 겹침 가늠용
   function perLobby(d, b) {
     var x = d && basisSt(d, b), tot = META && META.totals && META.totals[b];
@@ -352,6 +372,7 @@
     return (x[3] / tot * 8).toFixed(2);  // MetaTFT 'Pick Rate'처럼 소수 둘째 자리 (0.62 = 로비 8명 중 평균 0.62명)
   }
   function metaBack() {
+    if (isWide()) { document.getElementById("mt-list-view").hidden = false; return; }
     mtCurId = null;
     document.getElementById("mt-detail").hidden = true;
     document.getElementById("mt-list-view").hidden = false;
@@ -478,7 +499,7 @@
     ITEMS = d; setTimeout(embInit, 0);
     try { itApplyLive(JSON.parse(localStorage.getItem(IT_LIVE) || "null")); } catch (e) {}
     var ib = document.getElementById("it-upd-btn");
-    if (APP && !ib.dataset.on) { ib.dataset.on = 1; ib.hidden = false; ib.addEventListener("click", function () { itRefresh(ib); }); }
+    if (LIVE && !ib.dataset.on) { ib.dataset.on = 1; ib.hidden = false; ib.addEventListener("click", function () { itRefresh(ib); }); }
     var saved = {}; try { saved = JSON.parse(localStorage.getItem(IT_KEY) || "{}") || {}; } catch (e) {}
     if (saved.g) itGrp = saved.g;
     var rk = document.getElementById("it-rank"), so = document.getElementById("it-sort");
@@ -580,7 +601,7 @@
     var keys = Object.keys(RANK_Q);
     Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=3&permit_filter_adjustment=false&rank=" + RANK_Q[k]); })).then(function (rs) {
       var cid = String(rs[0].cluster_id);
-      if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel("덱 구성이 바뀌어서 다음 앱 업데이트 때 반영돼요"); return; }
+      if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel(WEB ? "덱 구성이 바뀌어 다음 업데이트 때 반영돼요" : "덱 구성이 바뀌어서 다음 앱 업데이트 때 반영돼요"); return; }
       var L = { at: Date.now(), cid: cid, s: {}, total: 1, totals: {}, src: 0 };
       keys.forEach(function (k, i) {
         L.s[k] = {}; L.src = Math.max(L.src, rs[i].updated || 0);
@@ -593,7 +614,7 @@
   }
   function setupMetaRefresh() {
     var btn = document.getElementById("mt-upd-btn");
-    if (APP) { btn.hidden = false; btn.addEventListener("click", function () { metaRefresh(btn); }); return; }
+    if (LIVE) { btn.hidden = false; btn.addEventListener("click", function () { metaRefresh(btn); }); return; }
     if (!window.claude || !window.claude.use) return;
     window.claude.use("mcp").then(function (mcp) {
       if (!mcp) return;
