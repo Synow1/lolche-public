@@ -2,8 +2,10 @@
 
 롤체(TFT) 공부 저장소. 사용자는 폰으로 플레이하는 다이아 경험자이고, 이 레포의 문서와 페이지로 공부한다.
 
-## 깃허브
-- 작업 브랜치 `ccr-35b685db-j7sckl`에 커밋하고, **올릴 때마다 main에도 바로 붙인다** (`git push origin HEAD:main`, 사용자 허락 2026-11-06). PR은 만들지 않는다. main은 브랜치와 같게 유지 (fast-forward만).
+## 깃허브 (2026-11-20부터 `main` 단일 브랜치, 사용자 결정)
+- **클로드와 제미나이 모두 `main`에서만 작업한다.** PR 없음, 다른 작업 브랜치 없음.
+- **작업·예약 루틴을 시작하기 전에 항상** `git checkout main && git pull --ff-only origin main`으로 최신 커밋을 먼저 받는다 (제미나이가 그사이 푸시했을 수 있음). 끝나면 `git push origin main`. 푸시가 거절되면(그사이 새 커밋) 다시 `git pull --ff-only` 또는 `git pull --rebase origin main` 뒤 점검을 다시 돌리고 푸시. 남의 커밋을 force push로 덮지 않는다.
+- **역할**: 클로드 = 매일 예약 점검(`check_patch.py`·`update.sh`), 데이터·19시즌 PBE·대회 갱신, 영어 문구 번역, 패치 노트, 전적 코칭. 제미나이 = 큰 UI/UX 개편·기능 개발·리팩토링 (`main`에 직접 푸시). 화면 구조를 크게 바꾸는 일은 제미나이 몫이니, 클로드는 데이터 작업 중 화면 버그를 보면 작게 고치거나 기록해 둔다.
 
 ## 새 세션이면
 - **`guide/HANDOFF.md`부터 읽는다** (세션 ID·예약 작업 옮기기, 사용자 성향, 앱·덱파워 현황, 남은 일). 화면 확인은 `node scripts/ui_check.js`.
@@ -84,13 +86,14 @@ python3 scripts/snap_rank.py        # 한국 1~1000위 매일 스냅샷 -> data/
 - 사용자가 "덱 갱신"이라고 하면 `bash scripts/update.sh full` (앱 업데이트까지 올림) → 커밋·푸시. 패치가 안 바뀌었으면 버전은 그대로.
 
 ## 자동 갱신 루틴 (예약 작업이 매일 아침 이 세션을 깨운다)
+0. `git checkout main && git pull --ff-only origin main` (제미나이 커밋을 먼저 받는다).
 1. `python3 scripts/check_patch.py` → `actions` 확인. 비어 있으면 아무것도 하지 말고 끝낸다 (알림도 없음).
 2. `notify`: 새 패치. 바로 사용자에게 알린다 (PushNotification, 없으면 다음 답장 맨 앞에). 패치 내용은 DC 롤체갤(`dc_crawl.py search <패치>`)·웹에서 찾아 `#patch` 섹션에 추가.
 3. `newset`(새 세트 첫날, 맨 앞) / `quick` / `full` / `esports`가 있으면 `bash scripts/update.sh <모드들>` (APK까지 만든다). 한 모드씩 끝날 때마다 `python3 scripts/check_patch.py --done <모드>`.
    - `update.sh`는 `scripts/check_data.py`로 원문·앱 데이터가 비지 않았는지 확인하고, 이상하면 앱에 올리지 않고 멈춘다. 멈추면 원인(어느 파일의 무엇이 비었는지)을 찾아 고친 뒤 다시 돌리고, 못 고치면 사용자에게 한 줄로 알린다.
    - 18.6부터 원문에 템 설명이 비어 온다. 설명은 `data/item_text.json`(마지막 정상 설명)으로 채운다. 새 템이 생겼는데 설명이 없으면 게임 원문을 찾아 여기에 넣는다.
    - `full`이면 덱이 바뀌었는지 보고 `#decks`(덱 노트)·`guide/` 문서도 손본다.
-4. 커밋·푸시 (브랜치와 main 둘 다, update.sh가 앱 업데이트까지 올림, 앱이 알아서 받음), 한 줄 요약 (무엇이 바뀌었는지).
+4. 커밋 → `git push origin main` (거절되면 pull 후 다시), update.sh가 앱 업데이트까지 올림(앱이 알아서 받음), 한 줄 요약 (무엇이 바뀌었는지).
    - `friends`만 있으면 (매일 나옴, 티어 분포 저장 포함) 커밋·푸시하고 조용히 끝낸다 (알림 없음).
 5. 대회 기간(`esports`)엔 우승자·한국 선수 결과를 한 줄로 알린다.
 - SDK·raw 데이터는 컨테이너가 새로 뜨면 없다. `android/build.sh`와 `tft_data.py`가 알아서 다시 받는다.

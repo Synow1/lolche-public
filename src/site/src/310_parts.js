@@ -108,6 +108,7 @@
       var num = el("div", "mt-num dk-kpi2");
       num.appendChild(el("b", "dk-avg", x.st[0].toFixed(2)));
       num.appendChild(el("span", "dk-top4", "순방 " + x.st[1] + "%"));
+      num.appendChild(el("span", "dk-win", "승률 " + x.st[2].toFixed(1) + "%"));
       r.appendChild(num);
       r.addEventListener("click", function () {
         var bs = document.getElementById("mt-basis"); if (bs && bs.value !== ptBasis && BASIS_LABEL[ptBasis]) { bs.value = ptBasis; bs.dispatchEvent(new Event("change")); }

@@ -1,17 +1,29 @@
 # 인수인계 (새 세션이 처음 읽을 것)
 
-마지막 정리: 2026-11-06, 앱 v1.35.2 (android/NATIVE 8). 작업 브랜치 `ccr-35b685db-j7sckl`.
-규칙 전체는 `CLAUDE.md`, 앱 문구 기준은 `guide/WRITING.md`, 게임 지식은 `guide/kb/` (먼저 `python3 scripts/kb.py 키워드`).
+마지막 정리: 2026-11-20, 앱 v2.0.0 (android/NATIVE 12). **브랜치는 `main` 하나** (클로드·제미나이 공용, PR 없음).
+규칙 전체는 `CLAUDE.md`, 앱 문구 기준은 `guide/WRITING.md`, 디자인은 `guide/DESIGN.md`, 게임 지식은 `guide/kb/` (먼저 `python3 scripts/kb.py 키워드`).
+
+## 0. 지금 상태 (2026-11-20)
+- **v2.0.0 전면 개편 (제미나이, OTA 배포 완료)**:
+  - **19시즌 중심 메인 홈 허브(`#home`, `099_home.html`, `399_v2_hub.js`)**: 프리즘 캔버스 히어로·D-Day·KPI·19시즌 바로가기 6개·7코스트/핵심 해금 가로 레일·18시즌 에메+ 상위 4덱·실전 도구·최근 데이터 변화 요약.
+  - **하단 5탭 재설계**: `홈(#home) · 19시즌(#s19) · 덱(#meta, .deck-seg: 메타/아카데미/재료/상징) · 전적(#rank, .rank-seg: 랭킹/친구/덱파워) · 더보기(#more)`. 각 탭은 마지막 하위 탭을 기억.
+  - **19시즌 스튜디오 고도화(`398_s19.js`)**: 10칸 **19시즌 스쿼드 빌더**(실시간 시너지 단계 + 선택 챔피언 해금 조건 자동 요약 + `localStorage` 저장), **해금 조건 암기 체크리스트**(진척도 바 + 검색), 초성 검색.
+  - **통합 스포트라이트 검색(`#spot-ov`, `/`, `Cmd/Ctrl+K`)**: 19시즌 챔피언·시너지·해금·증강 + 18시즌 메타 덱·유닛·아이템·증강 + 소환사 전적 초성 통합 검색.
+  - **더보기 허브 개편(`100_more.html`) + 테마 전환(시스템/다크/라이트) + View Transitions + 시트 아래로 스와이프 닫기**.
+- **v1.66.0 디자인 v3 (제미나이, 커밋 7fdd8e9)**: 바탕·목록·핵심 카드 밝기 3단계, 평균 등수·순방률 2축 색, 덱 줄 상단 메타 + 2단 KPI, 오버레이 컴팩트, `scripts/qa.js` CSS 미정의 변수 검사.
+- v1.65.0: 분할 OTA(data.zip·assets.zip), NATIVE 12, proxy 리다이렉트 홉마다 허용 검사, 덱파워 Python-JS 일치 검사(`check_power_parity.js`), lolche-public `src/`에 협업용 소스 사본.
+- v1.64.0: 19시즌 프리즘 투어 미리보기 탭(`#s19`, PBE).
+- **역할**: 클로드 = 매일 점검·데이터·19시즌 PBE·대회·번역·패치 노트·전적 코칭. 제미나이 = 큰 UI/UX 개편·기능·리팩토링. 둘 다 `main`에 직접 푸시.
 
 ## 1. 새 세션에서 맨 처음 할 일
-1. `git fetch origin ccr-35b685db-j7sckl && git checkout ccr-35b685db-j7sckl && git pull` (이 브랜치에 커밋하고 main에도 바로 푸시 `git push origin HEAD:main`. PR 만들지 말 것)
+1. `git checkout main && git pull --ff-only origin main` (작업·예약 루틴마다 먼저. 끝나면 `git push origin main`, 거절되면 다시 pull 후 점검·푸시. force push 금지)
 2. **세션 ID 바꾸기**: 새 세션 ID는 `get_session`(claude-code-remote)으로 확인.
-   - `site/tft-guide.html`의 `var SESSION = "session_..."` 와 `CLAUDE.md`의 세션 ID를 새 것으로 → 빌드·올리기 (`bash android/build.sh && bash scripts/publish_app.sh`) → 커밋·푸시.
+   - `site/src/400_app.js`의 `var SESSION = "session_..."` 와 `CLAUDE.md`의 세션 ID를 새 것으로 → 빌드·올리기 (`bash android/build.sh && bash scripts/publish_app.sh`) → 커밋·푸시.
    - 앱의 '갱신 요청' 버튼이 이 세션으로 메시지를 보낸다.
-3. **매일 점검 예약 작업 옮기기**: 지금 예약 '롤체 노트 매일 점검'(`trig_01C1T7muQ9pUZnGUcE62nvec`, `CRON_TZ=Asia/Seoul 41 9 * * *`)은 세션 `session_01VCcDCEg6hT8M9R4abL4j3G`을 깨운다 (2026-11-06 옮김, 그 전 `trig_015FPgjFEVC2tNRG58Pob7HH`은 꺼 둠).
+3. **매일 점검 예약 작업 옮기기**: 지금 예약 '롤체 노트 매일 점검'(`trig_01C1T7muQ9pUZnGUcE62nvec`, `CRON_TZ=Asia/Seoul 41 9 * * *`)은 세션 `session_01VCcDCEg6hT8M9R4abL4j3G`을 깨운다.
    - 새 세션에 같은 시간으로 새로 만들고(`create_trigger`, 기본 모드 = 이 세션), 옛 것은 `update_trigger enabled=false`. 사용자가 새 세션으로 옮기라고 했으니 바로 해도 된다.
    - 예약 프롬프트:
-     `[자동 점검] CLAUDE.md의 '자동 갱신 루틴'을 그대로 해줘. git pull로 브랜치(ccr-35b685db-j7sckl) 최신을 받은 뒤 check_patch.py를 돌리고, actions가 비어 있으면 아무것도 하지 말고 조용히 끝내. 새 패치(notify)면 바로 알리고, quick/full/esports가 있으면 update.sh로 갱신 → 커밋 → 브랜치와 main 둘 다 푸시 → 한 줄 요약 (APK 파일은 보내지 않음. NATIVE가 바뀐 날만 설치 창 안내 한 줄). check_data.py에서 멈추면 고치고, 못 고치면 한 줄로 알려. 대회 기간이면 우승자·한국 선수 결과도 한 줄로.`
+     `[자동 점검] CLAUDE.md의 '자동 갱신 루틴'을 그대로 해줘. 먼저 git checkout main && git pull --ff-only origin main으로 최신을 받은 뒤 check_patch.py를 돌리고, actions가 비어 있으면 아무것도 하지 말고 조용히 끝내. 새 패치(notify)면 바로 알리고, quick/full/esports가 있으면 update.sh로 갱신 → 커밋 → git push origin main → 한 줄 요약 (앱은 publish_app.sh로 자동 업데이트, APK 파일은 보내지 않음. android/NATIVE가 바뀐 날만 '앱을 열면 설치 창이 떠요'라고 한 줄). update.sh가 check_data.py에서 멈추면 원인을 고치고 다시 돌리고, 못 고치면 한 줄로 알려. 대회 기간이면 우승자·한국 선수 결과도 한 줄로.`
 4. 컨테이너가 새로 뜨면 `raw/`·안드로이드 SDK가 없다. `python3 scripts/tft_data.py fetch`와 `android/build.sh`가 알아서 받는다 (몇 분 걸림).
 
 ## 2. 사용자
