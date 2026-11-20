@@ -1255,7 +1255,7 @@ body::after { content: ""; position: fixed; inset: 0 0 auto 0; height: 320px; z-
 @keyframes v2in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 /* 조작: 알약 칩, 세그먼트 */
 .mt-chips button { border-radius: 999px; padding: 7px 14px; border: 1px solid var(--border-subtle); background: var(--surface); }
-.mt-chips button.on { border-color: transparent; box-shadow: 0 4px 14px color-mix(in srgb, var(--on-bg) 32%, transparent); }
+.mt-chips button.on { border-color: transparent; box-shadow: none; }
 .seg, .seg2 { border-radius: 14px; padding: 4px; border: 1px solid var(--border-subtle); }
 .seg button, .seg a, .seg2 button { border-radius: 10px; padding: 8px 10px; font-size: var(--fs-b); }
 .seg button.on, .seg a.on, .seg2 button.on { background: var(--elev2); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.18); }
@@ -1654,7 +1654,7 @@ body.dc-open { overflow: hidden; }
 .hm-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .hm-title { margin: 0; font-size: clamp(24px, 7vw, 30px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
 .hm-sub { margin: 4px 0 0; font-size: var(--fs-s); color: var(--muted); line-height: 1.45; }
-.hm-enter { flex: none; font: inherit; font-size: var(--fs-m); font-weight: 800; padding: 10px 14px; border: 0; border-radius: 13px; background: var(--on-bg); color: var(--on-ink); box-shadow: 0 6px 18px color-mix(in srgb, var(--on-bg) 28%, transparent); cursor: pointer; white-space: nowrap; }
+.hm-enter { flex: none; font: inherit; font-size: var(--fs-m); font-weight: 800; padding: 10px 14px; border: 0; border-radius: 13px; background: var(--on-bg); color: var(--on-ink); box-shadow: 0 4px 12px color-mix(in srgb, var(--on-bg) 20%, transparent); cursor: pointer; white-space: nowrap; }
 .hm-enter:active { transform: scale(.96); }
 .hm-kpi { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 14px 0 12px; }
 .hm-k { font: inherit; border: 1px solid var(--border-subtle); border-radius: 12px; background: color-mix(in srgb, var(--surface) 82%, transparent); padding: 8px 4px; display: grid; gap: 1px; text-align: center; cursor: pointer; }
