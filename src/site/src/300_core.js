@@ -602,6 +602,24 @@
     var real = board.filter(function (b) { return !b.plant; });
     return real.filter(function (b) { return b.i && b.i.length; }).concat(real.filter(function (b) { return !b.i || !b.i.length; }).sort(function (a, b) { return (IDX.units[b.u] || {}).cost - (IDX.units[a.u] || {}).cost; }));
   }
+  // 덱 지표 연속 그라데이션 색: 0(약함·코랄 레드) → 0.25(오렌지) → 0.5(골드) → 0.75(그린) → 1(최상·에메랄드 민트)
+  var DK_STOPS = [[2, 84, 67, 46], [25, 86, 64, 43], [44, 82, 62, 37], [128, 68, 61, 34], [160, 74, 58, 33]];
+  function dkGrad(node, t) {
+    var v = Math.max(0, Math.min(1, t)), p = v * (DK_STOPS.length - 1);
+    var i = Math.min(DK_STOPS.length - 2, Math.floor(p)), f = p - i;
+    var a = DK_STOPS[i], b = DK_STOPS[i + 1];
+    var h = Math.round(a[0] + (b[0] - a[0]) * f);
+    var s = Math.round(a[1] + (b[1] - a[1]) * f);
+    var ld = Math.round(a[2] + (b[2] - a[2]) * f);
+    var ll = Math.round(a[3] + (b[3] - a[3]) * f);
+    node.classList.add("dk-grad");
+    node.style.setProperty("--gd", "hsl(" + h + " " + s + "% " + ld + "%)");
+    node.style.setProperty("--gl", "hsl(" + h + " " + s + "% " + ll + "%)");
+    return node;
+  }
+  function dkAvgT(avg) { return (4.95 - avg) / 0.9; }
+  function dkWinT(win) { return win >= 11.5 ? 0.5 + (win - 11.5) / 15 : (win - 5) / 13; }
+  function dkTop4T(t4) { return (t4 - 40) / 20; }
 
   /* ---- 재료 → 덱: 가진 재료(초반 크립·첫 초밥)로 갈 만한 덱. MetaTFT 덱 통계(meta.json)의 캐리 템 빌드 판수로 계산 ---- */
   var PARTS = ["B.F. 대검", "곡궁", "쓸데없이 큰 지팡이", "여신의 눈물", "쇠사슬 조끼", "음전자 망토", "거인의 허리띠", "연습용 장갑", "뒤집개", "프라이팬"];

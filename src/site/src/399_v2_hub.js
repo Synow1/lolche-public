@@ -90,8 +90,8 @@
         mid.appendChild(strip(rest.map(function (b) { return b.u; })));
         r.appendChild(mid);
         var num = el("div", "mt-num dk-kpi2");
-        num.appendChild(el("b", "dk-avg", bs[0].toFixed(2)));
-        num.appendChild(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"));
+        num.appendChild(dkGrad(el("b", "dk-avg", bs[0].toFixed(2)), dkAvgT(bs[0])));
+        num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
         r.appendChild(num);
         r.addEventListener("click", function () { openDeck(v.id); });
         dbox.appendChild(r);

@@ -62,14 +62,14 @@
       var num = el("div", "mt-num dk-kpi2");
       if (bs) {
         if (mtSort === "win") {
-          num.appendChild(el("b", "dk-avg", bs[2].toFixed(1) + "%"));
-          num.appendChild(el("span", "dk-top4", "평균 " + bs[0].toFixed(2)));
+          num.appendChild(dkGrad(el("b", "dk-avg", bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
+          num.appendChild(dkGrad(el("span", "dk-top4", "평균 " + bs[0].toFixed(2)), dkAvgT(bs[0])));
         } else if (mtSort === "top4") {
-          num.appendChild(el("b", "dk-top4-hi", bs[1] + "%"));
-          num.appendChild(el("span", "dk-avg-sub", "평균 " + bs[0].toFixed(2)));
+          num.appendChild(dkGrad(el("b", "dk-top4-hi", bs[1] + "%"), dkTop4T(bs[1])));
+          num.appendChild(dkGrad(el("span", "dk-avg-sub", "평균 " + bs[0].toFixed(2)), dkAvgT(bs[0])));
         } else {
-          num.appendChild(el("b", "dk-avg", bs[0].toFixed(2)));
-          num.appendChild(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"));
+          num.appendChild(dkGrad(el("b", "dk-avg", bs[0].toFixed(2)), dkAvgT(bs[0])));
+          num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
         }
       } else {
         num.appendChild(el("small", null, d ? "판수 부족" : "통계 없음"));
@@ -184,8 +184,10 @@
     if (d) {
       var st = el("div", "dk-kpi"), hs = basisSt(d, basis) || basisSt(d, "all");
       var plv = perLobby(d, basisSt(d, basis) ? basis : "all");
-      [[BASIS_LABEL[basisSt(d, basis) ? basis : "all"] + " 평균 등수", hs[0].toFixed(2), "g"], ["순방", hs[1] + "%", "c"], ["승률", Math.round(hs[2]) + "%"]].concat(plv != null ? [["선택률", plv]] : []).forEach(function (x) {
-        var sp = el("div"); sp.appendChild(el("b", x[2] || null, x[1])); sp.appendChild(el("span", null, x[0])); st.appendChild(sp);
+      [[BASIS_LABEL[basisSt(d, basis) ? basis : "all"] + " 평균 등수", hs[0].toFixed(2), dkAvgT(hs[0])], ["순방률", hs[1] + "%", dkTop4T(hs[1])], ["승률", hs[2].toFixed(1) + "%", dkWinT(hs[2])]].concat(plv != null ? [["선택률", plv, null]] : []).forEach(function (x) {
+        var sp = el("div"), bv = el("b", null, x[1]);
+        if (x[2] != null) dkGrad(bv, x[2]);
+        sp.appendChild(bv); sp.appendChild(el("span", null, x[0])); st.appendChild(sp);
       });
       box.appendChild(st);
     }
