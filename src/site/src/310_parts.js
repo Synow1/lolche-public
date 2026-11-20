@@ -90,19 +90,25 @@
     var rows = el("div", "mt-rows");
     decks.slice(0, 12).forEach(function (x) {
       var d = x.d, bt = basisTier(d, ptBasis), mc = mainOf(d), r = el("button", "mt-row dk t-" + bt); r.type = "button";
-      r.appendChild(dkPortrait(mc, bt === "X" ? "-" : bt));
+      r.appendChild(dkPortrait(mc, null));
       var mid = el("div", "mt-mid");
+      var meta = el("div", "dk-meta");
+      meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
+      var sub = el("span", "dk-sub"); sub.appendChild(el("span", "pt-fit", "재료 궁합 " + Math.round(x.fit * 100) + "%"));
+      sub.appendChild(document.createTextNode(" · " + styleKo(d.style))); meta.appendChild(sub);
+      mid.appendChild(meta);
       var nm = el("div", "mt-name", deckName(d)), req = embReq(d); if (req) nm.insertBefore(embBadge(req), nm.firstChild);
       mid.appendChild(nm);
-      var sub = el("div", "dk-sub"); sub.appendChild(el("span", "pt-fit", "재료 궁합 " + Math.round(x.fit * 100) + "%"));
-      sub.appendChild(document.createTextNode(" · " + styleKo(d.style))); mid.appendChild(sub);
       if (x.items.length) {
         var iw = el("div", "pt-its"); iw.appendChild(el("span", null, "바로"));
         x.items.slice(0, 4).forEach(function (n) { var it = IDX.items[n]; if (it) iw.appendChild(img(it.icon, n)); });
         mid.appendChild(iw);
       } else mid.appendChild(strip(carriesFirst(d.board).filter(function (b) { return b !== mc; }).map(function (b) { return b.u; })));
       r.appendChild(mid);
-      var num = el("div", "mt-num", x.st[0].toFixed(2)); num.appendChild(el("small", null, "승률 " + Math.round(x.st[2]) + "%")); r.appendChild(num);
+      var num = el("div", "mt-num dk-kpi2");
+      num.appendChild(el("b", "dk-avg", x.st[0].toFixed(2)));
+      num.appendChild(el("span", "dk-top4", "순방 " + x.st[1] + "%"));
+      r.appendChild(num);
       r.addEventListener("click", function () {
         var bs = document.getElementById("mt-basis"); if (bs && bs.value !== ptBasis && BASIS_LABEL[ptBasis]) { bs.value = ptBasis; bs.dispatchEvent(new Event("change")); }
         var gi = GUIDES ? GUIDES.decks.findIndex(function (g) { return g.cluster === d.id; }) : -1;  // 롤체지지 공략이 있는 덱은 공략까지 보이게

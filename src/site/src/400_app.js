@@ -286,6 +286,8 @@
     if (prev && prev !== id) navPush("tab", function () { showTab(prev, false); window.scrollTo(0, y); });
     showTab(id, true);
   }
+  var CODEX = ["items", "augments", "traits"], CODEX_KEY = "tft-guide-codex", codexLast = "items";
+  try { var cl = localStorage.getItem(CODEX_KEY); if (CODEX.indexOf(cl) >= 0) codexLast = cl; } catch (e) {}
   var TAB_Y = {};
   function showTab(id, scroll) {
     if (!secs.some(function (s) { return s && s.id === id; })) id = secs[0].id;
@@ -302,10 +304,18 @@
     if (scroll) window.scrollTo(0, same ? 0 : TAB_Y[id] || 0);  // 다른 탭에서 돌아오면 보던 위치, 같은 탭을 다시 누르면 맨 위
     if (id === "tfa") setTimeout(tfaRender, 0);
     if (id === "s19") setTimeout(s19Render, 0);
-    var MAIN = ["meta", "tfa", "rank", "augments", "items"];
+    var MAIN = ["meta", "tfa", "rank"];
+    var isCodex = CODEX.indexOf(id) >= 0;
+    if (isCodex) {
+      codexLast = id;
+      try { localStorage.setItem(CODEX_KEY, id); } catch (e) {}
+    }
+    var codexLink = document.querySelector('.bnav a[data-nav="codex"]');
+    if (codexLink) codexLink.setAttribute("href", "#" + codexLast);
+    var navId = isCodex ? "codex" : MAIN.indexOf(id) >= 0 ? id : "more";
     var lab = links.filter(function (a) { return a.getAttribute("href") === "#" + id; })[0];
     document.getElementById("ab-title").textContent = id === "meta" ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
-    document.querySelectorAll(".bnav a").forEach(function (a) { a.classList.toggle("on", a.dataset.nav === (MAIN.indexOf(id) >= 0 ? id : "more")); });
+    document.querySelectorAll(".bnav a").forEach(function (a) { a.classList.toggle("on", a.dataset.nav === navId); });
     try { localStorage.setItem(TAB_KEY, id); } catch (e) {}
     if (id === "esports") setTimeout(function () { apacLiveIfDue(false); lvIfDue(false); }, 0);
     if (id === "dc") setTimeout(dcStart, 0);
@@ -314,7 +324,7 @@
     if (id === "power") setTimeout(pwRender, 0);
     if (id === "parts") setTimeout(ptRender, 0);
   }
-  // 아래 탭·더보기 타일·글 속 링크 모두 같은 탭 전환으로
+  // 아래 탭·더보기 타일·도감 전환·글 속 링크 모두 같은 탭 전환으로
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest('a[href^="#"]');
     if (!a || a.closest("nav.tabs")) return;
@@ -325,6 +335,10 @@
       if (prev && prev !== id) navPush("tab", function () { showTab(prev, false); window.scrollTo(0, y); });
       showTab(id, true);
     }
+  });
+  window.addEventListener("hashchange", function () {
+    var h = (location.hash || "").slice(1);
+    if (h && h !== current) showTab(h, true);
   });
   function mark() { if (current) showTab(current, false); }
   links.forEach(function (a) {

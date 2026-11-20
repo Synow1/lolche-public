@@ -43,8 +43,20 @@ function fresh(file, key, hours) {
   try { const h = JSON.parse(fs.readFileSync(path.join(SITE, 'rank_hist.json'), 'utf8')); const dd = (Date.now() - Date.parse(h.date + 'T12:00:00+09:00')) / 864e5; if (dd < 3 || dd > 10) notes.push('랭킹 변동 기준일이 ' + Math.round(dd) + '일 전 (' + h.date + ')'); } catch (e) { fail('rank_hist.json 못 읽음'); }
   try { const r = JSON.parse(fs.readFileSync(path.join(SITE, 'icons', 'radiant.json'), 'utf8')); if (Object.keys(r).length < 30) fail('찬란한 템 원본 그림이 ' + Object.keys(r).length + '개뿐'); } catch (e) { fail('icons/radiant.json 없음 (찬란한 템 원본 그림)'); }
   try { cp.execSync('python3 ' + JSON.stringify(path.join(__dirname, 'lint_page.py')), { stdio: 'pipe' }); } catch (e) { fail('lint_page: ' + String(e.stdout)); }
+  // CSS 미정의 변수 검사 (2026-11-20: var(--text) 5곳 오타가 숨어 있었음): CSS에 선언되지 않고 JS setProperty도 없는 폴백 없는 var(--*) 잡기
+  {
+    const css = fs.readFileSync(path.join(SITE, 'src', '010_style.css'), 'utf8');
+    const jsAll = fs.readdirSync(path.join(SITE, 'src')).filter(f => f.endsWith('.js')).map(f => fs.readFileSync(path.join(SITE, 'src', f), 'utf8')).join('\n');
+    const defined = new Set([...css.matchAll(/(--[a-zA-Z0-9_-]+)\s*:/g)].map(m => m[1]));
+    for (const m of jsAll.matchAll(/setProperty\(\s*['"](--[a-zA-Z0-9_-]+)['"]/g)) defined.add(m[1]);
+    const badVars = new Set();
+    for (const m of css.matchAll(/var\(\s*(--[a-zA-Z0-9_-]+)(\s*,[^)]+)?\)/g)) {
+      if (!defined.has(m[1]) && !m[2]) badVars.add(m[1]);
+    }
+    if (badVars.size) fail('CSS 미정의 변수: ' + [...badVars].join(', '));
+  }
 
-  const b = await chromium.launch();
+  const b = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
   const TABS = ['meta', 'tfa', 'dc', 'rank', 'augments', 'items', 'more', 'traits', 'find', 'builder', 'esports', 'friends', 'power', 'parts', 'emb', 'flow', 'wisps', 'numbers', 'scout', 'patch'];
   for (const [W, scheme] of [[360, 'dark'], [412, 'light']]) {
     const pg = await b.newPage({ viewport: { width: W, height: 860 }, colorScheme: scheme });
@@ -96,9 +108,26 @@ function fresh(file, key, hours) {
       const bad = await q(() => [...document.querySelectorAll('#meta .mt-row.dk')].filter(x => x.offsetParent && !x.querySelector('.dk-hex img')).length);
       if (bad) fail(`덱 탭 ${s}: 메인 캐리 그림 없는 줄 ${bad}개`);
     }
-    // 덱 탭: 선택률(로비 평균 인원, 2026-11-14 사용자: "한 판에 보통 몇 명이 하는지 덱들 같이" → 이름은 "선택률로 가자")
+    // 덱 탭: 선택률(로비 평균 인원) + v3 상단 메타 줄(.dk-meta .dk-tbadge) + 2단 KPI(.dk-kpi2 평균/순방)
     await go('meta'); await pg.waitForTimeout(600);
     if (await q(() => [...document.querySelectorAll('#mt-rows .mt-row')].filter(r => /선택률 [\d.]+/.test(r.textContent)).length) < 10) fail('덱: 줄마다 "선택률"이 안 보임');
+    if (await q(() => document.querySelectorAll('#mt-rows .mt-row.dk .dk-meta .dk-tbadge').length) < 10) fail('덱: 상단 메타 줄에 티어 배지(.dk-tbadge)가 안 보임');
+    if (await q(() => [...document.querySelectorAll('#mt-rows .mt-row.dk .dk-kpi2')].filter(k => /순방 \d+%/.test(k.textContent)).length) < 10) fail('덱: 오른쪽 2단 KPI에 순방률이 안 보임');
+    // 하단 플로팅 독 5탭(덱·아카데미·전적·도감·더보기) 및 도감 전환(아이템·증강·시너지) 검사
+    {
+      const navs = await q(() => [...document.querySelectorAll('.bnav a')].map(a => a.dataset.nav));
+      if (!navs || navs.join(',') !== 'meta,tfa,rank,codex,more') fail('아래 메뉴: 5탭 구조(meta,tfa,rank,codex,more)가 아님 (' + (navs || []).join(',') + ')');
+      for (const ct of ['items', 'augments', 'traits']) {
+        await go(ct); await pg.waitForTimeout(300);
+        if (await q(() => !document.querySelector('.bnav a[data-nav=codex]').classList.contains('on'))) fail(`도감(${ct}): 아래 메뉴 '도감' 표시가 안 켜짐`);
+        if (await q((ct) => !document.querySelector(`#${ct} .codex-seg a[href="#${ct}"].on`), ct)) fail(`도감(${ct}): 상단 전환 바 활성 표시가 안 켜짐`);
+      }
+      await go('meta'); await pg.waitForTimeout(300);
+      await q(() => document.querySelector('.bnav a[data-nav=codex]').click()); await pg.waitForTimeout(400);
+      if (await q(() => document.querySelector('section:not([hidden])').id) !== 'traits') fail('도감: 마지막 본 하위 탭(traits)으로 복원되지 않음');
+      await q(() => document.querySelector('#traits .codex-seg a[href="#items"]').click()); await pg.waitForTimeout(400);
+      if (await q(() => document.querySelector('section:not([hidden])').id) !== 'items') fail('도감: 상단 전환 바에서 아이템으로 안 넘어감');
+    }
     // TFT 아카데미는 따로 탭 (v1.51.0): 덱 탭 상세를 열어 둔 채 오가도 서로 상태가 남아야 한다
     await go('tfa'); await pg.waitForTimeout(600);
     if (await q(() => document.querySelectorAll('#tfa-out .mt-row').length) < 15) soft('TFT 아카데미: 덱 줄 15개 미만');

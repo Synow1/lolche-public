@@ -18,7 +18,6 @@
   function metaList() {
     var box = document.getElementById("mt-rows");
     metaUpdLabel();
-    metaUpdLabel();
     var q = document.getElementById("mt-q").value.trim();
     var basis = document.getElementById("mt-basis").value;
     box.innerHTML = "";
@@ -39,8 +38,17 @@
       var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
       var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
       r.classList.add("dk", "t-" + bt);
-      r.appendChild(dkPortrait(mc, bt === "X" ? "-" : bt));
+      r.appendChild(dkPortrait(mc, null));
       var mid = el("div", "mt-mid");
+      var meta = el("div", "dk-meta");
+      meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
+      var mtxt = el("span", "dk-sub");
+      if (d && d.style) mtxt.appendChild(document.createTextNode(styleKo(d.style)));
+      if (d && d.diff) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dd" + d.diff, DIFF[d.diff])); }
+      var pl = perLobby(d, basis);
+      if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dk-pl", "선택률 " + pl)); }
+      if (mtxt.textContent) meta.appendChild(mtxt);
+      mid.appendChild(meta);
       var nm = el("div", "mt-name", deckName(v));
       var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
       if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
@@ -48,17 +56,24 @@
       if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
       if (d && d.mine) nm.appendChild(el("span", "tag", d.mine));
       mid.appendChild(nm);
-      var sub = el("div", "dk-sub", d ? styleKo(d.style) : "");
-      if (d && d.diff) { sub.appendChild(document.createTextNode(" · ")); sub.appendChild(el("span", "dd" + d.diff, DIFF[d.diff])); }
-      var pl = perLobby(d, basis);
-      if (pl != null) { if (sub.textContent) sub.appendChild(document.createTextNode(" · ")); sub.appendChild(el("span", "dk-pl", "선택률 " + pl)); }
-      if (sub.textContent) mid.appendChild(sub);
       var rest = starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; });
       mid.appendChild(rest.some(function (b) { return (b.s || 0) >= 3; }) ? tfaUnitIcons(rest) : strip(rest.map(function (b) { return b.u; })));
       r.appendChild(mid);
-      var num = el("div", "mt-num", bs ? (mtSort === "win" ? bs[2].toFixed(1) + "%" : mtSort === "top4" ? bs[1] + "%" : bs[0].toFixed(2)) : "");
-      if (bs) num.appendChild(el("small", null, mtSort === "avg" ? "승률 " + Math.round(bs[2]) + "%" : "평균 " + bs[0].toFixed(2)));
-      else num.appendChild(el("small", null, d ? "판수 부족" : "통계 없음"));
+      var num = el("div", "mt-num dk-kpi2");
+      if (bs) {
+        if (mtSort === "win") {
+          num.appendChild(el("b", "dk-avg", bs[2].toFixed(1) + "%"));
+          num.appendChild(el("span", "dk-top4", "평균 " + bs[0].toFixed(2)));
+        } else if (mtSort === "top4") {
+          num.appendChild(el("b", "dk-top4-hi", bs[1] + "%"));
+          num.appendChild(el("span", "dk-avg-sub", "평균 " + bs[0].toFixed(2)));
+        } else {
+          num.appendChild(el("b", "dk-avg", bs[0].toFixed(2)));
+          num.appendChild(el("span", "dk-top4", "순방 " + bs[1] + "%"));
+        }
+      } else {
+        num.appendChild(el("small", null, d ? "판수 부족" : "통계 없음"));
+      }
       r.appendChild(num);
       r.addEventListener("click", function () { metaShow(v.id); });
       box.appendChild(r);
@@ -169,7 +184,7 @@
     if (d) {
       var st = el("div", "dk-kpi"), hs = basisSt(d, basis) || basisSt(d, "all");
       var plv = perLobby(d, basisSt(d, basis) ? basis : "all");
-      [[BASIS_LABEL[basisSt(d, basis) ? basis : "all"] + " 평균 등수", hs[0].toFixed(2), "g"], ["순방", hs[1] + "%"], ["승률", Math.round(hs[2]) + "%"]].concat(plv != null ? [["선택률", plv]] : []).forEach(function (x) {
+      [[BASIS_LABEL[basisSt(d, basis) ? basis : "all"] + " 평균 등수", hs[0].toFixed(2), "g"], ["순방", hs[1] + "%", "c"], ["승률", Math.round(hs[2]) + "%"]].concat(plv != null ? [["선택률", plv]] : []).forEach(function (x) {
         var sp = el("div"); sp.appendChild(el("b", x[2] || null, x[1])); sp.appendChild(el("span", null, x[0])); st.appendChild(sp);
       });
       box.appendChild(st);

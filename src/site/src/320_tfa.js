@@ -73,15 +73,20 @@
           if (c.tier === "X") box.appendChild(el("p", "emb-sub tfa-sub", "상징·증강·유물처럼 조건이 맞을 때만 하는 덱이에요. 글자는 조건이 맞았을 때의 티어예요"));
         }
         var tl = c.tier === "X" ? c.sub || "X" : c.tier, r = el("button", "mt-row dk t-" + tl); r.type = "button";
-        var mb = c.board.filter(function (x) { return x.u === c.main; })[0] || { u: c.main, s: 1, i: [] }, pt = dkPortrait(mb, tl);
-        if (c.tier === "X") pt.querySelector(".dk-tier").classList.add("x");
+        var mb = c.board.filter(function (x) { return x.u === c.main; })[0] || { u: c.main, s: 1, i: [] }, pt = dkPortrait(mb, null);
         r.appendChild(pt);
-        var mid = el("div", "mt-mid"), nm = el("div", "mt-name", c.title);
+        var mid = el("div", "mt-mid");
+        var meta = el("div", "dk-meta");
+        var tb = el("span", "dk-tbadge t-" + tl + (c.tier === "X" ? " x" : ""), tl);
+        meta.appendChild(tb);
+        var sb = el("span", "dk-sub", c.style); if (c.diff) { sb.appendChild(document.createTextNode(" · ")); sb.appendChild(el("span", "dd" + ({ "쉬움": 1, "보통": 2, "어려움": 4, "조건부": 3 })[c.diff], c.diff)); }
+        if (sb.textContent) meta.appendChild(sb);
+        mid.appendChild(meta);
+        var nm = el("div", "mt-name", c.title);
         var tr = tfaTrend(c); if (tr) nm.appendChild(tr);
         var tabs = tfaTabs(c);
         if (tabs.length > 1) { r.classList.add("tfa-stack"); nm.appendChild(el("span", "tfa-more", "비슷한 덱 " + (tabs.length - 1))); }
         mid.appendChild(nm);
-        var sb = el("div", "dk-sub", c.style); if (c.diff) { sb.appendChild(document.createTextNode(" · ")); sb.appendChild(el("span", "dd" + ({ "쉬움": 1, "보통": 2, "어려움": 4, "조건부": 3 })[c.diff], c.diff)); } mid.appendChild(sb);
         mid.appendChild(tfaUnitIcons(tfaOrder(c).filter(function (b) { return b.u !== c.main; })));
         r.appendChild(mid);
         r.addEventListener("click", function () { tfaShow(c.slug); });
