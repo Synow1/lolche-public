@@ -131,7 +131,7 @@ function fresh(file, key, hours) {
     await go('meta'); await pg.waitForTimeout(600);
     if (await q(() => [...document.querySelectorAll('#mt-rows .mt-row')].filter(r => /선택률 [\d.]+/.test(r.textContent)).length) < 10) fail('덱: 줄마다 "선택률"이 안 보임');
     if (await q(() => document.querySelectorAll('#mt-rows .mt-row.dk .dk-meta .dk-tbadge').length) < 10) fail('덱: 상단 메타 줄에 티어 배지(.dk-tbadge)가 안 보임');
-    if (await q(() => [...document.querySelectorAll('#mt-rows .mt-row.dk .dk-kpi2')].filter(k => /순방 \d+%/.test(k.textContent)).length) < 10) fail('덱: 오른쪽 2단 KPI에 순방률이 안 보임');
+    if (await q(() => [...document.querySelectorAll('#mt-rows .mt-row.dk .dk-kpi2')].filter(k => /승률 \d+(\.\d+)?%/.test(k.textContent)).length) < 10) fail('덱: 오른쪽 2단 KPI에 승률이 안 보임');
     // 덱 통합 서브탭(메타·아카데미·재료·상징) 및 아래 메뉴 활성 표시
     await go('tfa'); await pg.waitForTimeout(600);
     if (await q(() => document.querySelectorAll('#tfa-out .mt-row').length) < 15) soft('TFT 아카데미: 덱 줄 15개 미만');

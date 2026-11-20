@@ -63,16 +63,13 @@
       if (bs) {
         if (mtSort === "win") {
           num.appendChild(el("b", "dk-avg", bs[2].toFixed(1) + "%"));
-          num.appendChild(el("span", "dk-top4", "순방 " + bs[1] + "%"));
-          num.appendChild(el("span", "dk-win", "평균 " + bs[0].toFixed(2)));
+          num.appendChild(el("span", "dk-top4", "평균 " + bs[0].toFixed(2)));
         } else if (mtSort === "top4") {
           num.appendChild(el("b", "dk-top4-hi", bs[1] + "%"));
           num.appendChild(el("span", "dk-avg-sub", "평균 " + bs[0].toFixed(2)));
-          num.appendChild(el("span", "dk-win", "승률 " + bs[2].toFixed(1) + "%"));
         } else {
           num.appendChild(el("b", "dk-avg", bs[0].toFixed(2)));
-          num.appendChild(el("span", "dk-top4", "순방 " + bs[1] + "%"));
-          num.appendChild(el("span", "dk-win", "승률 " + bs[2].toFixed(1) + "%"));
+          num.appendChild(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"));
         }
       } else {
         num.appendChild(el("small", null, d ? "판수 부족" : "통계 없음"));

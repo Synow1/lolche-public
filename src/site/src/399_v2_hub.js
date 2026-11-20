@@ -91,8 +91,7 @@
         r.appendChild(mid);
         var num = el("div", "mt-num dk-kpi2");
         num.appendChild(el("b", "dk-avg", bs[0].toFixed(2)));
-        num.appendChild(el("span", "dk-top4", "순방 " + bs[1] + "%"));
-        num.appendChild(el("span", "dk-win", "승률 " + bs[2].toFixed(1) + "%"));
+        num.appendChild(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"));
         r.appendChild(num);
         r.addEventListener("click", function () { openDeck(v.id); });
         dbox.appendChild(r);
@@ -293,7 +292,7 @@
         var bs = basisSt(v.st, "emer"), mc = mainOf(v), ic = mc && IDX.units[mc.u] && IDX.units[mc.u].icon;
         return {
           icon: ic, title: deckName(v),
-          sub: bs ? ("에메+ 평균 " + bs[0].toFixed(2) + " · 순방 " + bs[1] + "% · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱",
+          sub: bs ? ("에메+ 평균 " + bs[0].toFixed(2) + " · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱",
           tag: basisTier(v.st, "emer") + " 티어", tagCls: "gold",
           go: function () { openDeck(v.id); }
         };
