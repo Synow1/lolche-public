@@ -712,19 +712,50 @@ function fresh(file, key, hours) {
         errs.length = 0;
         await go(t); await pg.waitForTimeout(['rank', 'esports', 'power'].includes(t) ? 2500 : 700);
         const r = await pg.evaluate(() => {
-          const sec = document.querySelector('section:not([hidden])'), o = { sw: document.documentElement.scrollWidth, broken: [], hid: [], text: sec ? sec.innerText.length : 0 };
+          const sec = document.querySelector('section:not([hidden])'), o = { sw: document.documentElement.scrollWidth, broken: [], hid: [], tiny: [], text: sec ? sec.innerText.length : 0 };
           if (!sec) return o;
-          sec.querySelectorAll('*').forEach(e => { if (e.hasAttribute('hidden') && getComputedStyle(e).display !== 'none') o.hid.push(e.id || e.className); });
+          const SKIP_FS = '.sr-title, .hxn, .st, .dk-st, .tfa-u3 b, .s19-lock, .s19-bslot .x, svg, svg *';
+          sec.querySelectorAll('*').forEach(e => {
+            if (e.hasAttribute('hidden') && getComputedStyle(e).display !== 'none') o.hid.push(e.id || e.className);
+            if (!e.closest('[hidden]') && !e.matches(SKIP_FS) && !e.closest(SKIP_FS)) {
+              const rc = e.getBoundingClientRect();
+              if (rc.width > 0 && rc.height > 0 && [...e.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim().length > 0)) {
+                const fs = parseFloat(getComputedStyle(e).fontSize);
+                if (fs < 12) o.tiny.push(`${e.tagName.toLowerCase()}.${String(e.className || '').trim().replace(/\s+/g, '.')}(${fs}px)`);
+              }
+            }
+          });
           sec.querySelectorAll('img').forEach(i => { if (i.complete && i.naturalWidth === 0 && i.getBoundingClientRect().width) o.broken.push(i.getAttribute('src')); });
           return o;
         });
         if (r.sw > 1280) fail(`[WEB/1280] ${t}: 화면보다 넓음 ${r.sw}px (가로 밀림)`);
         if (r.broken.length) fail(`[WEB/1280] ${t}: 깨진 이미지 ${[...new Set(r.broken)].slice(0, 3).join(', ')}`);
         if (r.hid.length) fail(`[WEB/1280] ${t}: 숨겼는데 보임 ${r.hid.slice(0, 3).join(', ')}`);
+        if (r.tiny.length) fail(`[WEB/1280] ${t}: 12px 미만 글자 ${[...new Set(r.tiny)].slice(0, 4).join(', ')}`);
         if (r.text < 40 && await pg.evaluate((t) => /새 시즌 내용은 준비 중/.test((document.getElementById(t) || {}).textContent || ''), t)) notes.push(`[WEB/1280] ${t}: 새 시즌 공략 미작성`);
         else if (r.text < 40) fail(`[WEB/1280] ${t}: 내용이 거의 없음 (${r.text}자)`);
         if (errs.length) fail(`[WEB/1280] ${t}: 페이지 오류 ${errs.slice(0, 2).join(' ; ')}`);
       }
+
+      // 아이템 티어표 머리줄 정렬 확인 (넓은 화면에서 머리줄이 왼쪽 절반에 쏠리지 않아야 함)
+      await go('items'); await pg.waitForTimeout(500);
+      const itAl = await pg.evaluate(() => {
+        const h = document.querySelector('#items .it-head'), r = document.querySelector('#items .it-row');
+        return h && r ? { hw: Math.round(h.getBoundingClientRect().width), rw: Math.round(r.getBoundingClientRect().width) } : null;
+      });
+      if (!itAl || Math.abs(itAl.hw - itAl.rw) > 12) fail(`[WEB/1280] 아이템 티어표 머리줄 폭 어긋남 (head=${itAl && itAl.hw}px, row=${itAl && itAl.rw}px)`);
+
+      // 19시즌 추천 덱 2단 보기 확인
+      await go('s19'); await pg.waitForTimeout(500);
+      await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]')?.click()); await pg.waitForTimeout(600);
+      const s19w = await pg.evaluate(() => {
+        const l = document.querySelector('#s19-out .s19-dk-col-list'), d = document.querySelector('#s19-out .s19-dk-col-detail');
+        return l && d ? { lR: l.getBoundingClientRect().right, dL: d.getBoundingClientRect().left, t0: (d.querySelector('.dc-vt') || {}).textContent || '', hex: d.querySelectorAll('.s19-hex .hx').length } : null;
+      });
+      if (!s19w || s19w.dL < s19w.lR - 2 || !s19w.t0 || s19w.hex < 20) fail(`[WEB/1280] 19시즌 추천 덱 2단 레이아웃 이상 (${JSON.stringify(s19w)})`);
+      await pg.evaluate(() => document.querySelectorAll('#s19-out .s19-dk-col-list .mt-row')[1]?.click()); await pg.waitForTimeout(300);
+      const s19t1 = await pg.evaluate(() => (document.querySelector('#s19-out .s19-dk-col-detail .dc-vt') || {}).textContent || '');
+      if (!s19t1 || (s19w && s19t1 === s19w.t0)) fail('[WEB/1280] 19시즌 추천 덱 2단: 다른 덱을 눌러도 오른쪽 상세가 안 바뀜');
 
       // 덱 목록·상세 2단 보기 + 직접 fetch 새로고침
       await go('meta'); await pg.waitForTimeout(800);

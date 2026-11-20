@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611202327">
+<meta name="lolche-web" content="202611202352">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -270,7 +270,7 @@ td .row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .mt-tools input, .mt-tools select { font: inherit; font-size: var(--fs-b); padding: 5px 9px; border-radius: 8px; border: 1px solid transparent; background: var(--surface); color: var(--ink); min-width: 0; }
 .mt-tools input { flex: 1; }
 .it-head, .it-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 44px 38px 40px 42px; gap: 6px; align-items: center; }
-.it-head { font-size: var(--fs-xs); color: var(--muted); padding: 0 8px 4px; }
+.it-head { grid-column: 1 / -1; font-size: var(--fs-xs); color: var(--muted); padding: 0 10px 4px; }
 .it-head span:nth-child(n+3) { text-align: right; }
 .it-rows { display: grid; gap: 6px; }
 .it-row { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 26px minmax(0, 1fr) 44px 38px 40px 42px; gap: 6px; align-items: center; padding: 9px 10px; border-radius: 14px; background: var(--surface); border: 1px solid transparent; }
@@ -1821,18 +1821,32 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
 /* ===== PC 웹 · 데스크톱 반응형 (1024px 이상) ===== */
 .pc-side-extra { display: none; }
+.s19-hgrid { display: contents; }
 .dc-web { text-align: center; padding: 32px 24px; max-width: 520px; margin: 12px auto 0; display: grid; justify-items: center; gap: 10px; }
 .dc-web h3 { margin: 0; font-size: var(--fs-xl); font-weight: 800; }
 .dc-web .sub { margin: 0; max-width: 400px; }
 .dc-web .codebtn.big { display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 180px; text-decoration: none; margin-top: 8px; padding: 11px 24px; background: var(--on-bg); color: var(--on-ink); border-color: var(--on-bg); border-radius: var(--r-ctl); }
 
 @media (min-width: 1024px) {
+  /* PC 가독성: 글자 크기 토큰 전체 한 단계 상향 (최소 12px 보장, 본문 15~16px) */
+  :root {
+    --fs-2xs: 12px;
+    --fs-xs: 12.5px;
+    --fs-s: 13px;
+    --fs-m: 14px;
+    --fs-b: 15px;
+    --fs-l: 16px;
+    --fs-xl: 18px;
+    --fs-2xl: 20px;
+    --fs-3xl: 24px;
+  }
+
   body:not(.overlay) {
-    padding-left: 224px;
-    padding-bottom: 40px;
+    padding-left: 232px;
+    padding-bottom: 48px;
   }
   body:not(.overlay) .appbar {
-    margin-left: -224px;
+    margin-left: -232px;
     border-bottom: 1px solid var(--border-subtle);
   }
   body:not(.overlay) .appbar .wrap {
@@ -1842,8 +1856,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
   body:not(.overlay) .ab-search {
     width: auto;
-    min-width: 240px;
-    padding: 0 12px;
+    min-width: 260px;
+    padding: 0 14px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1862,7 +1876,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     left: 0;
     right: auto;
     bottom: 0;
-    width: 224px;
+    width: 232px;
     max-width: none;
     margin: 0;
     padding: 14px 12px;
@@ -1896,6 +1910,12 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     font-weight: 700;
     background: color-mix(in srgb, var(--accent) 13%, transparent);
   }
+  /* 보조 사이드 메뉴 항목이 활성일 때는 상단 5탭 중복 강조를 눌러 현재 위치만 또렷하게 표시 */
+  body:not(.overlay):has(.pc-side-extra a.on) .bnav a.on {
+    color: var(--muted);
+    font-weight: 600;
+    background: transparent;
+  }
   body:not(.overlay) .bnav a.on::before { display: none; }
   body:not(.overlay) .bnav a.on svg { transform: none; }
 
@@ -1904,7 +1924,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     left: 0;
     top: calc(var(--abh) + 252px);
     bottom: 0;
-    width: 224px;
+    width: 232px;
     z-index: 9;
     display: flex;
     flex-direction: column;
@@ -1925,7 +1945,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .pc-side-extra a {
     display: flex;
     align-items: center;
-    height: 34px;
+    height: 36px;
     padding: 0 12px;
     border-radius: 10px;
     text-decoration: none;
@@ -1936,23 +1956,50 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
   body:not(.overlay) .pc-side-extra a.on {
     color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 11%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
     font-weight: 700;
   }
 
   /* 본문 최대 폭 제한 */
   body:not(.overlay) main.wrap {
-    max-width: 1120px;
+    max-width: 1200px;
     padding-left: 28px;
     padding-right: 28px;
   }
 
-  /* 메타 덱 · TFT 아카데미: 목록 + 상세 2단 마스터-디테일 */
+  /* 하드코딩된 소형 라벨도 PC에서는 최소 12px 보장 */
+  body:not(.overlay) .dk-tbadge { min-width: 22px; height: 22px; font-size: var(--fs-xs); }
+  body:not(.overlay) .mini .nm { font-size: var(--fs-2xs); }
+  body:not(.overlay) .mini .stars { font-size: var(--fs-2xs); }
+  body:not(.overlay) .odds i { font-size: var(--fs-2xs); }
+  body:not(.overlay) .dk .mt-name { font-size: var(--fs-l); }
+  body:not(.overlay) .dk-kpi2 .dk-avg,
+  body:not(.overlay) .dk-kpi2 .dk-top4-hi { font-size: 21px; }
+  body:not(.overlay) .dk-kpi2 .dk-top4,
+  body:not(.overlay) .dk-kpi2 .dk-avg-sub { font-size: var(--fs-xs); }
+
+  /* PC 전용 아이콘 · 초상 · 육각 보드 한 단계 확대 */
+  body:not(.overlay) .mt-row.dk { grid-template-columns: 64px minmax(0, 1fr) auto; gap: 13px; padding: 12px 14px; }
+  body:not(.overlay) .dk-mc,
+  body:not(.overlay) .dk-hex { width: 62px; height: 66px; }
+  body:not(.overlay) .dk-its img { width: 19px; height: 19px; border-radius: 4px; }
+  body:not(.overlay) .mt-strip { gap: 4px; }
+  body:not(.overlay) .dk .mt-strip img,
+  body:not(.overlay) .mt-strip img,
+  body:not(.overlay) .tfa-strip img,
+  body:not(.overlay) .s19-strip img { width: 30px; height: 30px; border-radius: 7px; }
+  body:not(.overlay) .hexboard { max-width: 540px; margin: 8px auto 6px; }
+  body:not(.overlay) .hexboard .its img { width: 17px; height: 17px; border-radius: 4px; }
+  body:not(.overlay) .s19-hex { max-width: 540px; margin: 8px auto 2px; }
+  body:not(.overlay) .s19-hex .its img { width: 17px; height: 17px; border-radius: 4px; }
+  body:not(.overlay) .s19-bwrap { text-align: left; }
+
+  /* 메타 덱 · TFT 아카데미 · 19시즌 추천 덱: 목록 + 상세 2단 마스터-디테일 */
   body:not(.overlay) #meta:not([hidden]),
   body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single) {
     display: grid;
-    grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
-    gap: 20px;
+    grid-template-columns: minmax(380px, 445px) minmax(0, 1fr);
+    gap: 22px;
     align-items: start;
   }
   body:not(.overlay) #meta .mt-list,
@@ -1976,7 +2023,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     background: var(--surface);
     border: 1px solid var(--border-subtle);
     border-radius: var(--r-card);
-    padding: 18px 20px 24px;
+    padding: 20px 22px 26px;
     scrollbar-width: thin;
   }
   body:not(.overlay) #meta .mt-detail .back,
@@ -1985,26 +2032,122 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) #tfa .mt-detail .mt-cols { grid-template-columns: 1fr; }
   body:not(.overlay) .mt-row.dk.sel {
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface));
   }
 
-  /* 홈 · 19시즌 · 더보기 · 전적·대회 멀티컬럼 보강 */
-  body:not(.overlay) #home .hm-decks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  body:not(.overlay) #home .hm-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  body:not(.overlay) #more .more-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  body:not(.overlay) #s19-out .s19-grid { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
-  body:not(.overlay) #s19-out .s19-bpool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
-  body:not(.overlay) #friends .fr-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  body:not(.overlay) #power #pw-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  body:not(.overlay) #esports #esp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+  /* 19시즌 추천 덱 2단 마스터-디테일 */
+  body:not(.overlay) .s19-dk-split {
+    display: grid;
+    grid-template-columns: minmax(380px, 445px) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  body:not(.overlay) .s19-dk-col-list { min-width: 0; }
+  body:not(.overlay) .s19-dk-col-list .mt-rows { grid-template-columns: 1fr; }
+  body:not(.overlay) .s19-dk-col-detail {
+    position: sticky;
+    top: calc(var(--abh) + 14px);
+    max-height: calc(100vh - var(--abh) - 28px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-card);
+    padding: 20px 22px 26px;
+    display: grid;
+    gap: 12px;
+    scrollbar-width: thin;
+  }
+  body:not(.overlay) .s19-dk-head { padding-bottom: 4px; border-bottom: 1px solid var(--border-subtle); }
+  body:not(.overlay) .s19-dk-head .dc-vt { margin: 0 0 4px; font-size: var(--fs-2xl); }
+  body:not(.overlay) .s19-dk-head .dc-vm { margin: 0; font-size: var(--fs-m); }
+  body:not(.overlay) .s19-dk-col-detail .s19-dk-kpi b { font-size: 20px; }
+
+  /* 홈 · 19시즌 개요 · 더보기 · 전적·대회 멀티컬럼 보강 */
+  body:not(.overlay) #home .hm-decks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  body:not(.overlay) #home .hm-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  body:not(.overlay) #home .hm-u7 { min-width: 102px; padding: 12px 10px; }
+  body:not(.overlay) #s19 .s19-hgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+  body:not(.overlay) #s19 .s19-hgrid > .s19-card { margin: 0; }
+  body:not(.overlay) #more .more-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  body:not(.overlay) #s19-out .s19-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  body:not(.overlay) #s19-out .s19-bpool { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  body:not(.overlay) #friends .fr-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  body:not(.overlay) #power #pw-chart { max-width: 660px; margin: 0 auto 14px; }
+  body:not(.overlay) #power #pw-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  body:not(.overlay) #esports #esp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
   body:not(.overlay) #esports #esp-list .wd-card { grid-column: 1 / -1; }
 
+  /* 표·읽기형 탭 가독성 보강: 시선 이동 폭 제한 + 열 간격 정돈 */
+  body:not(.overlay) #items #it-tier,
+  body:not(.overlay) #rank #rk-board,
+  body:not(.overlay) #rank #rk-search,
+  body:not(.overlay) #patch,
+  body:not(.overlay) #flow,
+  body:not(.overlay) #numbers,
+  body:not(.overlay) #scout,
+  body:not(.overlay) #wisps {
+    max-width: 980px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  body:not(.overlay) #items .it-head,
+  body:not(.overlay) #items .it-row {
+    grid-template-columns: 32px minmax(0, 1fr) 68px 64px 68px 78px;
+    gap: 12px;
+  }
+  body:not(.overlay) #items .it-head { padding: 4px 14px 6px; font-size: var(--fs-s); }
+  body:not(.overlay) #items .it-row { padding: 11px 14px; }
+  body:not(.overlay) #items .it-main > img { width: 40px; height: 40px; border-radius: 8px; }
+  body:not(.overlay) #items .it-main .mt-strip img { width: 25px; height: 25px; border-radius: 5px; }
+  body:not(.overlay) #patch td:first-child { min-width: 112px; width: 112px; white-space: nowrap; }
+
   /* 전체 화면 상세 · 시트 · 통합 검색 데스크톱 중앙 배치 */
-  body:not(.overlay) .fs-view .dc-vtop { max-width: 960px; width: 100%; margin: 0 auto; }
-  body:not(.overlay) .fs-view .dc-vbody { max-width: 960px; width: 100%; margin: 0 auto; }
+  body:not(.overlay) .fs-view .dc-vtop { max-width: 980px; width: 100%; margin: 0 auto; }
+  body:not(.overlay) .fs-view .dc-vbody { max-width: 980px; width: 100%; margin: 0 auto; }
   body:not(.overlay) .sheet-bg { align-items: center; padding: 24px; }
-  body:not(.overlay) .sheet { max-width: 520px; border-radius: 20px; max-height: 82vh; }
-  body:not(.overlay) .spot-box { max-width: 640px; }
+  body:not(.overlay) .sheet { max-width: 560px; border-radius: 20px; max-height: 82vh; }
+  body:not(.overlay) .spot-box { max-width: 680px; }
+}
+
+/* 대형 모니터 (1600px 이상): 본문 폭 1440px 확장 + 여유로운 멀티컬럼 */
+@media (min-width: 1600px) {
+  body:not(.overlay) main.wrap {
+    max-width: 1440px;
+    padding-left: 36px;
+    padding-right: 36px;
+  }
+  body:not(.overlay) #meta:not([hidden]),
+  body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single),
+  body:not(.overlay) .s19-dk-split {
+    grid-template-columns: minmax(440px, 500px) minmax(0, 1fr);
+    gap: 26px;
+  }
+  body:not(.overlay) #meta .mt-detail .mt-cols,
+  body:not(.overlay) #tfa .mt-detail .mt-cols {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 22px;
+  }
+  body:not(.overlay) #home .hm-quick {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  body:not(.overlay) #home .hm-decks,
+  body:not(.overlay) #s19-out .s19-drows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  body:not(.overlay) #s19 .s19-hgrid {
+    gap: 16px;
+  }
+  body:not(.overlay) #s19-out .s19-dk-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  body:not(.overlay) #power #pw-list,
+  body:not(.overlay) #esports #esp-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
 }
 
 @media (hover: hover) {
@@ -7909,10 +8052,13 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
 
   // 19시즌 PBE 추천 덱 행 & 상세 (롤체지지 추천 가이드 배치 + PBE 메타 통계)
-  function s19DeckRow(d, sortBy) {
+  var s19CurDeck = "";
+  function s19DeckKey(d) { return (d.n || "") + "|" + (d.mc || ""); }
+  function s19DeckRow(d, sortBy, onPick) {
     var mcEntry = d.u.filter(function (x) { return x.k === d.mc; })[0] || d.u[0];
     var mcu = mcEntry && s19Unit(mcEntry.k);
     var r = el("button", "mt-row dk t-" + (d.tier || "B")); r.type = "button";
+    r.dataset.s19dk = s19DeckKey(d);
     var w = el("div", "dk-mc"), hx = el("div", "dk-hex");
     if (mcu) {
       hx.style.setProperty("--cc", S19_COST_VAR[mcu.c] || "var(--c1)");
@@ -7957,7 +8103,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       num.appendChild(el("small", null, "추천 배치"));
     }
     r.appendChild(num);
-    r.addEventListener("click", function () { s19OpenDeck(d); });
+    r.addEventListener("click", function () { if (onPick) onPick(d); else s19OpenDeck(d); });
     return r;
   }
   function s19Decks(out, tools) {
@@ -7986,110 +8132,132 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       return (a.avg || 9) - (b.avg || 9);
     });
     if (!f.length) { out.appendChild(el("p", "empty", "조건에 맞는 19시즌 덱이 없어요")); return; }
-    var rows = el("div", "mt-rows");
-    f.forEach(function (d) { rows.appendChild(s19DeckRow(d, s19St.ds)); });
-    out.appendChild(rows);
+    if (isWide()) {
+      var split = el("div", "s19-dk-split"), lcol = el("div", "s19-dk-col-list"), dcol = el("div", "s19-dk-col-detail");
+      var rows = el("div", "mt-rows");
+      function showSplit(d, noScroll) {
+        var key = s19DeckKey(d); s19CurDeck = key;
+        rows.querySelectorAll(".mt-row").forEach(function (row) { row.classList.toggle("sel", row.dataset.s19dk === key); });
+        dcol.innerHTML = "";
+        var subTxt = "19시즌 PBE" + (d.tier ? " · " + d.tier + "티어" : "") + (d.plays ? " · " + d.plays.toLocaleString() + "판" : "");
+        var hd = el("div", "s19-dk-head");
+        hd.appendChild(el("h3", "dc-vt", d.n));
+        hd.appendChild(el("p", "dc-vm", subTxt));
+        dcol.appendChild(hd);
+        s19DeckDetailBody(dcol, d);
+        if (!noScroll) dcol.scrollTop = 0;
+      }
+      f.forEach(function (d) { rows.appendChild(s19DeckRow(d, s19St.ds, function (x) { showSplit(x, false); })); });
+      lcol.appendChild(rows); split.appendChild(lcol); split.appendChild(dcol); out.appendChild(split);
+      var initD = f.filter(function (d) { return s19DeckKey(d) === s19CurDeck; })[0] || f[0];
+      showSplit(initD, true);
+      return;
+    }
+    var rows2 = el("div", "mt-rows");
+    f.forEach(function (d) { rows2.appendChild(s19DeckRow(d, s19St.ds)); });
+    out.appendChild(rows2);
+  }
+  function s19DeckDetailBody(b, d) {
+    if (d.avg != null) {
+      var kpi = el("div", "dk-kpi s19-dk-kpi");
+      [["평균 등수", d.avg.toFixed(2), s19AvgT(d.avg)], ["승률", d.win.toFixed(1) + "%", s19WinT(d.win)], ["순방률", d.top4.toFixed(1) + "%", dkTop4T(d.top4)], ["선택률", d.pick ? d.pick.toFixed(2) : "-", d.pick ? "pick" : null]].forEach(function (x) {
+        var box = el("div"), bv = el("b", null, x[1]);
+        if (x[2] === "pick") dkPickGrad(bv, d.pick);
+        else if (x[2] != null) dkGrad(bv, x[2]);
+        box.appendChild(bv); box.appendChild(el("span", null, x[0])); kpi.appendChild(box);
+      });
+      b.appendChild(kpi);
+    }
+    var hasPos = d.u.some(function (x) { return x.pos && x.pos.length === 2; });
+    if (hasPos) {
+      var bc = el("div", "s19-card s19-bwrap");
+      bc.appendChild(el("h3", null, "추천 배치"));
+      bc.appendChild(s19HexBoard(d.u));
+      b.appendChild(bc);
+    }
+    var loadBtn = el("button", "s19-sqact on", "19시즌 스쿼드 빌더로 불러오기"); loadBtn.type = "button";
+    loadBtn.addEventListener("click", function () {
+      s19Sq = d.u.map(function (x) { return x.k; }).slice(0, 10);
+      s19SqSave();
+      var fv = b.closest(".fs-view");
+      var goB = function () { s19Jump("builder"); toast(d.n + " 스쿼드를 빌더에 불러왔어요"); };
+      if (fv && fv._navClose) fv._navClose(goB); else goB();
+    });
+    b.appendChild(loadBtn);
+    if (d.a && d.a.length) {
+      var ac = el("div", "s19-card"); ac.appendChild(el("h3", null, "추천 증강"));
+      var aw = el("div", "s19-dk-augs");
+      d.a.forEach(function (anm) {
+        var ag = s19Aug(anm);
+        var bt = el("button", "s19-dk-aug"); bt.type = "button";
+        if (ag && ag.img) bt.appendChild(img(ag.img, anm));
+        var sp = el("span");
+        sp.appendChild(el("b", null, anm));
+        if (ag && ag.tier) sp.appendChild(el("small", null, S19_TIER[ag.tier] || ""));
+        bt.appendChild(sp);
+        bt.addEventListener("click", function () {
+          var fv = b.closest(".fs-view");
+          var goA = function () { s19Jump("augs", { q: anm, an: false }); };
+          if (fv && fv._navClose) fv._navClose(goA); else goA();
+        });
+        aw.appendChild(bt);
+      });
+      ac.appendChild(aw); b.appendChild(ac);
+    }
+    if (d.t && d.t.length) {
+      var tc = el("div", "s19-card"); tc.appendChild(el("h3", null, "활성 시너지"));
+      var tr = el("div", "s19-tchips");
+      d.t.forEach(function (x) {
+        var t = s19Trait(x[0]), bt = el("button", "s19-tchip"); bt.type = "button";
+        if (t) bt.appendChild(s19Ti(t, 18));
+        bt.appendChild(el("span", null, x[0]));
+        bt.appendChild(el("small", null, String(x[1])));
+        if (t) bt.addEventListener("click", function () { s19OpenTrait(t); });
+        tr.appendChild(bt);
+      });
+      tc.appendChild(tr); b.appendChild(tc);
+    }
+    var unls = d.u.map(function (x) { return s19Unit(x.k); }).filter(function (u) { return u && u.unl; });
+    if (unls.length) {
+      var ub = el("div", "s19-bunl s19-dk-unl");
+      ub.appendChild(el("div", "s19-bunl-h", "필요한 해금 조건 (" + unls.length + "명)"));
+      unls.forEach(function (u) {
+        var row = el("div", "s19-bunl-r");
+        row.appendChild(el("b", null, u.n + (u.unl.lv ? " (" + u.unl.lv + "렙↑)" : "")));
+        row.appendChild(el("span", null, u.unl.c.join(" 또는 ")));
+        ub.appendChild(row);
+      });
+      b.appendChild(ub);
+    }
+    var uc = el("div", "s19-card"); uc.appendChild(el("h3", null, "챔피언 · 추천 아이템 (" + d.u.length + "명)"));
+    var ul = el("div", "s19-dk-list");
+    d.u.forEach(function (x) {
+      var u = s19Unit(x.k); if (!u) return;
+      var row = el("button", "s19-dk-u"); row.type = "button";
+      row.appendChild(s19Pic(u, 42));
+      var inf = el("div", "s19-dk-um");
+      var nm = el("b", null, u.n + (x.s >= 3 ? " ★★★" : ""));
+      if (x.k === d.mc) nm.appendChild(el("i", "s19-dk-core", "핵심"));
+      inf.appendChild(nm);
+      inf.appendChild(el("small", null, u.c + "코 · " + u.t.join(" · ")));
+      row.appendChild(inf);
+      if (x.i && x.i.length) {
+        var iw = el("div", "s19-dk-its");
+        x.i.forEach(function (inm) {
+          var src = s19ItemImg(inm);
+          if (src) { var im = img(src, inm); im.title = inm; iw.appendChild(im); }
+        });
+        row.appendChild(iw);
+      }
+      row.addEventListener("click", function () { s19OpenUnit(u); });
+      ul.appendChild(row);
+    });
+    uc.appendChild(ul); b.appendChild(uc);
+    b.appendChild(el("p", "fnote", "출처 롤체지지 PBE · 패치 전 수치와 조합은 바뀔 수 있어요"));
   }
   function s19OpenDeck(d) {
     var subTxt = "19시즌 PBE" + (d.tier ? " · " + d.tier + "티어" : "") + (d.plays ? " · " + d.plays.toLocaleString() + "판" : "");
-    fsOpen(d.n, subTxt, function (b) {
-      if (d.avg != null) {
-        var kpi = el("div", "dk-kpi s19-dk-kpi");
-        [["평균 등수", d.avg.toFixed(2), s19AvgT(d.avg)], ["승률", d.win.toFixed(1) + "%", s19WinT(d.win)], ["순방률", d.top4.toFixed(1) + "%", dkTop4T(d.top4)], ["선택률", d.pick ? d.pick.toFixed(2) : "-", d.pick ? "pick" : null]].forEach(function (x) {
-          var box = el("div"), bv = el("b", null, x[1]);
-          if (x[2] === "pick") dkPickGrad(bv, d.pick);
-          else if (x[2] != null) dkGrad(bv, x[2]);
-          box.appendChild(bv); box.appendChild(el("span", null, x[0])); kpi.appendChild(box);
-        });
-        b.appendChild(kpi);
-      }
-      var hasPos = d.u.some(function (x) { return x.pos && x.pos.length === 2; });
-      if (hasPos) {
-        var bc = el("div", "s19-card s19-bwrap");
-        bc.appendChild(el("h3", null, "추천 배치"));
-        bc.appendChild(s19HexBoard(d.u));
-        b.appendChild(bc);
-      }
-      var loadBtn = el("button", "s19-sqact on", "19시즌 스쿼드 빌더로 불러오기"); loadBtn.type = "button";
-      loadBtn.addEventListener("click", function () {
-        s19Sq = d.u.map(function (x) { return x.k; }).slice(0, 10);
-        s19SqSave();
-        var fv = b.closest(".fs-view");
-        var goB = function () { s19Jump("builder"); toast(d.n + " 스쿼드를 빌더에 불러왔어요"); };
-        if (fv && fv._navClose) fv._navClose(goB); else goB();
-      });
-      b.appendChild(loadBtn);
-      if (d.a && d.a.length) {
-        var ac = el("div", "s19-card"); ac.appendChild(el("h3", null, "추천 증강"));
-        var aw = el("div", "s19-dk-augs");
-        d.a.forEach(function (anm) {
-          var ag = s19Aug(anm);
-          var bt = el("button", "s19-dk-aug"); bt.type = "button";
-          if (ag && ag.img) bt.appendChild(img(ag.img, anm));
-          var sp = el("span");
-          sp.appendChild(el("b", null, anm));
-          if (ag && ag.tier) sp.appendChild(el("small", null, S19_TIER[ag.tier] || ""));
-          bt.appendChild(sp);
-          bt.addEventListener("click", function () {
-            var fv = b.closest(".fs-view");
-            var goA = function () { s19Jump("augs", { q: anm, an: false }); };
-            if (fv && fv._navClose) fv._navClose(goA); else goA();
-          });
-          aw.appendChild(bt);
-        });
-        ac.appendChild(aw); b.appendChild(ac);
-      }
-      if (d.t && d.t.length) {
-        var tc = el("div", "s19-card"); tc.appendChild(el("h3", null, "활성 시너지"));
-        var tr = el("div", "s19-tchips");
-        d.t.forEach(function (x) {
-          var t = s19Trait(x[0]), bt = el("button", "s19-tchip"); bt.type = "button";
-          if (t) bt.appendChild(s19Ti(t, 18));
-          bt.appendChild(el("span", null, x[0]));
-          bt.appendChild(el("small", null, String(x[1])));
-          if (t) bt.addEventListener("click", function () { s19OpenTrait(t); });
-          tr.appendChild(bt);
-        });
-        tc.appendChild(tr); b.appendChild(tc);
-      }
-      var unls = d.u.map(function (x) { return s19Unit(x.k); }).filter(function (u) { return u && u.unl; });
-      if (unls.length) {
-        var ub = el("div", "s19-bunl s19-dk-unl");
-        ub.appendChild(el("div", "s19-bunl-h", "필요한 해금 조건 (" + unls.length + "명)"));
-        unls.forEach(function (u) {
-          var row = el("div", "s19-bunl-r");
-          row.appendChild(el("b", null, u.n + (u.unl.lv ? " (" + u.unl.lv + "렙↑)" : "")));
-          row.appendChild(el("span", null, u.unl.c.join(" 또는 ")));
-          ub.appendChild(row);
-        });
-        b.appendChild(ub);
-      }
-      var uc = el("div", "s19-card"); uc.appendChild(el("h3", null, "챔피언 · 추천 아이템 (" + d.u.length + "명)"));
-      var ul = el("div", "s19-dk-list");
-      d.u.forEach(function (x) {
-        var u = s19Unit(x.k); if (!u) return;
-        var row = el("button", "s19-dk-u"); row.type = "button";
-        row.appendChild(s19Pic(u, 42));
-        var inf = el("div", "s19-dk-um");
-        var nm = el("b", null, u.n + (x.s >= 3 ? " ★★★" : ""));
-        if (x.k === d.mc) nm.appendChild(el("i", "s19-dk-core", "핵심"));
-        inf.appendChild(nm);
-        inf.appendChild(el("small", null, u.c + "코 · " + u.t.join(" · ")));
-        row.appendChild(inf);
-        if (x.i && x.i.length) {
-          var iw = el("div", "s19-dk-its");
-          x.i.forEach(function (inm) {
-            var src = s19ItemImg(inm);
-            if (src) { var im = img(src, inm); im.title = inm; iw.appendChild(im); }
-          });
-          row.appendChild(iw);
-        }
-        row.addEventListener("click", function () { s19OpenUnit(u); });
-        ul.appendChild(row);
-      });
-      uc.appendChild(ul); b.appendChild(uc);
-      b.appendChild(el("p", "fnote", "출처 롤체지지 PBE · 패치 전 수치와 조합은 바뀔 수 있어요"));
-    }, "19시즌");
+    fsOpen(d.n, subTxt, function (b) { s19DeckDetailBody(b, d); }, "19시즌");
   }
 
   // 개요: 숫자 한눈에, PBE 추천 덱 TOP 3, 빠른 스쿼드 빌더, 학습 순서, 7코스트, 복각 시너지, 핵심 규칙
@@ -8118,11 +8286,12 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     cta.appendChild(ct); cta.appendChild(el("i", null, (s19Sq.length ? s19Sq.length + "/10 배치됨 ›" : "조합 만들기 ›")));
     cta.addEventListener("click", function () { s19Go("builder"); });
     out.appendChild(cta);
+    var hgrid = el("div", "s19-hgrid");
     var seven = U.filter(function (u) { return u.c === 7; });
     if (seven.length) {
       var c7 = el("div", "s19-card"); c7.appendChild(el("h3", null, "7코스트 챔피언"));
       c7.appendChild(el("p", "sub", "19시즌에 추가된 최상위 7코스트 유닛이에요. 대부분 해금 조건이 필요해요"));
-      var r7 = el("div", "s19-urow"); seven.forEach(function (u) { r7.appendChild(s19UnitBtn(u)); }); c7.appendChild(r7); out.appendChild(c7);
+      var r7 = el("div", "s19-urow"); seven.forEach(function (u) { r7.appendChild(s19UnitBtn(u)); }); c7.appendChild(r7); hgrid.appendChild(c7);
     }
     var how = el("div", "s19-card"); how.appendChild(el("h3", null, "학습 순서"));
     var ol = el("ol", "s19-steps");
@@ -8136,14 +8305,14 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       b.addEventListener("click", function () { if (x[2] === "traits") s19St.tf = "ORIGIN"; if (x[2] === "augs") s19St.an = true; s19Go(x[2]); });
       li.appendChild(b); ol.appendChild(li);
     });
-    how.appendChild(ol); out.appendChild(how);
+    how.appendChild(ol); hgrid.appendChild(how);
     var back = S19.traits.filter(function (t) { return t.back && t.back.length && !t.uniq; });
     if (back.length) {
       var cb = el("div", "s19-card"); cb.appendChild(el("h3", null, "복각 시너지"));
       cb.appendChild(el("p", "sub", "이전 시즌에서 복각된 시너지예요. 세부 효과는 달라졌을 수 있어요"));
       var rb = el("div", "s19-tchips");
       back.forEach(function (t) { var b = el("button", "s19-tchip"); b.type = "button"; b.appendChild(s19Ti(t, 18)); b.appendChild(el("span", null, t.n)); b.appendChild(el("small", null, "세트 " + t.back.join("·"))); b.addEventListener("click", function () { s19OpenTrait(t); }); rb.appendChild(b); });
-      cb.appendChild(rb); out.appendChild(cb);
+      cb.appendChild(rb); hgrid.appendChild(cb);
     }
     var rules = el("div", "s19-card"); rules.appendChild(el("h3", null, "19시즌 핵심 규칙"));
     var ul = el("ul", "s19-rules");
@@ -8151,7 +8320,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
      ["프리즘 퀘스트", "K/DA·HEARTSTEEL·펜타킬·Ionic Spark는 상징 외에도 프리즘 퀘스트 아이템이 있어요"],
      ["고유 시너지", "챔피언 1명만 보유한 전용 시너지예요. 필드에 배치하는 즉시 활성화돼요"],
      ["출처", "MetaTFT PBE 원문과 롤체지지 한국어 데이터예요"]].forEach(function (x) { var li = el("li"); li.appendChild(el("b", null, x[0])); li.appendChild(document.createTextNode(" " + x[1])); ul.appendChild(li); });
-    rules.appendChild(ul); out.appendChild(rules);
+    rules.appendChild(ul); hgrid.appendChild(rules);
+    out.appendChild(hgrid);
   }
   function s19UnitBtn(u) {
     var b = el("button", "s19-ut"); b.type = "button"; b.appendChild(s19Pic(u)); b.appendChild(el("span", "s19-un", u.n));
@@ -9277,6 +9447,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         if (ml && md && !ml.hidden && !md.hidden) md.hidden = true;
         if (tl && td && !tl.hidden && !td.hidden) td.hidden = true;
       }
+      if (current === "s19" && S19) s19Render();
     };
     if (wideMQ.addEventListener) wideMQ.addEventListener("change", onWideChange);
     else if (wideMQ.addListener) wideMQ.addListener(onWideChange);

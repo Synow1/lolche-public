@@ -431,6 +431,7 @@
         if (ml && md && !ml.hidden && !md.hidden) md.hidden = true;
         if (tl && td && !tl.hidden && !td.hidden) td.hidden = true;
       }
+      if (current === "s19" && S19) s19Render();
     };
     if (wideMQ.addEventListener) wideMQ.addEventListener("change", onWideChange);
     else if (wideMQ.addListener) wideMQ.addListener(onWideChange);
