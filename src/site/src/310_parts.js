@@ -60,6 +60,7 @@
       tray.appendChild(clr);
     }
     document.querySelectorAll("#pt-basis button").forEach(function (b) { b.classList.toggle("on", b.dataset.b === ptBasis); });
+    var ptb = document.getElementById("pt-basis"); if (ptb) ptb.hidden = !!(META && META.pbe);  // PBE 통계엔 티어 구분이 없음
     out.innerHTML = "";
     if (!ptHeld.length) { out.appendChild(el("p", "empty", "위에서 보유한 재료를 선택해 주세요")); return; }
     var N = ptNeed(), held = ptCount(ptHeld), total = ptHeld.length, made = ptBuildable(ptHeld);

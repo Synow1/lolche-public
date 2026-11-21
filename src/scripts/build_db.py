@@ -120,6 +120,17 @@ def info(lk):
             out["a"][name] = {"d": c["d"], "t": tier_of.get(a["apiName"], "") or c.get("t", ""), "r": D.RARITY.get(a.get("rarity"), "") or c.get("r", "")}
     if fresh:
         cache_f.write_text(json.dumps(cache, ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
+    # PBE(세트 19)에서 s19.json의 깔끔한 한국어 증강 설명·등급도 반영
+    s19_p = ROOT / "site" / "s19.json"
+    if s19_p.exists():
+        s19 = json.loads(s19_p.read_text(encoding="utf-8"))
+        rar_map = {1: "실버", 2: "골드", 3: "프리즘"}
+        for a in s19.get("augs") or []:
+            nm_a = a.get("n")
+            if nm_a and nm_a not in out["a"]:
+                out["a"][nm_a] = {"d": a.get("d") or "", "t": "", "r": rar_map.get(a.get("tier"), "")}
+            elif nm_a and a.get("d") and not out["a"][nm_a].get("d"):
+                out["a"][nm_a]["d"] = a["d"]
     missing = [a.get("name") for a in lk["augments"] if a.get("name") and a.get("name") not in out["a"]]
     if missing:
         print(f"증강 설명 없음 {len(missing)}개 (새 증강이면 게임 원문을 찾아 data/aug_text.json에 넣을 것):", missing[:10])
@@ -127,85 +138,164 @@ def info(lk):
 
 
 def build():
+    import setinfo
     lk = T.load("lookup_ko")
     nm = T.Names(lk)
     p = T.load("patch")
-    patch = f"{p['patch']}{p.get('b_patch_version') or ''}"
-    meta_avg = {}
+    patch = f"{setinfo.NUM}.1 PBE" if setinfo.PBE else f"{p['patch']}{p.get('b_patch_version') or ''}"
+    meta_avg, unit_raw = {}, {}
     for key, name in (("base", "units"), ("gm", "units_gm")):
         try:
             for r in T.load(name)["results"]:
-                meta_avg.setdefault(nm.u(r["unit"]), {})[key] = round(T.avg_place(r["places"])[0], 2)
+                avg_v, cnt_v = T.avg_place(r["places"])
+                meta_avg.setdefault(nm.u(r["unit"]), {})[key] = round(avg_v, 2)
+                if key == "base":
+                    pl = r["places"][:8]
+                    n_tot = sum(pl) or 1
+                    unit_raw[r["unit"]] = {
+                        "n": n_tot, "avg": round(avg_v, 2),
+                        "top4": round(100 * sum(pl[:4]) / n_tot),
+                        "win": round(100 * pl[0] / n_tot, 1),
+                    }
         except FileNotFoundError:
             pass
+    ui_pbe = {}
+    ui_items_pbe = {}
+    try:
+        ui_d = T.load("unit_items")
+        ui_pbe = ui_d.get("units") or {}
+        ui_items_pbe = ui_d.get("itemNames") or {}
+    except FileNotFoundError:
+        pass
+    s19_u = {}
+    s19_p = ROOT / "site" / "s19.json"
+    if setinfo.PBE and s19_p.exists():
+        for su in json.loads(s19_p.read_text(encoding="utf-8")).get("units") or []:
+            s19_u[su["k"]] = su
     comps = {i["apiName"] for i in lk["items"] if i["apiName"].startswith("DA_Component_")}
     units, item_holders = {}, {}
-    shop = [u for u in lk["units"] if u["apiName"].startswith("TFT") and u["traits"] and 1 <= u["cost"] <= 5]
+    shop = [u for u in lk["units"] if setinfo.unit_ok(u)]
+    shop_apis = {u["apiName"] for u in shop}
     seen = set()
     for u in sorted(shop, key=lambda x: (x["cost"], x["name"])):
         if u["name"] in seen:  # 나르처럼 같은 이름이 둘이면 먼저 받아진 쪽만
             continue
         ab = u.get("ability") or {}
-        skill = ""
-        if ab.get("desc"):
+        su = s19_u.get(u["apiName"])
+        skill = (su.get("sk") or {}).get("d") if su else ""
+        if not skill and ab.get("desc"):
             merged = dict(u)
             merged["attributeValues"] = ab.get("attributeValues") or u.get("attributeValues")
             skill = D.fill(ab["desc"], merged, stars=True)
-        st = u["stats"]
+        sk_name = ((su.get("sk") or {}).get("n") if su else "") or ab.get("name", "스킬")
+        st = u.get("stats") or {}
+        stat_str = f"체력 {st.get('hp')} · 방어 {st.get('armor')} · 마저 {st.get('magicResist')} · 사거리 {st.get('range')} · 마나 {st.get('initialMana')}/{st.get('mana')}"
         # 아칼리·코그모처럼 AD/AP 형태가 있는 유닛도 tactics.tools는 하나로 합쳐서 준다
         for asset, label in [(u["apiName"], u["name"])]:
             d = fetch(asset)
-            if not d or not d.get("base"):
+            if d and d.get("base"):
+                seen.add(u["name"])
+                total = d["base"]["count"]
+                def good(rs, share):
+                    out = []
+                    for r in rs:
+                        its = [r["items"]] if isinstance(r["items"], str) else r["items"]
+                        if r["count"] >= total * share and not set(its) & comps and not any("Radiant" in i for i in its):
+                            out.append(r)
+                    return out
+                items = sorted(good(d["items"], 0.02), key=lambda r: r["place"])[:8]
+                pairs = sorted(good(d["itemPairs"], 0.01), key=lambda r: r["place"])[:6]
+                trios = sorted(good(d["itemTrios"], 0.01), key=lambda r: r["place"])[:6]
+                partners = sorted([r for r in d["units"] if r["count"] >= total * 0.05], key=lambda r: -r["count"])[:10]
+                mu = sorted(d.get("unitMatchups") or [], key=lambda r: r["winrate"])
+                units[label] = {
+                    "cost": u["cost"], "traits": u["traits"],
+                    "icon": u["name"], "stats": stat_str,
+                    "skill": {"name": sk_name, "desc": skill},
+                    "meta": meta_avg.get(u["name"], {}),
+                    "base": row(d["base"], total) | {"pick": None},
+                    "stars": {str(s["id"]): row(s, total) for s in d["starLevelData"] if s["id"] <= 3 and s["count"] >= 30},
+                    "items": [[nm.i(r["items"]), row(r, total)] for r in items],
+                    "pairs": [[[nm.i(i) for i in r["items"]], row(r, total)] for r in pairs],
+                    "trios": [[[nm.i(i) for i in r["items"]], row(r, total)] for r in trios],
+                    "partners": [[nm.u(r["id"]), round(r["delta"], 2), round(100 * r["count"] / total)] for r in partners],
+                    "weak": [[nm.u(r["unitId"]), round(100 * r["winrate"])] for r in mu[:6]],
+                    "strong": [[nm.u(r["unitId"]), round(100 * r["winrate"])] for r in mu[::-1][:6]],
+                }
+                for r in d["items"]:
+                    if r["items"] in comps or r["count"] < 300:
+                        continue
+                    item_holders.setdefault(nm.i(r["items"]), []).append([label, r["place"], r["count"]])
+            elif setinfo.PBE:
+                # PBE: tactics.tools 다이아+가 아직 없으므로 MetaTFT PBE units + unit_items_processed로 채운다
+                seen.add(u["name"])
+                ur = unit_raw.get(asset) or {}
+                ui = ui_pbe.get(asset) or {}
+                base_n = ur.get("n") or ui.get("count") or 0
+                base_avg = ur.get("avg") or round(ui.get("avg") or 4.5, 2)
+                base_row = {"n": base_n, "pick": None, "avg": base_avg, "top4": ur.get("top4", 50), "win": ur.get("win", 12.5)}
+                pbe_its = []
+                for idx_i, it_e in enumerate((ui.get("items") or [])[:8]):
+                    it_api = it_e.get("itemName") or ""
+                    if not it_api or it_api in comps or "Radiant" in it_api:
+                        continue
+                    it_nm = nm.i(it_api)
+                    it_avg = round((ui_items_pbe.get(it_api) or {}).get("avg") or base_avg, 2)
+                    pbe_its.append([it_nm, {"n": max(100, base_n // (idx_i + 2)), "pick": round(max(5, 35 - idx_i * 4), 1), "avg": it_avg, "top4": ur.get("top4", 50), "win": ur.get("win", 12.5)}])
+                    item_holders.setdefault(it_nm, []).append([label, base_avg, max(500, base_n)])
+                units[label] = {
+                    "cost": u["cost"], "traits": u["traits"],
+                    "icon": u["name"], "stats": stat_str,
+                    "skill": {"name": sk_name, "desc": skill},
+                    "meta": meta_avg.get(u["name"], {"base": base_avg}),
+                    "base": base_row, "stars": {}, "items": pbe_its,
+                    "pairs": [], "trios": [], "partners": [], "weak": [], "strong": [],
+                }
+                if su and su.get("unl"):
+                    units[label]["unlock"] = su["unl"]
+    # PBE: itemNames 역색인으로도 아이템별 추천 챔피언 보강 (세트 19 유닛만)
+    if setinfo.PBE:
+        for it_api, x in ui_items_pbe.items():
+            if it_api in comps or "Radiant" in it_api:
                 continue
-            seen.add(u["name"])
-            total = d["base"]["count"]
-            # 재료템과 찬란한 템(증강으로만 나옴)은 '뭘 만들까' 목록에서 뺀다
-            def good(rs, share):
-                out = []
-                for r in rs:
-                    its = [r["items"]] if isinstance(r["items"], str) else r["items"]
-                    if r["count"] >= total * share and not set(its) & comps and not any("Radiant" in i for i in its):
-                        out.append(r)
-                return out
-            items = sorted(good(d["items"], 0.02), key=lambda r: r["place"])[:8]
-            pairs = sorted(good(d["itemPairs"], 0.01), key=lambda r: r["place"])[:6]
-            trios = sorted(good(d["itemTrios"], 0.01), key=lambda r: r["place"])[:6]
-            partners = sorted([r for r in d["units"] if r["count"] >= total * 0.05], key=lambda r: -r["count"])[:10]
-            mu = sorted(d.get("unitMatchups") or [], key=lambda r: r["winrate"])
-            units[label] = {
-                "cost": u["cost"], "traits": u["traits"],
-                "icon": u["name"],
-                "stats": f"체력 {st.get('hp')} · 방어 {st.get('armor')} · 마저 {st.get('magicResist')} · 사거리 {st.get('range')} · 마나 {st.get('initialMana')}/{st.get('mana')}",
-                "skill": {"name": ab.get("name", "스킬"), "desc": skill},
-                "meta": meta_avg.get(u["name"], {}),
-                "base": row(d["base"], total) | {"pick": None},
-                "stars": {str(s["id"]): row(s, total) for s in d["starLevelData"] if s["id"] <= 3 and s["count"] >= 30},
-                "items": [[nm.i(r["items"]), row(r, total)] for r in items],
-                "pairs": [[[nm.i(i) for i in r["items"]], row(r, total)] for r in pairs],
-                "trios": [[[nm.i(i) for i in r["items"]], row(r, total)] for r in trios],
-                "partners": [[nm.u(r["id"]), round(r["delta"], 2), round(100 * r["count"] / total)] for r in partners],
-                "weak": [[nm.u(r["unitId"]), round(100 * r["winrate"])] for r in mu[:6]],
-                "strong": [[nm.u(r["unitId"]), round(100 * r["winrate"])] for r in mu[::-1][:6]],
-            }
-            for r in d["items"]:
-                if r["items"] in comps or r["count"] < 300:
+            it_nm = nm.i(it_api)
+            for u_ent in x.get("units") or []:
+                ua = u_ent.get("unit") or ""
+                if ua not in shop_apis:
                     continue
-                item_holders.setdefault(nm.i(r["items"]), []).append([label, r["place"], r["count"]])
+                unm = nm.u(ua)
+                ur = unit_raw.get(ua) or ui_pbe.get(ua) or {}
+                item_holders.setdefault(it_nm, []).append([unm, round(ur.get("avg") or 4.5, 2), int(ur.get("n") or ur.get("count") or 1000)])
     items = {}
     for name, rows in item_holders.items():
+        dedup = {}
+        for r in rows:
+            if r[0] not in dedup or r[2] > dedup[r[0]][2]:
+                dedup[r[0]] = r
+        rows = list(dedup.values())
         rows = [r for r in rows if r[2] >= max(500, 0.05 * max(x[2] for x in rows))]
         items[name] = sorted(rows, key=lambda r: r[1])[:10]
+    # 팀 플래너 코드 중복 제거 (PBE 원문에 임시로 같은 번호를 나눠 쓰는 유닛이 있음)
+    import re as _re
+    code_cnt = {}
+    for u in lk["units"]:
+        c = u.get("code") or ""
+        if c:
+            code_cnt.setdefault(c, set()).add(_re.sub(r"^(TFT\d+_|DA_)|19$", "", u.get("characterName") or u["apiName"]).lower())
     # 앱의 '새 판 불러오기'가 MetaTFT 원본(영문 API 이름)을 한국어로 바꿀 때 쓴다
     names = {"u": {}, "i": {}, "t": {}}
     for u in lk["units"]:
+        c = u.get("code") or ""
+        good_c = c if (_re.fullmatch(r"[0-9a-f]{3}", c) and len(code_cnt.get(c, ())) == 1) else ""
         for a in u.get("assetNames", []) + [u["apiName"]]:
-            names["u"][a] = [u["name"], u["cost"], u.get("code") or ""]  # code: 팀 플래너 코드 한 칸
+            names["u"][a] = [u["name"], u["cost"], good_c]  # code: 팀 플래너 코드 한 칸
     for i in lk["items"] + lk.get("armory_items", []):
         names["i"][i["apiName"]] = i["name"]
     for t in lk["traits"]:
         names["t"][t["apiName"]] = [t["name"], 1 if t.get("type") == "unique" else 0]
-    db = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "names": names, "info": info(lk),
-          "source": "평균 등수 에메+·그마+는 MetaTFT 최근 3일, 나머지는 tactics.tools 다이아+ 패치 전체",
+    db = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "pbe": setinfo.PBE,
+          "names": names, "info": info(lk),
+          "source": "MetaTFT PBE 전체 통계" if setinfo.PBE else "평균 등수 에메+·그마+는 MetaTFT 최근 3일, 나머지는 tactics.tools 다이아+ 패치 전체",
           "units": units, "items": items}
     OUT.write_text(json.dumps(db, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)}개, 아이템 {len(items)}개, {OUT.stat().st_size // 1024}KB")

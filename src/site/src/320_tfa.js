@@ -58,6 +58,13 @@
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === tfaView); });
     if (tfaView !== "comps") { document.getElementById("tfa-detail").hidden = true; document.getElementById("tfa-list").hidden = false; }
     if (!TFA || !IDX) { box.innerHTML = '<p class="empty">불러오는 중</p>'; return; }
+    var hasV = { comps: true, augs: Object.keys(TFA.augs || {}).length > 0, items: Object.keys(TFA.items || {}).length > 0 };
+    document.querySelectorAll("#tfa-view button").forEach(function (b) { b.hidden = !hasV[b.dataset.v]; });
+    if (!hasV[tfaView]) {
+      tfaView = "comps"; if (secEl) secEl.classList.remove("tfa-wide-single");
+      document.querySelectorAll("#tfa-view button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === tfaView); });
+    }
+    var tv = document.getElementById("tfa-view"); if (tv) tv.hidden = !hasV.augs && !hasV.items;
     document.getElementById("tfa-note").textContent = updAt(TFA.updated) + " · " + ago(Date.parse(TFA.updated)) + " · 출처 TFT Academy";
     tools.innerHTML = ""; box.innerHTML = "";
     // 새 세트 첫날: TFT 아카데미가 새 세트 티어표를 아직 안 올렸으면 (세트 19 대비)

@@ -52,16 +52,15 @@ def grade(group, avg, freq):
 
 
 def main():
+    import setinfo
     lk = json.loads((RAW / "lookup_ko.json").read_text())
     nm = T.Names(lk)
     db = json.loads((ROOT / "site" / "db.json").read_text())
     group = {n: v["g"] for n, v in db["info"]["i"].items()}
 
     tiers = {}
-    for key, ranks in TIERS.items():
-        d = fetch(key, ranks)
-        if not d:
-            continue
+    if setinfo.PBE:
+        d = T.load("items")
         games = sum(g["count"] for g in d.get("games") or []) or 1
         rows = {}
         for r in d["results"]:
@@ -73,31 +72,63 @@ def main():
             avg = sum(c * (i + 1) for i, c in enumerate(r["places"])) / n
             letter, score = grade(g, avg, n / games)
             rows[name] = [n, round(avg, 2), round(100 * sum(r["places"][:4]) / n), round(100 * r["places"][0] / n, 1), letter, score]
-        tiers[key] = {"games": games, "items": rows}
-        print(key, games, "판", len(rows), "템")
+        for key in ("all", "emer"):
+            tiers[key] = {"games": games, "items": rows}
+        print("PBE", games, "판", len(rows), "템")
+    else:
+        for key, ranks in TIERS.items():
+            d = fetch(key, ranks)
+            if not d:
+                continue
+            games = sum(g["count"] for g in d.get("games") or []) or 1
+            rows = {}
+            for r in d["results"]:
+                name = nm.i(r["itemName"])
+                g = group.get(name)
+                n = sum(r["places"])
+                if g not in GROUPS or n < 50:
+                    continue
+                avg = sum(c * (i + 1) for i, c in enumerate(r["places"])) / n
+                letter, score = grade(g, avg, n / games)
+                rows[name] = [n, round(avg, 2), round(100 * sum(r["places"][:4]) / n), round(100 * r["places"][0] / n, 1), letter, score]
+            tiers[key] = {"games": games, "items": rows}
+            print(key, games, "판", len(rows), "템")
 
-    # 템별 유닛 성적 (다이아+). AD/AP 같은 유닛은 합친다.
+    # 템별 유닛 성적 (라이브는 tactics.tools 다이아+, PBE는 MetaTFT PBE unit_items 기반 db.items)
     units = {}
-    import setinfo
     try:
         tst = json.loads((ROOT / "data" / "tt_patch.json").read_text())
-        ttp = str(tst["patch"]) if tst.get("set", setinfo.NUM) == setinfo.NUM else "none"  # 새 세트인데 tactics.tools가 아직이면 지난 세트 것을 안 쓴다
-    except Exception: ttp = ""
-    for f in sorted((RAW / "tt").glob((ttp + "_*.json") if ttp else "*.json")):  # build_db.py가 받은 그 패치 것만
-        d = json.loads(f.read_text())
-        u = nm.u(f.stem.split("_", 1)[1] if ttp else f.stem)
-        for r in d.get("items") or []:
-            it = nm.i(r["items"])
-            if group.get(it) not in GROUPS or r["count"] < 30:
-                continue
-            a = units.setdefault(it, {}).setdefault(u, [0, 0.0, 0.0, 0.0])
-            a[0] += r["count"]; a[1] += r["place"] * r["count"]; a[2] += r["top4"] * r["count"]; a[3] += r["won"] * r["count"]
+        ttp = str(tst["patch"]) if tst.get("set", setinfo.NUM) == setinfo.NUM else "none"
+    except Exception:
+        ttp = "none" if setinfo.PBE else ""
+    if not setinfo.PBE:
+        for f in sorted((RAW / "tt").glob((ttp + "_*.json") if ttp else "*.json")):
+            d = json.loads(f.read_text())
+            u = nm.u(f.stem.split("_", 1)[1] if ttp else f.stem)
+            for r in d.get("items") or []:
+                it = nm.i(r["items"])
+                if group.get(it) not in GROUPS or r["count"] < 30:
+                    continue
+                a = units.setdefault(it, {}).setdefault(u, [0, 0.0, 0.0, 0.0])
+                a[0] += r["count"]; a[1] += r["place"] * r["count"]; a[2] += r["top4"] * r["count"]; a[3] += r["won"] * r["count"]
     by_item = {}
     for it, us in units.items():
         rows = [[u, a[0], round(a[1] / a[0], 2), round(a[2] / a[0]), round(a[3] / a[0], 1)] for u, a in us.items()]
         by_item[it] = sorted(rows, key=lambda x: -x[1])[:12]
+    if not by_item and setinfo.PBE:
+        u_info = db.get("units") or {}
+        for it, rows in (db.get("items") or {}).items():
+            if group.get(it) not in GROUPS:
+                continue
+            out_r = []
+            for u, avg, cnt in rows[:12]:
+                ub = (u_info.get(u) or {}).get("base") or {}
+                out_r.append([u, int(cnt), round(avg, 2), int(ub.get("top4", 50)), round(float(ub.get("win", 12.5)), 1)])
+            if out_r:
+                by_item[it] = out_r
 
-    out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": db.get("patch"), "tiers": tiers, "units": by_item}
+    out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": db.get("patch"), "pbe": setinfo.PBE,
+           "tiers": tiers, "units": by_item}
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
     print(f"{OUT.relative_to(ROOT)}: 템 {len(tiers.get('all', {}).get('items', {}))}개, 유닛별 성적 {len(by_item)}개, {OUT.stat().st_size // 1024}KB")
 

@@ -1,8 +1,9 @@
   /* ---- 19시즌(프리즘 투어) 스튜디오 (v2.2.0: 개요·추천 덱(배치·증강)·시너지·챔피언·해금 트래커·스쿼드 빌더·증강·아이템) ---- */
-  var S19 = null, S19_KEY = "tft-guide-s19", s19St = { v: "home", tf: "all", cf: 0, af: 0, an: false, q: "", bcf: 0, ds: "avg", dm: "guide" };
+  var S19 = null, S19_KEY = "tft-guide-s19", s19St = { v: "units", tf: "all", cf: 0, af: 0, an: false, q: "", bcf: 0, ds: "avg", dm: "guide" };
   var S19_SQ_KEY = "tft-guide-s19-squad", s19Sq = [];
   var S19_UL_KEY = "tft-guide-s19-uldone", s19UlDone = {};
   try { var s19s = JSON.parse(localStorage.getItem(S19_KEY) || "null"); if (s19s) for (var k19 in s19s) s19St[k19] = s19s[k19]; s19St.q = ""; } catch (e) {}
+  if (s19St.v === "home" || s19St.v === "decks") s19St.v = "units";
   try { var sqs = JSON.parse(localStorage.getItem(S19_SQ_KEY) || "[]"); if (Array.isArray(sqs)) s19Sq = sqs.slice(0, 10); } catch (e) {}
   try { var uls = JSON.parse(localStorage.getItem(S19_UL_KEY) || "{}"); if (uls && typeof uls === "object") s19UlDone = uls; } catch (e) {}
   function s19Save() { try { localStorage.setItem(S19_KEY, JSON.stringify({ v: s19St.v, tf: s19St.tf, cf: s19St.cf, af: s19St.af, an: s19St.an, bcf: s19St.bcf, ds: s19St.ds, dm: s19St.dm })); } catch (e) {} }
@@ -44,7 +45,8 @@
     return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) { S19 = d; s19LiveLoad(); if (typeof homeRender === "function") homeRender(); return d; });
   }
   function s19Jump(view, opts) {
-    var nextV = view || "home";
+    if (view === "decks") { goTab("meta"); return; }
+    var nextV = (!view || view === "home") ? "units" : view;
     var prevTab = current, prevV = s19St.v, py = window.scrollY;
     if (prevTab && prevTab !== "s19") {
       navPush("tab", function () {
@@ -75,8 +77,8 @@
     var out = document.getElementById("s19-out"), tools = document.getElementById("s19-tools");
     if (keepTools === true && tools) tools = document.createElement("div");
     if (!out) return;
-    var views = { home: s19Home, decks: s19Decks, traits: s19Traits, units: s19Units, unlock: s19Unlocks, builder: s19Builder, augs: s19Augs, items: s19Items };
-    if (!views[s19St.v]) s19St.v = "home";
+    var views = { units: s19Units, unlock: s19Unlocks, traits: s19Traits, builder: s19Builder, augs: s19Augs, items: s19Items };
+    if (!views[s19St.v]) s19St.v = "units";
     document.querySelectorAll("#s19-view button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === s19St.v); });
     if (!S19) { out.innerHTML = '<p class="empty">불러오는 중</p>'; s19Load().then(s19Render).catch(function () { out.innerHTML = '<p class="empty">불러오지 못했어요. 앱을 다시 열어 주세요</p>'; }); return; }
     var rel = S19.release ? (+S19.release.slice(5, 7)) + "/" + (+S19.release.slice(8, 10)) : "";

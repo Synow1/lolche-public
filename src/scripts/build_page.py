@@ -26,7 +26,9 @@ def main():
     sys.path.insert(0, str(ROOT / "scripts"))
     import setinfo
     nm = {str(k): v.get("ko") or v.get("en") or "" for k, v in setinfo.names().items()}
-    new = new.replace(b"__SET_ID__", setinfo.SET.encode()).replace(b"__SET_NAMES__", json.dumps(nm, ensure_ascii=False).encode())
+    new = (new.replace(b"__SET_ID__", setinfo.SET.encode())
+              .replace(b"__LIVE_SET_ID__", setinfo.LIVE_SET.encode())
+              .replace(b"__SET_NAMES__", json.dumps(nm, ensure_ascii=False).encode()))
     cur = OUT.read_bytes() if OUT.exists() else b""
     if "--check" in sys.argv:
         if cur != new:

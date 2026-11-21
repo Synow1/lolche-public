@@ -77,8 +77,9 @@ python3 scripts/snap_rank.py        # 한국 1~1000위 매일 스냅샷 -> data/
 - **claude.ai 아티팩트(https://claude.ai/artifact/9Xp87yVYgRCC2w9dVHFydJ)는 더 이상 관리하지 않는다** (사용자가 앱만 씀, 2026-11-01). 다시 게시하지 말 것.
 그다음 손으로 고칠 것: `guide/롤체_챌린저_커리큘럼.md` 10·12장, `guide/00_한장요약.md` 덱 표, `site/tft-guide.html` 덱·패치 섹션.
 
-## 19시즌 미리보기 탭 (v1.64.0, `#s19`, `site/src/120_s19.html`·`398_s19.js`)
-- `python3 scripts/build_s19.py` -> `site/s19.json`·`site/icons/s19/`. MetaTFT PBE 원문(TFTSet19_pbe_ko_kr/en_us: 수치·해금·단계 효과) + 롤체지지 `data/*?season=set19`(한국어 이름·설명·증강 등급·새 증강) + MetaTFT CDN 아이콘. 영어뿐인 글은 `data/s19_ko.json`(끝에 '번역 없는 글 N' → `--missing`으로 뽑아 해요체로 번역). 매일 점검 friends에서 돈다. 상점에 안 나오는 변신 모습(shopUnit false)은 뺀다. **PBE 덱 통계는 MetaTFT** `comps_stats`·`comps_data?queue=PBE` + `comp_details` (2026-11-21부터. lolchess.gg는 이 서버를 403으로 막아 안 씀, 우회 시도 금지). 덱마다 묶음 번호 `id`·`decksCid`가 있어 덱 탭처럼 앱·웹 "새로고침" 버튼이 숫자만 바로 바꾼다(`s19Refresh`). 챔피언 그림은 128px(원본 크기). 세트 19가 라이브가 되면 일반 탭이 19시즌이 되니 이 탭은 정리한다.
+## 19시즌 도감 탭 (v1.64.0 미리보기 → v3.0.0 도감, `#s19`, `site/src/120_s19.html`·`398_s19.js`)
+- **v3.0.0부터 앱 전체가 19시즌 PBE 기준**이다. `scripts/setinfo.py`의 `LIVE_NUM`(본섭 세트, 12/1 전 18)과 `NUM`(공략 세트 19)이 다르면 `PBE=True`: 공략 데이터는 MetaTFT `queue=PBE`·TFT Academy `set=19`, 전적·랭킹·친구·덱파워는 `LIVE_SET_ID`(본섭 18시즌, dak.gg `set18`) 그대로. 12/1 본섭 출시 때 `LIVE_NUM = 19`로 올리고 데이터를 다시 만들면 된다. `#s19`는 하단 '도감' 탭(챔피언·해금·시너지·빌더·증강·아이템)이고 19시즌 덱은 `#meta`에서 본다.
+- `python3 scripts/build_s19.py` -> `site/s19.json`·`site/icons/s19/`. MetaTFT PBE 원문(TFTSet19_pbe_ko_kr/en_us: 수치·해금·단계 효과) + 롤체지지 `data/*?season=set19`(한국어 이름·설명·증강 등급·새 증강) + MetaTFT CDN 아이콘. 영어뿐인 글은 `data/s19_ko.json`(끝에 '번역 없는 글 N' → `--missing`으로 뽑아 해요체로 번역). 매일 점검 friends에서 돈다. 상점에 안 나오는 변신 모습(shopUnit false)은 뺀다. **PBE 덱 통계는 MetaTFT** `comps_stats`·`comps_data?queue=PBE` + `comp_details` (2026-11-21부터. lolchess.gg는 이 서버를 403으로 막아 안 씀, 우회 시도 금지). 덱마다 묶음 번호 `id`·`decksCid`가 있어 덱 탭처럼 앱·웹 "새로고침" 버튼이 숫자만 바로 바꾼다(`s19Refresh`). 챔피언 그림은 128px(원본 크기). (v3.0.0에서 덱은 `#meta`로 옮기고 이 탭은 도감으로 정리함.)
 
 ## 세트가 바뀔 때 (세트 19: 12/1 예정)
 - **`guide/kb/set19_prep.md`부터 읽는다.** 세트 번호는 `scripts/setinfo.py` 한 곳(MetaTFT 패치 앞자리)이고 대부분 저절로 바뀐다. 사람이 할 것(세트 이름, 새 시즌 공략 글 `data-set="19"`, 대회 일정, 이름 규칙 확인)은 그 문서 목록대로.

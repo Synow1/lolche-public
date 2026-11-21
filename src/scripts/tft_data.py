@@ -23,32 +23,33 @@ RAW = ROOT / "raw"
 OUT = ROOT / "guide" / "data"
 
 RANKS = "CHALLENGER,DIAMOND,EMERALD,GRANDMASTER,MASTER"  # 기본 기준 에메+ (2026-11-07 사용자: 플래+ 말고 에메+)
-Q = f"queue=1100&patch=current&days=3&rank={RANKS}&permit_filter_adjustment=true"
+Q = "queue=PBE" if setinfo.PBE else f"queue=1100&patch=current&days=3&rank={RANKS}&permit_filter_adjustment=true"
 API = "https://api-hc.metatft.com"
 SOURCES = {
-    "lookup_ko": f"https://data.metatft.com/lookups/{SET}_latest_ko_kr.json",
+    "lookup_ko": f"https://data.metatft.com/lookups/{SET}_{'pbe' if setinfo.PBE else 'latest'}_ko_kr.json",
     "patch": f"{API}/tft-stat-api/patch",
     "units": f"{API}/tft-stat-api/units?{Q}",
     "items": f"{API}/tft-stat-api/items_matches?{Q}",
-    "aug_tiers": f"{API}/tft-stat-api/augments_tiers",
-    "comps_data": f"{API}/tft-comps-api/comps_data?queue=1100",
+    "aug_tiers": f"{API}/tft-stat-api/augments_tiers" + ("?queue=PBE" if setinfo.PBE else ""),
+    "comps_data": f"{API}/tft-comps-api/comps_data?queue={'PBE' if setinfo.PBE else '1100'}",
     "comps_stats": f"{API}/tft-comps-api/comps_stats?{Q}",
-    "unit_items": f"{API}/tft-comps-api/unit_items_processed",
+    "unit_items": f"{API}/tft-comps-api/unit_items_processed" + ("?queue=PBE" if setinfo.PBE else ""),
     "traits": f"{API}/tft-stat-api/traits?{Q}",
 }
-# 고티어 비교용. 챌린저만은 표본이 작아서 그마+, 마스터+도 같이 받는다.
+# 고티어 비교용. 챌린저만은 표본이 작아서 그마+, 마스터+도 같이 받는다. (PBE는 단일 큐)
 TIERS = {
     "ma": "MASTER,GRANDMASTER,CHALLENGER",
     "gm": "GRANDMASTER,CHALLENGER",
     "ch": "CHALLENGER",
 }
-TIER_LABEL = {"base": "에메+", "ma": "마스터+", "gm": "그마+", "ch": "챌린저"}
+TIER_LABEL = {"base": "PBE" if setinfo.PBE else "에메+", "ma": "마스터+", "gm": "그마+", "ch": "챌린저"}
 TIER_MIN = {"base": 3000, "ma": 1500, "gm": 350, "ch": 120}
-for _t, _r in TIERS.items():
-    _q = f"queue=1100&patch=current&days=3&rank={_r}&permit_filter_adjustment=true"
-    SOURCES[f"comps_stats_{_t}"] = f"{API}/tft-comps-api/comps_stats?{_q}"
-    SOURCES[f"units_{_t}"] = f"{API}/tft-stat-api/units?{_q}"
-    SOURCES[f"traits_{_t}"] = f"{API}/tft-stat-api/traits?{_q}"
+if not setinfo.PBE:
+    for _t, _r in TIERS.items():
+        _q = f"queue=1100&patch=current&days=3&rank={_r}&permit_filter_adjustment=true"
+        SOURCES[f"comps_stats_{_t}"] = f"{API}/tft-comps-api/comps_stats?{_q}"
+        SOURCES[f"units_{_t}"] = f"{API}/tft-stat-api/units?{_q}"
+        SOURCES[f"traits_{_t}"] = f"{API}/tft-stat-api/traits?{_q}"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
@@ -77,13 +78,61 @@ def rounds_text(names):
     return f"{spans[0][0]}~{spans[-1][1]}" if spans else "-"
 
 
+def _enrich_pbe_lookup(raw_bytes):
+    """PBE lookup_ko의 영어·누락 이름을 s19.json 한국어 이름·설명으로 보강한다."""
+    lk = json.loads(raw_bytes)
+    s19_p = ROOT / "site" / "s19.json"
+    if not s19_p.exists():
+        return lk
+    s19 = json.loads(s19_p.read_text(encoding="utf-8"))
+    u_ko = {u["k"]: u for u in s19.get("units") or [] if u.get("k")}
+    t_ko = {t["k"]: t for t in s19.get("traits") or [] if t.get("k")}
+    a_by_n = {a["n"]: a for a in s19.get("augs") or [] if a.get("n")}
+    a_by_ic = {Path(a["img"]).stem: a for a in s19.get("augs") or [] if a.get("img")}
+    t_name_map = {}
+    for t in lk.get("traits") or []:
+        st = t_ko.get(t["apiName"])
+        if st and st.get("n"):
+            t_name_map[t.get("name") or ""] = st["n"]
+            t["name"] = st["n"]
+            if st.get("d"):
+                t["desc"] = st["d"]
+    for u in lk.get("units") or []:
+        su = u_ko.get(u["apiName"])
+        if su and su.get("n"):
+            u["name"] = su["n"]
+            if su.get("t"):
+                u["traits"] = su["t"]
+        elif u.get("traits"):
+            u["traits"] = [t_name_map.get(tn, tn) for tn in u["traits"]]
+    for a in lk.get("augments") or []:
+        ic = (a.get("icon") or "").lower()
+        sa = a_by_n.get(a.get("name") or "") or a_by_ic.get(ic)
+        if sa:
+            if sa.get("n"):
+                a["name"] = sa["n"]
+            if sa.get("d"):
+                a["desc"] = sa["d"]
+    return lk
+
+
 def fetch():
     RAW.mkdir(exist_ok=True)
     for name, url in SOURCES.items():
         req = urllib.request.Request(url, headers=HEADERS)
         with urllib.request.urlopen(req, timeout=60) as r:
-            (RAW / f"{name}.json").write_bytes(r.read())
+            body = r.read()
+        if name == "lookup_ko" and setinfo.PBE:
+            lk = _enrich_pbe_lookup(body)
+            (RAW / f"{name}.json").write_text(json.dumps(lk, ensure_ascii=False), encoding="utf-8")
+        else:
+            (RAW / f"{name}.json").write_bytes(body)
         print("fetched", name)
+    if setinfo.PBE:
+        for base in ("comps_stats", "units", "traits"):
+            src = (RAW / f"{base}.json").read_bytes()
+            for _t in TIERS:
+                (RAW / f"{base}_{_t}.json").write_bytes(src)
 
 
 def load(name):
@@ -154,8 +203,7 @@ def write(name, title, note, lines):
 
 
 def build_units(lk, patch):
-    units = [u for u in lk["units"] if u["cost"] and u["cost"] <= 5 and u["traits"]
-             and u["apiName"].startswith("TFT")]
+    units = [u for u in lk["units"] if setinfo.unit_ok(u)]
     lines = ["## 코스트별 유닛", "", "| 코스트 | 유닛 | 특성 | 역할 | 사거리 |", "|---|---|---|---|---|"]
     seen = set()
     for u in sorted(units, key=lambda x: (x["cost"], x["name"])):

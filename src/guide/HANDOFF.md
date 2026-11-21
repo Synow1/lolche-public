@@ -1,15 +1,21 @@
 # 인수인계 (새 세션이 처음 읽을 것)
 
-마지막 정리: 2026-11-21, 앱 v2.6.0 (android/NATIVE 12). **브랜치는 `main` 하나** (클로드·제미나이 공용, PR 없음). 작업 전 `WORK.md` 확인.
+마지막 정리: 2026-11-21, 앱 v3.0.0 (android/NATIVE 12). **브랜치는 `main` 하나** (클로드·제미나이 공용, PR 없음). 작업 전 `WORK.md` 확인.
 규칙 전체는 `CLAUDE.md`, 앱 문구 기준은 `guide/WRITING.md`, 디자인은 `guide/DESIGN.md`, 게임 지식은 `guide/kb/` (먼저 `python3 scripts/kb.py 키워드`).
 
 ## 0. 지금 상태 (2026-11-21)
+- **v3.0.0 19시즌 전면 전환 (제미나이)**:
+  - `scripts/setinfo.py`: `LIVE_NUM`(본섭, 12/1 전 18) · `NUM`(공략 세트 19) · `PBE = LIVE_NUM < NUM` · `SET`/`LIVE_SET` · `SEASON`(dak.gg 본섭) · `GUIDE_SEASON` · `unit_ok()`(DA_*19, 7코스트). **12/1에 `LIVE_NUM = 19`로 올리면** PBE 분기가 꺼지고 전적·랭킹도 19시즌이 된다.
+  - 공략 데이터(`db/items/meta/guides/tfa/icons index`)는 19시즌 PBE(MetaTFT `queue=PBE`, TFT Academy `set=19`) 기준. `META.pbe`/`ITEMS.pbe`면 티어 고르기(에메+ 등)를 숨기고 새로고침도 `queue=PBE`로 받는다. TFT Academy 증강·아이템 티어표가 비면 아카데미의 증강·아이템 보기를 숨긴다.
+  - 전적·친구·덱파워·이스포츠는 `LIVE_SET_ID`(본섭 18시즌) 그대로, 18시즌 아이콘은 `site/oldsets.json`의 로컬 `icons/` 경로로 그린다.
+  - 하단 5탭: `홈 · 덱(#meta) · 도감(#s19, data-nav=dex) · 전적 · 더보기`. `#s19`는 이제 도감(챔피언·해금·시너지·빌더·증강·아이템)이고 19시즌 덱은 `#meta`에서 본다.
+  - `qa.js`: 모든 탭에서 화면에 `undefined`·`NaN` 글자 금지, 폰 검사는 `reducedMotion`(탭 들어오는 움직임 때문에 여백이 5px 커 보이던 흔들림 제거).
 - **v2.3.0 ~ v2.6.0 (PC 웹 + 19시즌 PBE + MetaTFT식 PC 덱 줄)**:
   - PC 웹(`https://synow1.github.io/lolche-public/`): `WEB` 분기, 왼쪽 사이드 메뉴, 직접 CORS fetch, MetaTFT식 넓은 덱 줄 + 아래로 펼치기(`.pcdk`/`.pcdk-open`), 19시즌 PBE MetaTFT 통계 + 새로고침 + 팀 코드 복사, 고화질 챔피언 초상.
 - **개발·배포 구조 개선 (2026-11-21)**:
   - CSS 5분할(`010_base.css` · `011_decks.css` · `012_rank_esports.css` · `013_theme_v2.css` · `014_desktop.css`), `android/build.sh` 자동 APK/assets 생략(`--fast`), `publish_app.sh` 최신 `main`·버전 역전 가드 및 변경 없는 바이너리 복사 생략, `qa.js` `proxyGet` 공용 캐시·`--fast`·`014_desktop.css` PC 단독 검사, `.github/workflows/ci-deploy.yml`, `WORK.md`.
 - **v2.0.0 전면 개편**:
-  - **19시즌 중심 메인 홈 허브(`#home`, `099_home.html`, `399_v2_hub.js`)** · **하단 5탭(`홈 · 19시즌 · 덱 · 전적 · 더보기`)** · **19시즌 스쿼드 빌더·해금 체크리스트(`398_s19.js`)** · **통합 스포트라이트 검색(`/`, `Cmd/Ctrl+K`)** · **테마 전환(시스템/다크/라이트)**.
+  - **19시즌 중심 메인 홈 허브(`#home`, `099_home.html`, `399_v2_hub.js`)** · **하단 5탭(v3.0.0부터 `홈 · 덱 · 도감 · 전적 · 더보기`)** · **19시즌 스쿼드 빌더·해금 체크리스트(`398_s19.js`)** · **통합 스포트라이트 검색(`/`, `Cmd/Ctrl+K`)** · **테마 전환(시스템/다크/라이트)**.
 - **역할 (2026-11-21부터)**: 클로드·제미나이 둘 다 디자인·구조·기능·데이터를 모두 한다 (정해진 몫 없음). 매일 점검·전적 코칭은 클로드 세션이 돌린다. 둘 다 `main`에 직접 푸시.
 
 ## 1. 새 세션에서 맨 처음 할 일

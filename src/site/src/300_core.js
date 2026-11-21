@@ -130,7 +130,7 @@
 
   function miniUnit(u, withItems) {
     var info = IDX.units[u.name] || {};
-    if (RK_SEASON && OLD_UI[u.name]) info = { icon: OLD_UI[u.name], cost: info.cost };  // 지난 시즌은 그 세트 아이콘
+    if ((RK_SEASON || !info.icon) && OLD_UI[u.name]) info = { icon: OLD_UI[u.name], cost: u.cost || info.cost };  // 지난·본섭(18) 세트 아이콘
     var box = el("div", "mu"); box.dataset.cost = u.cost || info.cost || 1; box.dataset.unit = u.name;
     if ((u.cost || info.cost || 1) >= 4 && (u.star || 1) >= 3) box.classList.add("hi3");  // 4·5코 3성 반짝
     var face = el("div", "face");
@@ -140,7 +140,7 @@
     if (withItems) {
       var its = el("div", "its");
       (u.items || []).forEach(function (it) {
-        var ic = IDX.items[it.name]; if (RK_SEASON && OLD_II[it.name]) ic = { icon: OLD_II[it.name] };
+        var ic = IDX.items[it.name]; if ((RK_SEASON || !ic) && OLD_II[it.name]) ic = { icon: OLD_II[it.name] };
         if (ic) { var im = img(ic.icon, it.name); im.title = it.name; im.dataset.item = it.name; its.appendChild(im); }
       });
       box.appendChild(its);
@@ -151,8 +151,8 @@
 
 
   function buildEmblems() {
-    var AVG = { "선봉대 상징": 4.09, "싸움꾼 상징": 4.12, "달빛 상징": 4.22, "나무정령 상징": 4.23, "처형자 상징": 4.23, "속사포 상징": 4.26, "약탈자 상징": 4.32, "요정 상징": 4.32, "주문술사 상징": 4.33, "기원자 상징": 4.34, "지옥불 상징": 4.35, "사냥꾼 상징": 4.41, "원시 상징": 4.47, "개화 상징": 4.49, "날렵이 상징": 4.57, "검은 가시 상징": 4.63 };
     var NOTE = { "전략가의 왕관": "팀 규모 +1", "전략가의 망토": "팀 규모 +1", "전략가의 방패": "팀 규모 +1" };
+    var itMap = (ITEMS && (ITEMS.tiers.emer || ITEMS.tiers.all) && (ITEMS.tiers.emer || ITEMS.tiers.all).items) || {};
     var tb = document.getElementById("emblems");
     COMPONENTS.concat(["뒤집개", "프라이팬"]).forEach(function (c) {
       var tr = document.createElement("tr");
@@ -162,7 +162,8 @@
         var name = recipeOf(k, c);
         if (name) {
           td.appendChild(itemSpan(name, name.replace(" 상징", "")));
-          var extra = AVG[name] ? AVG[name].toFixed(2) : NOTE[name];
+          var avg = itMap[name] && itMap[name][1];
+          var extra = avg ? Number(avg).toFixed(2) : NOTE[name];
           if (extra) { var s = document.createElement("span"); s.className = "num"; s.style.color = "var(--muted)"; s.style.fontSize = "12px"; s.style.marginLeft = "6px"; s.textContent = extra; td.appendChild(s); }
         }
         tr.appendChild(td);
@@ -207,7 +208,7 @@
   function unitChip(name) {
     var s = el("span", "u", name);
     var u = IDX.units[name.replace(/ \((AD|AP)\)$/, "")];
-    if (RK_SEASON && OLD_UI[name]) u = { icon: OLD_UI[name], cost: (u || {}).cost };  // 지난 시즌은 그 세트 아이콘
+    if ((RK_SEASON || !u) && OLD_UI[name]) u = { icon: OLD_UI[name], cost: (u || {}).cost };  // 지난·본섭(18) 세트 아이콘
     if (u) { if (u.cost) s.dataset.cost = u.cost; s.insertBefore(img(u.icon, ""), s.firstChild); }
     return s;
   }

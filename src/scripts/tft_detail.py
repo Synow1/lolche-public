@@ -138,7 +138,8 @@ def build_traits(lk, patch):
 
 
 def build_units(lk, patch):
-    units = [u for u in lk["units"] if u["apiName"].startswith("TFT") and u["traits"] and 1 <= u["cost"] <= 5]
+    import setinfo
+    units = [u for u in lk["units"] if setinfo.unit_ok(u)]
     seen, lines = set(), []
     for u in sorted(units, key=lambda x: (x["cost"], x["name"])):
         if u["name"] in seen:

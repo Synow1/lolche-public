@@ -114,9 +114,10 @@ def main():
     index = {"units": {}, "items": {}, "traits": {}, "augments": {}}
 
     for u in lk["units"]:
-        if not u["apiName"].startswith(setinfo.PREFIX) or not u["traits"] or not 1 <= u["cost"] <= 5:
+        if not setinfo.unit_ok(u):
             continue
-        p = save("champions", "u", u["apiName"].lower())
+        s19_p = OUT / "s19" / "u" / f"{u['apiName'].lower()}.webp"
+        p = f"icons/s19/u/{s19_p.name}" if s19_p.exists() else save("champions", "u", u["apiName"].lower())
         if p:
             index["units"][u["name"]] = {"icon": p, "cost": u["cost"]}
 
@@ -145,7 +146,8 @@ def main():
                     index["items"][i["name"]] = {"icon": p, "recipe": [names.get(c, c) for c in i.get("composition") or []]}
 
     for t in lk["traits"]:
-        p = save("traits", "t", t["apiName"].lower())
+        s19_t = OUT / "s19" / "t" / f"{t['apiName'].lower()}.webp"
+        p = f"icons/s19/t/{s19_t.name}" if s19_t.exists() else save("traits", "t", t["apiName"].lower())
         if p:
             index["traits"][t["name"]] = p
 
@@ -155,12 +157,14 @@ def main():
         for it in tier["content"]:
             a = aug.get(it["id"])
             if a and a.get("icon") and a["name"] not in index["augments"]:
-                p = save("augments", "a", a["icon"].lower())
+                s19_a = OUT / "s19" / "a" / f"{a['icon'].lower()}.webp"
+                p = f"icons/s19/a/{s19_a.name}" if s19_a.exists() else save("augments", "a", a["icon"].lower())
                 if p:
                     index["augments"][a["name"]] = p
     for a in lk["augments"]:
         if a.get("icon") and a.get("desc") and a["name"] not in index["augments"]:
-            p = save("augments", "a", a["icon"].lower())
+            s19_a = OUT / "s19" / "a" / f"{a['icon'].lower()}.webp"
+            p = f"icons/s19/a/{s19_a.name}" if s19_a.exists() else save("augments", "a", a["icon"].lower())
             if p:
                 index["augments"][a["name"]] = p
 

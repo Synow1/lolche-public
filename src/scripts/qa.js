@@ -128,7 +128,7 @@ function fresh(file, key, hours) {
   const tasks = []; const task = (tags, fn) => { if (tags.some(need)) tasks.push(fn); };
   const TABS = ['home', 's19', 'meta', 'tfa', 'dc', 'rank', 'augments', 'items', 'more', 'traits', 'find', 'builder', 'esports', 'friends', 'power', 'parts', 'emb', 'flow', 'wisps', 'numbers', 'scout', 'patch'];
   for (const [W, scheme] of [[360, 'dark'], [412, 'light']]) task(TABS, async () => {
-    const pg = await b.newPage({ viewport: { width: W, height: 860 }, colorScheme: scheme });
+    const pg = await b.newPage({ viewport: { width: W, height: 860 }, colorScheme: scheme, reducedMotion: 'reduce' });  // 탭 들어올 때 움직임(v2in)이 끝나기 전에 재면 여백이 5px 커 보임
     const errs = []; pg.on('pageerror', e => errs.push(e.message));
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     await pg.route('https://lolche.local/**', async (r) => {
@@ -148,6 +148,8 @@ function fresh(file, key, hours) {
       const r = await pg.evaluate((W) => {
         const sec = document.querySelector('section:not([hidden])'), o = { sw: document.documentElement.scrollWidth, broken: [], hid: [], text: sec ? sec.innerText.length : 0 };
         if (!sec) return o;
+        // 화면에 undefined·NaN 글자 금지 (v3.0.0: PBE 가이드 시너지 형식이 달라 메타 덱 줄에 'undefined'가 떴음)
+        o.bad = (sec.innerText.match(/\bundefined\b|\bNaN\b/g) || []).length;
         sec.querySelectorAll('*').forEach(e => { if (e.hasAttribute('hidden') && getComputedStyle(e).display !== 'none') o.hid.push(e.id || e.className); });
         sec.querySelectorAll('img').forEach(i => { if (i.complete && i.naturalWidth === 0 && i.getBoundingClientRect().width) o.broken.push(i.getAttribute('src')); });
         // 화면 맨 위 여백: 첫 내용이 앱 바 아래 14px에서 시작 (탭마다 10~38px로 달랐음, 2026-11-13)
@@ -160,6 +162,7 @@ function fresh(file, key, hours) {
       if (r.sw > W) fail(`${tag} ${t}: 화면보다 넓음 ${r.sw}px (가로 밀림)`);
       if (r.broken.length) fail(`${tag} ${t}: 깨진 이미지 ${[...new Set(r.broken)].slice(0, 3).join(', ')}`);
       if (r.hid.length) fail(`${tag} ${t}: 숨겼는데 보임 ${r.hid.slice(0, 3).join(', ')}`);
+      if (r.bad) fail(`${tag} ${t}: 화면에 undefined·NaN 글자 ${r.bad}개`);
       // 세트가 바뀌어 지난 세트 공략(data-set)을 숨긴 탭은 '준비 중' 한 줄: 실패 대신 참고로 남겨 새 시즌 글을 쓰게 (세트 19 대비)
       if (r.text < 40 && await pg.evaluate((t) => /새 시즌 내용은 준비 중/.test((document.getElementById(t) || {}).textContent || ''), t)) notes.push(`${tag} ${t}: 새 시즌 공략을 아직 안 씀 (지난 세트 글 숨김)`);
       else if (r.text < 40 && !(FAST && ['dc', 'friends', 'rank'].includes(t))) fail(`${tag} ${t}: 내용이 거의 없음 (${r.text}자)`);
@@ -176,7 +179,7 @@ function fresh(file, key, hours) {
     if (await q(() => document.querySelectorAll('#hm-decks .mt-row.dk').length) < 3) fail('홈: 18시즌 상위 덱 카드가 안 보임');
     {
       const navs = await q(() => [...document.querySelectorAll('.bnav a')].map(a => a.dataset.nav));
-      if (!navs || navs.join(',') !== 'home,s19,decks,rank,more') fail('아래 메뉴: v2.0 5탭(home,s19,decks,rank,more)이 아님 (' + (navs || []).join(',') + ')');
+      if (!navs || navs.join(',') !== 'home,decks,dex,rank,more') fail('아래 메뉴: v3.0 5탭(home,decks,dex,rank,more)이 아님 (' + (navs || []).join(',') + ')');
       // 통합 스포트라이트 검색 (초성 포함)
       await q(() => document.getElementById('spot-btn').click()); await pg.waitForTimeout(300);
       await q(() => { const i = document.getElementById('spot-q'); i.value = 'ㅌㅁ'; i.dispatchEvent(new Event('input')); }); await pg.waitForTimeout(300);
@@ -674,41 +677,20 @@ function fresh(file, key, hours) {
     const errs = []; pg.on('pageerror', e => errs.push(String(e)));
     await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(2500);
     await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#s19'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(1200);
-    for (const [v, sel, min] of [['home', '.s19-k', 4], ['decks', '.mt-row.dk', 15], ['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['builder', '.s19-bpick', 60], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
+    // v3.0.0: #s19는 '도감' 탭 (덱·개요는 #home·#meta로 옮김)
+    for (const [v, sel, min] of [['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['builder', '.s19-bpick', 60], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
       await pg.evaluate((v) => document.querySelector('#s19-view [data-v=' + v + ']').click(), v); await pg.waitForTimeout(500);
       const r = await pg.evaluate((sel) => ({ n: document.querySelectorAll('#s19-out ' + sel).length, sw: document.documentElement.scrollWidth, seg: [...document.querySelectorAll('#s19-view button')].some(b => b.getBoundingClientRect().height > 44) }), sel);
       if (r.n < min) fail(`19시즌 ${v}: 항목 ${r.n}개 (최소 ${min})`);
       if (r.sw > 360) fail(`19시즌 ${v}: 화면보다 넓음 ${r.sw}px`);
       if (r.seg) fail('19시즌: 보기 버튼 글자가 두 줄로 꺾임');
     }
+    if (await pg.evaluate(() => !!document.querySelector('#s19-view [data-v=decks], #s19-view [data-v=home]'))) fail('도감 탭: 덱·개요 보기가 남아 있음 (v3.0.0에서 #meta·#home으로 옮김)');
     // 검색창이 입력 중에 새로 만들어지면 한글 조합이 끊겨 "ㅈㅔㄹㅣ"가 된다 (2026-11-21 사용자 스크린샷): 입력 뒤에도 같은 검색창이어야
-    await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]').click()); await pg.waitForTimeout(400);
-    const ime = await pg.evaluate(() => { const i = document.querySelector('#s19-tools .s19-q'); if (!i) return 'none'; window.__q = i; i.value = '제리'; i.dispatchEvent(new Event('input', { bubbles: true }));
-      const same = document.querySelector('#s19-tools .s19-q') === window.__q, n = document.querySelectorAll('#s19-out .mt-row.dk').length; i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); return same ? n : 'replaced'; });
-    if (ime === 'none' || ime === 'replaced') fail(`19시즌 검색: 입력할 때 검색창이 새로 만들어짐 (한글이 낱자로 끊김) (${ime})`);
-    // PBE 덱 통계 새로고침 버튼 (2026-11-21 사용자 요청): 누르면 MetaTFT PBE 숫자로 바뀌는지 (가짜 응답: 첫 덱 평균 1.00)
-    await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]').click()); await pg.waitForTimeout(400);
-    await pg.evaluate(() => document.querySelector('#s19-out .s19-dmode button:last-child')?.click()); await pg.waitForTimeout(400);
-    const rfBtn = await pg.evaluate(() => { const b = document.querySelector('#s19-out .s19-upd button'); if (b) b.click(); return !!b; }); await pg.waitForTimeout(800);
-    const rfAvg = await pg.evaluate(() => [...document.querySelectorAll('#s19-out .mt-row.dk .mt-num .dk-avg')].map(x => x.textContent.trim())[0] || '');
-    if (!rfBtn) fail('19시즌 덱: PBE 통계 새로고침 버튼이 없음');
-    else if (rfAvg !== '1.00') fail(`19시즌 덱: 새로고침해도 PBE 통계가 안 바뀜 (첫 덱 평균 ${rfAvg})`);
-    await pg.evaluate(() => { try { localStorage.removeItem('tft-guide-s19-live'); } catch (e) {} });
-    await pg.evaluate(() => document.querySelector('#s19-out .s19-dmode button:first-child')?.click()); await pg.waitForTimeout(300);
-    // 19시즌 추천 덱 상세 열기 + '빌더로 불러오기' + 뒤로가기 연쇄 검증 (2026-11-20 사용자: 뒤로가기 멈춤/건너뜀 방지)
-    await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]').click()); await pg.waitForTimeout(400);
-    await pg.evaluate(() => document.querySelector('#s19-out .mt-row.dk')?.click()); await pg.waitForTimeout(400);
-    const s19d = await pg.evaluate(() => ({ u: document.querySelectorAll('.fs-view .s19-dk-u').length, hex: document.querySelectorAll('.fs-view .s19-hex .hx img').length }));
-    if (s19d.u < 5 || s19d.hex < 5) fail(`19시즌 추천 덱: 상세 배치(${s19d.hex}) 또는 챔피언(${s19d.u})이 안 열림`);
-    // 19시즌 덱 팀 코드 복사 (2026-11-21 사용자 요청): 02 + 칸 번호 10개 + TFTSet19
-    const s19code = await pg.evaluate(() => (document.querySelector('.fs-view .s19-code') || {}).title || '');
-    if (!/^02([0-9a-f]{3}){10}TFTSet19$/.test(s19code) || /^02(000)+/.test(s19code)) fail(`19시즌 추천 덱: 팀 코드 복사 버튼이 없거나 코드 모양이 틀림 (${s19code})`);
-    await pg.evaluate(() => document.querySelector('.fs-view .s19-sqact')?.click()); await pg.waitForTimeout(500);
-    const afterLoad = await pg.evaluate(() => ({ fs: !!document.querySelector('.fs-view'), on: document.querySelector('#s19-view button.on')?.dataset.v, slots: document.querySelectorAll('#s19-out .s19-bslot.full').length }));
-    if (afterLoad.fs || afterLoad.on !== 'builder' || afterLoad.slots < 5) fail(`19시즌 빌더 불러오기: fs=${afterLoad.fs} tab=${afterLoad.on} slots=${afterLoad.slots}`);
-    await pg.goBack(); await pg.waitForTimeout(450);
-    const afterBk = await pg.evaluate(() => document.querySelector('#s19-view button.on')?.dataset.v);
-    if (afterBk !== 'decks') fail(`19시즌 뒤로가기: 빌더에서 뒤로가면 decks로 돌아와야 하는데 ${afterBk}`);
+    await pg.evaluate(() => document.querySelector('#s19-view [data-v=units]').click()); await pg.waitForTimeout(400);
+    const ime = await pg.evaluate(() => { const i = document.querySelector('#s19-tools .s19-q'); if (!i) return 'none'; window.__q = i; i.value = '자'; i.dispatchEvent(new Event('input', { bubbles: true }));
+      const same = document.querySelector('#s19-tools .s19-q') === window.__q; i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); return same ? 'ok' : 'replaced'; });
+    if (ime !== 'ok') fail(`도감 검색: 입력할 때 검색창이 새로 만들어짐 (한글이 낱자로 끊김) (${ime})`);
     await pg.evaluate(() => document.querySelector('#s19-view [data-v=builder]').click()); await pg.waitForTimeout(350);
     await pg.evaluate(() => document.querySelector('#s19-out .s19-bclr')?.click()); await pg.waitForTimeout(250);
     // 19시즌 스쿼드 빌더: 챔피언 2명 추가 → 시너지 계산 칩 표시 → 비우기
@@ -847,8 +829,10 @@ function fresh(file, key, hours) {
             }
           });
           sec.querySelectorAll('img').forEach(i => { if (i.complete && i.naturalWidth === 0 && i.getBoundingClientRect().width) o.broken.push(i.getAttribute('src')); });
+          o.bad = (sec.innerText.match(/\bundefined\b|\bNaN\b/g) || []).length;
           return o;
         });
+        if (r.bad) fail(`[WEB/1280] ${t}: 화면에 undefined·NaN 글자 ${r.bad}개`);
         if (r.sw > 1280) fail(`[WEB/1280] ${t}: 화면보다 넓음 ${r.sw}px (가로 밀림)`);
         if (r.broken.length) fail(`[WEB/1280] ${t}: 깨진 이미지 ${[...new Set(r.broken)].slice(0, 3).join(', ')}`);
         if (r.hid.length) fail(`[WEB/1280] ${t}: 숨겼는데 보임 ${r.hid.slice(0, 3).join(', ')}`);
@@ -869,19 +853,10 @@ function fresh(file, key, hours) {
 
       }
       if (['s19'].some(needWeb)) {
-      // 19시즌 덱 PC 줄 (2026-11-21 사용자: "메타TFT처럼, PC는 PC대로"): 넓은 줄에 챔피언·숫자 4칸, 누르면 아래로 펼쳐 큰 배치판
+      // v3.0.0 도감 탭 (PC): 챔피언 카드가 넓게 깔리고 가로 밀림이 없어야 (덱 PC 줄 검사는 #meta로 옮김)
       await go('s19'); await pg.waitForTimeout(500);
-      await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]')?.click()); await pg.waitForTimeout(600);
-      const s19w = await pg.evaluate(() => { const r = [...document.querySelectorAll('#s19-out .pcdk')]; return { n: r.length, units: r[0] ? r[0].querySelectorAll('.pcdk-u img').length : 0, stats: r[0] ? r[0].querySelectorAll('.pcdk-stats > div').length : 0 }; });
-      if (s19w.n < 10 || s19w.units < 5 || s19w.stats !== 4) fail(`[WEB/1280] 19시즌 덱: PC 줄 모양이 아님 (${JSON.stringify(s19w)})`);
-      if (await pg.evaluate(() => document.querySelectorAll('#s19-out .pcdk .pcdk-chip.ch-reroll, #s19-out .pcdk .pcdk-chip.ch-fast, #s19-out .pcdk .pcdk-chip.ch-std').length) < 10) fail('[WEB/1280] 19시즌 덱: 운영 방식 칩(리롤·운영)이 안 보임');
-      await pg.evaluate(() => document.querySelector('#s19-out .pcdk')?.click()); await pg.waitForTimeout(500);
-      // 배치판이 크고 템 아이콘이 18px 이상 (2026-11-21 사용자: "배치판이 진짜 중요함, 아이템·아이콘 키워")
-      const s19b = await pg.evaluate(() => { const o = document.querySelector('#s19-out .pcdk-open'), h = o && o.querySelector('.s19-hex'), it = h && h.querySelector('.its img'); return h ? { hw: Math.round(h.getBoundingClientRect().width), it: it ? it.getBoundingClientRect().width : 0, hx: h.querySelectorAll('.hx').length } : null; });
-      if (!s19b || s19b.hw < 500 || s19b.it < 18 || s19b.hx < 20) fail(`[WEB/1280] 19시즌 덱 펼치기: 배치판이 없거나 작음 (${JSON.stringify(s19b)})`);
-      await pg.evaluate(() => document.querySelectorAll('#s19-out .pcdk')[1]?.click()); await pg.waitForTimeout(300);
-      const s19t = await pg.evaluate(() => ({ open: document.querySelectorAll('#s19-out .pcdk-open').length, second: !!document.querySelectorAll('#s19-out .pcdk')[1]?.classList.contains('open') }));
-      if (s19t.open !== 1 || !s19t.second) fail(`[WEB/1280] 19시즌 덱: 다른 줄을 누르면 그 줄만 펼쳐져야 함 (${JSON.stringify(s19t)})`);
+      const dx = await pg.evaluate(() => ({ n: document.querySelectorAll('#s19-out .s19-uc').length, sw: document.documentElement.scrollWidth }));
+      if (dx.n < 60 || dx.sw > 1280) fail(`[WEB/1280] 도감: 챔피언 ${dx.n}개, 폭 ${dx.sw}px`);
       }
       if (['meta'].some(needWeb)) {
       // 메타 덱 PC 줄 + 펼치기 + 직접 fetch 새로고침 (2026-11-21: 오른쪽 상세 칸 대신 MetaTFT처럼 줄 아래로 펼침)

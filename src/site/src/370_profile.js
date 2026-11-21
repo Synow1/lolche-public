@@ -75,7 +75,7 @@
   /* ---- 롤체지지(닥지지) API: 전적·친구는 이걸로. MetaTFT는 저티어 판이 빠질 때가 있어서 (롤체지지 화면과 같은 판을 보여주려고) ----
      받은 걸 기존 화면 코드가 쓰는 MetaTFT 모양으로 바꾼다. 지난 시즌 최고 티어·판수만 MetaTFT에서. */
   var DAK = "https://tft.dakgg.io/api/v1/", TIER_BASE = { IRON: 0, BRONZE: 400, SILVER: 800, GOLD: 1200, PLATINUM: 1600, EMERALD: 2000, DIAMOND: 2400 };
-  function dakSeason() { return "set" + SET_ID.replace("TFTSet", "").replace("_2", ".5"); }
+  function dakSeason() { return "set" + LIVE_SET_ID.replace("TFTSet", "").replace("_2", ".5"); }
   function dakNum(tier, rank, lp) {
     if (!tier || tier === "UNRANKED") return null;
     return TIER_BASE[tier] == null ? 2800 + (lp || 0) : TIER_BASE[tier] + (4 - (DIV[rank] || 4)) * 100 + (lp || 0);
@@ -134,7 +134,7 @@
         return r.meta && r.meta.totalCount > acc.length && page < 5 && (r.summonerLeagueLogs || []).length ? logsFrom(page + 1, acc) : acc;
       });
     }
-    var mt = opt.history ? getMT("public/profile/lookup_by_riotid/KR/" + encodeURIComponent(riotId.split("#")[0]) + "/" + encodeURIComponent(riotId.split("#")[1] || "KR1") + "?source=full_profile&tft_set=" + SET_ID).catch(function () { return null; }) : Promise.resolve(null);
+    var mt = opt.history ? getMT("public/profile/lookup_by_riotid/KR/" + encodeURIComponent(riotId.split("#")[0]) + "/" + encodeURIComponent(riotId.split("#")[1] || "KR1") + "?source=full_profile&tft_set=" + LIVE_SET_ID).catch(function () { return null; }) : Promise.resolve(null);
     return Promise.all([dakGet(base + "/profile?season=" + season), logsFrom(1, []).catch(function () { return []; }), dakGet(base + "/matches?season=" + season + "&page=1" + q).catch(function () { return null; }), mt])
       .then(function (r) {
         var pf = r[0], logs = r[1], m1 = r[2], mtp = r[3];
@@ -275,9 +275,9 @@
       var rb = el("div", "rk-rank"); if (tp) rb.style.setProperty("--tc", TIER_COLOR[tp[0]]);
       rb.appendChild(tierImg(tp && tp[0], "rk-bigemb"));
       var rt = el("div", "rk-rt");
-      var seaNo = RK_SEASON ? RK_SEASON.replace("set", "") : SET_ID.replace("TFTSet", "").replace("_2", ".5");
+      var seaNo = RK_SEASON ? RK_SEASON.replace("set", "") : LIVE_SET_ID.replace("TFTSet", "").replace("_2", ".5");
       var sl = el("div", "rk-sl"); sl.appendChild(el("span", "rk-sb" + (RK_SEASON ? " old" : ""), "S" + seaNo));
-      sl.appendChild(el("small", null, RK_SEASON ? "지난 시즌 랭크 게임" : "이번 시즌 랭크 게임")); rt.appendChild(sl);
+      sl.appendChild(el("small", null, RK_SEASON ? "지난 시즌 랭크 게임" : (LIVE_SET_ID !== SET_ID ? "본섭 " + seaNo + "시즌 랭크 게임 · 12/1 19시즌 전환" : "이번 시즌 랭크 게임"))); rt.appendChild(sl);
       var tn = el("div", "rk-tn");
       var apexT = tp && /MASTER|CHALLENGER/.test(tp[0]);
       tn.appendChild(el("b", null, tp ? TIER_KO[tp[0]] + (tp[1] && !apexT ? " " + ROMAN[tp[1]] : "") : "언랭"));
@@ -301,7 +301,7 @@
         card.appendChild(gr);
       }
       // 지난 시즌: 칸은 최종 티어, 누르면 시즌별 최종·최고 티어와 판수 표
-      var hist = d.rating_history || {}, past = Object.keys(hist).filter(function (k) { return k !== SET_ID && hist[k]["1100"] && (hist[k]["1100"].num_games || hist[k]["1100"].nolp); })
+      var hist = d.rating_history || {}, past = Object.keys(hist).filter(function (k) { return k !== LIVE_SET_ID && hist[k]["1100"] && (hist[k]["1100"].num_games || hist[k]["1100"].nolp); })
         .sort(function (a, b) { return setNo(b) - setNo(a); });
       function tname(text) { var p = tierParts(text); return p ? TIER_KO[p[0]] + (p[1] && !/MASTER|CHALLENGER/.test(p[0]) ? " " + p[1] : "") : (text || "-"); }
       function tcol(text) { var p = tierParts(text); return p ? "color-mix(in srgb, " + TIER_COLOR[p[0]] + " 70%, var(--ink))" : ""; }
@@ -318,7 +318,7 @@
         function chips() { ps.innerHTML = "";
           // 이번 시즌 칩을 맨 앞에: 지금 보는 게 이번 시즌이면 강조, 지난 시즌을 보는 중이면 눌러서 돌아가기
           var cur = el("button", "rk-ps now" + (RK_SEASON ? "" : " on")); cur.type = "button";
-          cur.appendChild(el("small", null, "S" + SET_ID.replace("TFTSet", "").replace("_2", ".5")));
+          cur.appendChild(el("small", null, "S" + LIVE_SET_ID.replace("TFTSet", "").replace("_2", ".5")));
           if (!RK_SEASON) { var cp = tierParts(rk.rating_text); cur.appendChild(tierImg(cp && cp[0])); var cb = el("b", null, tname(rk.rating_text)); cb.style.color = tcol(rk.rating_text); cur.appendChild(cb); }
           else cur.appendChild(el("b", null, "이번 시즌"));
           cur.addEventListener("click", function () { if (RK_SEASON) { rkProfile(riotId, null); window.scrollTo(0, 0); } });

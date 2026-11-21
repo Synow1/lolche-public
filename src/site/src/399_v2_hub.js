@@ -28,16 +28,15 @@
     // 1) 19시즌 히어로 KPI + 7코스트 가로 레일
     if (S19) {
       var dd = document.getElementById("hm-dday");
-      if (dd) dd.textContent = "19시즌 PBE · " + s19DdayText();
+      if (dd) dd.textContent = (META && META.pbe ? "19시즌 PBE · " : "19시즌 · ") + s19DdayText();
       var upd = document.getElementById("hm-s19-upd");
       if (upd) upd.textContent = updAt(S19.pbe || S19.updated);
       var kpi = document.getElementById("hm-s19-kpi");
-      var s19List = (S19.guides && S19.guides.length) ? S19.guides : (S19.decks || []);
       if (kpi) {
-        var dlen = s19List.length;
+        var dlen = (META && META.decks && META.decks.length) || (S19.decks && S19.decks.length) || 0;
         kpi.innerHTML = "";
         [
-          [dlen || S19.augs.filter(function (a) { return a.new; }).length, dlen ? "추천 덱" : "신규 증강", dlen ? "decks" : "augs"],
+          [dlen, "메타 덱", "decks"],
           [S19.units.length, "챔피언", "units"],
           [S19.traits.filter(function (t) { return !t.uniq; }).length, "시너지", "traits"],
           [S19.units.filter(function (u) { return u.unl; }).length, "해금", "unlock"]
@@ -45,15 +44,9 @@
           var b = el("button", "hm-k"); b.type = "button";
           b.appendChild(el("b", null, String(x[0])));
           b.appendChild(el("span", null, x[1]));
-          b.addEventListener("click", function () { s19Jump(x[2], x[2] === "augs" ? { an: true } : null); });
+          b.addEventListener("click", function () { if (x[2] === "decks") goTab("meta"); else s19Jump(x[2]); });
           kpi.appendChild(b);
         });
-      }
-      var dw = document.getElementById("hm-s19-decks-wrap"), dr = document.getElementById("hm-s19-decks"), ds = document.getElementById("hm-s19-dsub");
-      if (dw && dr && s19List.length) {
-        dw.hidden = false; dr.innerHTML = "";
-        if (ds) ds.textContent = "롤체지지 배치 · PBE " + (S19.decksPlays ? Math.round(S19.decksPlays / 10000) + "만판" : s19List.length + "개");
-        s19List.slice().sort(function (a, b) { return (a.avg || 9) - (b.avg || 9); }).slice(0, 4).forEach(function (d) { dr.appendChild(s19DeckRow(d, "avg")); });
       }
       var seven = S19.units.filter(function (u) { return u.c === 7 || (u.c === 5 && u.unl); })
         .sort(function (a, b) { return b.c - a.c || (b.unl ? 1 : 0) - (a.unl ? 1 : 0); })
@@ -71,11 +64,11 @@
         });
       }
     }
-    // 2) 지금 18시즌 상위 덱 TOP 4
+    // 2) 19시즌 상위 덱 TOP 4 (META Set 19 PBE / Live)
     var dbox = document.getElementById("hm-decks");
     if (dbox && META && IDX) {
       var msub = document.getElementById("hm-meta-sub");
-      if (msub) msub.textContent = "에메+ · 패치 " + (META.patch || "");
+      if (msub) msub.textContent = (META.pbe ? "MetaTFT PBE" : "에메+") + " · " + (META.patch || "");
       var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer"); })
         .sort(function (a, b) { return basisSt(a.st, "emer")[0] - basisSt(b.st, "emer")[0]; })
         .slice(0, 4);
@@ -125,7 +118,7 @@
 
   function homeInit() {
     var go = document.getElementById("hm-s19-go");
-    if (go) go.addEventListener("click", function () { s19Jump("home"); });
+    if (go) go.addEventListener("click", function () { s19Jump("units"); });
     document.querySelectorAll("#home [data-s19]").forEach(function (b) {
       b.addEventListener("click", function () {
         var v = b.dataset.s19;
@@ -190,7 +183,7 @@
     setTimeout(start, 120);
   }
 
-  /* ---- 글로벌 통합 스포트라이트 검색 (초성 + 19시즌 + 18시즌·덱·템·증강·소환사) ---- */
+  /* ---- 글로벌 통합 스포트라이트 검색 (초성 + 19시즌 덱·챔피언·해금·시너지·템·증강·소환사) ---- */
   var spotScope = "all";
   function spotOpen(preset) {
     var ov = document.getElementById("spot-ov"), inp = document.getElementById("spot-q");
@@ -242,123 +235,87 @@
     box.innerHTML = "";
     if (!q) {
       spotGroup(box, "빠른 이동", [
-        { badge: "19", title: "19시즌 프리즘 투어", sub: "시너지 · 7코스트 · 해금 · 스쿼드 빌더", tag: "PBE", tagCls: "cyan", go: function () { s19Jump("home"); } },
-        { badge: "19", title: "19시즌 PBE 추천 덱", sub: "MetaTFT PBE 통계 · 평균 등수·승률·추천 아이템", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("decks"); } },
-        { badge: "빌", title: "19시즌 스쿼드 빌더", sub: "챔피언 조합 시너지·해금 실시간 계산", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("builder"); } },
-        { badge: "해", title: "19시즌 해금 조건", sub: "조건별 검색 · 암기 체크리스트", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("unlock"); } },
-        { badge: "덱", title: "18시즌 메타 덱", sub: "에메+ 평균 등수 · 승률 · 선택률", tag: "라이브", tagCls: "gold", go: function () { goTab("meta"); } },
+        { badge: "덱", title: "19시즌 메타 덱", sub: "MetaTFT PBE 통계 · 추천 배치 · 평균 등수", tag: "덱", tagCls: "gold", go: function () { goTab("meta"); } },
+        { badge: "아", title: "TFT 아카데미", sub: "19시즌 프로 티어표 · 단계별 운영", tag: "프로", tagCls: "cyan", go: function () { goTab("tfa"); } },
+        { badge: "해", title: "해금 조건 체크리스트", sub: "조건별 검색 · 외운 챔피언 표시", tag: "도감", tagCls: "cyan", go: function () { s19Jump("unlock"); } },
+        { badge: "빌", title: "스쿼드 빌더", sub: "19시즌 조합 시너지·해금·팀 코드", tag: "도감", tagCls: "cyan", go: function () { s19Jump("builder"); } },
         { badge: "재", title: "재료 → 덱", sub: "보유 재료 기반 추천 덱", tag: "도구", go: function () { goTab("parts"); } },
         { badge: "템", title: "아이템 티어표 · 조합표", sub: "조합템 · 찬란한 · 유물 · 상징", tag: "도감", go: function () { goTab("items"); } }
       ]);
       return;
     }
-    var want19 = spotScope !== "live", wantLive = spotScope !== "s19";
+    var wantDecks = spotScope === "all" || spotScope === "decks";
+    var wantUnits = spotScope === "all" || spotScope === "units";
+    var wantRef = spotScope === "all" || spotScope === "ref";
     var total = 0;
-    // 1) 19시즌 추천 덱·챔피언·시너지·증강
-    if (want19 && S19) {
-      var seen19 = {};
-      var d19 = (S19.guides || []).concat(S19.decks || []).filter(function (d) {
-        if (seen19[d.n]) return false;
-        var ok = matches(d.n, q) || (d.t || []).some(function (t) { return matches(t[0], q); }) || d.u.some(function (x) { var u = s19Unit(x.k); return u && matches(u.n, q); });
-        if (ok) seen19[d.n] = 1;
-        return ok;
-      }).slice(0, 5).map(function (d) {
-        var mcu = s19Unit(d.mc);
+    // 1) 19시즌 메타 덱
+    if (wantDecks && META && IDX) {
+      var dks = allViews().filter(function (v) {
+        return v && (matches(deckName(v), q) || v.board.some(function (b) { return matches(b.u, q); }));
+      }).slice(0, 6).map(function (v) {
+        var bs = basisSt(v.st, "emer"), mc = mainOf(v), ic = mc && IDX.units[mc.u] && IDX.units[mc.u].icon;
         return {
-          icon: mcu && mcu.img, title: d.n,
-          sub: (d.avg != null ? "PBE 평균 " + d.avg.toFixed(2) + " · 승률 " + d.win.toFixed(1) + "%" : "추천 배치") + (d.guide ? " · 배치" : ""),
-          tag: (d.tier || "19") + (d.tier ? "티어" : "시즌"), tagCls: "cyan",
-          go: function () { s19OpenDeck(d); }
+          icon: ic, title: deckName(v),
+          sub: bs ? ((META.pbe ? "PBE 평균 " : "에메+ 평균 ") + bs[0].toFixed(2) + " · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱",
+          tag: basisTier(v.st, "emer") + " 티어", tagCls: "gold",
+          go: function () { openDeck(v.id); }
         };
       });
-      total += d19.length;
-      spotGroup(box, "19시즌 추천 덱", d19);
-
+      total += dks.length;
+      spotGroup(box, "메타 덱", dks);
+    }
+    // 2) 19시즌 챔피언 · 해금
+    if (wantUnits && S19) {
       var u19 = S19.units.filter(function (u) {
         return matches(u.n, q) || u.t.some(function (t) { return matches(t, q); }) || (u.unl && u.unl.c.some(function (c) { return matches(c, q); }));
       }).slice(0, 6).map(function (u) {
         return {
           icon: u.img, title: u.n,
           sub: u.c + "코 · " + u.t.join(" · ") + (u.unl ? " · 해금" : ""),
-          tag: "19시즌", tagCls: "cyan",
+          tag: u.unl ? "해금" : u.c + "코", tagCls: "cyan",
           go: function () { s19OpenUnit(u); }
         };
       });
       total += u19.length;
-      spotGroup(box, "19시즌 챔피언", u19);
-
-      var t19 = S19.traits.filter(function (t) { return matches(t.n, q) || matches(t.en || "", q); }).slice(0, 5).map(function (t) {
-        return {
-          icon: t.img, dark: true, title: t.n,
-          sub: (t.uniq ? "고유" : t.type === "ORIGIN" ? "계열" : "직업") + " · " + t.u.length + "명",
-          tag: "19시즌", tagCls: "cyan",
-          go: function () { s19OpenTrait(t); }
-        };
-      });
-      total += t19.length;
-      spotGroup(box, "19시즌 시너지", t19);
-
-      var a19 = S19.augs.filter(function (a) { return matches(a.n, q); }).slice(0, 4).map(function (a) {
-        return {
-          icon: a.img, round: true, title: a.n,
-          sub: (S19_TIER[a.tier] || "") + (a.new ? " · 새 증강" : ""),
-          tag: "19증강", tagCls: "cyan",
-          go: function () { s19Jump("augs", { q: a.n, an: false }); }
-        };
-      });
-      total += a19.length;
-      spotGroup(box, "19시즌 증강", a19);
+      spotGroup(box, "챔피언 · 해금", u19);
     }
-    // 2) 18시즌 메타 덱
-    if (wantLive && META && IDX) {
-      var dks = allViews().filter(function (v) {
-        return v && (matches(deckName(v), q) || v.board.some(function (b) { return matches(b.u, q); }));
-      }).slice(0, 5).map(function (v) {
-        var bs = basisSt(v.st, "emer"), mc = mainOf(v), ic = mc && IDX.units[mc.u] && IDX.units[mc.u].icon;
-        return {
-          icon: ic, title: deckName(v),
-          sub: bs ? ("에메+ 평균 " + bs[0].toFixed(2) + " · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱",
-          tag: basisTier(v.st, "emer") + " 티어", tagCls: "gold",
-          go: function () { openDeck(v.id); }
-        };
-      });
-      total += dks.length;
-      spotGroup(box, "18시즌 메타 덱", dks);
-    }
-    // 3) 18시즌 유닛·아이템·증강·시너지
-    if (wantLive && DB && IDX) {
-      var us = Object.keys(DB.units).filter(function (n) { return matches(n, q); }).slice(0, 4).map(function (n) {
-        var u = DB.units[n], ic = IDX.units[n];
-        return {
-          icon: ic && ic.icon, title: n,
-          sub: u.cost + "코 · " + (u.traits || []).join(" · "),
-          tag: "유닛", go: function () { openSheet("u", n); }
-        };
-      });
-      total += us.length;
-      spotGroup(box, "18시즌 유닛", us);
+    // 3) 시너지 · 아이템 · 증강
+    if (wantRef) {
+      if (S19) {
+        var t19 = S19.traits.filter(function (t) { return matches(t.n, q) || matches(t.en || "", q); }).slice(0, 5).map(function (t) {
+          return {
+            icon: t.img, dark: true, title: t.n,
+            sub: (t.uniq ? "고유" : t.type === "ORIGIN" ? "계열" : "직업") + " · " + t.u.length + "명",
+            tag: "시너지", tagCls: "cyan",
+            go: function () { s19OpenTrait(t); }
+          };
+        });
+        total += t19.length;
+        spotGroup(box, "시너지", t19);
+      }
+      if (DB && IDX) {
+        var its = Object.keys(DB.info.i).filter(function (n) { return matches(n, q); }).slice(0, 5).map(function (n) {
+          var inf = DB.info.i[n], ic = IDX.items[n];
+          return {
+            icon: ic && ic.icon, title: n,
+            sub: inf.g || "아이템",
+            tag: "아이템", go: function () { openSheet("i", n); }
+          };
+        });
+        total += its.length;
+        spotGroup(box, "아이템", its);
 
-      var its = Object.keys(DB.info.i).filter(function (n) { return matches(n, q); }).slice(0, 5).map(function (n) {
-        var inf = DB.info.i[n], ic = IDX.items[n];
-        return {
-          icon: ic && ic.icon, title: n,
-          sub: inf.g || "아이템",
-          tag: "아이템", go: function () { openSheet("i", n); }
-        };
-      });
-      total += its.length;
-      spotGroup(box, "아이템", its);
-
-      var ags = Object.keys(DB.info.a).filter(function (n) { return matches(n, q); }).slice(0, 4).map(function (n) {
-        var inf = DB.info.a[n];
-        return {
-          icon: IDX.augments[n], round: true, title: n,
-          sub: [inf.r, inf.t ? inf.t + "티어" : ""].filter(Boolean).join(" · "),
-          tag: "증강", go: function () { openSheet("a", n); }
-        };
-      });
-      total += ags.length;
-      spotGroup(box, "증강", ags);
+        var ags = Object.keys(DB.info.a).filter(function (n) { return matches(n, q); }).slice(0, 5).map(function (n) {
+          var inf = DB.info.a[n];
+          return {
+            icon: IDX.augments[n], round: true, title: n,
+            sub: [inf.r, inf.t ? inf.t + "티어" : ""].filter(Boolean).join(" · "),
+            tag: "증강", go: function () { openSheet("a", n); }
+          };
+        });
+        total += ags.length;
+        spotGroup(box, "증강", ags);
+      }
     }
     // 4) 소환사 전적 검색 바로가기
     spotGroup(box, "소환사 전적", [{

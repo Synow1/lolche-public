@@ -139,12 +139,12 @@ def main():
     if "--missing" in sys.argv:
         print(json.dumps(sorted(set(missing)), ensure_ascii=False, indent=0))
         return
-    if sum(1 for c in comps if not c["var"]) < 10 or not augs or not items:  # 비어 오면 지난 파일을 그대로 둔다
+    if sum(1 for c in comps if not c["var"]) < 10 or (not setinfo.PBE and (not augs or not items)):  # 비어 오면 지난 파일을 그대로 둔다
         sys.exit(f"TFT 아카데미 데이터 이상: 덱 {len(comps)} · 증강 {len(augs)} · 아이템 {len(items)}")
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "set": SET, "comps": comps, "augs": augs, "items": items,
            "source": "TFT Academy (Dishsoap, Frodan)"}
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"{OUT.relative_to(ROOT)}: 덱 {sum(1 for c in comps if not c["var"])} (+탭 {sum(1 for c in comps if c["var"])}) · 증강 등급 {len(augs)} · 아이템 종류 {len(items)} · 번역 없는 글 {len(set(missing))} · {OUT.stat().st_size // 1024}KB")
+    print(f"{OUT.relative_to(ROOT)}: 덱 {sum(1 for c in comps if not c['var'])} (+탭 {sum(1 for c in comps if c['var'])}) · 증강 등급 {len(augs)} · 아이템 종류 {len(items)} · 번역 없는 글 {len(set(missing))} · {OUT.stat().st_size // 1024}KB")
 
 
 if __name__ == "__main__":

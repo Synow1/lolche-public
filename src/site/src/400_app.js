@@ -288,7 +288,8 @@
       if (tries < 2) { sessionStorage.setItem("lolche-stale", tries + 1); location.reload(); }
     } else sessionStorage.removeItem("lolche-stale");
   } catch (e) {}
-  var SET_ID = "__SET_ID__";  // scripts/setinfo.py (MetaTFT 패치 앞자리)가 조립 때 채운다
+  var SET_ID = "__SET_ID__";  // scripts/setinfo.py 공략·도감 기준 세트 (TFTSet19)
+  var LIVE_SET_ID = "__LIVE_SET_ID__";  // 본섭 랭크·전적 기준 세트 (12/1 전까지 TFTSet18, 출시 후 TFTSet19)
   // 손으로 쓴 세트 전용 글(data-set="18": 수호령·패치 노트·덱별 추천템 등)은 세트가 바뀌면 숨긴다. 탭 전체면 안내 한 줄 (세트 19 대비, 2026-11-16)
   document.querySelectorAll("[data-set]").forEach(function (e) {
     if ("TFTSet" + e.dataset.set === SET_ID) return;
@@ -382,7 +383,7 @@
     if (dLink) dLink.setAttribute("href", "#" + deckLast);
     var rLink = document.querySelector('.bnav a[data-nav="rank"]');
     if (rLink) rLink.setAttribute("href", "#" + rankLast);
-    var navId = id === "home" ? "home" : id === "s19" ? "s19" : isDeck ? "decks" : isRank ? "rank" : "more";
+    var navId = id === "home" ? "home" : id === "s19" ? "dex" : isDeck ? "decks" : isRank ? "rank" : "more";
     var lab = links.filter(function (a) { return a.getAttribute("href") === "#" + id; })[0];
     document.getElementById("ab-title").textContent = (id === "home" || id === "meta") ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
     document.querySelectorAll(".bnav a").forEach(function (a) { a.classList.toggle("on", a.dataset.nav === navId); });
@@ -454,6 +455,7 @@
   v2PrismInit();
   setupMetaRefresh();
   rkUpdSetup();
+  if (LIVE_SET_ID !== SET_ID) loadOld();  // 본섭 18시즌 전적·랭킹·덱파워 아이콘 선로딩
 
   // 덱파워 모델은 다른 데이터를 기다리지 않고 바로 받는다. 실패하면 3초 뒤 한 번 더
   (function loadPower(n) {

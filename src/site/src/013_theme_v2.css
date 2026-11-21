@@ -465,8 +465,8 @@ body.dc-open { overflow: hidden; }
 .hm-k b { font-family: var(--mono); font-size: var(--fs-xl); font-weight: 800; color: var(--accent); line-height: 1.2; }
 .hm-k span { font-size: var(--fs-2xs); color: var(--muted); font-weight: 600; }
 .hm-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.hm-pills button { font: inherit; font-size: var(--fs-s); font-weight: 700; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border-subtle); background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--ink); cursor: pointer; }
-.hm-pills button.hi { background: var(--accent2-soft); color: var(--accent2); border-color: color-mix(in srgb, var(--accent2) 38%, transparent); }
+.hm-pills button, .hm-pills a { font: inherit; font-size: var(--fs-s); font-weight: 700; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border-subtle); background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; line-height: inherit; }
+.hm-pills button.hi, .hm-pills a.hi { background: var(--accent2-soft); color: var(--accent2); border-color: color-mix(in srgb, var(--accent2) 38%, transparent); }
 .hm-searchbar { width: 100%; display: flex; align-items: center; gap: 10px; margin: 12px 0 4px; padding: 11px 13px; border-radius: 14px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--muted); font: inherit; font-size: var(--fs-m); text-align: left; cursor: pointer; }
 .hm-searchbar svg { width: 18px; height: 18px; flex: none; color: var(--accent); }
 .hm-searchbar span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

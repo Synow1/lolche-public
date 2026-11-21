@@ -547,7 +547,8 @@
     var t = document.getElementById("it-upd-t"); if (!t || !ITEMS) return;
     var at = ITEMS.liveAt || Date.parse(ITEMS.updated);
     if (rank == null) { rank = document.getElementById("it-rank").value; games = (ITEMS.tiers[rank] || ITEMS.tiers.all).games; }
-    t.textContent = msg || (RANK_LABEL[rank] + " · 최근 3일 " + Math.round(games / 1e4).toLocaleString() + "만 판\n" + updAt(at) + " · " + ago(at) + " · MetaTFT");
+    var head = ITEMS.pbe ? ("19시즌 PBE · " + Math.round(games / 1e4).toLocaleString() + "만 판") : (RANK_LABEL[rank] + " · 최근 3일 " + Math.round(games / 1e4).toLocaleString() + "만 판");
+    t.textContent = msg || (head + "\n" + updAt(at) + " · " + ago(at) + " · MetaTFT");
   }
   function itGrade(g, avg, freq) {  // scripts/build_items.py grade()와 같게
     var pk = { "조합템": [0.5, 1], "상징": [0.125, 0.25] }[g] || [0, 0], sc = (4.5 - avg + pk[0]) * Math.pow(freq, pk[1]);
@@ -570,13 +571,24 @@
   }
   function itRefresh(btn) {
     btn.disabled = true; btn.textContent = "불러오는 중";
-    var keys = Object.keys(IT_RANK_Q);
-    Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-stat-api/items_matches?queue=1100&patch=current&days=3&rank=" + IT_RANK_Q[k] + "&permit_filter_adjustment=true"); })).then(function (rs) {
-      var L = { at: Date.now(), t: {} };
-      keys.forEach(function (k, i) {
-        var d = rs[i] || {}, g = (d.games || []).reduce(function (a, x) { return a + (x.count || 0); }, 0) || 1;
-        L.t[k] = { g: g, r: (d.results || []).map(function (r) { return [r.itemName, (r.places || []).slice(0, 8)]; }) };
-      });
+    var req = ITEMS && ITEMS.pbe
+      ? viaApp("https://api-hc.metatft.com/tft-stat-api/items_matches?queue=PBE").then(function (d) {
+          var g = (d.games || []).reduce(function (a, x) { return a + (x.count || 0); }, 0) || 1;
+          var rec = { g: g, r: (d.results || []).map(function (r) { return [r.itemName, (r.places || []).slice(0, 8)]; }) };
+          return { at: Date.now(), t: { all: rec, emer: rec } };
+        })
+      : (function () {
+          var keys = Object.keys(IT_RANK_Q);
+          return Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-stat-api/items_matches?queue=1100&patch=current&days=3&rank=" + IT_RANK_Q[k] + "&permit_filter_adjustment=true"); })).then(function (rs) {
+            var L = { at: Date.now(), t: {} };
+            keys.forEach(function (k, i) {
+              var d = rs[i] || {}, g = (d.games || []).reduce(function (a, x) { return a + (x.count || 0); }, 0) || 1;
+              L.t[k] = { g: g, r: (d.results || []).map(function (r) { return [r.itemName, (r.places || []).slice(0, 8)]; }) };
+            });
+            return L;
+          });
+        })();
+    req.then(function (L) {
       try { localStorage.setItem(IT_LIVE, JSON.stringify(L)); } catch (e) {}
       itApplyLive(L); itList();
     }).catch(function () { itUpdLabel(null, null, "불러오지 못했어요. 다시 시도해 주세요"); })
@@ -591,12 +603,14 @@
     if (saved.g) itGrp = saved.g;
     var rk = document.getElementById("it-rank"), so = document.getElementById("it-sort");
     if (saved.r) rk.value = saved.r; if (saved.s) so.value = saved.s;
+    if (ITEMS.pbe) rk.value = "emer";
     document.querySelectorAll("#it-grp button").forEach(function (b) {
       b.classList.toggle("on", b.dataset.g === itGrp);
       b.addEventListener("click", function () { itGrp = b.dataset.g; document.querySelectorAll("#it-grp button").forEach(function (x) { x.classList.toggle("on", x === b); }); itList(); });
     });
     rk.addEventListener("change", itList); so.addEventListener("change", itList);
     pickify(rk); pickify(so);
+    if (ITEMS.pbe && rk.parentNode && rk.parentNode.classList.contains("dd")) rk.parentNode.hidden = true;  // PBE 통계엔 티어 구분이 없음
     document.getElementById("it-q").addEventListener("input", itList);
     document.querySelectorAll("#it-seg button").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -616,6 +630,7 @@
     try { saved = JSON.parse(localStorage.getItem(MT_KEY) || "{}") || {}; } catch (e) {}
     var basis = document.getElementById("mt-basis");
     if (saved.b) basis.value = saved.b;
+    if (META.pbe) basis.value = "emer";
     if (saved.f && saved.f !== "mine") mtFilter = saved.f;
     if (saved.s) mtSrc = saved.s === "win" || saved.s === "tfa" ? "guide" : saved.s;
     metaPending = saved.id || null;
@@ -635,6 +650,7 @@
     if (!BASIS_LABEL[basis.value]) basis.value = "emer";
     basis.addEventListener("change", function () { metaList(); metaSave(); });
     pickify(basis);
+    if (META.pbe && basis.parentNode && basis.parentNode.classList.contains("dd")) basis.parentNode.hidden = true;  // PBE 통계엔 티어 구분이 없음 (pickify가 만든 .dd 상자째 숨김)
     document.getElementById("mt-q").addEventListener("input", metaList);
     metaList();
     if (metaPending && deckView(metaPending)) {
@@ -643,10 +659,9 @@
       metaPending = null;
     }
   }
-  function buildMeta(data) { META = data; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); }
+  function buildMeta(data) { META = data; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
 
-  /* ---- 덱 통계 새로고침: 앱은 MetaTFT comps_stats(티어별 5번)를 바로 받아 숫자만 바꾼다 (보드·템은 그대로).
-     claude.ai 페이지는 네트워크가 막혀 있어서 작업 세션에 갱신 요청을 보낸다. ---- */
+  /* ---- 덱 통계 새로고침: 앱·PC 웹은 MetaTFT comps_stats를 바로 받아 숫자만 바꾼다 (보드·템은 그대로). ---- */
   var META_LIVE = "tft-guide-meta-live";
   var RANK_Q = { all: "CHALLENGER,DIAMOND,EMERALD,GRANDMASTER,MASTER,PLATINUM", emer: "CHALLENGER,DIAMOND,EMERALD,GRANDMASTER,MASTER", low: "IRON,BRONZE,SILVER,GOLD", dia: "DIAMOND", top: "MASTER,GRANDMASTER,CHALLENGER", gmc: "GRANDMASTER,CHALLENGER" };
   var RANK_MIN = { gmc: 60, top: 200, dia: 250 };
@@ -685,21 +700,36 @@
     var b = (document.getElementById("mt-basis") || {}).value || "emer", tot = (META.totals || {})[b];
     var at = META.srcAt || META.src_at || (META.liveAt ? new Date(META.liveAt) : META.updated);
     var ats = typeof at === "number" ? at : at instanceof Date ? +at : Date.parse(at);
-    t.textContent = msg || ((tot ? "분석된 덱 " + tot.toLocaleString() + " · MetaTFT 최근 3일\n" : "") + updAt(at) + (ats ? " · " + ago(ats) : "") + (tot ? "" : " · MetaTFT 최근 3일"));
+    var srcLbl = META.pbe ? "MetaTFT 19시즌 PBE" : "MetaTFT 최근 3일";
+    t.textContent = msg || ((tot ? "분석된 덱 " + tot.toLocaleString() + " · " + srcLbl + "\n" : "") + updAt(at) + (ats ? " · " + ago(ats) : "") + (tot ? "" : " · " + srcLbl));
   }
   function metaRefresh(btn) {
     btn.disabled = true; btn.textContent = "불러오는 중";
-    var keys = Object.keys(RANK_Q);
-    Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=3&permit_filter_adjustment=false&rank=" + RANK_Q[k]); })).then(function (rs) {
-      var cid = String(rs[0].cluster_id);
-      if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel(WEB ? "덱 구성이 바뀌어 다음 업데이트 때 반영돼요" : "덱 구성이 바뀌어서 다음 앱 업데이트 때 반영돼요"); return; }
-      var L = { at: Date.now(), cid: cid, s: {}, total: 1, totals: {}, src: 0 };
-      keys.forEach(function (k, i) {
-        L.s[k] = {}; L.src = Math.max(L.src, rs[i].updated || 0);
-        (rs[i].results || []).forEach(function (r) { if (r.cluster) L.s[k][r.cluster] = r.places; else { L.totals[k] = r.places[0]; if (k === "all") L.total = r.places[0]; } });
-      });
+    var req = META && META.pbe
+      ? viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE").then(function (r) {
+          var cid = String(r.cluster_id);
+          if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel("덱 구성이 바뀌어 다음 업데이트 때 반영돼요"); return null; }
+          var m = {}, tot = 1;
+          (r.results || []).forEach(function (x) { if (x.cluster) m[x.cluster] = x.places; else tot = x.places[0]; });
+          return { at: Date.now(), cid: cid, s: { all: m, emer: m }, total: tot, totals: { all: tot, emer: tot }, src: r.updated || 0 };
+        })
+      : (function () {
+          var keys = Object.keys(RANK_Q);
+          return Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=3&permit_filter_adjustment=false&rank=" + RANK_Q[k]); })).then(function (rs) {
+            var cid = String(rs[0].cluster_id);
+            if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel(WEB ? "덱 구성이 바뀌어 다음 업데이트 때 반영돼요" : "덱 구성이 바뀌어서 다음 앱 업데이트 때 반영돼요"); return null; }
+            var L = { at: Date.now(), cid: cid, s: {}, total: 1, totals: {}, src: 0 };
+            keys.forEach(function (k, i) {
+              L.s[k] = {}; L.src = Math.max(L.src, rs[i].updated || 0);
+              (rs[i].results || []).forEach(function (r) { if (r.cluster) L.s[k][r.cluster] = r.places; else { L.totals[k] = r.places[0]; if (k === "all") L.total = r.places[0]; } });
+            });
+            return L;
+          });
+        })();
+    req.then(function (L) {
+      if (!L) return;
       try { localStorage.setItem(META_LIVE, JSON.stringify(L)); } catch (e) {}
-      metaApply(L); metaUpdLabel(); metaList();
+      metaApply(L); metaUpdLabel(); metaList(); if (typeof homeRender === "function") homeRender();
     }).catch(function (e) { metaUpdLabel("불러오지 못했어요. 다시 시도해 주세요"); })
       .then(function () { btn.disabled = false; btn.textContent = "새로고침"; });
   }
@@ -721,19 +751,4 @@
   /* ---- 상징 → 덱: 상징을 고르면 갈 덱(MetaTFT 덱별 상징 성적 + 롤체지지 [상징] 덱)과 넣을 챔피언 ---- */
   var EMB_KEY = "tft-guide-emb", embSel = [];
   try { embSel = JSON.parse(localStorage.getItem(EMB_KEY) || "[]") || []; } catch (e) {}
-  var EMB_TIP = {
-    "나무정령 상징": "아펠리오스에게. 이즈리얼·아펠리오스 8렙 나무정령 7, 상징이 없으면 나무정령 5",
-    "속사포 상징": "아펠리오스 속사포 5, 이즈리얼",
-    "기원자 상징": "아리·알룬. 아리 덱이면 감시자에 방템 3개",
-    "처형자 상징": "소라카·아리, 햇빛 유나라. 5렙 처형자 2, 6렙 처형자 3",
-    "주문술사 상징": "소라카, 모르가나",
-    "요정 상징": "트리스타나 리롤 요정 4",
-    "사냥꾼 상징": "아칼리, AD 니달리",
-    "엄호대 상징": "카시오페아, 엄호대 렝가",
-    "싸움꾼 상징": "마스터 이, 헤카림·릴리아 탱커",
-    "전쟁기계 상징": "전쟁기계 6. 저코스트 전쟁기계 대신 케넨·아이번·타릭",
-    "지옥불 상징": "애쉬·럭스. 지옥불 덱은 치유 감소 템이 필요 없어요",
-    "검은 가시 상징": "카직스, 검은 가시 유나라",
-    "치명적인 꽃 상징": "베이가, 알룬, 적응형 투구 든 이즈리얼",
-    "악의 여단 상징": "쓸 덱이 거의 없어요"
-  };
+  var EMB_TIP = {};

@@ -242,7 +242,7 @@ def deck(nm, cluster, v, s, d, total, codes):
         api = x["itemNames"]
         if "Emblem" not in api or api.endswith("Augment") or x["count"] < 150:
             continue
-        hold = [[nm.u(u["units"]), round(100 * u["count"] / x["count"]), round(u["avg"], 2)] for u in x["units"][:3] if u["count"] >= 40]
+        hold = [[nm.u(u["units"]), round(100 * u["count"] / x["count"]), round(u["avg"], 2)] for u in (x.get("units") or [])[:3] if u["count"] >= 40]
         emb[nm.i(api)] = [x["count"], round(x["avg"], 2), round(100 * x["pcnt"], 1), hold]
     finals = [[int(x["level"]), round(x["avg"], 2), round(100 * x["count"] / max(1, sum(y["count"] for y in fl)))]
               for x in sorted(fl, key=lambda x: int(x["level"])) if x["count"] >= 100]
@@ -269,6 +269,30 @@ def tier_of(q):
 
 def basis_stats(decks):
     """덱마다 기준별 성적을 붙이고, 기준별 분석된 덱 수와 MetaTFT 업데이트 시각(ms)을 돌려준다."""
+    import setinfo
+    if setinfo.PBE:
+        js = T.load("comps_stats")
+        res = js["results"]
+        tot = next((x["places"][0] for x in res if not x.get("cluster")), 0)
+        by = {str(x["cluster"]): x["places"] for x in res if x.get("cluster")}
+        ok = []
+        for d in decks:
+            p = by.get(str(d["id"]))
+            if not p or p[8] < 300:
+                continue
+            n = p[8]
+            st_row = [round(sum(p[i] * (i + 1) for i in range(8)) / n, 2), round(sum(p[:4]) / n * 100), round(p[0] / n * 100, 1), n]
+            for k in ("all", "emer"):
+                d.setdefault("st", {})[k] = st_row
+            ok.append(d)
+        ok.sort(key=lambda d: d["st"]["emer"][0])
+        for i, d in enumerate(ok):
+            t_lbl = tier_of(i / len(ok))
+            for k in ("all", "emer"):
+                d.setdefault("tiers", {})[k] = t_lbl
+        totals = {"all": tot, "emer": tot}
+        print("PBE 통계:", len(ok), "덱, 분석된 덱:", tot)
+        return totals, js.get("updated") or 0
     totals, src_at = {}, 0
     for k, ranks in BASIS.items():
         url = f"https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=3&permit_filter_adjustment=false&rank={ranks}"
@@ -298,13 +322,82 @@ def basis_stats(decks):
     return totals, src_at
 
 
+def _sync_pbe_guides(decks):
+    """PBE(세트 19): s19.json의 롤체지지 추천 배치 가이드를 site/guides.json 형식으로 변환해 메타 탭 '추천 덱'에 연결한다."""
+    s19_p = ROOT / "site" / "s19.json"
+    if not s19_p.exists():
+        return
+    s19 = json.loads(s19_p.read_text(encoding="utf-8"))
+    u_by_k = {u["k"]: u for u in s19.get("units") or []}
+    aug_tier = {a["n"]: a.get("tier") or 2 for a in s19.get("augs") or []}
+    meta_by_id = {str(d["id"]): d for d in decks}
+    STYLE = {1: "bronze", 2: "bronze", 3: "silver", 4: "gold", 5: "chromatic", 6: "unique"}  # build_guides.py와 같은 표
+    ORDER = {"chromatic": 0, "gold": 1, "silver": 2, "bronze": 3, "unique": 4}
+    styles = {}
+    for t in s19.get("traits") or []:
+        steps = [s for s in t.get("steps") or [] if s.get("m") is not None]
+        styles[t["n"]] = [[s["m"], (steps[i + 1]["m"] - 1) if i + 1 < len(steps) else None, STYLE.get(s.get("s"), "bronze")]
+                          for i, s in enumerate(steps)]
+    out_g = []
+    for g in s19.get("guides") or []:
+        board = []
+        for cu in g.get("u") or []:
+            su = u_by_k.get(cu["k"])
+            if not su:
+                continue
+            ent = {"u": su["n"], "c": su["c"], "i": cu.get("i") or [], "star": cu.get("s") or 2, "plant": False}
+            if cu.get("pos"):
+                ent["pos"] = cu["pos"]
+            if cu.get("r") and cu["r"] <= 2:
+                ent["core"] = True
+            board.append(ent)
+        if len(board) < 5:
+            continue
+        md = meta_by_id.get(str(g.get("sid") or ""))
+        if not md:
+            mine = {x["u"] for x in board}
+            best_sc, best_d = 0, None
+            for d0 in decks:
+                theirs = {x["u"] for x in d0.get("board") or []} | {u for lv in (d0.get("levels") or {}).values() for u in lv}
+                sc = len(mine & theirs) - 0.01 * len(theirs - mine)
+                if sc > best_sc:
+                    best_sc, best_d = sc, d0
+            md = best_d if best_sc >= 4 else None
+        aug_out = [{"n": a, "tier": aug_tier.get(a, 2)} for a in (g.get("a") or [])]
+        # 롤체지지 t = [이름, 인원, Riot style 번호] -> build_guides.py와 같은 {t, n, style}
+        syn = [{"t": t[0], "n": t[1], "style": STYLE.get(t[2] if len(t) > 2 else 1, "bronze")} for t in (g.get("t") or []) if len(t) > 1]
+        syn.sort(key=lambda x: (ORDER.get(x["style"], 5), -x["n"]))
+        out_g.append({
+            "name": g.get("n") or "", "tag": "", "board": board,
+            "augments": aug_out, "syn": syn, "cluster": md["id"] if md else None,
+        })
+    if out_g:
+        gout = ROOT / "site" / "guides.json"
+        gout.write_text(json.dumps({"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+                                    "patch": "19.1 PBE", "styles": styles, "decks": out_g},
+                                   ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print(f"{gout.relative_to(ROOT)}: 19시즌 추천 가이드 {len(out_g)}개 (MetaTFT 짝 {sum(1 for x in out_g if x['cluster'])}개)")
+
+
 def main():
+    import re as _re
+    import setinfo
     CACHE.mkdir(parents=True, exist_ok=True)
     lk = T.load("lookup_ko")
     nm = T.Names(lk)
-    codes = {a: u["code"] for u in lk["units"] if u.get("code") for a in u.get("assetNames", []) + [u["apiName"]]}
+    code_cnt = {}
+    for u in lk["units"]:
+        c = u.get("code") or ""
+        if c:
+            code_cnt.setdefault(c, set()).add(_re.sub(r"^(TFT\d+_|DA_)|19$", "", u.get("characterName") or u["apiName"]).lower())
+    codes = {}
+    for u in lk["units"]:
+        c = u.get("code") or ""
+        if _re.fullmatch(r"[0-9a-f]{3}", c) and len(code_cnt.get(c, ())) == 1:
+            for a in u.get("assetNames", []) + [u["apiName"]]:
+                codes[a] = c
     p = T.load("patch")
-    patch = f"{p['patch']}{p.get('b_patch_version') or ''}"
+    patch = f"{setinfo.NUM}.1 PBE" if setinfo.PBE else f"{p['patch']}{p.get('b_patch_version') or ''}"
     data = T.load("comps_data")["results"]["data"]
     cid, details = data["cluster_id"], data["cluster_details"]
     res = T.load("comps_stats")["results"]
@@ -329,9 +422,9 @@ def main():
         x["tier"] = "S" if q < 0.12 else "A" if q < 0.35 else "B" if q < 0.7 else "C"
     totals, src_at = basis_stats(decks)
     totals.setdefault("all", total)
-    meta = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "cluster_id": str(cid),
-            "src_at": src_at or T.load("comps_stats").get("updated") or 0, "totals": totals,
-            "source": "MetaTFT 최근 3일 에메+ (티어별 평균은 같은 기간 전 티어)", "decks": decks}
+    meta = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "pbe": setinfo.PBE,
+            "cluster_id": str(cid), "src_at": src_at or T.load("comps_stats").get("updated") or 0, "totals": totals,
+            "source": "MetaTFT PBE 전체 통계" if setinfo.PBE else "MetaTFT 최근 3일 에메+ (티어별 평균은 같은 기간 전 티어)", "decks": decks}
     # 새 패치 첫날은 판이 적어 덱 묶음이 몇 개 안 나온다 (18.7 첫날 15개). 그러면 지난 파일을 그대로 두고 다음 점검에서 다시 (2026-11-18)
     try: old_n = len(json.loads(OUT.read_text()).get("decks") or [])
     except Exception: old_n = 0
@@ -339,6 +432,8 @@ def main():
         print(f"덱 {len(meta.get('decks') or [])}개뿐 (새 패치 초반) -> 지난 meta.json({old_n}개) 유지"); return
     OUT.write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{OUT.relative_to(ROOT)}: 덱 {len(decks)}개, {OUT.stat().st_size // 1024}KB")
+    if setinfo.PBE:
+        _sync_pbe_guides(decks)
 
 
 if __name__ == "__main__":

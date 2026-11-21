@@ -141,6 +141,7 @@
       return m ? { txt: m[1] + "." + m[2] + (m[3] || "").toLowerCase(), a: +m[1], b: +m[2], c: (m[3] || "").toLowerCase() } : null;
     }).filter(Boolean).sort(function (x, y) { return (y.a - x.a) || (y.b - x.b) || (y.c > x.c ? 1 : y.c < x.c ? -1 : 0); });
     var p = cands.length ? cands[0].txt : "";
+    if (META && META.pbe) p = SET_ID.replace("TFTSet", "") + " PBE";
     var b = document.getElementById("patch-badge"); if (p) { b.textContent = p; b.hidden = false; }
     var about = document.getElementById("about");
     var ver = VER ? "<b>롤체 노트 v" + VER.version + "</b>" + (APP && window.LolcheApp.built ? " · 빌드 " + window.LolcheApp.built() : "") + "<br>" : "";
@@ -195,16 +196,17 @@
   var CELLS = null, CELLS_KEY = "tft-guide-cells";
   function cellsLoad() {
     if (CELLS) return Promise.resolve(CELLS);
-    try { var c = JSON.parse(localStorage.getItem(CELLS_KEY) || "null"); if (c && Date.now() - c.at < 864e5 && c.season === dakSeason()) { CELLS = c.d; return Promise.resolve(CELLS); } } catch (e) {}
+    var gSea = "set" + SET_ID.replace("TFTSet", "").replace("_2", ".5");
+    try { var c = JSON.parse(localStorage.getItem(CELLS_KEY) || "null"); if (c && Date.now() - c.at < 864e5 && c.season === gSea) { CELLS = c.d; return Promise.resolve(CELLS); } } catch (e) {}
     if (!LIVE) return Promise.reject(new Error("실시간 조회 불가"));
-    return dakGet("team-builder-cell-stats?hl=ko&season=" + dakSeason() + "&tier=1").then(function (r) {
+    return dakGet("team-builder-cell-stats?hl=ko&season=" + gSea + "&tier=1").then(function (r) {
       var d = {};
       ((r.teamBuilderCellStat || {}).championCellStats || []).forEach(function (x) {
         var nm = DB.names.u[x.key]; nm = nm ? nm[0] : null; if (!nm || d[nm]) return;
         d[nm] = x.cellStats.map(function (c) { return [+c[0].replace("cell_", ""), c[1] / x.count]; });
       });
       CELLS = d;
-      try { localStorage.setItem(CELLS_KEY, JSON.stringify({ at: Date.now(), season: dakSeason(), d: d })); } catch (e) {}
+      try { localStorage.setItem(CELLS_KEY, JSON.stringify({ at: Date.now(), season: gSea, d: d })); } catch (e) {}
       return d;
     });
   }
