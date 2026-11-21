@@ -278,10 +278,11 @@
         });
         var traits = (d.t || []).filter(function (x) { return x[2] !== 6; }).slice(0, 8).map(function (x) { var t = s19Trait(x[0]); return { t: x[0], n: x[1], style: PC_TR[x[2]] || "bronze", img: t && t.img }; });
         var nm = el("div", "mt-name", d.n);
-        var sub = [d.guide ? "추천 배치" : "", d.level ? d.level + "렙" : "", d.plays ? d.plays.toLocaleString() + "판" : ""].filter(Boolean).join(" · ");
+        var chips = [d.guide ? ["추천 배치", "ch-fast"] : null, d.level ? [d.level + "렙 완성", "ch-lv"] : null].filter(Boolean);
+        var sub = d.plays ? d.plays.toLocaleString() + "판" : "";
         var stats = d.avg != null ? [["평균 등수", d.avg.toFixed(2), s19AvgT(d.avg)], ["선택률", d.pick ? d.pick.toFixed(2) : "-", d.pick ? "pick" : null], ["승률", d.win.toFixed(1) + "%", s19WinT(d.win)], ["순방률", d.top4.toFixed(1) + "%", dkTop4T(d.top4)]]
           : [["평균 등수", "-"], ["선택률", "-"], ["승률", "-"], ["통계 없음", "-"]];
-        var row = pcDeckRow({ id: s19DeckKey(d), tier: d.tier || "X", name: nm, sub: sub, traits: traits, units: units, stats: stats,
+        var row = pcDeckRow({ id: s19DeckKey(d), tier: d.tier || "X", name: nm, chips: chips, sub: sub, traits: traits, units: units, stats: stats,
           open: function (box) { s19CurDeck = s19DeckKey(d); box.classList.add("s19-pcopen"); s19DeckDetailBody(box, d); } });
         prow.appendChild(row);
       });

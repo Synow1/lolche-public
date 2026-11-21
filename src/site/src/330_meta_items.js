@@ -23,6 +23,11 @@
     if (o.id != null) r.dataset.id = o.id;
     r.appendChild(el("span", "dk-tbadge pcdk-tier t-" + o.tier, o.tier === "X" ? "-" : o.tier));
     var nm = el("div", "pcdk-name"); nm.appendChild(o.name);
+    if (o.chips && o.chips.length) {  // 운영 방식·완성 레벨·난이도 칩 (2026-11-21 사용자: "5렙 리롤 같은 표시도 강조, 색깔도 칠해, 잘 안 보여")
+      var cw = el("div", "pcdk-chips");
+      o.chips.forEach(function (c) { cw.appendChild(el("span", "pcdk-chip " + (c[1] || ""), c[0])); });
+      nm.appendChild(cw);
+    }
     if (o.sub) nm.appendChild(el("div", "pcdk-sub", o.sub));
     r.appendChild(nm);
     var bd = el("div", "pcdk-board");
@@ -85,7 +90,8 @@
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
-    var sub = d ? [styleKo(d.style), d.level ? d.level + "렙 완성" : "", d.diff ? DIFF[d.diff] : ""].filter(Boolean).join(" · ") : "";
+    var chips = d ? [d.style ? [styleKo(d.style), isReroll(d) ? "ch-reroll" : /^Fast/.test(d.style) ? "ch-fast" : "ch-std"] : null,
+      d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null].filter(Boolean) : [];
     var units = starOrder(v.board, mc && mc.u).map(function (b) {
       var ic = IDX.units[b.u] || {};
       return { name: b.u, c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
@@ -93,7 +99,7 @@
     var traits = (v.syn || []).filter(function (s) { return s.style !== "unique"; }).slice(0, 8).map(function (s) { return { t: s.t, n: s.n, style: s.style, img: IDX.traits[s.t] }; });
     var stats = bs ? [["평균 등수", bs[0].toFixed(2), dkAvgT(bs[0])], ["선택률", pl != null ? pl : "-", pl != null ? "pick" : null], ["승률", bs[2].toFixed(1) + "%", dkWinT(bs[2])], ["순방률", bs[1] + "%", dkTop4T(bs[1])]]
       : [["평균 등수", "-"], ["선택률", "-"], ["승률", "-"], [d ? "판수 부족" : "통계 없음", "-"]];
-    return pcDeckRow({ id: v.id, tier: basisTier(d, basis), name: nm, sub: sub, traits: traits, units: units, stats: stats,
+    return pcDeckRow({ id: v.id, tier: basisTier(d, basis), name: nm, chips: chips, traits: traits, units: units, stats: stats,
       open: function (box) { var md = document.getElementById("mt-detail"); box.appendChild(md); metaShow(v.id, true); } });
   }
 

@@ -891,6 +891,12 @@ function fresh(file, key, hours) {
       const mtCol = await pg.evaluate(() => { const f = document.querySelector('#mt-rows .pcdk'); if (!f) return null; const bs = [...f.querySelectorAll('.pcdk-stats b')], ink = getComputedStyle(f.querySelector('.pcdk-name .mt-name')).color;
         return { graded: bs.filter(x => x.classList.contains('dk-grad')).length, plain: bs.filter(x => getComputedStyle(x).color === ink).length }; });
       if (!mtCol || mtCol.graded < 4 || mtCol.plain) fail(`[WEB/1280] 메타 덱: 평균 등수·선택률·승률·순방률 숫자에 색이 안 칠해짐 (${JSON.stringify(mtCol)})`);
+      // 운영 칩·글자 가독성 (2026-11-21 사용자: "5렙 리롤 같은 표시 강조, 색깔", "폰트 가독성"): 칩에 색, PC는 자간을 안 좁히고 글자 복사 가능
+      const mtTy = await pg.evaluate(() => { const c = [...document.querySelectorAll('#mt-rows .pcdk-chip')], bs = getComputedStyle(document.body);
+        return { chips: c.length, styled: c.filter(x => /ch-(reroll|fast|std)/.test(x.className)).length, bg: c[0] ? getComputedStyle(c[0]).backgroundColor : '', ls: bs.letterSpacing, sel: bs.userSelect || bs.webkitUserSelect }; });
+      if (mtTy.chips < 20 || mtTy.styled < 10 || /rgba\(0, 0, 0, 0\)|transparent/.test(mtTy.bg)) fail(`[WEB/1280] 메타 덱: 운영 방식 칩(리롤·운영)이 안 보이거나 색이 없음 (${JSON.stringify(mtTy)})`);
+      if (mtTy.ls !== 'normal' && mtTy.ls !== '0px') fail(`[WEB/1280] PC 글자 자간이 좁혀져 있음 (${mtTy.ls})`);
+      if (mtTy.sel === 'none') fail('[WEB/1280] PC에서 글자를 선택·복사할 수 없음 (user-select: none)');
       await pg.evaluate(() => document.querySelectorAll('#mt-rows .pcdk')[1]?.click()); await pg.waitForTimeout(500);
       const mt2b = await pg.evaluate(() => { const o = document.querySelector('#mt-rows .pcdk-open'); return { open: document.querySelectorAll('#mt-rows .pcdk-open').length, after: !!(o && o.previousElementSibling === document.querySelectorAll('#mt-rows .pcdk')[1]), hex: o ? o.querySelectorAll('#mt-detail .hexboard .hx').length : 0, code: !!(o && o.querySelector('.codebtn')) }; });
       if (mt2b.open !== 1 || !mt2b.after || mt2b.hex < 20 || !mt2b.code) fail(`[WEB/1280] 메타 덱: 누른 줄 아래로 상세(배치판·팀 코드)가 안 펼쳐짐 (${JSON.stringify(mt2b)})`);

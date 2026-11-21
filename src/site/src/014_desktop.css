@@ -462,3 +462,34 @@
   :root:not([data-theme="light"]) body:not(.overlay) .pcdk-stats b.dk-grad { color: var(--gd, var(--accent)); }
   :root:not([data-theme="light"]) body:not(.overlay) .pcdk-stats b.dk-op { text-shadow: 0 0 14px color-mix(in srgb, var(--gd, var(--accent2)) 48%, transparent); }
 }
+/* PC 글자 가독성 (2026-11-21 사용자: "폰트 가독성이 뭔가 떨어진다"). 폰용 설정이 PC에 그대로 걸려 있던 것:
+   전체 자간 -1%(013_theme_v2 body), 흐린 보조 회색, 작은 라벨 400 굵기 -> 윈도우에서 작은 한글이 뭉개져 보임.
+   Pretendard는 공식 파일부터 힌팅이 없어 작고 가는 글자에 특히 약하다. PC에서는 자간을 풀고, 보조 글자를 밝고 한 단계 굵게 */
+@media (min-width: 1024px) {
+  :root { --muted: #4B5565; }
+  :root[data-theme="dark"] { --muted: #A0A9BB; }
+  body:not(.overlay) { letter-spacing: 0; font-kerning: normal; text-rendering: optimizeLegibility; -webkit-user-select: text; user-select: text; }
+  body:not(.overlay) small, body:not(.overlay) .sub, body:not(.overlay) .dk-sub, body:not(.overlay) .pcdk-sub,
+  body:not(.overlay) .pcdk-un, body:not(.overlay) .pcdk-stats small, body:not(.overlay) .mt-upd > span { font-weight: 500; }
+  body:not(.overlay) .pcdk-un { font-size: 12.5px; }
+  body:not(.overlay) .pcdk-stats small { font-size: 12.5px; }
+  body:not(.overlay) .pcdk-sub { font-size: 13px; }
+}
+@media (min-width: 1024px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --muted: #A0A9BB; }
+}
+/* PC 덱 줄 운영 칩 (2026-11-21 사용자: "5렙 리롤 같은 표시도 강조로, 색깔도 칠해, 잘 안 보여"): 리롤 보라 · 빠른 8/9렙 금색 · 기본 회색, 완성 레벨, 난이도 4색 */
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  body:not(.overlay) .pcdk-chip { --chc: var(--muted); font-size: 12.5px; font-weight: 700; line-height: 1.45; padding: 2px 8px; border-radius: 6px; white-space: nowrap;
+    color: color-mix(in srgb, var(--chc) 82%, var(--ink)); background: color-mix(in srgb, var(--chc) 17%, transparent); }
+  body:not(.overlay) .pcdk-chip.ch-reroll { --chc: #b57bff; }
+  body:not(.overlay) .pcdk-chip.ch-fast { --chc: #e8b94f; }
+  body:not(.overlay) .pcdk-chip.ch-std { --chc: #7fa7d9; }
+  body:not(.overlay) .pcdk-chip.ch-lv { --chc: var(--muted); font-weight: 600; }
+  body:not(.overlay) .pcdk-chip.ch-d1 { --chc: #2fbf7f; }
+  body:not(.overlay) .pcdk-chip.ch-d2 { --chc: #4b9dff; }
+  body:not(.overlay) .pcdk-chip.ch-d3 { --chc: #ff9f1a; }
+  body:not(.overlay) .pcdk-chip.ch-d4 { --chc: #ff5a5f; }
+  body:not(.overlay) .pcdk-sub { margin-top: 4px; }
+}
