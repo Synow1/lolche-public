@@ -1986,7 +1986,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .s19-bwrap { text-align: left; }
 
   /* 메타 덱 · TFT 아카데미 · 19시즌 추천 덱: 목록 + 상세 2단 마스터-디테일 */
-  body:not(.overlay) #meta:not([hidden]),
   body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single) {
     display: grid;
     grid-template-columns: minmax(380px, 445px) minmax(0, 1fr);
@@ -2139,7 +2138,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     padding-left: 36px;
     padding-right: 36px;
   }
-  body:not(.overlay) #meta:not([hidden]),
   body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single),
   body:not(.overlay) .s19-dk-split {
     grid-template-columns: minmax(440px, 500px) minmax(0, 1fr);
@@ -2186,4 +2184,82 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     border-color: var(--accent);
     color: var(--ink);
   }
+}
+/* PC 덱 줄 (2026-11-21 사용자: "메타TFT 보고 개선, PC는 PC대로"): 한 줄에 티어 · 이름 · 시너지와 챔피언(별·템·이름) · 숫자 4칸, 누르면 아래로 펼침.
+   폰은 기존 카드 줄 그대로. 메타 덱(#mt-rows.pc-rows)과 19시즌 덱(.s19-pcrows)이 같이 쓴다 */
+@media (min-width: 1024px) {
+  body:not(.overlay) #meta:not([hidden]) { display: block; }
+  body:not(.overlay) #meta .mt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 10px; }
+  body:not(.overlay) #meta .mt-bar #mt-src { flex: none; width: 240px; }
+  body:not(.overlay) #meta .mt-frow { flex: 1 1 320px; }
+  body:not(.overlay) #meta .mt-tools { flex: 1 1 440px; }
+  body:not(.overlay) .pc-rows { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  body:not(.overlay) .pcdk { display: grid; grid-template-columns: 32px minmax(140px, 200px) minmax(0, 1fr) minmax(240px, 300px) 16px; align-items: center; gap: 0 18px;
+    padding: 12px 16px 10px 16px; background: var(--surface); border-radius: 14px; cursor: pointer; position: relative; overflow: hidden; outline: none; }
+  body:not(.overlay) .pcdk::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tc); }
+  body:not(.overlay) .pcdk:hover, body:not(.overlay) .pcdk:focus-visible { background: var(--raise); }
+  body:not(.overlay) .pcdk.open { background: var(--raise); border-radius: 14px 14px 0 0; }
+  body:not(.overlay) .pcdk-tier { width: 30px; height: 30px; font-size: 15px; border-radius: 8px; }
+  body:not(.overlay) .pcdk-name { min-width: 0; }
+  body:not(.overlay) .pcdk-name .mt-name { font-size: 16px; font-weight: 800; line-height: 1.3; }
+  body:not(.overlay) .pcdk-sub { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+  body:not(.overlay) .pcdk-board { min-width: 0; display: grid; gap: 5px; }
+  body:not(.overlay) .pcdk-traits { display: flex; flex-wrap: wrap; gap: 4px 9px; }
+  body:not(.overlay) .pcdk-traits .trx b { font-size: 12.5px; }
+  body:not(.overlay) .pcdk-units { display: flex; gap: 6px; min-width: 0; }
+  body:not(.overlay) .pcdk-u { flex: 0 1 54px; min-width: 36px; display: grid; justify-items: center; position: relative; padding-top: 12px; }
+  body:not(.overlay) .pcdk-st { position: absolute; top: 0; left: -4px; right: -4px; text-align: center; font-size: 11px; line-height: 12px; letter-spacing: -2px; color: #f5c542; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+  body:not(.overlay) .pcdk-pic { width: 100%; max-width: 48px; aspect-ratio: 1; border-radius: 9px; border: 2px solid var(--cc); overflow: hidden; background: var(--sunk); }
+  body:not(.overlay) .pcdk-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  body:not(.overlay) .pcdk-its { display: flex; gap: 1px; height: 16px; margin-top: 2px; }
+  body:not(.overlay) .pcdk-its img { width: 16px; height: 16px; border-radius: 3px; }
+  body:not(.overlay) .pcdk-un { font-size: 12px; color: var(--muted); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  body:not(.overlay) .pcdk-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; gap: 4px; }
+  body:not(.overlay) .pcdk-stats b { display: block; font-size: 20px; font-weight: 800; font-family: var(--mono); line-height: 1.2; }
+  body:not(.overlay) .pcdk-stats small { font-size: 12px; color: var(--muted); }
+  body:not(.overlay) .pcdk-chev { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); justify-self: center; margin-top: -5px; transition: transform .15s; }
+  body:not(.overlay) .pcdk.open .pcdk-chev { transform: rotate(225deg); margin-top: 5px; }
+  body:not(.overlay) .pcdk-open { background: var(--surface); border-radius: 0 0 14px 14px; padding: 8px 24px 24px; margin-top: -8px; display: grid; gap: 12px; }
+  body:not(.overlay) .pcdk-open #mt-detail { position: static; max-height: none; overflow: visible; border: 0; padding: 0; background: transparent; }
+  body:not(.overlay) .pcdk-open .dk-hero, body:not(.overlay) .pcdk-open .dk-kpi, body:not(.overlay) .pcdk-open .s19-dk-kpi { display: none; }
+  body:not(.overlay) .pcdk-open #mt-detail .mt-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; }
+  body:not(.overlay) .pcdk-open .codebtn.big { max-width: 360px; }
+}
+/* PC 덱 줄 폭별 칸: 1024~1279는 챔피언 줄을 아래로, 1280~1599는 좁은 이름·숫자 칸, 1600 이상은 넓게 */
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk { grid-template-areas: "t n b s c"; grid-template-columns: 30px 150px minmax(0, 1fr) 236px 14px; gap: 0 14px; }
+  body:not(.overlay) .pcdk-tier { grid-area: t; } body:not(.overlay) .pcdk-name { grid-area: n; } body:not(.overlay) .pcdk-board { grid-area: b; }
+  body:not(.overlay) .pcdk-stats { grid-area: s; } body:not(.overlay) .pcdk-chev { grid-area: c; }
+  body:not(.overlay) .pcdk-its { width: 100%; justify-content: center; }
+  body:not(.overlay) .pcdk-its img { flex: 0 1 16px; min-width: 0; height: auto; aspect-ratio: 1; }
+  body:not(.overlay) .pcdk-stats b { font-size: 18px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  body:not(.overlay) .pcdk { grid-template-areas: "t n s c" ". b b b"; grid-template-columns: 30px minmax(0, 1fr) 236px 14px; gap: 8px 14px; }
+}
+@media (min-width: 1600px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 32px 200px minmax(0, 1fr) 300px 16px; gap: 0 18px; }
+  body:not(.overlay) .pcdk-stats b { font-size: 20px; }
+}
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-stats b { white-space: nowrap; letter-spacing: -.4px; }
+  body:not(.overlay) .pcdk-stats small { white-space: nowrap; }
+}
+@media (min-width: 1024px) and (max-width: 1599px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 30px 150px minmax(0, 1fr) 256px 14px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 30px minmax(0, 1fr) 256px 14px; }
+}
+/* PC 19시즌 펼친 덱: 1440 이상은 왼쪽 배치판(크게), 오른쪽 팀 코드·증강·시너지·해금. 그 밑 폭은 배치판이 작아져서 한 줄로 */
+@media (min-width: 1440px) {
+  body:not(.overlay) .s19-pcopen { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-auto-flow: row dense; align-items: start; column-gap: 20px; }
+  body:not(.overlay) .s19-pcopen > * { grid-column: 2; }
+  body:not(.overlay) .s19-pcopen > .s19-bwrap { grid-column: 1; grid-row: 1 / span 6; }
+  body:not(.overlay) .s19-pcopen > .s19-card:has(.s19-dk-list), body:not(.overlay) .s19-pcopen > .fnote { grid-column: 1 / -1; }
+  body:not(.overlay) .s19-pcopen .codebtn.big { max-width: none; }
+}
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-open .s19-hex { max-width: 720px; }
+  body:not(.overlay) .pcdk-open .s19-card, body:not(.overlay) .pcdk-open .s19-sqact, body:not(.overlay) .pcdk-open .s19-bunl { margin: 0; }
 }

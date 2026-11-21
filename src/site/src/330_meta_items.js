@@ -15,8 +15,91 @@
     });
   }
 
+  /* ---- PC 덱 줄 (2026-11-21 사용자: "메타TFT 보고 개선해, PC는 PC대로"): 한 줄에 티어 · 이름·운영 · 시너지와 챔피언(별·템·이름) · 숫자 4칸.
+     누르면 그 줄 바로 아래에 상세가 펼쳐진다 (오른쪽 상세 칸 없음). 메타 덱과 19시즌 덱이 같이 쓴다. 폰은 기존 줄 그대로 ---- */
+  var PC_TR = { 1: "bronze", 2: "silver", 3: "silver", 4: "gold", 5: "chromatic", 6: "unique" };
+  function pcDeckRow(o) {
+    var r = el("div", "pcdk dk t-" + o.tier); r.tabIndex = 0; r.setAttribute("role", "button"); r.setAttribute("aria-expanded", "false");
+    if (o.id != null) r.dataset.id = o.id;
+    r.appendChild(el("span", "dk-tbadge pcdk-tier t-" + o.tier, o.tier === "X" ? "-" : o.tier));
+    var nm = el("div", "pcdk-name"); nm.appendChild(o.name);
+    if (o.sub) nm.appendChild(el("div", "pcdk-sub", o.sub));
+    r.appendChild(nm);
+    var bd = el("div", "pcdk-board");
+    if (o.traits && o.traits.length) {
+      var tr = el("div", "pcdk-traits");
+      o.traits.forEach(function (t) {
+        var c = el("span", "trx s-" + t.style); c.title = t.t + " " + t.n;
+        var hx = el("span", "hx2"); if (t.img) hx.appendChild(img(t.img, "")); c.appendChild(hx);
+        c.appendChild(el("b", null, String(t.n))); tr.appendChild(c);
+      });
+      bd.appendChild(tr);
+    }
+    var us = el("div", "pcdk-units");
+    o.units.forEach(function (u) {
+      var c = el("div", "pcdk-u"); c.title = u.name + (u.s >= 3 ? " 3성" : "");
+      c.appendChild(el("span", "pcdk-st", u.s >= 3 ? "★★★" : ""));
+      var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[Math.min(u.c || 1, 5)] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
+      var it = el("span", "pcdk-its");
+      (u.items || []).slice(0, 3).forEach(function (x) { if (x[1]) { var im = img(x[1], x[0]); im.title = x[0]; it.appendChild(im); } });
+      c.appendChild(it);
+      c.appendChild(el("span", "pcdk-un", u.name.replace(/ \([^)]+\)$/, "")));
+      us.appendChild(c);
+    });
+    bd.appendChild(us); r.appendChild(bd);
+    var st = el("div", "pcdk-stats");
+    o.stats.forEach(function (s) {
+      var c = el("div"), b = el("b", null, s[1]);
+      if (s[2] === "pick") dkPickGrad(b, +s[1]); else if (s[2] != null) dkGrad(b, s[2]);
+      c.appendChild(b); c.appendChild(el("small", null, s[0])); st.appendChild(c);
+    });
+    r.appendChild(st);
+    r.appendChild(el("span", "pcdk-chev"));
+    r._toggle = function (noScroll) { pcToggle(r, o.open, noScroll); };
+    r.addEventListener("click", function () { r._toggle(false); });
+    r.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); r._toggle(false); } });
+    return r;
+  }
+  // 펼치기: 같은 목록에서 하나만 열린다. 다시 누르면 접힌다
+  function pcToggle(row, render, noScroll) {
+    var list = row.parentNode, was = row.classList.contains("open");
+    [].forEach.call(list.querySelectorAll(".pcdk.open"), function (x) { x.classList.remove("open"); x.setAttribute("aria-expanded", "false"); });
+    [].forEach.call(list.querySelectorAll(".pcdk-open"), function (x) { pcHome(x); x.remove(); });
+    if (was) { if (row.dataset.id && list.id === "mt-rows") { mtCurId = null; metaSave(); } return; }
+    var box = el("div", "pcdk-open"); row.parentNode.insertBefore(box, row.nextSibling);
+    row.classList.add("open"); row.setAttribute("aria-expanded", "true");
+    render(box);
+    if (noScroll) return;
+    var y = row.getBoundingClientRect().top;
+    if (y < 60 || y > innerHeight - 120) window.scrollBy(0, y - 80);
+  }
+  // 펼친 칸에 옮겨 둔 #mt-detail은 목록을 다시 그리기 전에 제자리로 (지우면 같이 사라진다)
+  function pcHome(scope) {
+    var md = document.getElementById("mt-detail"), sec = document.getElementById("meta");
+    if (md && sec && (!scope || scope.contains(md))) { md.hidden = true; sec.appendChild(md); }
+  }
+  function pcMetaRow(v, basis) {
+    var d = v.st, bs = basisSt(d, basis), mc = mainOf(v), pl = perLobby(d, basis);
+    var nm = el("div", "mt-name", deckName(v));
+    var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
+    if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
+    if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+    if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
+    var sub = d ? [styleKo(d.style), d.level ? d.level + "렙 완성" : "", d.diff ? DIFF[d.diff] : ""].filter(Boolean).join(" · ") : "";
+    var units = starOrder(v.board, mc && mc.u).map(function (b) {
+      var ic = IDX.units[b.u] || {};
+      return { name: b.u, c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
+    });
+    var traits = (v.syn || []).filter(function (s) { return s.style !== "unique"; }).slice(0, 8).map(function (s) { return { t: s.t, n: s.n, style: s.style, img: IDX.traits[s.t] }; });
+    var stats = bs ? [["평균 등수", bs[0].toFixed(2), dkAvgT(bs[0])], ["선택률", pl != null ? pl : "-", pl != null ? "pick" : null], ["승률", bs[2].toFixed(1) + "%", dkWinT(bs[2])], ["순방률", bs[1] + "%", dkTop4T(bs[1])]]
+      : [["평균 등수", "-"], ["선택률", "-"], ["승률", "-"], [d ? "판수 부족" : "통계 없음", "-"]];
+    return pcDeckRow({ id: v.id, tier: basisTier(d, basis), name: nm, sub: sub, traits: traits, units: units, stats: stats,
+      open: function (box) { var md = document.getElementById("mt-detail"); box.appendChild(md); metaShow(v.id, true); } });
+  }
+
   function metaList() {
     var box = document.getElementById("mt-rows");
+    pcHome();
     metaUpdLabel();
     var q = document.getElementById("mt-q").value.trim();
     var basis = document.getElementById("mt-basis").value;
@@ -34,7 +117,10 @@
       if (!x || !y) return (x ? 0 : 1) - (y ? 0 : 1);
       return mtSort === "win" ? y[2] - x[2] : mtSort === "top4" ? y[1] - x[1] : mtSort === "pick" ? (y[3] || 0) - (x[3] || 0) : x[0] - y[0];
     });
+    var wideNow = isWide();
+    box.classList.toggle("pc-rows", wideNow);
     list.forEach(function (v) {
+      if (wideNow) { box.appendChild(pcMetaRow(v, basis)); return; }
       var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
       r.dataset.id = v.id;
       var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
@@ -82,9 +168,9 @@
     if (!list.length) {
       box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
       if (isWide()) document.getElementById("mt-detail").hidden = true;
-    } else if (isWide()) {
-      var pick = list.some(function (x) { return x.id === mtCurId; }) ? mtCurId : list[0].id;
-      metaShow(pick, true);
+    } else if (wideNow && mtCurId) {  // PC: 펼쳐 두었던 덱은 다시 그려도 펼친 채로
+      var openRow = box.querySelector('.pcdk[data-id="' + mtCurId + '"]');
+      if (openRow) openRow._toggle(true);
     }
   }
 
@@ -354,16 +440,11 @@
   }
 
   var mtCurId = null;
+  // PC로 넓어지거나 덱 탭에 들어올 때: 목록을 PC 줄로 (이미 PC 줄이면 그대로)
   function metaEnsureWide() {
     if (!isWide() || !META) return;
     document.getElementById("mt-list-view").hidden = false;
-    var box = document.getElementById("mt-detail");
-    if (mtCurId && deckView(mtCurId)) {
-      if (box.hidden || !box.childNodes.length) metaShow(mtCurId, true);
-      return;
-    }
-    var first = document.querySelector("#mt-rows .mt-row[data-id]");
-    if (first) metaShow(first.dataset.id, true);
+    if (!document.querySelector("#mt-rows.pc-rows")) metaList();
   }
   // 선택률 = 이 덱 판 수 / 전체 판 수 × 8 = 로비 8명 중 이 덱을 하는 평균 인원 (MetaTFT 'Pick Rate'와 같은 정의, 2026-11-14 사용자: 이름은 "선택률"). 겹침 가늠용
   function perLobby(d, b) {
@@ -550,7 +631,11 @@
     pickify(basis);
     document.getElementById("mt-q").addEventListener("input", metaList);
     metaList();
-    if (metaPending && deckView(metaPending)) { metaShow(metaPending, true); metaPending = null; }
+    if (metaPending && deckView(metaPending)) {
+      if (isWide()) { mtCurId = metaPending; var rw = document.querySelector('#mt-rows .pcdk[data-id="' + metaPending + '"]'); if (rw) rw._toggle(true); }
+      else metaShow(metaPending, true);
+      metaPending = null;
+    }
   }
   function buildMeta(data) { META = data; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); }
 

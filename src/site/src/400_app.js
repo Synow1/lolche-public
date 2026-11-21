@@ -428,6 +428,7 @@
         if (tl) tl.hidden = false;
         if (TFA && tfaView === "comps") tfaRender();
       } else {
+        if (META && document.querySelector("#mt-rows.pc-rows")) { pcHome(); metaList(); }  // PC 줄 -> 폰 줄
         if (ml && md && !ml.hidden && !md.hidden) md.hidden = true;
         if (tl && td && !tl.hidden && !td.hidden) td.hidden = true;
       }

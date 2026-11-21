@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611210105">
+<meta name="lolche-web" content="202611210139">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -1997,7 +1997,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .s19-bwrap { text-align: left; }
 
   /* 메타 덱 · TFT 아카데미 · 19시즌 추천 덱: 목록 + 상세 2단 마스터-디테일 */
-  body:not(.overlay) #meta:not([hidden]),
   body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single) {
     display: grid;
     grid-template-columns: minmax(380px, 445px) minmax(0, 1fr);
@@ -2150,7 +2149,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     padding-left: 36px;
     padding-right: 36px;
   }
-  body:not(.overlay) #meta:not([hidden]),
   body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single),
   body:not(.overlay) .s19-dk-split {
     grid-template-columns: minmax(440px, 500px) minmax(0, 1fr);
@@ -2197,6 +2195,84 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     border-color: var(--accent);
     color: var(--ink);
   }
+}
+/* PC 덱 줄 (2026-11-21 사용자: "메타TFT 보고 개선, PC는 PC대로"): 한 줄에 티어 · 이름 · 시너지와 챔피언(별·템·이름) · 숫자 4칸, 누르면 아래로 펼침.
+   폰은 기존 카드 줄 그대로. 메타 덱(#mt-rows.pc-rows)과 19시즌 덱(.s19-pcrows)이 같이 쓴다 */
+@media (min-width: 1024px) {
+  body:not(.overlay) #meta:not([hidden]) { display: block; }
+  body:not(.overlay) #meta .mt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 10px; }
+  body:not(.overlay) #meta .mt-bar #mt-src { flex: none; width: 240px; }
+  body:not(.overlay) #meta .mt-frow { flex: 1 1 320px; }
+  body:not(.overlay) #meta .mt-tools { flex: 1 1 440px; }
+  body:not(.overlay) .pc-rows { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  body:not(.overlay) .pcdk { display: grid; grid-template-columns: 32px minmax(140px, 200px) minmax(0, 1fr) minmax(240px, 300px) 16px; align-items: center; gap: 0 18px;
+    padding: 12px 16px 10px 16px; background: var(--surface); border-radius: 14px; cursor: pointer; position: relative; overflow: hidden; outline: none; }
+  body:not(.overlay) .pcdk::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tc); }
+  body:not(.overlay) .pcdk:hover, body:not(.overlay) .pcdk:focus-visible { background: var(--raise); }
+  body:not(.overlay) .pcdk.open { background: var(--raise); border-radius: 14px 14px 0 0; }
+  body:not(.overlay) .pcdk-tier { width: 30px; height: 30px; font-size: 15px; border-radius: 8px; }
+  body:not(.overlay) .pcdk-name { min-width: 0; }
+  body:not(.overlay) .pcdk-name .mt-name { font-size: 16px; font-weight: 800; line-height: 1.3; }
+  body:not(.overlay) .pcdk-sub { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+  body:not(.overlay) .pcdk-board { min-width: 0; display: grid; gap: 5px; }
+  body:not(.overlay) .pcdk-traits { display: flex; flex-wrap: wrap; gap: 4px 9px; }
+  body:not(.overlay) .pcdk-traits .trx b { font-size: 12.5px; }
+  body:not(.overlay) .pcdk-units { display: flex; gap: 6px; min-width: 0; }
+  body:not(.overlay) .pcdk-u { flex: 0 1 54px; min-width: 36px; display: grid; justify-items: center; position: relative; padding-top: 12px; }
+  body:not(.overlay) .pcdk-st { position: absolute; top: 0; left: -4px; right: -4px; text-align: center; font-size: 11px; line-height: 12px; letter-spacing: -2px; color: #f5c542; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+  body:not(.overlay) .pcdk-pic { width: 100%; max-width: 48px; aspect-ratio: 1; border-radius: 9px; border: 2px solid var(--cc); overflow: hidden; background: var(--sunk); }
+  body:not(.overlay) .pcdk-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  body:not(.overlay) .pcdk-its { display: flex; gap: 1px; height: 16px; margin-top: 2px; }
+  body:not(.overlay) .pcdk-its img { width: 16px; height: 16px; border-radius: 3px; }
+  body:not(.overlay) .pcdk-un { font-size: 12px; color: var(--muted); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  body:not(.overlay) .pcdk-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; gap: 4px; }
+  body:not(.overlay) .pcdk-stats b { display: block; font-size: 20px; font-weight: 800; font-family: var(--mono); line-height: 1.2; }
+  body:not(.overlay) .pcdk-stats small { font-size: 12px; color: var(--muted); }
+  body:not(.overlay) .pcdk-chev { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); justify-self: center; margin-top: -5px; transition: transform .15s; }
+  body:not(.overlay) .pcdk.open .pcdk-chev { transform: rotate(225deg); margin-top: 5px; }
+  body:not(.overlay) .pcdk-open { background: var(--surface); border-radius: 0 0 14px 14px; padding: 8px 24px 24px; margin-top: -8px; display: grid; gap: 12px; }
+  body:not(.overlay) .pcdk-open #mt-detail { position: static; max-height: none; overflow: visible; border: 0; padding: 0; background: transparent; }
+  body:not(.overlay) .pcdk-open .dk-hero, body:not(.overlay) .pcdk-open .dk-kpi, body:not(.overlay) .pcdk-open .s19-dk-kpi { display: none; }
+  body:not(.overlay) .pcdk-open #mt-detail .mt-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; }
+  body:not(.overlay) .pcdk-open .codebtn.big { max-width: 360px; }
+}
+/* PC 덱 줄 폭별 칸: 1024~1279는 챔피언 줄을 아래로, 1280~1599는 좁은 이름·숫자 칸, 1600 이상은 넓게 */
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk { grid-template-areas: "t n b s c"; grid-template-columns: 30px 150px minmax(0, 1fr) 236px 14px; gap: 0 14px; }
+  body:not(.overlay) .pcdk-tier { grid-area: t; } body:not(.overlay) .pcdk-name { grid-area: n; } body:not(.overlay) .pcdk-board { grid-area: b; }
+  body:not(.overlay) .pcdk-stats { grid-area: s; } body:not(.overlay) .pcdk-chev { grid-area: c; }
+  body:not(.overlay) .pcdk-its { width: 100%; justify-content: center; }
+  body:not(.overlay) .pcdk-its img { flex: 0 1 16px; min-width: 0; height: auto; aspect-ratio: 1; }
+  body:not(.overlay) .pcdk-stats b { font-size: 18px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  body:not(.overlay) .pcdk { grid-template-areas: "t n s c" ". b b b"; grid-template-columns: 30px minmax(0, 1fr) 236px 14px; gap: 8px 14px; }
+}
+@media (min-width: 1600px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 32px 200px minmax(0, 1fr) 300px 16px; gap: 0 18px; }
+  body:not(.overlay) .pcdk-stats b { font-size: 20px; }
+}
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-stats b { white-space: nowrap; letter-spacing: -.4px; }
+  body:not(.overlay) .pcdk-stats small { white-space: nowrap; }
+}
+@media (min-width: 1024px) and (max-width: 1599px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 30px 150px minmax(0, 1fr) 256px 14px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 30px minmax(0, 1fr) 256px 14px; }
+}
+/* PC 19시즌 펼친 덱: 1440 이상은 왼쪽 배치판(크게), 오른쪽 팀 코드·증강·시너지·해금. 그 밑 폭은 배치판이 작아져서 한 줄로 */
+@media (min-width: 1440px) {
+  body:not(.overlay) .s19-pcopen { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-auto-flow: row dense; align-items: start; column-gap: 20px; }
+  body:not(.overlay) .s19-pcopen > * { grid-column: 2; }
+  body:not(.overlay) .s19-pcopen > .s19-bwrap { grid-column: 1; grid-row: 1 / span 6; }
+  body:not(.overlay) .s19-pcopen > .s19-card:has(.s19-dk-list), body:not(.overlay) .s19-pcopen > .fnote { grid-column: 1 / -1; }
+  body:not(.overlay) .s19-pcopen .codebtn.big { max-width: none; }
+}
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-open .s19-hex { max-width: 720px; }
+  body:not(.overlay) .pcdk-open .s19-card, body:not(.overlay) .pcdk-open .s19-sqact, body:not(.overlay) .pcdk-open .s19-bunl { margin: 0; }
 }
 </style>
 
@@ -4028,8 +4104,91 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     });
   }
 
+  /* ---- PC 덱 줄 (2026-11-21 사용자: "메타TFT 보고 개선해, PC는 PC대로"): 한 줄에 티어 · 이름·운영 · 시너지와 챔피언(별·템·이름) · 숫자 4칸.
+     누르면 그 줄 바로 아래에 상세가 펼쳐진다 (오른쪽 상세 칸 없음). 메타 덱과 19시즌 덱이 같이 쓴다. 폰은 기존 줄 그대로 ---- */
+  var PC_TR = { 1: "bronze", 2: "silver", 3: "silver", 4: "gold", 5: "chromatic", 6: "unique" };
+  function pcDeckRow(o) {
+    var r = el("div", "pcdk dk t-" + o.tier); r.tabIndex = 0; r.setAttribute("role", "button"); r.setAttribute("aria-expanded", "false");
+    if (o.id != null) r.dataset.id = o.id;
+    r.appendChild(el("span", "dk-tbadge pcdk-tier t-" + o.tier, o.tier === "X" ? "-" : o.tier));
+    var nm = el("div", "pcdk-name"); nm.appendChild(o.name);
+    if (o.sub) nm.appendChild(el("div", "pcdk-sub", o.sub));
+    r.appendChild(nm);
+    var bd = el("div", "pcdk-board");
+    if (o.traits && o.traits.length) {
+      var tr = el("div", "pcdk-traits");
+      o.traits.forEach(function (t) {
+        var c = el("span", "trx s-" + t.style); c.title = t.t + " " + t.n;
+        var hx = el("span", "hx2"); if (t.img) hx.appendChild(img(t.img, "")); c.appendChild(hx);
+        c.appendChild(el("b", null, String(t.n))); tr.appendChild(c);
+      });
+      bd.appendChild(tr);
+    }
+    var us = el("div", "pcdk-units");
+    o.units.forEach(function (u) {
+      var c = el("div", "pcdk-u"); c.title = u.name + (u.s >= 3 ? " 3성" : "");
+      c.appendChild(el("span", "pcdk-st", u.s >= 3 ? "★★★" : ""));
+      var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[Math.min(u.c || 1, 5)] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
+      var it = el("span", "pcdk-its");
+      (u.items || []).slice(0, 3).forEach(function (x) { if (x[1]) { var im = img(x[1], x[0]); im.title = x[0]; it.appendChild(im); } });
+      c.appendChild(it);
+      c.appendChild(el("span", "pcdk-un", u.name.replace(/ \([^)]+\)$/, "")));
+      us.appendChild(c);
+    });
+    bd.appendChild(us); r.appendChild(bd);
+    var st = el("div", "pcdk-stats");
+    o.stats.forEach(function (s) {
+      var c = el("div"), b = el("b", null, s[1]);
+      if (s[2] === "pick") dkPickGrad(b, +s[1]); else if (s[2] != null) dkGrad(b, s[2]);
+      c.appendChild(b); c.appendChild(el("small", null, s[0])); st.appendChild(c);
+    });
+    r.appendChild(st);
+    r.appendChild(el("span", "pcdk-chev"));
+    r._toggle = function (noScroll) { pcToggle(r, o.open, noScroll); };
+    r.addEventListener("click", function () { r._toggle(false); });
+    r.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); r._toggle(false); } });
+    return r;
+  }
+  // 펼치기: 같은 목록에서 하나만 열린다. 다시 누르면 접힌다
+  function pcToggle(row, render, noScroll) {
+    var list = row.parentNode, was = row.classList.contains("open");
+    [].forEach.call(list.querySelectorAll(".pcdk.open"), function (x) { x.classList.remove("open"); x.setAttribute("aria-expanded", "false"); });
+    [].forEach.call(list.querySelectorAll(".pcdk-open"), function (x) { pcHome(x); x.remove(); });
+    if (was) { if (row.dataset.id && list.id === "mt-rows") { mtCurId = null; metaSave(); } return; }
+    var box = el("div", "pcdk-open"); row.parentNode.insertBefore(box, row.nextSibling);
+    row.classList.add("open"); row.setAttribute("aria-expanded", "true");
+    render(box);
+    if (noScroll) return;
+    var y = row.getBoundingClientRect().top;
+    if (y < 60 || y > innerHeight - 120) window.scrollBy(0, y - 80);
+  }
+  // 펼친 칸에 옮겨 둔 #mt-detail은 목록을 다시 그리기 전에 제자리로 (지우면 같이 사라진다)
+  function pcHome(scope) {
+    var md = document.getElementById("mt-detail"), sec = document.getElementById("meta");
+    if (md && sec && (!scope || scope.contains(md))) { md.hidden = true; sec.appendChild(md); }
+  }
+  function pcMetaRow(v, basis) {
+    var d = v.st, bs = basisSt(d, basis), mc = mainOf(v), pl = perLobby(d, basis);
+    var nm = el("div", "mt-name", deckName(v));
+    var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
+    if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
+    if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+    if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
+    var sub = d ? [styleKo(d.style), d.level ? d.level + "렙 완성" : "", d.diff ? DIFF[d.diff] : ""].filter(Boolean).join(" · ") : "";
+    var units = starOrder(v.board, mc && mc.u).map(function (b) {
+      var ic = IDX.units[b.u] || {};
+      return { name: b.u, c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
+    });
+    var traits = (v.syn || []).filter(function (s) { return s.style !== "unique"; }).slice(0, 8).map(function (s) { return { t: s.t, n: s.n, style: s.style, img: IDX.traits[s.t] }; });
+    var stats = bs ? [["평균 등수", bs[0].toFixed(2), dkAvgT(bs[0])], ["선택률", pl != null ? pl : "-", pl != null ? "pick" : null], ["승률", bs[2].toFixed(1) + "%", dkWinT(bs[2])], ["순방률", bs[1] + "%", dkTop4T(bs[1])]]
+      : [["평균 등수", "-"], ["선택률", "-"], ["승률", "-"], [d ? "판수 부족" : "통계 없음", "-"]];
+    return pcDeckRow({ id: v.id, tier: basisTier(d, basis), name: nm, sub: sub, traits: traits, units: units, stats: stats,
+      open: function (box) { var md = document.getElementById("mt-detail"); box.appendChild(md); metaShow(v.id, true); } });
+  }
+
   function metaList() {
     var box = document.getElementById("mt-rows");
+    pcHome();
     metaUpdLabel();
     var q = document.getElementById("mt-q").value.trim();
     var basis = document.getElementById("mt-basis").value;
@@ -4047,7 +4206,10 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       if (!x || !y) return (x ? 0 : 1) - (y ? 0 : 1);
       return mtSort === "win" ? y[2] - x[2] : mtSort === "top4" ? y[1] - x[1] : mtSort === "pick" ? (y[3] || 0) - (x[3] || 0) : x[0] - y[0];
     });
+    var wideNow = isWide();
+    box.classList.toggle("pc-rows", wideNow);
     list.forEach(function (v) {
+      if (wideNow) { box.appendChild(pcMetaRow(v, basis)); return; }
       var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
       r.dataset.id = v.id;
       var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
@@ -4095,9 +4257,9 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     if (!list.length) {
       box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
       if (isWide()) document.getElementById("mt-detail").hidden = true;
-    } else if (isWide()) {
-      var pick = list.some(function (x) { return x.id === mtCurId; }) ? mtCurId : list[0].id;
-      metaShow(pick, true);
+    } else if (wideNow && mtCurId) {  // PC: 펼쳐 두었던 덱은 다시 그려도 펼친 채로
+      var openRow = box.querySelector('.pcdk[data-id="' + mtCurId + '"]');
+      if (openRow) openRow._toggle(true);
     }
   }
 
@@ -4367,16 +4529,11 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
 
   var mtCurId = null;
+  // PC로 넓어지거나 덱 탭에 들어올 때: 목록을 PC 줄로 (이미 PC 줄이면 그대로)
   function metaEnsureWide() {
     if (!isWide() || !META) return;
     document.getElementById("mt-list-view").hidden = false;
-    var box = document.getElementById("mt-detail");
-    if (mtCurId && deckView(mtCurId)) {
-      if (box.hidden || !box.childNodes.length) metaShow(mtCurId, true);
-      return;
-    }
-    var first = document.querySelector("#mt-rows .mt-row[data-id]");
-    if (first) metaShow(first.dataset.id, true);
+    if (!document.querySelector("#mt-rows.pc-rows")) metaList();
   }
   // 선택률 = 이 덱 판 수 / 전체 판 수 × 8 = 로비 8명 중 이 덱을 하는 평균 인원 (MetaTFT 'Pick Rate'와 같은 정의, 2026-11-14 사용자: 이름은 "선택률"). 겹침 가늠용
   function perLobby(d, b) {
@@ -4563,7 +4720,11 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     pickify(basis);
     document.getElementById("mt-q").addEventListener("input", metaList);
     metaList();
-    if (metaPending && deckView(metaPending)) { metaShow(metaPending, true); metaPending = null; }
+    if (metaPending && deckView(metaPending)) {
+      if (isWide()) { mtCurId = metaPending; var rw = document.querySelector('#mt-rows .pcdk[data-id="' + metaPending + '"]'); if (rw) rw._toggle(true); }
+      else metaShow(metaPending, true);
+      metaPending = null;
+    }
   }
   function buildMeta(data) { META = data; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); }
 
@@ -8015,8 +8176,11 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     showTab("s19", false, 0);
     s19Render();
   }
-  function s19Render() {
+  // keepTools: 검색어 입력 중에는 검색창이 든 도구 줄은 그대로 두고 결과만 다시 그린다.
+  // 검색창까지 새로 만들면 한글 조합이 끊겨 "제리"가 "ㅈㅔㄹㅣ"로 들어간다 (2026-11-21 사용자 스크린샷)
+  function s19Render(keepTools) {
     var out = document.getElementById("s19-out"), tools = document.getElementById("s19-tools");
+    if (keepTools === true && tools) tools = document.createElement("div");
     if (!out) return;
     var views = { home: s19Home, decks: s19Decks, traits: s19Traits, units: s19Units, unlock: s19Unlocks, builder: s19Builder, augs: s19Augs, items: s19Items };
     if (!views[s19St.v]) s19St.v = "home";
@@ -8038,7 +8202,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
   function s19Search(tools, ph) {
     var i = el("input", "s19-q"); i.type = "search"; i.placeholder = ph; i.value = s19St.q;
-    i.addEventListener("input", function () { s19St.q = i.value; var pos = i.selectionStart; s19Render(); var j = document.querySelector("#s19-tools .s19-q"); if (j) { j.focus(); try { j.setSelectionRange(pos, pos); } catch (e) {} } });
+    i.addEventListener("input", function () { s19St.q = i.value; s19Render(true); });
     tools.appendChild(i);
   }
   function s19Chips(tools, list, cur, set) {
@@ -8212,25 +8376,25 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       return (a.avg || 9) - (b.avg || 9);
     });
     if (!f.length) { out.appendChild(el("p", "empty", "조건에 맞는 19시즌 덱이 없어요")); return; }
-    if (isWide()) {
-      var split = el("div", "s19-dk-split"), lcol = el("div", "s19-dk-col-list"), dcol = el("div", "s19-dk-col-detail");
-      var rows = el("div", "mt-rows");
-      function showSplit(d, noScroll) {
-        var key = s19DeckKey(d); s19CurDeck = key;
-        rows.querySelectorAll(".mt-row").forEach(function (row) { row.classList.toggle("sel", row.dataset.s19dk === key); });
-        dcol.innerHTML = "";
-        var subTxt = "19시즌 PBE" + (d.tier ? " · " + d.tier + "티어" : "") + (d.plays ? " · " + d.plays.toLocaleString() + "판" : "");
-        var hd = el("div", "s19-dk-head");
-        hd.appendChild(el("h3", "dc-vt", d.n));
-        hd.appendChild(el("p", "dc-vm", subTxt));
-        dcol.appendChild(hd);
-        s19DeckDetailBody(dcol, d);
-        if (!noScroll) dcol.scrollTop = 0;
-      }
-      f.forEach(function (d) { rows.appendChild(s19DeckRow(d, s19St.ds, function (x) { showSplit(x, false); })); });
-      lcol.appendChild(rows); split.appendChild(lcol); split.appendChild(dcol); out.appendChild(split);
-      var initD = f.filter(function (d) { return s19DeckKey(d) === s19CurDeck; })[0] || f[0];
-      showSplit(initD, true);
+    if (isWide()) {  // PC: MetaTFT처럼 넓은 줄, 누르면 아래로 펼침 (2026-11-21)
+      var prow = el("div", "mt-rows pc-rows s19-pcrows");
+      f.forEach(function (d) {
+        var units = d.u.slice().sort(function (a, b) { return (a.k === d.mc ? -9 : 0) - (b.k === d.mc ? -9 : 0) || (b.i || []).length - (a.i || []).length || (b.s || 0) - (a.s || 0); }).map(function (x) {
+          var u = s19Unit(x.k) || { n: x.k, c: 1 };
+          return { name: u.n, c: u.c === 7 ? 5 : u.c, s: x.s, img: u.img, items: (x.i || []).map(function (n) { return [n, s19ItemImg(n)]; }) };
+        });
+        var traits = (d.t || []).filter(function (x) { return x[2] !== 6; }).slice(0, 8).map(function (x) { var t = s19Trait(x[0]); return { t: x[0], n: x[1], style: PC_TR[x[2]] || "bronze", img: t && t.img }; });
+        var nm = el("div", "mt-name", d.n);
+        var sub = [d.guide ? "추천 배치" : "", d.level ? d.level + "렙" : "", d.plays ? d.plays.toLocaleString() + "판" : ""].filter(Boolean).join(" · ");
+        var stats = d.avg != null ? [["평균 등수", d.avg.toFixed(2), s19AvgT(d.avg)], ["선택률", d.pick ? d.pick.toFixed(2) : "-", d.pick ? "pick" : null], ["승률", d.win.toFixed(1) + "%", s19WinT(d.win)], ["순방률", d.top4.toFixed(1) + "%", dkTop4T(d.top4)]]
+          : [["평균 등수", "-"], ["선택률", "-"], ["승률", "-"], ["통계 없음", "-"]];
+        var row = pcDeckRow({ id: s19DeckKey(d), tier: d.tier || "X", name: nm, sub: sub, traits: traits, units: units, stats: stats,
+          open: function (box) { s19CurDeck = s19DeckKey(d); box.classList.add("s19-pcopen"); s19DeckDetailBody(box, d); } });
+        prow.appendChild(row);
+      });
+      out.appendChild(prow);
+      var again = s19CurDeck && [].filter.call(prow.children, function (r) { return r.dataset.id === s19CurDeck; })[0];
+      if (again) again._toggle(true);
       return;
     }
     var rows2 = el("div", "mt-rows");
@@ -9533,6 +9697,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         if (tl) tl.hidden = false;
         if (TFA && tfaView === "comps") tfaRender();
       } else {
+        if (META && document.querySelector("#mt-rows.pc-rows")) { pcHome(); metaList(); }  // PC 줄 -> 폰 줄
         if (ml && md && !ml.hidden && !md.hidden) md.hidden = true;
         if (tl && td && !tl.hidden && !td.hidden) td.hidden = true;
       }

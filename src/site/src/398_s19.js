@@ -69,8 +69,11 @@
     showTab("s19", false, 0);
     s19Render();
   }
-  function s19Render() {
+  // keepTools: 검색어 입력 중에는 검색창이 든 도구 줄은 그대로 두고 결과만 다시 그린다.
+  // 검색창까지 새로 만들면 한글 조합이 끊겨 "제리"가 "ㅈㅔㄹㅣ"로 들어간다 (2026-11-21 사용자 스크린샷)
+  function s19Render(keepTools) {
     var out = document.getElementById("s19-out"), tools = document.getElementById("s19-tools");
+    if (keepTools === true && tools) tools = document.createElement("div");
     if (!out) return;
     var views = { home: s19Home, decks: s19Decks, traits: s19Traits, units: s19Units, unlock: s19Unlocks, builder: s19Builder, augs: s19Augs, items: s19Items };
     if (!views[s19St.v]) s19St.v = "home";
@@ -92,7 +95,7 @@
   }
   function s19Search(tools, ph) {
     var i = el("input", "s19-q"); i.type = "search"; i.placeholder = ph; i.value = s19St.q;
-    i.addEventListener("input", function () { s19St.q = i.value; var pos = i.selectionStart; s19Render(); var j = document.querySelector("#s19-tools .s19-q"); if (j) { j.focus(); try { j.setSelectionRange(pos, pos); } catch (e) {} } });
+    i.addEventListener("input", function () { s19St.q = i.value; s19Render(true); });
     tools.appendChild(i);
   }
   function s19Chips(tools, list, cur, set) {
@@ -266,25 +269,25 @@
       return (a.avg || 9) - (b.avg || 9);
     });
     if (!f.length) { out.appendChild(el("p", "empty", "조건에 맞는 19시즌 덱이 없어요")); return; }
-    if (isWide()) {
-      var split = el("div", "s19-dk-split"), lcol = el("div", "s19-dk-col-list"), dcol = el("div", "s19-dk-col-detail");
-      var rows = el("div", "mt-rows");
-      function showSplit(d, noScroll) {
-        var key = s19DeckKey(d); s19CurDeck = key;
-        rows.querySelectorAll(".mt-row").forEach(function (row) { row.classList.toggle("sel", row.dataset.s19dk === key); });
-        dcol.innerHTML = "";
-        var subTxt = "19시즌 PBE" + (d.tier ? " · " + d.tier + "티어" : "") + (d.plays ? " · " + d.plays.toLocaleString() + "판" : "");
-        var hd = el("div", "s19-dk-head");
-        hd.appendChild(el("h3", "dc-vt", d.n));
-        hd.appendChild(el("p", "dc-vm", subTxt));
-        dcol.appendChild(hd);
-        s19DeckDetailBody(dcol, d);
-        if (!noScroll) dcol.scrollTop = 0;
-      }
-      f.forEach(function (d) { rows.appendChild(s19DeckRow(d, s19St.ds, function (x) { showSplit(x, false); })); });
-      lcol.appendChild(rows); split.appendChild(lcol); split.appendChild(dcol); out.appendChild(split);
-      var initD = f.filter(function (d) { return s19DeckKey(d) === s19CurDeck; })[0] || f[0];
-      showSplit(initD, true);
+    if (isWide()) {  // PC: MetaTFT처럼 넓은 줄, 누르면 아래로 펼침 (2026-11-21)
+      var prow = el("div", "mt-rows pc-rows s19-pcrows");
+      f.forEach(function (d) {
+        var units = d.u.slice().sort(function (a, b) { return (a.k === d.mc ? -9 : 0) - (b.k === d.mc ? -9 : 0) || (b.i || []).length - (a.i || []).length || (b.s || 0) - (a.s || 0); }).map(function (x) {
+          var u = s19Unit(x.k) || { n: x.k, c: 1 };
+          return { name: u.n, c: u.c === 7 ? 5 : u.c, s: x.s, img: u.img, items: (x.i || []).map(function (n) { return [n, s19ItemImg(n)]; }) };
+        });
+        var traits = (d.t || []).filter(function (x) { return x[2] !== 6; }).slice(0, 8).map(function (x) { var t = s19Trait(x[0]); return { t: x[0], n: x[1], style: PC_TR[x[2]] || "bronze", img: t && t.img }; });
+        var nm = el("div", "mt-name", d.n);
+        var sub = [d.guide ? "추천 배치" : "", d.level ? d.level + "렙" : "", d.plays ? d.plays.toLocaleString() + "판" : ""].filter(Boolean).join(" · ");
+        var stats = d.avg != null ? [["평균 등수", d.avg.toFixed(2), s19AvgT(d.avg)], ["선택률", d.pick ? d.pick.toFixed(2) : "-", d.pick ? "pick" : null], ["승률", d.win.toFixed(1) + "%", s19WinT(d.win)], ["순방률", d.top4.toFixed(1) + "%", dkTop4T(d.top4)]]
+          : [["평균 등수", "-"], ["선택률", "-"], ["승률", "-"], ["통계 없음", "-"]];
+        var row = pcDeckRow({ id: s19DeckKey(d), tier: d.tier || "X", name: nm, sub: sub, traits: traits, units: units, stats: stats,
+          open: function (box) { s19CurDeck = s19DeckKey(d); box.classList.add("s19-pcopen"); s19DeckDetailBody(box, d); } });
+        prow.appendChild(row);
+      });
+      out.appendChild(prow);
+      var again = s19CurDeck && [].filter.call(prow.children, function (r) { return r.dataset.id === s19CurDeck; })[0];
+      if (again) again._toggle(true);
       return;
     }
     var rows2 = el("div", "mt-rows");
