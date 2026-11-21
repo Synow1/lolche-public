@@ -11,6 +11,7 @@
   python3 scripts/build_s19.py --missing   # 번역 없는 영어 글 목록 (JSON)
 """
 import json
+from collections import Counter
 import re
 import sys
 import time
@@ -25,7 +26,8 @@ ICONS = ROOT / "site" / "icons" / "s19"
 KO = ROOT / "data" / "s19_ko.json"
 MT = "https://data.metatft.com/lookups/TFTSet19_pbe_{}.json"
 DAK = "https://tft.dakgg.io/api/v1/data/{}?hl=ko&season=set19"
-CDN = "https://cdn.metatft.com/cdn-cgi/image/width=96,height=96,format=webp/https://cdn.metatft.com/file/metatft/{}/{}.png"
+CDN = "https://cdn.metatft.com/cdn-cgi/image/width={0},height={0},quality=88,format=webp/https://cdn.metatft.com/file/metatft/{1}/{2}.png"
+UNIT_PX = 128  # 챔피언은 배치판에 크게 나와서 원본 크기(128)로 (2026-11-21 사용자: "화질이 약간 깨져 보여")
 UA = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.metatft.com/"}
 HANGUL = re.compile(r"[가-힣]")
 SET_KO = {1: "1", 2: "2", 3: "갤럭시", 4: "운명", 5: "심판", 6: "기계공학", 7: "용의 땅", 8: "괴물 습격", 9: "룬테라", 10: "리믹스 럼블",
@@ -111,16 +113,145 @@ def icon(kind, folder, name):
     if not name: return ""
     name = name.lower()
     p = ICONS / folder / f"{re.sub(r'[^0-9a-z_]', '_', name)}.webp"
-    if not p.exists():
+    px = UNIT_PX if kind == "champions" else 96
+    small = False
+    if p.exists() and kind == "champions":
         try:
-            with urllib.request.urlopen(urllib.request.Request(CDN.format(kind, name), headers=UA), timeout=30) as r:
+            from PIL import Image
+            small = Image.open(p).size[0] < px
+        except Exception:
+            pass
+    if not p.exists() or small:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(CDN.format(px, kind, name), headers=UA), timeout=30) as r:
                 data = r.read()
-        except urllib.error.HTTPError:
-            return ""
+        except Exception:
+            return f"icons/s19/{folder}/{p.name}" if p.exists() else ""
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(data)
         time.sleep(0.03)
     return f"icons/s19/{folder}/{p.name}"
+
+
+PBE_API = "https://api-hc.metatft.com/tft-comps-api/"
+PBE_CACHE = ROOT / "raw" / "s19_comps"
+PBE_MIN = 3000  # 이보다 적은 판의 덱 묶음은 뺀다 (PBE 판이 많아 라이브 덱 탭과 같은 기준)
+
+
+def cell_rc(name):
+    """MetaTFT 자리 통계 cell_1~7 뒷줄 … cell_22~28 앞줄 -> [줄 0=앞, 칸 0~6] (build_meta.cell_of와 같음)"""
+    n = int(name.split("_")[1]) - 1
+    return [3 - n // 7, n % 7]
+
+
+def pbe_decks(mk, units, traits):
+    """MetaTFT PBE 덱 묶음 -> s19 덱 목록. 덱마다 최종 보드·자리·별·캐리 템·평균/순방/승률/판수, 묶음 번호 id (앱 새로고침이 이걸로 숫자만 바꾼다)."""
+    cs = get(PBE_API + "comps_stats?queue=PBE")
+    cd = get(PBE_API + "comps_data?queue=PBE")
+    if cd.get("tft_set") != "TFTSet19":
+        raise RuntimeError(f"MetaTFT PBE가 19시즌이 아님 ({cd.get('tft_set')})")
+    data = cd["results"]["data"]
+    cid, details = data["cluster_id"], data["cluster_details"]
+    res = cs["results"]
+    total = res[0]["places"][0]
+    shop = {u["k"] for u in units}
+    def base(x): return re.sub(r"^(TFT\d+_|DA_(\d+_)?)|19$", "", x).lower()
+    by_base = {base(u["k"]): u["k"] for u in units}
+    alias = {}
+    for u in mk["units"]:
+        tgt = u["apiName"] if u["apiName"] in shop else by_base.get(base(u.get("characterName") or u["apiName"]))
+        for a in (u.get("assetNames") or []) + [u["apiName"]]:
+            if tgt: alias[a] = tgt
+    def uk(a): return a if a in shop else alias.get(a) or by_base.get(base(a))
+    iname = {i["apiName"]: i["name"] for i in mk["items"] + mk.get("armory_items", []) if HANGUL.search(i.get("name") or "")}
+    uname = {u["k"]: u["n"] for u in units}
+    tname = {t["k"]: t["n"] for t in traits}
+    u_tr = {u["k"]: u["t"] for u in units}
+    t_steps = {t["n"]: t.get("steps") or [] for t in traits}
+    t_uniq = {t["n"]: t.get("uniq", False) for t in traits}
+    PBE_CACHE.mkdir(parents=True, exist_ok=True)
+    out = []
+    for s in res:
+        if not s["cluster"] or s["count"] < PBE_MIN or s["cluster"] not in details:
+            continue
+        cpath = PBE_CACHE / f"{s['cluster']}.json"
+        if cpath.exists() and time.time() - cpath.stat().st_mtime < 6 * 3600:
+            d = json.loads(cpath.read_text())
+        else:
+            try:
+                d = get(PBE_API + f"comp_details?comp={s['cluster']}&cluster_id={cid}")["results"]
+            except Exception as e:
+                print("PBE 덱 상세 실패", s["cluster"], e, file=sys.stderr); continue
+            cpath.write_text(json.dumps(d)); time.sleep(0.3)
+        v = details[s["cluster"]]
+        opts = d.get("options") or {}
+        fl = sorted(d.get("final_levels") or [], key=lambda x: -x["count"])
+        level = next((x["level"] for x in fl if x["level"] in opts and int(x["level"]) >= 7), None) or max(opts, key=int, default=None)
+        if not level: continue
+        best = max(opts[level], key=lambda o: o.get("score", 0))
+        board = [a for a in best.get("units_list", "").split("&") if a]
+        us = {x["unit"]: x for x in d.get("unit_stats") or []}
+        def share3(a): return next((x["pcnt"] for x in us.get(a, {}).get("num_items", []) if x["num_items"] == 3), 0)
+        carriers = sorted([a for a in board if share3(a) >= 0.4], key=share3, reverse=True)[:3]
+        builds = {}
+        for b in sorted(d.get("builds") or [], key=lambda b: -b["count"]):
+            if b["unit"] in carriers and b.get("num_items") == 3 and b["unit"] not in builds:
+                builds[b["unit"]] = [iname[i] for i in b["buildName"] if i in iname][:3]
+        pos = (d.get("positioning") or {}).get("units") or {}
+        def pl(a): return ((pos.get(a) or pos.get(next((x for x in pos if uk(x) == uk(a)), ""), {})) or {}).get("positions") or []
+        taken, cells = set(), {}
+        for a in sorted(board, key=lambda a: -(pl(a) or [{"count": 0}])[0]["count"]):
+            for c in pl(a):
+                rc = tuple(cell_rc(c["cell"]))
+                if rc not in taken:
+                    taken.add(rc); cells[a] = list(rc); break
+            else:  # 자리 통계가 없으면 뒷줄부터 빈칸 (보드에서 빠지지 않게)
+                rc = next(((r, c) for r in (3, 2, 1, 0) for c in range(7) if (r, c) not in taken), None)
+                if rc: taken.add(rc); cells[a] = list(rc)
+        champs = []
+        for a in board:
+            k = uk(a)
+            if not k or any(c["k"] == k for c in champs): continue
+            tiers = us.get(a, {}).get("tiers") or []
+            star = max(tiers, key=lambda t: t["pcnt"])["tier"] if tiers else 2
+            r = carriers.index(a) + 1 if a in carriers else 99
+            e = {"k": k, "r": r, "s": min(int(star), 3), "i": builds.get(a, [])}
+            if a in cells: e["pos"] = cells[a]
+            champs.append(e)
+        if len(champs) < 5: continue
+        champs.sort(key=lambda c: (c["r"], -len(c["i"])))
+        parts = [x["name"] for x in (v.get("name") or [])]
+        nm_parts = [tname.get(x) or uname.get(uk(x) or "", "") for x in parts]
+        name = " ".join(x for x in nm_parts if x).strip()
+        mc = next((uk(x) for x in parts if uk(x) and any(c["k"] == uk(x) for c in champs)), None) or champs[0]["k"]
+        tc = Counter()
+        for c in champs:
+            for tn in u_tr.get(c["k"], []): tc[tn] += 1
+        trs = []
+        for tn, cnt in tc.items():
+            st_lv = 4 if t_uniq.get(tn) else 0
+            for stp in t_steps.get(tn, []):
+                if stp.get("m") and cnt >= stp["m"]: st_lv = stp.get("s") or 1
+            if st_lv > 0: trs.append([tn, cnt, st_lv])
+        trs.sort(key=lambda x: (-x[2], -x[1]))
+        p, n = s["places"][:8], s["count"]
+        out.append({"id": s["cluster"], "n": name or uname.get(mc, ""), "mc": mc, "avg": round(sum((i + 1) * x for i, x in enumerate(p)) / n, 2),
+                    "win": round(p[0] / n * 100, 1), "top4": round(sum(p[:4]) / n * 100, 1), "pick": round(n / total * 8, 2), "plays": n,
+                    "level": int(level), "u": champs, "t": trs[:6], "pos": bool(cells)})
+    # 이름이 같은 덱은 다른 챔피언 하나를 붙여 가른다
+    cnt = Counter(x["n"] for x in out)
+    for x in out:
+        if cnt[x["n"]] > 1:
+            extra = next((uname[c["k"]] for c in x["u"] if c["k"] != x["mc"] and uname.get(c["k"], "") not in x["n"]), "")
+            if extra: x["n"] += " " + extra.split(" ")[0]
+    out.sort(key=lambda x: x["avg"])
+    for i, x in enumerate(out):
+        q = i / max(len(out), 1)
+        x["tier"] = "S" if q < 0.12 else "A" if q < 0.35 else "B" if q < 0.7 else "C"
+    upd = datetime.fromtimestamp((cs.get("updated") or 0) / 1000, timezone.utc).isoformat(timespec="minutes") if cs.get("updated") else ""
+    if len(out) < 10:
+        raise RuntimeError(f"PBE 덱 {len(out)}개뿐")
+    return out, total // 8, upd, str(cid)
 
 
 def main():
@@ -264,77 +395,23 @@ def main():
     items.sort(key=lambda i: (["emb", "quest", "set"].index(i["kind"]), not i["craft"], i["n"]))
 
     # 19시즌 PBE 추천 덱:
-    # 1) 롤체지지 PBE 메타 덱 통계 (lolchess.gg/decks?queue=pbe, ~29만 판) -> pbe_decks
+    # 1) MetaTFT PBE 덱 통계 (comps_stats/comps_data?queue=PBE + comp_details, 2026-11-21부터. lolchess.gg는 이 서버를 403으로 막아 멈춰 있었음) -> pbe_decks
     # 2) 롤체지지 19시즌 추천 가이드 덱 (tft.dakgg.io/api/v1/guide-decks?hl=ko&q=new-set) -> guides (4x7 육각 배치 + 추천 증강 3개)
     # 둘을 유닛 겹침으로 교차 매칭해 가이드엔 PBE 통계를, PBE 통계엔 배치·증강을 붙인다.
-    decks, guides, decks_plays, decks_upd = [], [], 0, ""
+    decks, guides, decks_plays, decks_upd, decks_cid = [], [], 0, "", ""
     u_by_k = {u["k"]: u["k"] for u in units}
     u_by_n = {u["n"]: u["k"] for u in units}
     u_by_base = {re.sub(r" \([^)]+\)$", "", u["n"]): u["k"] for u in units}
     u_by_cost = {u["k"]: u["c"] for u in units}
     u_traits = {u["k"]: u["t"] for u in units}
     try:
-        pbe_req = urllib.request.Request("https://lolchess.gg/decks?queue=pbe",
-                                         headers={"User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36", "Accept-Language": "ko"})
-        with urllib.request.urlopen(pbe_req, timeout=30) as r:
-            pbe_html = r.read().decode("utf-8", "ignore")
-        m_nd = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', pbe_html, re.S)
-        if m_nd:
-            qs = json.loads(m_nd.group(1))["props"]["pageProps"]["dehydratedState"]["queries"]
-            md = next((q["state"]["data"] for q in qs if isinstance(q["state"].get("data"), dict) and "metaDeckList" in q["state"]["data"]), None)
-            if md and md.get("season") == "set19":
-                ml = md["metaDeckList"]
-                refs = md.get("refs") or {}
-                ch_ref = {c["key"]: c["name"] for c in refs.get("champions") or []}
-                tr_ref = {t["key"]: t["name"] for t in refs.get("traits") or []}
-                it_ref = {i["key"]: i["name"] for i in refs.get("items") or []}
-                def map_uk(ck):
-                    if ck in u_by_k: return ck
-                    nm = ch_ref.get(ck, "")
-                    return u_by_n.get(nm) or u_by_base.get(nm) or ""
-                decks_plays = int(ml.get("plays") or 0)
-                if ml.get("updatedAt"):
-                    decks_upd = datetime.fromtimestamp(ml["updatedAt"] / 1000, timezone.utc).isoformat(timespec="minutes")
-                raw_decks = [x for x in (ml.get("metaDecks") or []) if (x.get("plays") or 0) >= 200 and (x.get("deck") or {}).get("champions")]
-                raw_decks.sort(key=lambda x: x.get("avgPlacement", 9))
-                n_raw = len(raw_decks)
-                name_cnt = Counter((x.get("deckNameKo") or "").strip() for x in raw_decks)
-                for idx_d, x in enumerate(raw_decks):
-                    st_map = {}
-                    for cs in x.get("championStats") or []:
-                        p3 = next((t.get("plays", 0) for t in cs.get("championTierStats") or [] if t.get("key") == 3), 0)
-                        st_map[cs["key"]] = 3 if cs.get("plays") and (p3 / cs["plays"]) >= 0.45 else 2
-                    champs = []
-                    for c in sorted(x["deck"]["champions"], key=lambda z: (z.get("coreRank", 99), -(len(z.get("items") or [])))):
-                        uk = map_uk(c["key"])
-                        if not uk: continue
-                        its = [it_ref.get(ik, ik) for ik in (c.get("items") or []) if it_ref.get(ik)]
-                        champs.append({"k": uk, "r": int(c.get("coreRank", 99)), "s": st_map.get(c["key"], 2), "i": its[:3]})
-                    if not champs: continue
-                    mc = map_uk(x.get("deckChampionKey") or "") or champs[0]["k"]
-                    base_nm = (x.get("deckNameKo") or "").strip()
-                    if not base_nm:
-                        dk0 = (x.get("deckKey") or "").split("|")[0].split("-")[0]
-                        base_nm = (tr_ref.get(dk0, "") + " " + uname.get(mc, "")).strip()
-                    if name_cnt[base_nm] > 1:
-                        sec_u = next((uname.get(c["k"], "") for c in champs if c["k"] != mc and uname.get(c["k"], "") not in base_nm), "")
-                        if sec_u: base_nm = f"{base_nm} {sec_u.split(' ')[0]}"
-                    trs = []
-                    for t0 in sorted(x["deck"].get("traits") or [], key=lambda z: (-(z.get("style") or 0), -(z.get("numUnits") or 0))):
-                        tn = tname.get(t0["key"]) or tr_ref.get(t0["key"])
-                        if tn and (t0.get("style") or 0) > 0:
-                            trs.append([tn, int(t0.get("numUnits") or 0), int(t0.get("style") or 1)])
-                    ratio = idx_d / max(n_raw, 1)
-                    tier = "S" if (ratio < 0.2 and x["plays"] >= 1000) else "A" if ratio < 0.5 else "B" if ratio < 0.8 else "C"
-                    decks.append({"n": base_nm, "mc": mc, "tier": tier, "avg": round(float(x["avgPlacement"]), 2),
-                                  "win": round(float(x["winRate"]), 1), "top4": round(float(x["topRate"]), 1),
-                                  "pick": round(float(x.get("pickRate") or 0), 2), "plays": int(x["plays"]),
-                                  "u": champs, "t": trs[:6]})
+        decks, decks_plays, decks_upd, decks_cid = pbe_decks(mk, units, traits)
     except Exception as ex:
         if OUT.exists():
             try:
                 prev = json.loads(OUT.read_text(encoding="utf-8"))
                 decks, decks_plays, decks_upd = prev.get("decks", []), prev.get("decksPlays", 0), prev.get("decksUpdated", "")
+                decks_cid = prev.get("decksCid", "")
             except Exception:
                 pass
         print(f"19시즌 PBE 덱 생략 ({ex})", file=sys.stderr)
@@ -390,7 +467,7 @@ def main():
                     best_sc, best_d = sc, d0
             entry = {"n": gn, "mc": mc, "u": champs, "t": trs[:6], "a": augs_g, "guide": True}
             if best_d:
-                entry.update({"tier": best_d["tier"], "avg": best_d["avg"], "win": best_d["win"],
+                entry.update({"sid": best_d.get("id"), "tier": best_d["tier"], "avg": best_d["avg"], "win": best_d["win"],
                               "top4": best_d["top4"], "pick": best_d["pick"], "plays": best_d["plays"]})
                 # 반대로 PBE 통계 덱에도 배치도가 없으면 가이드 배치·증강을 연결
                 if not best_d.get("pos"):
@@ -409,8 +486,8 @@ def main():
     meta = mk.get("_metadata") or {}
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "pbe": meta.get("generated", ""), "release": "2026-12-01",
            "name": "프리즘 투어", "units": units, "traits": traits, "augs": augs, "items": items,
-           "guides": guides, "decks": decks, "decksPlays": decks_plays, "decksUpdated": decks_upd,
-           "src": "MetaTFT PBE 원문 · 롤체지지 · 라이엇 패치 노트"}
+           "guides": guides, "decks": decks, "decksPlays": decks_plays, "decksUpdated": decks_upd, "decksCid": decks_cid,
+           "src": "MetaTFT PBE 원문·덱 통계 · 롤체지지 · 라이엇 패치 노트"}
     if "--missing" in sys.argv:
         print(json.dumps(sorted(set(missing)), ensure_ascii=False, indent=0)); return
     if len(units) < 60 or len(traits) < 20:

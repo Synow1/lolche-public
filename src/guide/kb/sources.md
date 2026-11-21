@@ -114,3 +114,9 @@
 | Nanande | TFT Set 18 Enchanted Wilds - 5 Beginner Comps | 2개월 전 | 328회 | https://youtu.be/HsQuLM6le7c |
 | Send TFT | My RECORD Most Gold From Augments: 150 GOLD In One Game?! | 24분 전 | 279회 | https://youtu.be/MgPsoTVMnww |
 | Wasianiverson VODs | Regionals Day 1 DOMINATION / Enchanted Wilds Patch 18.5c VOD / October 30th, 202 | 1일 전 | 6,059회 | https://youtu.be/Ql0JCYze4Pc |
+
+## 19시즌 PBE 덱 통계 (2026-11-21)
+- MetaTFT가 PBE 덱 묶음을 따로 집계한다: `api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE`, `comps_data?queue=PBE` (tft_set TFTSet19, cluster_id 427), 덱 상세는 라이브와 같은 `comp_details?comp=<묶음>&cluster_id=427`. 11/21 기준 약 189만 보드(23만 판). CORS 허용이라 앱·PC 웹이 바로 받는다.
+- lolchess.gg PBE 덱(`/decks?queue=pbe`)은 이 서버 IP를 403으로 막아 11/19 뒤로 멈춰 있었다. 우회하지 않는다. 롤체지지 API `meta-decks`는 `shard=pbe1`이면 season이 set19로 바뀌지만 metaDeckList가 비어 있다.
+- PBE 템은 역할별로 거의 같은 세트(탱커 가고일·정령의 형상·워모그 등)가 모여 있다. 자료 오류가 아니다.
+- PBE 원문 팀 플래너 번호 중 449는 그레이브즈·모데카이저·나서스가 같이 쓰는 임시 번호라 팀 코드에서 뺀다.

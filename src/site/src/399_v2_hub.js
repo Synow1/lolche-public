@@ -243,7 +243,7 @@
     if (!q) {
       spotGroup(box, "빠른 이동", [
         { badge: "19", title: "19시즌 프리즘 투어", sub: "시너지 · 7코스트 · 해금 · 스쿼드 빌더", tag: "PBE", tagCls: "cyan", go: function () { s19Jump("home"); } },
-        { badge: "19", title: "19시즌 PBE 추천 덱", sub: "롤체지지 PBE 통계 · 평균 등수·승률·추천 아이템", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("decks"); } },
+        { badge: "19", title: "19시즌 PBE 추천 덱", sub: "MetaTFT PBE 통계 · 평균 등수·승률·추천 아이템", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("decks"); } },
         { badge: "빌", title: "19시즌 스쿼드 빌더", sub: "챔피언 조합 시너지·해금 실시간 계산", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("builder"); } },
         { badge: "해", title: "19시즌 해금 조건", sub: "조건별 검색 · 암기 체크리스트", tag: "19시즌", tagCls: "cyan", go: function () { s19Jump("unlock"); } },
         { badge: "덱", title: "18시즌 메타 덱", sub: "에메+ 평균 등수 · 승률 · 선택률", tag: "라이브", tagCls: "gold", go: function () { goTab("meta"); } },
