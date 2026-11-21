@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611211626">
+<meta name="lolche-web" content="202611211637">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -746,6 +746,16 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .tr-row .t1 span { font-family: var(--mono); font-size: var(--fs-s); color: var(--muted); }
 .tr-row .t1 em { font-style: normal; font-size: var(--fs-s); color: var(--moss); }
 .tr-row .mt-strip img { width: 26px; height: 26px; }
+/* 해금 챔피언 자물쇠 (2026-11-21 사용자: "덱에 해금 챔 있으면 자물쇠 표시"). 색은 도감 '해금' 표시(.s19-lock)와 같은 분홍. 누르면 챔피언 정보에 해금 조건 */
+.lk { position: absolute; z-index: 4; width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center; background: #ff4d8d; color: #fff; box-shadow: 0 0 0 1.5px var(--bg); pointer-events: none; }
+.lk svg { width: 9px; height: 9px; fill: currentColor; display: block; }
+.uwrap { position: relative; display: inline-flex; flex: none; }
+.uwrap .lk { top: -4px; right: -4px; }
+.hxwrap .lk { top: 4%; right: 2%; }
+.dk-mc .lk { top: 1px; right: -1px; }
+.pcdk-u .lk { top: 8px; right: -2px; width: 17px; height: 17px; }
+.pcdk-u .lk svg { width: 10px; height: 10px; }
+.sh-unl { margin: 10px 0 4px; }
 /* 랭킹 */
 .tiles.rk-cut { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tiles.rk-cut .tile b { font-size: var(--fs-xl); }
@@ -3586,11 +3596,25 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   var BASIS_LABEL = { all: "플래+", emer: "에메+", dia: "다이아", top: "마스터+", gmc: "그마·챌", low: "플래 미만" };
   var mtSort = "avg";
   var STYLE_ORDER = { chromatic: 0, gold: 1, silver: 2, bronze: 3, unique: 4 };
+  // 19시즌 해금 챔피언 (2026-11-21 사용자: "덱에 해금 챔 있으면 자물쇠 표시, 누르면 해금 조건도 챔 정보에"). 해금 조건은 s19.json units[].unl
+  var UNL_IDX = null;
+  function unlockOf(name) {
+    if (!S19 || !S19.units) return null;
+    if (!UNL_IDX) { UNL_IDX = {}; S19.units.forEach(function (u) { if (u.unl) UNL_IDX[u.n.replace(/ \([^)]+\)$/, "")] = u.unl; }); }
+    return UNL_IDX[String(name || "").replace(/ \([^)]+\)$/, "")] || null;
+  }
+  function lockBadge() {
+    var s = el("span", "lk"); s.title = "해금 챔피언"; s.setAttribute("aria-label", "해금 챔피언");
+    s.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 7V5.3a3.4 3.4 0 0 1 6.8 0V7h.5c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1H4.1c-.6 0-1-.4-1-1V8c0-.6.4-1 1-1zm1.7 0h3.4V5.3a1.7 1.7 0 0 0-3.4 0z"/></svg>';
+    return s;
+  }
   function uIcon(name) {
     var u = IDX.units[name];
     if (!u) return null;
     var i = img(u.icon, name); i.dataset.c = u.cost; i.title = name; i.dataset.unit = name;
-    return i;
+    if (!unlockOf(name)) return i;
+    var w = el("span", "uwrap"); w.dataset.unit = name; w.title = name + " (해금)"; w.appendChild(i); w.appendChild(lockBadge());
+    return w;
   }
   function strip(names) {
     var s = el("div", "mt-strip");
@@ -3722,6 +3746,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     w.appendChild(hx);
     if (tier) w.appendChild(el("span", "dk-tier", tier));
     if (b.s >= 3) w.appendChild(el("b", "dk-st", "★★★"));
+    if (unlockOf(b.u)) w.appendChild(lockBadge());
     if (b.i && b.i.length) { var its = el("div", "dk-its"); b.i.forEach(function (n) { var it = IDX.items[n]; if (it) its.appendChild(img(it.icon, n)); }); w.appendChild(its); }
     return w;
   }
@@ -4195,6 +4220,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var c = el("div", "pcdk-u"); c.title = u.name + (u.s >= 3 ? " 3성" : "");
       c.appendChild(el("span", "pcdk-st", u.s >= 3 ? "★★★" : ""));
       var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[Math.min(u.c || 1, 5)] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
+      if (u.lock) { c.appendChild(lockBadge()); c.title += " · 해금 챔피언"; }
+      if (u.unit) c.dataset.unit = u.unit;
       var it = el("span", "pcdk-its");
       (u.items || []).slice(0, 3).forEach(function (x) { if (x[1]) { var im = img(x[1], x[0]); im.title = x[0]; it.appendChild(im); } });
       c.appendChild(it);
@@ -4244,7 +4271,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null].filter(Boolean) : [];
     var units = starOrder(v.board, mc && mc.u).map(function (b) {
       var ic = IDX.units[b.u] || {};
-      return { name: b.u, c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
+      return { name: b.u, unit: b.u, lock: !!unlockOf(b.u), c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
     });
     var traits = (v.syn || []).filter(function (s) { return s.style !== "unique"; }).slice(0, 8).map(function (s) { return { t: s.t, n: s.n, style: s.style, img: IDX.traits[s.t] }; });
     var stats = bs ? [["평균 등수", bs[0].toFixed(2), dkAvgT(bs[0])], ["선택률", pl != null ? pl : "-", pl != null ? "pick" : null], ["승률", bs[2].toFixed(1) + "%", dkWinT(bs[2])], ["순방률", bs[1] + "%", dkTop4T(bs[1])]]
@@ -4342,6 +4369,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
           hx.dataset.c = cost;
           if (ic) inner.appendChild(img(ic.icon, u.u));
           cellw.title = u.u; if (!u.plant) cellw.dataset.unit = u.u;
+          if (!u.plant && unlockOf(u.u)) cellw.appendChild(lockBadge());
           if (u.s >= 2) cellw.appendChild(el("div", "st", "★".repeat(u.s)));
           cellw.appendChild(el("div", "hxn" + (u.i && u.i.length ? " lift" : ""), u.u.replace(/ /g, "")));
           if (u.i && u.i.length) {
@@ -8233,7 +8261,11 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
   function s19Load() {
     if (S19) return Promise.resolve(S19);
-    return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) { S19 = d; s19LiveLoad(); if (typeof homeRender === "function") homeRender(); return d; });
+    return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) {
+      S19 = d; UNL_IDX = null; s19LiveLoad(); if (typeof homeRender === "function") homeRender();
+      if (META && metaReady) metaList();  // 덱 줄에 해금 자물쇠를 붙이려고 다시 그림
+      return d;
+    });
   }
   function s19Jump(view, opts) {
     if (view === "decks") { goTab("meta"); return; }
@@ -8355,6 +8387,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
             cellw.style.cursor = "pointer";
             (function (unitObj) { cellw.addEventListener("click", function () { s19OpenUnit(unitObj); }); })(u);
             if (x.s >= 3) cellw.appendChild(el("div", "st", "★★★"));
+            if (u.unl) cellw.appendChild(lockBadge());
             cellw.appendChild(el("div", "hxn" + (x.i && x.i.length ? " lift" : ""), u.n.replace(/ \([^)]+\)$/, "").replace(/ /g, "")));
             if (x.i && x.i.length) {
               var its = el("div", "its");
@@ -8393,6 +8426,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     }
     w.appendChild(hx);
     if (mcEntry && mcEntry.s >= 3) w.appendChild(el("b", "dk-st", "★★★"));
+    if (mcu && mcu.unl) w.appendChild(lockBadge());
     if (mcEntry && mcEntry.i && mcEntry.i.length) {
       var its = el("div", "dk-its");
       mcEntry.i.slice(0, 3).forEach(function (inm) { var src = s19ItemImg(inm); if (src) its.appendChild(img(src, inm)); });
@@ -8415,7 +8449,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var u = s19Unit(x.k); if (!u || !u.img) return;
       var im2 = img(u.img, u.n); im2.loading = "lazy"; im2.className = "c" + (u.c === 7 ? 5 : u.c);
       if (u.c === 7) im2.classList.add("c7");
-      st.appendChild(im2);
+      if (u.unl) { var uw = el("span", "uwrap"); uw.title = u.n + " (해금)"; uw.appendChild(im2); uw.appendChild(lockBadge()); st.appendChild(uw); }
+      else st.appendChild(im2);
     });
     mid.appendChild(st); r.appendChild(mid);
     var num = el("div", "mt-num dk-kpi2");
@@ -8468,7 +8503,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       f.forEach(function (d) {
         var units = d.u.slice().sort(function (a, b) { return (a.k === d.mc ? -9 : 0) - (b.k === d.mc ? -9 : 0) || (b.i || []).length - (a.i || []).length || (b.s || 0) - (a.s || 0); }).map(function (x) {
           var u = s19Unit(x.k) || { n: x.k, c: 1 };
-          return { name: u.n, c: u.c === 7 ? 5 : u.c, s: x.s, img: u.img, items: (x.i || []).map(function (n) { return [n, s19ItemImg(n)]; }) };
+          return { name: u.n, lock: !!u.unl, c: u.c === 7 ? 5 : u.c, s: x.s, img: u.img, items: (x.i || []).map(function (n) { return [n, s19ItemImg(n)]; }) };
         });
         var traits = (d.t || []).filter(function (x) { return x[2] !== 6; }).slice(0, 8).map(function (x) { var t = s19Trait(x[0]); return { t: x[0], n: x[1], style: PC_TR[x[2]] || "bronze", img: t && t.img }; });
         var nm = el("div", "mt-name", d.n);
@@ -9437,9 +9472,17 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     ((u && u.traits) || []).forEach(function (t) { sub.appendChild(traitChip(t)); });
     var box = el("div");
     box.appendChild(shHead(ic && ic.icon, cost, base, sub));
+    // 해금 챔피언이면 조건부터 (2026-11-21 사용자: "누르면 해금 조건도 챔 정보에"). 도감 챔피언 화면과 같은 상자
+    var unl = unlockOf(base);
+    if (unl) {
+      var ub = el("div", "note gold s19-unl sh-unl"); ub.appendChild(el("b", null, "해금 조건" + (unl.lv ? " · " + unl.lv + "레벨부터" : "")));
+      unl.c.forEach(function (c, i) { ub.appendChild(el("p", null, (unl.c.length > 1 ? (i ? "또는 " : "") : "") + c)); });
+      box.appendChild(ub);
+    }
     if (u) {
       var tiles = el("div", "sh-kv");
-      [["에메+ 평균", u.meta.base], ["그마+", u.meta.gm], ["2성", u.stars["2"] && u.stars["2"].avg], ["3성", u.stars["3"] && u.stars["3"].avg]].forEach(function (k) {
+      // PBE는 티어 구분이 없어 '에메+·그마+'가 같은 숫자 -> 'PBE 평균' 하나로
+      (META && META.pbe ? [["PBE 평균", u.meta.base]] : [["에메+ 평균", u.meta.base], ["그마+", u.meta.gm]]).concat([["2성", u.stars["2"] && u.stars["2"].avg], ["3성", u.stars["3"] && u.stars["3"].avg]]).forEach(function (k) {
         if (k[1] == null) return;
         var sp = el("span", null, k[0]); sp.appendChild(el("b", null, Number(k[1]).toFixed(2))); tiles.appendChild(sp);
       });
@@ -9453,7 +9496,10 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         box.appendChild(s1);
       }
       if (u.skill && u.skill.desc) {
-        var s2 = shSec("스킬: " + u.skill.name);
+        // PBE 원문은 스킬 이름이 영어로 오는 챔피언이 있어 19시즌 도감(s19.json)의 한국어 이름을 먼저
+        var s19u = S19 && S19.units && S19.units.filter(function (x) { return x.n.replace(/ \([^)]+\)$/, "") === base; })[0];
+        var skn = s19u && s19u.sk && /[가-힣]/.test(s19u.sk.n || "") ? s19u.sk.n : u.skill.name;
+        var s2 = shSec("스킬: " + skn);
         s2.appendChild(el("p", "sh-text", u.skill.desc));
         s2.appendChild(el("p", "fnote", u.stats));
         box.appendChild(s2);

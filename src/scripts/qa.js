@@ -252,6 +252,20 @@ function fresh(file, key, hours) {
     if (JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).pbe && await q(() => /티어별 평균|에메\+ 평균|플래\+ /.test(document.getElementById('mt-detail').innerText))) fail('덱 상세: PBE인데 티어 기준(에메+·플래+·티어별 평균)이 나옴 (PBE는 티어 구분 없음)');
     { const wrap = await q(() => [...document.querySelectorAll('#mt-detail .dk-kpi > div')].filter(x => { const b = x.querySelector('b'), sp = x.querySelector('span'); const lh = (e) => parseFloat(getComputedStyle(e).lineHeight) || parseFloat(getComputedStyle(e).fontSize) * 1.3; return (b && b.getBoundingClientRect().height > lh(b) * 1.5) || (sp && sp.getBoundingClientRect().height > lh(sp) * 1.5); }).map(x => x.textContent));
       if (wrap && wrap.length) fail(`[${W}] 덱 상세: 숫자 칸 글자가 두 줄로 꺾임 (${wrap.join(' / ')})`); }
+    // 해금 챔피언 자물쇠 + 누르면 해금 조건 (2026-11-21 사용자: "덱에 해금 챔 있으면 자물쇠, 누르면 해금 조건도 챔 정보에")
+    if (JSON.parse(fs.readFileSync(path.join(SITE, 's19.json'), 'utf8')).units.some(u => u.unl) && JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).pbe) {
+      await go('meta'); await pg.waitForTimeout(500);
+      const lkRow = await q(() => [...document.querySelectorAll('#mt-rows .mt-row')].findIndex(r => r.querySelector('.lk')));
+      if (lkRow < 0) fail('덱 줄: 해금 챔피언 자물쇠가 하나도 없음');
+      else {
+        await q((i) => document.querySelectorAll('#mt-rows .mt-row')[i].click(), lkRow); await pg.waitForTimeout(600);
+        await q(() => { const c = [...document.querySelectorAll('#mt-detail .hexboard .hxwrap')].find(w => w.querySelector('.lk')); if (c) c.click(); }); await pg.waitForTimeout(600);
+        const unl = await q(() => (document.querySelector('.sh-unl') || {}).innerText || '');
+        if (!/해금 조건/.test(unl || '')) fail('덱 상세: 자물쇠 챔피언을 눌러도 챔피언 정보에 해금 조건이 없음');
+        await q(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))); await pg.waitForTimeout(300);
+        await q(() => document.querySelector('#mt-detail .back')?.click()); await pg.waitForTimeout(300);
+      }
+    }
     }
     if (['items'].some(need)) {
     await go('items'); await pg.waitForTimeout(600);
@@ -873,6 +887,7 @@ function fresh(file, key, hours) {
         clip: r.filter(x => { const b = x.querySelector('.pcdk-units'), l = b && b.lastElementChild; return l && l.getBoundingClientRect().right > b.getBoundingClientRect().right + 1; }).length }; });
       if (mt2.n < 15 || mt2.units < 5 || mt2.stats !== '평균 등수,선택률,승률,순방률') fail(`[WEB/1280] 메타 덱: PC 줄 모양이 아님 (${JSON.stringify(mt2)})`);
       if (mt2.clip) fail(`[WEB/1280] 메타 덱: 챔피언이 줄 밖으로 잘린 줄 ${mt2.clip}개`);
+      if (JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).pbe && !(await pg.evaluate(() => document.querySelectorAll('#mt-rows .pcdk .lk').length))) fail('[WEB/1280] 메타 덱: PC 줄에 해금 챔피언 자물쇠가 없음');
       // 숫자 4칸 색 (2026-11-21 사용자: "덱탭 색깔도 칠해줘, 평등이랑"): 값마다 색이 달라야 (흰 글자 그대로면 실패)
       const mtCol = await pg.evaluate(() => { const f = document.querySelector('#mt-rows .pcdk'); if (!f) return null; const bs = [...f.querySelectorAll('.pcdk-stats b')], ink = getComputedStyle(f.querySelector('.pcdk-name .mt-name')).color;
         return { graded: bs.filter(x => x.classList.contains('dk-grad')).length, plain: bs.filter(x => getComputedStyle(x).color === ink).length }; });

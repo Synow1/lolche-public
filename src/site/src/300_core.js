@@ -460,11 +460,25 @@
   var BASIS_LABEL = { all: "플래+", emer: "에메+", dia: "다이아", top: "마스터+", gmc: "그마·챌", low: "플래 미만" };
   var mtSort = "avg";
   var STYLE_ORDER = { chromatic: 0, gold: 1, silver: 2, bronze: 3, unique: 4 };
+  // 19시즌 해금 챔피언 (2026-11-21 사용자: "덱에 해금 챔 있으면 자물쇠 표시, 누르면 해금 조건도 챔 정보에"). 해금 조건은 s19.json units[].unl
+  var UNL_IDX = null;
+  function unlockOf(name) {
+    if (!S19 || !S19.units) return null;
+    if (!UNL_IDX) { UNL_IDX = {}; S19.units.forEach(function (u) { if (u.unl) UNL_IDX[u.n.replace(/ \([^)]+\)$/, "")] = u.unl; }); }
+    return UNL_IDX[String(name || "").replace(/ \([^)]+\)$/, "")] || null;
+  }
+  function lockBadge() {
+    var s = el("span", "lk"); s.title = "해금 챔피언"; s.setAttribute("aria-label", "해금 챔피언");
+    s.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 7V5.3a3.4 3.4 0 0 1 6.8 0V7h.5c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1H4.1c-.6 0-1-.4-1-1V8c0-.6.4-1 1-1zm1.7 0h3.4V5.3a1.7 1.7 0 0 0-3.4 0z"/></svg>';
+    return s;
+  }
   function uIcon(name) {
     var u = IDX.units[name];
     if (!u) return null;
     var i = img(u.icon, name); i.dataset.c = u.cost; i.title = name; i.dataset.unit = name;
-    return i;
+    if (!unlockOf(name)) return i;
+    var w = el("span", "uwrap"); w.dataset.unit = name; w.title = name + " (해금)"; w.appendChild(i); w.appendChild(lockBadge());
+    return w;
   }
   function strip(names) {
     var s = el("div", "mt-strip");
@@ -596,6 +610,7 @@
     w.appendChild(hx);
     if (tier) w.appendChild(el("span", "dk-tier", tier));
     if (b.s >= 3) w.appendChild(el("b", "dk-st", "★★★"));
+    if (unlockOf(b.u)) w.appendChild(lockBadge());
     if (b.i && b.i.length) { var its = el("div", "dk-its"); b.i.forEach(function (n) { var it = IDX.items[n]; if (it) its.appendChild(img(it.icon, n)); }); w.appendChild(its); }
     return w;
   }

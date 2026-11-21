@@ -513,3 +513,13 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .tr-row .t1 span { font-family: var(--mono); font-size: var(--fs-s); color: var(--muted); }
 .tr-row .t1 em { font-style: normal; font-size: var(--fs-s); color: var(--moss); }
 .tr-row .mt-strip img { width: 26px; height: 26px; }
+/* 해금 챔피언 자물쇠 (2026-11-21 사용자: "덱에 해금 챔 있으면 자물쇠 표시"). 색은 도감 '해금' 표시(.s19-lock)와 같은 분홍. 누르면 챔피언 정보에 해금 조건 */
+.lk { position: absolute; z-index: 4; width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center; background: #ff4d8d; color: #fff; box-shadow: 0 0 0 1.5px var(--bg); pointer-events: none; }
+.lk svg { width: 9px; height: 9px; fill: currentColor; display: block; }
+.uwrap { position: relative; display: inline-flex; flex: none; }
+.uwrap .lk { top: -4px; right: -4px; }
+.hxwrap .lk { top: 4%; right: 2%; }
+.dk-mc .lk { top: 1px; right: -1px; }
+.pcdk-u .lk { top: 8px; right: -2px; width: 17px; height: 17px; }
+.pcdk-u .lk svg { width: 10px; height: 10px; }
+.sh-unl { margin: 10px 0 4px; }

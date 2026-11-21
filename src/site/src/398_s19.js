@@ -42,7 +42,11 @@
   }
   function s19Load() {
     if (S19) return Promise.resolve(S19);
-    return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) { S19 = d; s19LiveLoad(); if (typeof homeRender === "function") homeRender(); return d; });
+    return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) {
+      S19 = d; UNL_IDX = null; s19LiveLoad(); if (typeof homeRender === "function") homeRender();
+      if (META && metaReady) metaList();  // 덱 줄에 해금 자물쇠를 붙이려고 다시 그림
+      return d;
+    });
   }
   function s19Jump(view, opts) {
     if (view === "decks") { goTab("meta"); return; }
@@ -164,6 +168,7 @@
             cellw.style.cursor = "pointer";
             (function (unitObj) { cellw.addEventListener("click", function () { s19OpenUnit(unitObj); }); })(u);
             if (x.s >= 3) cellw.appendChild(el("div", "st", "★★★"));
+            if (u.unl) cellw.appendChild(lockBadge());
             cellw.appendChild(el("div", "hxn" + (x.i && x.i.length ? " lift" : ""), u.n.replace(/ \([^)]+\)$/, "").replace(/ /g, "")));
             if (x.i && x.i.length) {
               var its = el("div", "its");
@@ -202,6 +207,7 @@
     }
     w.appendChild(hx);
     if (mcEntry && mcEntry.s >= 3) w.appendChild(el("b", "dk-st", "★★★"));
+    if (mcu && mcu.unl) w.appendChild(lockBadge());
     if (mcEntry && mcEntry.i && mcEntry.i.length) {
       var its = el("div", "dk-its");
       mcEntry.i.slice(0, 3).forEach(function (inm) { var src = s19ItemImg(inm); if (src) its.appendChild(img(src, inm)); });
@@ -224,7 +230,8 @@
       var u = s19Unit(x.k); if (!u || !u.img) return;
       var im2 = img(u.img, u.n); im2.loading = "lazy"; im2.className = "c" + (u.c === 7 ? 5 : u.c);
       if (u.c === 7) im2.classList.add("c7");
-      st.appendChild(im2);
+      if (u.unl) { var uw = el("span", "uwrap"); uw.title = u.n + " (해금)"; uw.appendChild(im2); uw.appendChild(lockBadge()); st.appendChild(uw); }
+      else st.appendChild(im2);
     });
     mid.appendChild(st); r.appendChild(mid);
     var num = el("div", "mt-num dk-kpi2");
@@ -277,7 +284,7 @@
       f.forEach(function (d) {
         var units = d.u.slice().sort(function (a, b) { return (a.k === d.mc ? -9 : 0) - (b.k === d.mc ? -9 : 0) || (b.i || []).length - (a.i || []).length || (b.s || 0) - (a.s || 0); }).map(function (x) {
           var u = s19Unit(x.k) || { n: x.k, c: 1 };
-          return { name: u.n, c: u.c === 7 ? 5 : u.c, s: x.s, img: u.img, items: (x.i || []).map(function (n) { return [n, s19ItemImg(n)]; }) };
+          return { name: u.n, lock: !!u.unl, c: u.c === 7 ? 5 : u.c, s: x.s, img: u.img, items: (x.i || []).map(function (n) { return [n, s19ItemImg(n)]; }) };
         });
         var traits = (d.t || []).filter(function (x) { return x[2] !== 6; }).slice(0, 8).map(function (x) { var t = s19Trait(x[0]); return { t: x[0], n: x[1], style: PC_TR[x[2]] || "bronze", img: t && t.img }; });
         var nm = el("div", "mt-name", d.n);

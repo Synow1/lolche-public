@@ -45,6 +45,8 @@
       var c = el("div", "pcdk-u"); c.title = u.name + (u.s >= 3 ? " 3성" : "");
       c.appendChild(el("span", "pcdk-st", u.s >= 3 ? "★★★" : ""));
       var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[Math.min(u.c || 1, 5)] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
+      if (u.lock) { c.appendChild(lockBadge()); c.title += " · 해금 챔피언"; }
+      if (u.unit) c.dataset.unit = u.unit;
       var it = el("span", "pcdk-its");
       (u.items || []).slice(0, 3).forEach(function (x) { if (x[1]) { var im = img(x[1], x[0]); im.title = x[0]; it.appendChild(im); } });
       c.appendChild(it);
@@ -94,7 +96,7 @@
       d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null].filter(Boolean) : [];
     var units = starOrder(v.board, mc && mc.u).map(function (b) {
       var ic = IDX.units[b.u] || {};
-      return { name: b.u, c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
+      return { name: b.u, unit: b.u, lock: !!unlockOf(b.u), c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
     });
     var traits = (v.syn || []).filter(function (s) { return s.style !== "unique"; }).slice(0, 8).map(function (s) { return { t: s.t, n: s.n, style: s.style, img: IDX.traits[s.t] }; });
     var stats = bs ? [["평균 등수", bs[0].toFixed(2), dkAvgT(bs[0])], ["선택률", pl != null ? pl : "-", pl != null ? "pick" : null], ["승률", bs[2].toFixed(1) + "%", dkWinT(bs[2])], ["순방률", bs[1] + "%", dkTop4T(bs[1])]]
@@ -192,6 +194,7 @@
           hx.dataset.c = cost;
           if (ic) inner.appendChild(img(ic.icon, u.u));
           cellw.title = u.u; if (!u.plant) cellw.dataset.unit = u.u;
+          if (!u.plant && unlockOf(u.u)) cellw.appendChild(lockBadge());
           if (u.s >= 2) cellw.appendChild(el("div", "st", "★".repeat(u.s)));
           cellw.appendChild(el("div", "hxn" + (u.i && u.i.length ? " lift" : ""), u.u.replace(/ /g, "")));
           if (u.i && u.i.length) {

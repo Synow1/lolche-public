@@ -121,9 +121,17 @@
     ((u && u.traits) || []).forEach(function (t) { sub.appendChild(traitChip(t)); });
     var box = el("div");
     box.appendChild(shHead(ic && ic.icon, cost, base, sub));
+    // 해금 챔피언이면 조건부터 (2026-11-21 사용자: "누르면 해금 조건도 챔 정보에"). 도감 챔피언 화면과 같은 상자
+    var unl = unlockOf(base);
+    if (unl) {
+      var ub = el("div", "note gold s19-unl sh-unl"); ub.appendChild(el("b", null, "해금 조건" + (unl.lv ? " · " + unl.lv + "레벨부터" : "")));
+      unl.c.forEach(function (c, i) { ub.appendChild(el("p", null, (unl.c.length > 1 ? (i ? "또는 " : "") : "") + c)); });
+      box.appendChild(ub);
+    }
     if (u) {
       var tiles = el("div", "sh-kv");
-      [["에메+ 평균", u.meta.base], ["그마+", u.meta.gm], ["2성", u.stars["2"] && u.stars["2"].avg], ["3성", u.stars["3"] && u.stars["3"].avg]].forEach(function (k) {
+      // PBE는 티어 구분이 없어 '에메+·그마+'가 같은 숫자 -> 'PBE 평균' 하나로
+      (META && META.pbe ? [["PBE 평균", u.meta.base]] : [["에메+ 평균", u.meta.base], ["그마+", u.meta.gm]]).concat([["2성", u.stars["2"] && u.stars["2"].avg], ["3성", u.stars["3"] && u.stars["3"].avg]]).forEach(function (k) {
         if (k[1] == null) return;
         var sp = el("span", null, k[0]); sp.appendChild(el("b", null, Number(k[1]).toFixed(2))); tiles.appendChild(sp);
       });
@@ -137,7 +145,10 @@
         box.appendChild(s1);
       }
       if (u.skill && u.skill.desc) {
-        var s2 = shSec("스킬: " + u.skill.name);
+        // PBE 원문은 스킬 이름이 영어로 오는 챔피언이 있어 19시즌 도감(s19.json)의 한국어 이름을 먼저
+        var s19u = S19 && S19.units && S19.units.filter(function (x) { return x.n.replace(/ \([^)]+\)$/, "") === base; })[0];
+        var skn = s19u && s19u.sk && /[가-힣]/.test(s19u.sk.n || "") ? s19u.sk.n : u.skill.name;
+        var s2 = shSec("스킬: " + skn);
         s2.appendChild(el("p", "sh-text", u.skill.desc));
         s2.appendChild(el("p", "fnote", u.stats));
         box.appendChild(s2);
