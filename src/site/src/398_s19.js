@@ -141,6 +141,14 @@
 
   // 19시즌 PBE 추천 덱 행 & 상세 (롤체지지 추천 가이드 배치 + PBE 메타 통계)
   var s19CurDeck = "";
+  // 19시즌 팀 플래너 코드: "02" + 칸 번호 10개(3자리, 빈칸 000) + "TFTSet19" (덱 탭 codeOfNames와 같은 틀)
+  function s19CodeOf(keys) {
+    var cs = [];
+    keys.forEach(function (k) { var u = s19Unit(k); if (u && u.tp && cs.indexOf(u.tp) < 0 && cs.length < 10) cs.push(u.tp); });
+    if (!cs.length) return null;
+    while (cs.length < 10) cs.push("000");
+    return "02" + cs.join("") + "TFTSet19";
+  }
   function s19DeckKey(d) { return (d.n || "") + "|" + (d.mc || ""); }
   function s19DeckRow(d, sortBy, onPick) {
     var mcEntry = d.u.filter(function (x) { return x.k === d.mc; })[0] || d.u[0];
@@ -262,6 +270,13 @@
       bc.appendChild(el("h3", null, "추천 배치"));
       bc.appendChild(s19HexBoard(d.u));
       b.appendChild(bc);
+    }
+    // 팀 코드 복사 (2026-11-21 사용자: "19시즌 덱들도 팀코드 복사 해줘야지"). 19시즌 팀 플래너에 붙여넣는 코드라 PBE·19시즌 시작 뒤에 쓸 수 있다
+    var code = s19CodeOf(d.u.map(function (x) { return x.k; }));
+    if (code) {
+      var cb = codeButton(code, "팀 코드 복사", "codebtn big s19-code"); b.appendChild(cb);
+      var miss = d.u.filter(function (x) { var u = s19Unit(x.k); return u && !u.tp; }).map(function (x) { return s19Unit(x.k).n; });
+      b.appendChild(el("p", "s19-codenote", "19시즌 팀 플래너용 코드예요" + (miss.length ? ". " + miss.join(", ") + "의 코드는 아직 PBE에 없어서 빠져요" : "")));
     }
     var loadBtn = el("button", "s19-sqact on", "19시즌 스쿼드 빌더로 불러오기"); loadBtn.type = "button";
     loadBtn.addEventListener("click", function () {
@@ -541,6 +556,8 @@
     hd.appendChild(el("b", null, "내 19시즌 스쿼드 " + s19Sq.length + "/10"));
     var clr = el("button", "s19-bclr", "초기화"); clr.type = "button"; clr.disabled = !s19Sq.length;
     clr.addEventListener("click", function () { s19Sq = []; s19SqSave(); s19Render(); });
+    var sqCode = s19CodeOf(s19Sq);
+    if (sqCode) hd.appendChild(codeButton(sqCode, "팀 코드"));
     hd.appendChild(clr); top.appendChild(hd);
     var slots = el("div", "s19-bslots");
     for (var i = 0; i < 10; i++) {

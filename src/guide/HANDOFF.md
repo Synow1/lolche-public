@@ -13,7 +13,7 @@
 - **v1.66.0 디자인 v3 (제미나이, 커밋 7fdd8e9)**: 바탕·목록·핵심 카드 밝기 3단계, 평균 등수·순방률 2축 색, 덱 줄 상단 메타 + 2단 KPI, 오버레이 컴팩트, `scripts/qa.js` CSS 미정의 변수 검사.
 - v1.65.0: 분할 OTA(data.zip·assets.zip), NATIVE 12, proxy 리다이렉트 홉마다 허용 검사, 덱파워 Python-JS 일치 검사(`check_power_parity.js`), lolche-public `src/`에 협업용 소스 사본.
 - v1.64.0: 19시즌 프리즘 투어 미리보기 탭(`#s19`, PBE).
-- **역할**: 클로드 = 매일 점검·데이터·19시즌 PBE·대회·번역·패치 노트·전적 코칭. 제미나이 = 큰 UI/UX 개편·기능·리팩토링. 둘 다 `main`에 직접 푸시.
+- **역할 (2026-11-21부터)**: 클로드·제미나이 둘 다 디자인·구조·기능·데이터를 모두 한다 (정해진 몫 없음). 매일 점검·전적 코칭은 클로드 세션이 돌린다. 둘 다 `main`에 직접 푸시.
 
 ## 1. 새 세션에서 맨 처음 할 일
 1. `git checkout main && git pull --ff-only origin main` (작업·예약 루틴마다 먼저. 끝나면 `git push origin main`, 거절되면 다시 pull 후 점검·푸시. force push 금지)

@@ -562,6 +562,9 @@ function fresh(file, key, hours) {
     if (/\{Set19|%i:|<TFT|TFTCurveTable/.test(raw)) fail('19시즌: 원문 틀(<TFT…>·{Set19…}·%i:)이 글에 그대로 남음');
     if (S.units.some(u => !u.img)) fail('19시즌: 아이콘 없는 챔피언 ' + S.units.filter(u => !u.img).map(u => u.n).slice(0, 3).join(', '));
     const dup = S.units.map(u => u.n).filter((n, i, a) => a.indexOf(n) !== i); if (dup.length) fail('19시즌: 같은 이름 챔피언이 둘 ' + dup.join(', '));
+    const tps = S.units.map(u => u.tp).filter(Boolean), tpDup = tps.filter((c, i) => tps.indexOf(c) !== i);
+    if (tps.length < S.units.length * 0.8) fail(`19시즌: 팀 플래너 코드 있는 챔피언이 적음 (${tps.length}/${S.units.length})`);
+    if (tpDup.length) fail('19시즌: 팀 플래너 코드가 겹침 ' + tpDup.join(', '));
     const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     await pg.route('https://lolche.local/**', async (r) => { const u = new URL(r.request().url());
@@ -583,6 +586,9 @@ function fresh(file, key, hours) {
     await pg.evaluate(() => document.querySelector('#s19-out .mt-row.dk')?.click()); await pg.waitForTimeout(400);
     const s19d = await pg.evaluate(() => ({ u: document.querySelectorAll('.fs-view .s19-dk-u').length, hex: document.querySelectorAll('.fs-view .s19-hex .hx img').length }));
     if (s19d.u < 5 || s19d.hex < 5) fail(`19시즌 추천 덱: 상세 배치(${s19d.hex}) 또는 챔피언(${s19d.u})이 안 열림`);
+    // 19시즌 덱 팀 코드 복사 (2026-11-21 사용자 요청): 02 + 칸 번호 10개 + TFTSet19
+    const s19code = await pg.evaluate(() => (document.querySelector('.fs-view .s19-code') || {}).title || '');
+    if (!/^02([0-9a-f]{3}){10}TFTSet19$/.test(s19code) || /^02(000)+/.test(s19code)) fail(`19시즌 추천 덱: 팀 코드 복사 버튼이 없거나 코드 모양이 틀림 (${s19code})`);
     await pg.evaluate(() => document.querySelector('.fs-view .s19-sqact')?.click()); await pg.waitForTimeout(500);
     const afterLoad = await pg.evaluate(() => ({ fs: !!document.querySelector('.fs-view'), on: document.querySelector('#s19-view button.on')?.dataset.v, slots: document.querySelectorAll('#s19-out .s19-bslot.full').length }));
     if (afterLoad.fs || afterLoad.on !== 'builder' || afterLoad.slots < 5) fail(`19시즌 빌더 불러오기: fs=${afterLoad.fs} tab=${afterLoad.on} slots=${afterLoad.slots}`);
@@ -714,7 +720,7 @@ function fresh(file, key, hours) {
         const r = await pg.evaluate(() => {
           const sec = document.querySelector('section:not([hidden])'), o = { sw: document.documentElement.scrollWidth, broken: [], hid: [], tiny: [], text: sec ? sec.innerText.length : 0 };
           if (!sec) return o;
-          const SKIP_FS = '.sr-title, .hxn, .st, .dk-st, .tfa-u3 b, .s19-lock, .s19-bslot .x, svg, svg *';
+          const SKIP_FS = '.sr-title, .st, .dk-st, .tfa-u3 b, .s19-lock, .s19-bslot .x, svg, svg *';
           sec.querySelectorAll('*').forEach(e => {
             if (e.hasAttribute('hidden') && getComputedStyle(e).display !== 'none') o.hid.push(e.id || e.className);
             if (!e.closest('[hidden]') && !e.matches(SKIP_FS) && !e.closest(SKIP_FS)) {
@@ -767,6 +773,16 @@ function fresh(file, key, hours) {
       await pg.evaluate(() => document.querySelectorAll('#mt-rows .mt-row')[1]?.click()); await pg.waitForTimeout(400);
       const mt2b = await pg.evaluate(() => ({ lVis: !document.getElementById('mt-list-view').hidden, t1: (document.querySelector('#mt-detail .dk-hero h3') || {}).textContent || '' }));
       if (!mt2b.lVis || !mt2b.t1 || mt2b.t1 === mt2.t0) fail('[WEB/1280] 메타 덱 2단: 다른 덱을 눌러도 상세가 안 바뀌거나 목록이 숨겨짐');
+      // v2.3.2 PC 가독성: 덱 줄 챔피언 아이콘이 줄 밖으로 잘리지 않는지(8명 덱), 배치판 이름 12px·별 11px 이상, 스크롤바가 얇은 막대인지
+      const pcr = await pg.evaluate(() => {
+        const clip = [], small = [];
+        document.querySelectorAll('#meta .dk .mt-strip').forEach(s => { const r = s.getBoundingClientRect(), l = s.lastElementChild; if (r.width && l && l.getBoundingClientRect().right > r.right + 0.5) clip.push((s.closest('.dk').querySelector('.mt-name') || {}).textContent); });
+        document.querySelectorAll('#meta .hxn, #meta .hxwrap .st, #meta .dk-st, #meta .tfa-u3 b').forEach(e => { const f = parseFloat(getComputedStyle(e).fontSize), min = e.classList.contains('hxn') ? 12 : 11; if (e.offsetParent && f < min) small.push(e.className + ' ' + f + 'px'); });
+        return { clip, small, sb: getComputedStyle(document.documentElement).scrollbarWidth };
+      });
+      if (pcr.clip.length) fail(`[WEB/1280] 덱 줄 챔피언 아이콘이 잘림: ${pcr.clip.slice(0, 3).join(', ')}`);
+      if (pcr.small.length) fail(`[WEB/1280] 배치판 이름·별 글자가 작음: ${[...new Set(pcr.small)].slice(0, 3).join(', ')}`);
+      if (pcr.sb !== 'thin') fail(`[WEB/1280] 스크롤바가 기본 굵은 막대 (scrollbar-width=${pcr.sb})`);
       await pg.evaluate(() => document.getElementById('mt-upd-btn')?.click()); await pg.waitForTimeout(3500);
       if (!directHosts.has('api-hc.metatft.com')) fail('[WEB/1280] 덱 새로고침: api-hc.metatft.com 직접 fetch가 일어나지 않음');
 

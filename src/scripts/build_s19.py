@@ -166,6 +166,13 @@ def main():
                        "img": icon("traits", "t", t["apiName"])})
 
     # 유닛
+    # 팀 플래너 칸 번호 (덱 '팀 코드 복사'). PBE 원문은 새 유닛 여럿이 같은 번호(예: 449)를 임시로 나눠 쓰니, 다른 유닛과 겹치는 번호는 버린다
+    code_names = {}
+    for u in mk["units"]:
+        if u.get("code"): code_names.setdefault(u["code"], set()).add(re.sub(r"^(TFT\d+_|DA_)|19$", "", u.get("characterName") or u["apiName"]).lower())
+    def tp_code(u):
+        c = u.get("code") or ""
+        return c if re.fullmatch(r"[0-9a-f]{3}", c) and len(code_names.get(c, ())) == 1 else ""
     units = []
     for u in mk["units"]:
         if not u.get("traits") or (u.get("cost") or 0) < 1: continue
@@ -202,7 +209,7 @@ def main():
                       "st": {"hp": st.get("hp"), "ad": dmg[:3] or st.get("damage"), "as": st.get("attackSpeed"), "ar": st.get("armor"),
                              "mr": st.get("magicResist"), "rng": st.get("range"), "m0": st.get("initialMana"), "m": st.get("mana")},
                       "sk": {"n": sk_name, "d": sk_desc, "l": lines, "img": icon("abilities", "s", ab.get("icon") or "")},
-                      "unl": unl, "pool": u.get("poolCount"), "img": icon("champions", "u", u["apiName"])})
+                      "unl": unl, "pool": u.get("poolCount"), "tp": tp_code(u), "img": icon("champions", "u", u["apiName"])})
     units.sort(key=lambda x: (x["c"], x["n"]))
     from collections import Counter
     dup = Counter(u["n"] for u in units)

@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611202352">
+<meta name="lolche-web" content="202611210011">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -1602,6 +1602,8 @@ body.dc-open { overflow: hidden; }
 .s19-ucm .s19-skn { color: var(--ink); opacity: .75; }
 .s19-uc .s19-lock { top: 6px; right: 6px; }
 .s19-uhead { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; margin-bottom: 12px; }
+.codebtn.big.s19-code { margin: 0 0 4px; }
+.s19-codenote { margin: 0 2px 10px; font-size: var(--fs-xs); color: var(--muted); }
 .s19-sqact { width: 100%; font: inherit; font-size: var(--fs-b); font-weight: 800; padding: 10px 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--border-elev2); background: var(--elev2); color: var(--accent2); cursor: pointer; }
 .s19-sqact.on { background: var(--accent2-soft); border-color: color-mix(in srgb, var(--accent2) 40%, transparent); }
 .s19-unl { margin-bottom: 10px; } .s19-unl p { margin: 4px 0 0; }
@@ -1624,7 +1626,7 @@ body.dc-open { overflow: hidden; }
 /* 19시즌 스쿼드 빌더 */
 .s19-bcard { background: var(--elev2); border: 1px solid var(--border-elev2); border-radius: var(--r-card); padding: 13px 14px; margin-bottom: 12px; box-shadow: var(--shadow); }
 .s19-bhd { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-.s19-bhd b { font-size: var(--fs-b); font-weight: 800; }
+.s19-bhd b { flex: 1; font-size: var(--fs-b); font-weight: 800; }
 .s19-bclr { font: inherit; font-size: var(--fs-s); font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--muted); cursor: pointer; }
 .s19-bclr:disabled { opacity: .45; cursor: default; }
 .s19-bslots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
@@ -2110,6 +2112,28 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 }
 
 /* 대형 모니터 (1600px 이상): 본문 폭 1440px 확장 + 여유로운 멀티컬럼 */
+/* PC 가독성 2 (v2.3.2): 배치판 이름 12px·별 11px(세 개가 아이콘 폭 안에 들게), 덱 줄 아이콘은 줄 폭에 맞춰 줄여 잘리지 않게 */
+@media (min-width: 1024px) {
+  body:not(.overlay) .hxn { font-size: 12px; letter-spacing: -.2px; }
+  body:not(.overlay) .hxwrap .st { font-size: 11px; letter-spacing: -2px; top: -4px; }
+  body:not(.overlay) .dk-st { font-size: 11px; letter-spacing: -2px; top: -9px; }
+  body:not(.overlay) .tfa-u3 b { font-size: 11px; letter-spacing: -2px; top: -12px; }
+  body:not(.overlay) .dk .mt-strip { -webkit-mask-image: none; mask-image: none; padding-top: 6px; }
+  body:not(.overlay) .dk .mt-strip.tfa-strip { padding-top: 13px; }
+  body:not(.overlay) .dk .mt-strip > img,
+  body:not(.overlay) .dk .mt-strip > .tfa-u3 { flex: 0 1 30px; min-width: 18px; }
+  body:not(.overlay) .dk .mt-strip > img,
+  body:not(.overlay) .dk .mt-strip > .tfa-u3 img { width: 100%; max-width: 30px; height: auto; aspect-ratio: 1; }
+}
+/* 스크롤바: 기본 회색 막대 대신 얇고 배경에 묻히는 막대 (마우스 쓰는 화면만) */
+@media (hover: hover) and (pointer: fine) {
+  html, body:not(.overlay) * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 40%, transparent) transparent; }
+  body:not(.overlay) ::-webkit-scrollbar { width: 8px; height: 8px; }
+  body:not(.overlay) ::-webkit-scrollbar-track { background: transparent; }
+  body:not(.overlay) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 40%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+  body:not(.overlay) ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--muted) 65%, transparent); }
+  body:not(.overlay) ::-webkit-scrollbar-corner { background: transparent; }
+}
 @media (min-width: 1600px) {
   body:not(.overlay) main.wrap {
     max-width: 1440px;
@@ -8053,6 +8077,14 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
   // 19시즌 PBE 추천 덱 행 & 상세 (롤체지지 추천 가이드 배치 + PBE 메타 통계)
   var s19CurDeck = "";
+  // 19시즌 팀 플래너 코드: "02" + 칸 번호 10개(3자리, 빈칸 000) + "TFTSet19" (덱 탭 codeOfNames와 같은 틀)
+  function s19CodeOf(keys) {
+    var cs = [];
+    keys.forEach(function (k) { var u = s19Unit(k); if (u && u.tp && cs.indexOf(u.tp) < 0 && cs.length < 10) cs.push(u.tp); });
+    if (!cs.length) return null;
+    while (cs.length < 10) cs.push("000");
+    return "02" + cs.join("") + "TFTSet19";
+  }
   function s19DeckKey(d) { return (d.n || "") + "|" + (d.mc || ""); }
   function s19DeckRow(d, sortBy, onPick) {
     var mcEntry = d.u.filter(function (x) { return x.k === d.mc; })[0] || d.u[0];
@@ -8174,6 +8206,13 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       bc.appendChild(el("h3", null, "추천 배치"));
       bc.appendChild(s19HexBoard(d.u));
       b.appendChild(bc);
+    }
+    // 팀 코드 복사 (2026-11-21 사용자: "19시즌 덱들도 팀코드 복사 해줘야지"). 19시즌 팀 플래너에 붙여넣는 코드라 PBE·19시즌 시작 뒤에 쓸 수 있다
+    var code = s19CodeOf(d.u.map(function (x) { return x.k; }));
+    if (code) {
+      var cb = codeButton(code, "팀 코드 복사", "codebtn big s19-code"); b.appendChild(cb);
+      var miss = d.u.filter(function (x) { var u = s19Unit(x.k); return u && !u.tp; }).map(function (x) { return s19Unit(x.k).n; });
+      b.appendChild(el("p", "s19-codenote", "19시즌 팀 플래너용 코드예요" + (miss.length ? ". " + miss.join(", ") + "의 코드는 아직 PBE에 없어서 빠져요" : "")));
     }
     var loadBtn = el("button", "s19-sqact on", "19시즌 스쿼드 빌더로 불러오기"); loadBtn.type = "button";
     loadBtn.addEventListener("click", function () {
@@ -8453,6 +8492,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     hd.appendChild(el("b", null, "내 19시즌 스쿼드 " + s19Sq.length + "/10"));
     var clr = el("button", "s19-bclr", "초기화"); clr.type = "button"; clr.disabled = !s19Sq.length;
     clr.addEventListener("click", function () { s19Sq = []; s19SqSave(); s19Render(); });
+    var sqCode = s19CodeOf(s19Sq);
+    if (sqCode) hd.appendChild(codeButton(sqCode, "팀 코드"));
     hd.appendChild(clr); top.appendChild(hd);
     var slots = el("div", "s19-bslots");
     for (var i = 0; i < 10; i++) {
