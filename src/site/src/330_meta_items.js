@@ -284,7 +284,7 @@
     if (d) {
       var st = el("div", "dk-kpi"), hs = basisSt(d, basis) || basisSt(d, "all");
       var plv = perLobby(d, basisSt(d, basis) ? basis : "all");
-      [[BASIS_LABEL[basisSt(d, basis) ? basis : "all"] + " 평균 등수", hs[0].toFixed(2), dkAvgT(hs[0])], ["순방률", hs[1] + "%", dkTop4T(hs[1])], ["승률", hs[2].toFixed(1) + "%", dkWinT(hs[2])]].concat(plv != null ? [["선택률", plv, "pick"]] : []).forEach(function (x) {
+      [[META.pbe ? "평균 등수" : BASIS_LABEL[basisSt(d, basis) ? basis : "all"] + " 평균", hs[0].toFixed(2), dkAvgT(hs[0])], ["순방률", hs[1] + "%", dkTop4T(hs[1])], ["승률", hs[2].toFixed(1) + "%", dkWinT(hs[2])]].concat(plv != null ? [["선택률", plv, "pick"]] : []).forEach(function (x) {
         var sp = el("div"), bv = el("b", null, x[1]);
         if (x[2] === "pick") dkPickGrad(bv, +x[1]);
         else if (x[2] != null) dkGrad(bv, x[2]);
@@ -430,7 +430,7 @@
       }
       var rk = sec("티어별 평균"); var kv2 = el("div", "kv");
       ["low", "all", "emer", "dia", "top", "gmc"].forEach(function (g) { var x = basisSt(d, g); if (!x) return; var sp = el("span", null, BASIS_LABEL[g] + " " + (basisTier(d, g) === "X" ? "" : basisTier(d, g))); sp.appendChild(el("b", null, x[0].toFixed(2))); sp.appendChild(el("small", null, "승률 " + Math.round(x[2]) + "%")); kv2.appendChild(sp); });
-      rk.appendChild(kv2); B.appendChild(rk);
+      rk.appendChild(kv2); if (!META.pbe) B.appendChild(rk);  // PBE는 티어 구분이 없어 모든 기준이 같은 숫자
       if (d.counters.length) {
         var co = sec("상대하기 힘든 덱"); var kv3 = el("div", "kv");
         d.counters.forEach(function (c) { var sp = el("span", null, c[0]); sp.appendChild(el("b", "bad", "+" + c[1].toFixed(2))); kv3.appendChild(sp); });

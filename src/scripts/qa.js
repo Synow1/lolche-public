@@ -95,6 +95,10 @@ function fresh(file, key, hours) {
 
 (async () => {
   // ---- 4. 데이터 신선도
+  // 덱 배치판 유닛 이름이 영어로 남으면 그림 없이 'Lillia'처럼 보인다 (2026-11-21 사용자 스크린샷: PBE 판의 지난 세트 이름표 DA_18_*)
+  { const m = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')), bad = new Set();
+    for (const d of m.decks || []) { for (const b of [d.board || [], ...Object.values(d.lvb || {})]) for (const u of b) if (/^[\x00-\x7f]+$/.test(u.u)) bad.add(u.u); }
+    if (bad.size) fail('덱 자료: 한국어로 안 바뀐 유닛 이름 ' + [...bad].slice(0, 6).join(', ')); }
   // 월즈 진출자 명단에 같은 이름이 두 번 들어가면 안 됨 (2026-11-15: Liquipedia가 CSFX를 CangShan으로 바꿔 두 번 들어가고 HangHang이 빠졌음)
   { const c = (JSON.parse(fs.readFileSync(path.join(SITE, 'esports.json'), 'utf8')).crown || {}).players || [], seen = {};
     c.forEach(p => { const k = p.n.toLowerCase(); if (seen[k]) fail('이스포츠: 월즈 진출자 명단에 ' + p.n + '가 두 번 들어감'); seen[k] = 1; }); }
@@ -244,6 +248,10 @@ function fresh(file, key, hours) {
     if (kpi.length !== 4) notes.push('덱 상세: 숫자 칸이 4개가 아님 (통계 없는 추천 덱일 수 있음)');
     else if (!/선택률/.test(kpi[3])) fail('덱 상세: 넷째 칸이 선택률이 아님');
     if (await q(() => { const k = document.querySelector('#mt-detail .dk-kpi'); return k && k.scrollWidth > k.clientWidth + 1; })) fail('덱 상세: 숫자 칸이 화면 밖으로 넘침');
+    // 숫자·이름표가 두 줄로 꺾이면 안 됨 (2026-11-21 사용자 폰 스크린샷: "21.2 / %", "에메+ 평균 / 등수")
+    if (JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).pbe && await q(() => /티어별 평균|에메\+ 평균|플래\+ /.test(document.getElementById('mt-detail').innerText))) fail('덱 상세: PBE인데 티어 기준(에메+·플래+·티어별 평균)이 나옴 (PBE는 티어 구분 없음)');
+    { const wrap = await q(() => [...document.querySelectorAll('#mt-detail .dk-kpi > div')].filter(x => { const b = x.querySelector('b'), sp = x.querySelector('span'); const lh = (e) => parseFloat(getComputedStyle(e).lineHeight) || parseFloat(getComputedStyle(e).fontSize) * 1.3; return (b && b.getBoundingClientRect().height > lh(b) * 1.5) || (sp && sp.getBoundingClientRect().height > lh(sp) * 1.5); }).map(x => x.textContent));
+      if (wrap && wrap.length) fail(`[${W}] 덱 상세: 숫자 칸 글자가 두 줄로 꺾임 (${wrap.join(' / ')})`); }
     }
     if (['items'].some(need)) {
     await go('items'); await pg.waitForTimeout(600);

@@ -191,7 +191,10 @@ body.dc-open { overflow: hidden; }
 
 .dk-kpi:has(> div:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .dk-kpi:has(> div:nth-child(4)) > div { padding: 12px 10px; }
-.dk-kpi:has(> div:nth-child(4)) b { font-size: 21px; }
+.dk-kpi:has(> div:nth-child(4)) b { font-size: clamp(16px, 5.2vw, 21px); white-space: nowrap; }
+/* 4칸 숫자가 좁은 폰에서 "21.2 / %", "에메+ 평균 / 등수"로 꺾이던 것 (2026-11-21 사용자 스크린샷): 숫자·이름표 한 줄 */
+.dk-kpi:has(> div:nth-child(4)) > div { padding: 12px 8px; min-width: 0; }
+.dk-kpi:has(> div:nth-child(4)) span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dk-sub .dk-pl { color: var(--muted); }
 .tfa-th { display: flex; align-items: center; gap: 8px; }
 .tfa-th .tierb { grid-row: auto; width: 28px; height: 28px; font-size: var(--fs-m); border-radius: 8px; }

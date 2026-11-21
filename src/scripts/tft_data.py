@@ -184,8 +184,35 @@ class Names:
         self.trait = {t["apiName"]: t["name"] for t in lk["traits"]}
         self.item = {i["apiName"]: i["name"] for i in lk["items"] + lk.get("armory_items", [])}
 
+        # PBE 판에는 지난 세트 이름표(DA_18_Lillia, DA_Taric18 ...)가 섞여 온다 (2026-11-21 사용자 스크린샷: 배치판에 'Lillia'·'Yunara'가 그림 없이 영어로).
+        # 세트 번호를 뗀 이름으로 지금 세트 유닛을 찾고, 없으면 known()이 False라 보드에서 뺀다
+        self.base = {}
+        for u in lk["units"]:
+            if (u.get("cost") or 0) < 1 or u.get("shopUnit") is False: continue
+            for a in u.get("assetNames", []) + [u["apiName"]]:
+                self.base.setdefault(self._b(a), a)
+        for a in list(self.unit):  # 상점에 안 나오는 모습(변신·소환)도 이름은 그대로 쓴다
+            self.base.setdefault(self._b(a), a)
+
+    @staticmethod
+    def _b(a):
+        import re as _re
+        return _re.sub(r"^(TFT\d+_|DA_(\d+_)?)|\d+$", "", a).lower()
+
+    def _canon(self, a):
+        return a if a in self.unit else self.base.get(self._b(a))
+
+    def known(self, a):  # 지금 세트의 상점 유닛만 (소환물·장치 같은 0코스트는 보드에서 뺀다)
+        c = self._canon(a)
+        return c is not None and (self.cost.get(c) or 0) >= 1
+
     def u(self, a):
-        return self.unit.get(a, a.replace("DA_18_", "").replace("DA_", ""))
+        c = self._canon(a)
+        return self.unit[c] if c else a.replace("DA_18_", "").replace("DA_", "")
+
+    def c(self, a):
+        c = self._canon(a)
+        return self.cost.get(c, 1) if c else 1
 
     def t(self, a):
         base = a.rsplit("_", 1)[0] if a.split("_")[-1].isdigit() else a

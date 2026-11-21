@@ -189,7 +189,7 @@ def deck(nm, cluster, v, s, d, total, codes):
     board = []
     for u in board_units:
         b = builds.get(u)
-        board.append({"u": nm.u(u), "c": nm.cost.get(u, 1), "s": star(u), "pos": cells.get(u),
+        board.append({"u": nm.u(u), "c": nm.c(u), "s": star(u), "pos": cells.get(u),
                       "i": [nm.i(i) for i in b[0][0]] if b else []})
 
     ranks = {}
@@ -208,13 +208,13 @@ def deck(nm, cluster, v, s, d, total, codes):
     for lv in ("4", "5", "6"):
         o = sorted(d.get("early_options", {}).get(lv, []), key=lambda x: -x["count"])
         if o:
-            early[lv] = [nm.u(u) for u in o[0]["unit_list"].split("&")]
+            early[lv] = [nm.u(u) for u in o[0]["unit_list"].split("&") if nm.known(u)]
     by_level, codes_by_level = {}, {str(level): team_code(board_units, codes)}
     for lv, lst in opts.items():
         if lst and int(lv) != level and 7 <= int(lv) <= 10:
             o = max(lst, key=lambda x: x.get("score", 0))
             us = o["units_list"].split("&")
-            by_level[lv] = [nm.u(u) for u in us]
+            by_level[lv] = [nm.u(u) for u in us if nm.known(u)]
             codes_by_level[lv] = team_code(us, codes)
     for lv in ("4", "5", "6"):
         o = sorted(d.get("early_options", {}).get(lv, []), key=lambda x: -x["count"])
@@ -230,13 +230,13 @@ def deck(nm, cluster, v, s, d, total, codes):
             if rc is None:  # 자리 통계가 없으면 뒷줄부터 빈칸
                 rc = next(((r, c) for r in (3, 2, 1, 0) for c in range(7) if (r, c) not in taken), None)
             taken.add(rc)
-            out.append({"u": nm.u(u), "c": nm.cost.get(u, 1), "pos": rc, "i": final_items.get(nm.u(u), [])})
+            out.append({"u": nm.u(u), "c": nm.c(u), "pos": rc, "i": final_items.get(nm.u(u), [])})
         return out
     lvb = {str(level): board}
     for lv, lst in list(early.items()) + list(by_level.items()):
         src = (sorted(d.get("early_options", {}).get(lv, []), key=lambda x: -x["count"])[0]["unit_list"] if lv in early
                else max(opts[lv], key=lambda x: x.get("score", 0))["units_list"])
-        lvb[lv] = place([u for u in src.split("&") if u])
+        lvb[lv] = place([u for u in src.split("&") if u and nm.known(u)])
     # 상징: 이 덱에서 쓴 비율·단 판 평균·누가 들었나 (상징 탭)
     emb = {}
     for x in d.get("itemNames", []):
