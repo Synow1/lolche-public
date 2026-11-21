@@ -657,6 +657,8 @@ function fresh(file, key, hours) {
     // PBE 덱 통계 (MetaTFT queue=PBE, 2026-11-21~): 묶음 번호(새로고침용)와 배치판 자리가 다 있어야
     if ((S.decks || []).length < 15) fail(`19시즌: PBE 덱 통계 ${(S.decks || []).length}개 (너무 적음)`);
     if (!S.decksCid || (S.decks || []).some(d => !d.id)) fail('19시즌: PBE 덱에 묶음 번호(id/decksCid)가 없어 새로고침이 안 됨');
+    // 운영 방식 (2026-11-21 사용자: "리롤 그런 거, 18시즌 덱처럼"): PBE 덱마다 MetaTFT levelling이 있어야
+    if ((S.decks || []).filter(d => !d.style).length > 3) fail(`19시즌: 운영 방식(리롤·운영)이 없는 PBE 덱 ${(S.decks || []).filter(d => !d.style).length}개`);
     const noPos = (S.decks || []).filter(d => d.u.some(c => !c.pos)).map(d => d.n);
     if (noPos.length) fail('19시즌: 배치판에 자리 없는 챔피언이 있는 PBE 덱 ' + noPos.slice(0, 3).join(', '));
     const s19Small = S.units.filter(u => { try { const f = path.join(SITE, u.img); return fs.existsSync(f) && fs.statSync(f).size < 2500; } catch (e) { return false; } }).map(u => u.n);
@@ -872,6 +874,7 @@ function fresh(file, key, hours) {
       await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]')?.click()); await pg.waitForTimeout(600);
       const s19w = await pg.evaluate(() => { const r = [...document.querySelectorAll('#s19-out .pcdk')]; return { n: r.length, units: r[0] ? r[0].querySelectorAll('.pcdk-u img').length : 0, stats: r[0] ? r[0].querySelectorAll('.pcdk-stats > div').length : 0 }; });
       if (s19w.n < 10 || s19w.units < 5 || s19w.stats !== 4) fail(`[WEB/1280] 19시즌 덱: PC 줄 모양이 아님 (${JSON.stringify(s19w)})`);
+      if (await pg.evaluate(() => document.querySelectorAll('#s19-out .pcdk .pcdk-chip.ch-reroll, #s19-out .pcdk .pcdk-chip.ch-fast, #s19-out .pcdk .pcdk-chip.ch-std').length) < 10) fail('[WEB/1280] 19시즌 덱: 운영 방식 칩(리롤·운영)이 안 보임');
       await pg.evaluate(() => document.querySelector('#s19-out .pcdk')?.click()); await pg.waitForTimeout(500);
       // 배치판이 크고 템 아이콘이 18px 이상 (2026-11-21 사용자: "배치판이 진짜 중요함, 아이템·아이콘 키워")
       const s19b = await pg.evaluate(() => { const o = document.querySelector('#s19-out .pcdk-open'), h = o && o.querySelector('.s19-hex'), it = h && h.querySelector('.its img'); return h ? { hw: Math.round(h.getBoundingClientRect().width), it: it ? it.getBoundingClientRect().width : 0, hx: h.querySelectorAll('.hx').length } : null; });

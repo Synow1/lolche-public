@@ -237,7 +237,7 @@ def pbe_decks(mk, units, traits):
         p, n = s["places"][:8], s["count"]
         out.append({"id": s["cluster"], "n": name or uname.get(mc, ""), "mc": mc, "avg": round(sum((i + 1) * x for i, x in enumerate(p)) / n, 2),
                     "win": round(p[0] / n * 100, 1), "top4": round(sum(p[:4]) / n * 100, 1), "pick": round(n / total * 8, 2), "plays": n,
-                    "level": int(level), "u": champs, "t": trs[:6], "pos": bool(cells)})
+                    "level": int(level), "style": v.get("levelling") or "", "u": champs, "t": trs[:6], "pos": bool(cells)})
     # 이름이 같은 덱은 다른 챔피언 하나를 붙여 가른다
     cnt = Counter(x["n"] for x in out)
     for x in out:
@@ -467,7 +467,7 @@ def main():
                     best_sc, best_d = sc, d0
             entry = {"n": gn, "mc": mc, "u": champs, "t": trs[:6], "a": augs_g, "guide": True}
             if best_d:
-                entry.update({"sid": best_d.get("id"), "tier": best_d["tier"], "avg": best_d["avg"], "win": best_d["win"],
+                entry.update({"sid": best_d.get("id"), "style": best_d.get("style", ""), "level": best_d.get("level"), "tier": best_d["tier"], "avg": best_d["avg"], "win": best_d["win"],
                               "top4": best_d["top4"], "pick": best_d["pick"], "plays": best_d["plays"]})
                 # 반대로 PBE 통계 덱에도 배치도가 없으면 가이드 배치·증강을 연결
                 if not best_d.get("pos"):
