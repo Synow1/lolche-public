@@ -412,6 +412,8 @@ def main():
         if d:
             x = deck(nm, s["cluster"], details[s["cluster"]], s, d, total, codes)
             x["augs"], x["augsrc"] = deck_augs(actx, s["cluster"], x["board"])
+            if setinfo.PBE and x["augsrc"] != "pro":  # PBE는 시너지로 채운 증강이 덱마다 거의 같아 의미 없음 (2026-11-21 사용자) -> 안 넣는다
+                x["augs"], x["augsrc"] = None, ""
             decks.append(x)
     names = {x["id"]: x["name"] for x in decks}
     for x in decks:

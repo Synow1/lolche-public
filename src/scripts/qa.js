@@ -99,6 +99,9 @@ function fresh(file, key, hours) {
   { const m = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')), bad = new Set();
     for (const d of m.decks || []) { for (const b of [d.board || [], ...Object.values(d.lvb || {})]) for (const u of b) if (/^[\x00-\x7f]+$/.test(u.u)) bad.add(u.u); }
     if (bad.size) fail('덱 자료: 한국어로 안 바뀐 유닛 이름 ' + [...bad].slice(0, 6).join(', ')); }
+  // PBE 추천 증강: 시너지로 채운 증강은 덱마다 거의 같아 넣지 않는다 (2026-11-21 사용자: "추천 증강 다 똑같다, 정보 없으면 지워라")
+  { const m = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
+    if (m.pbe && (m.decks || []).some(d => d.augs && d.augsrc !== 'pro')) fail('덱 자료: PBE인데 근거 없는(시너지로 채운) 추천 증강이 들어 있음'); }
   // 월즈 진출자 명단에 같은 이름이 두 번 들어가면 안 됨 (2026-11-15: Liquipedia가 CSFX를 CangShan으로 바꿔 두 번 들어가고 HangHang이 빠졌음)
   { const c = (JSON.parse(fs.readFileSync(path.join(SITE, 'esports.json'), 'utf8')).crown || {}).players || [], seen = {};
     c.forEach(p => { const k = p.n.toLowerCase(); if (seen[k]) fail('이스포츠: 월즈 진출자 명단에 ' + p.n + '가 두 번 들어감'); seen[k] = 1; }); }

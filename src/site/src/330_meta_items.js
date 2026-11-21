@@ -322,8 +322,11 @@
     }
     var RAR = { 3: "프리즘", 2: "골드", 1: "실버" }, picked = {}, rows = { "프리즘": [], "골드": [], "실버": [] };
     (v.augs || []).forEach(function (a) { var r = (DB && DB.info.a[a.n] && DB.info.a[a.n].r) || RAR[a.tier]; if (rows[r] && !picked[a.n]) { rows[r].push(a.n); picked[a.n] = "g"; } });
-    var pool = d && d.augs ? d.augs : null;
-    if (!pool) { pool = { "프리즘": [], "골드": [], "실버": [] }; synAugs(v.syn, []).forEach(function (n) { var r = DB && DB.info.a[n] && DB.info.a[n].r; if (pool[r]) pool[r].push(n); }); }
+    // PBE는 MetaTFT 프로 가이드 증강이 없어 시너지 이름으로 채운 증강이 덱마다 거의 같았다 (2026-11-21 사용자: "추천 증강 다 똑같이 돼 있다, 정보 없으면 다 지워라")
+    // -> PBE에선 채우기 없이 롤체지지 가이드가 직접 고른 증강만. 없으면 추천 증강 칸을 안 그린다
+    var augNoInfo = META && META.pbe && !(d && d.augsrc === "pro");
+    var pool = !augNoInfo && d && d.augs ? d.augs : null;
+    if (!pool) { pool = { "프리즘": [], "골드": [], "실버": [] }; if (!augNoInfo) synAugs(v.syn, []).forEach(function (n) { var r = DB && DB.info.a[n] && DB.info.a[n].r; if (pool[r]) pool[r].push(n); }); }
     Object.keys(rows).forEach(function (r) { (pool[r] || []).forEach(function (n) { if (rows[r].length < 3 && !picked[n]) { rows[r].push(n); picked[n] = 1; } }); });
     if (GD && GD.augs && GD.augs.length) {  // 롤체지지 가이드: 등급마다 공통·전투·경제·아이템
       var sg = sec("추천 증강", "출처 롤체지지");
