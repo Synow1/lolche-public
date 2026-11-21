@@ -21,12 +21,27 @@ const FRESH = (() => { try { const st = JSON.parse(fs.readFileSync(path.join(__d
 const soft = (m) => FRESH ? notes.push('새 시즌 초기라 참고: ' + m) : fail(m);
 // 외부 자료 받기는 기다리지 않는 방식으로 (동기 curl은 qa 전체를 멈춰 동시에 도는 다른 검사의 1초 간격 측정이 밀린다, 2026-11-21)
 const execA = (cmd, opt) => new Promise((res, rej) => cp.exec(cmd, Object.assign({ encoding: 'buffer', maxBuffer: 1 << 28 }, opt), (e, out) => e ? rej(e) : res(out)));
+const FAST = process.argv.includes('--fast') || process.env.QA_FAST === '1';
+const proxyCache = new Map();
+const proxyGet = (targetUrl) => {
+  if (FAST) return Promise.resolve(Buffer.from('{}'));
+  const noCache = /dcinside|summoner-sync|comps_stats|items_stats/.test(targetUrl);
+  if (!noCache && proxyCache.has(targetUrl)) return proxyCache.get(targetUrl);
+  const p = execA('curl -s --compressed -H "User-Agent: Mozilla/5.0" -H "Origin: https://www.metatft.com" ' + JSON.stringify(targetUrl), { maxBuffer: 1 << 28, timeout: 60000 }).catch(() => Buffer.alloc(0));
+  if (!noCache) proxyCache.set(targetUrl, p);
+  return p;
+};
 
 // ---- 검사 범위: 지난번 통과 때와 비교해 바뀐 파일 -> 탭 (2026-11-21)
 const crypto = require('crypto');
 const BASE = path.join(__dirname, '..', 'data', 'qa_base.json');
 // 모든 탭에 걸리는 조각: 바뀌면 전부
-const CORE = ['000_head.html', '010_style.css', '020_shell.html', '200_script_open.html', '300_core.js', '399_v2_hub.js', '400_app.js', '900_script_close.html'];
+const CORE = ['000_head.html', '010_base.css', '013_theme_v2.css', '020_shell.html', '200_script_open.html', '300_core.js', '399_v2_hub.js', '400_app.js', '900_script_close.html'];
+const CSS_TAGS = {
+  '011_decks.css': ['meta', 'tfa', 'parts', 'builder', 'items', 'augments', 'traits', 'emb', 'home', 'overlay'],
+  '012_rank_esports.css': ['rank', 'friends', 'power', 'esports', 'home'],
+  '014_desktop.css': ['web'],
+};
 const JS_TAGS = {
   '310_parts.js': ['parts'], '320_tfa.js': ['tfa'], '330_meta_items.js': ['meta', 'items', 'home', 'overlay'],
   '340_emb_builder_lists.js': ['emb', 'builder', 'traits', 'find', 'flow', 'wisps', 'numbers', 'scout', 'patch', 'augments'],
@@ -48,18 +63,24 @@ const SCOPE = (() => {
   for (const k of Object.keys(now)) now[k] = crypto.createHash('sha1').update(fs.readFileSync(now[k])).digest('hex').slice(0, 12);
   let base = null; try { base = JSON.parse(fs.readFileSync(BASE, 'utf8')); } catch (e) {}
   let all = !base || process.argv.includes('--all') || process.env.QA_ALL === '1';
+  let webAll = false;
   const tags = new Set(), changed = Object.keys(now).filter(k => !base || base[k] !== now[k]);
   for (const k of changed) {
     const f = k.replace(/^src\//, ''), m = /^\d{3}_(\w+)\.html$/.exec(f);
     if (k === 'qa.js' || CORE.includes(f)) all = true;
     else if (k.startsWith('src/') && m) tags.add(m[1]);
+    else if (k.startsWith('src/') && CSS_TAGS[f]) {
+      CSS_TAGS[f].forEach(t => tags.add(t));
+      if (f === '014_desktop.css') webAll = true;
+    }
     else if (JS_TAGS[f] || DATA_TAGS[f]) (k.startsWith('src/') ? JS_TAGS[f] : DATA_TAGS[f]).forEach(t => tags.add(t));
     else all = true;  // 모르는 파일이면 안전하게 전부
   }
-  return { all, tags, now, changed };
+  return { all, webAll, tags, now, changed };
 })();
 const need = (t) => SCOPE.all || SCOPE.tags.has(t);
-const saveBase = () => { try { fs.writeFileSync(BASE, JSON.stringify(SCOPE.now, null, 0)); } catch (e) {} };
+const needWeb = (t) => SCOPE.all || SCOPE.webAll || SCOPE.tags.has(t);
+const saveBase = () => { if (FAST) return; try { fs.writeFileSync(BASE, JSON.stringify(SCOPE.now, null, 0)); } catch (e) {} };
 const T0 = Date.now();
 
 function fresh(file, key, hours) {
@@ -89,10 +110,11 @@ function fresh(file, key, hours) {
   try { const h = JSON.parse(fs.readFileSync(path.join(SITE, 'rank_hist.json'), 'utf8')); const dd = (Date.now() - Date.parse(h.date + 'T12:00:00+09:00')) / 864e5; if (dd < 3 || dd > 10) notes.push('랭킹 변동 기준일이 ' + Math.round(dd) + '일 전 (' + h.date + ')'); } catch (e) { fail('rank_hist.json 못 읽음'); }
   try { const r = JSON.parse(fs.readFileSync(path.join(SITE, 'icons', 'radiant.json'), 'utf8')); if (Object.keys(r).length < 30) fail('찬란한 템 원본 그림이 ' + Object.keys(r).length + '개뿐'); } catch (e) { fail('icons/radiant.json 없음 (찬란한 템 원본 그림)'); }
   try { cp.execSync('python3 ' + JSON.stringify(path.join(__dirname, 'lint_page.py')), { stdio: 'pipe' }); } catch (e) { fail('lint_page: ' + String(e.stdout)); }
-  // CSS 미정의 변수 검사 (2026-11-20: var(--text) 5곳 오타가 숨어 있었음): CSS에 선언되지 않고 JS setProperty도 없는 폴백 없는 var(--*) 잡기
+  // CSS 미정의 변수 검사 (2026-11-20: var(--text) 5곳 오타가 숨어 있었음): CSS 조각 전체를 합쳐 폴백 없는 미정의 var(--*) 잡기
   {
-    const css = fs.readFileSync(path.join(SITE, 'src', '010_style.css'), 'utf8');
-    const jsAll = fs.readdirSync(path.join(SITE, 'src')).filter(f => f.endsWith('.js')).map(f => fs.readFileSync(path.join(SITE, 'src', f), 'utf8')).join('\n');
+    const srcDir = path.join(SITE, 'src');
+    const css = fs.readdirSync(srcDir).filter(f => f.endsWith('.css')).sort().map(f => fs.readFileSync(path.join(srcDir, f), 'utf8')).join('\n');
+    const jsAll = fs.readdirSync(srcDir).filter(f => f.endsWith('.js')).map(f => fs.readFileSync(path.join(srcDir, f), 'utf8')).join('\n');
     const defined = new Set([...css.matchAll(/(--[a-zA-Z0-9_-]+)\s*:/g)].map(m => m[1]));
     for (const m of jsAll.matchAll(/setProperty\(\s*['"](--[a-zA-Z0-9_-]+)['"]/g)) defined.add(m[1]);
     const badVars = new Set();
@@ -111,18 +133,18 @@ function fresh(file, key, hours) {
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     await pg.route('https://lolche.local/**', async (r) => {
       const u = new URL(r.request().url());
-      if (u.pathname === '/proxy') { let body = ''; try { body = (await execA('curl -s --compressed -H "User-Agent: Mozilla/5.0" -H "Origin: https://www.metatft.com" ' + JSON.stringify(u.searchParams.get('u')), { maxBuffer: 1 << 28, timeout: 60000 })); } catch (e) {} return r.fulfill({ status: 200, contentType: 'application/json', body }); }
+      if (u.pathname === '/proxy') { const body = await proxyGet(u.searchParams.get('u') || ''); return r.fulfill({ status: 200, contentType: 'application/json', body }); }
       if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
       const f = path.join(SITE, decodeURIComponent(u.pathname)); if (!fs.existsSync(f)) return r.fulfill({ status: 404, body: '' });
       return r.fulfill({ body: fs.readFileSync(f) });
     });
-    await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(3500);
+    await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(FAST ? 1200 : 3500);
     const go = (t) => pg.evaluate((t) => { const a = document.createElement('a'); a.href = '#' + t; document.body.appendChild(a); a.click(); a.remove(); window.scrollTo(0, 0); }, t);
     const tag = `[${W}/${scheme}]`;
     // ---- 1. 모든 탭 공통
     for (const t of TABS.filter(need)) {
       errs.length = 0;
-      await go(t); await pg.waitForTimeout(['rank', 'friends', 'esports', 'power'].includes(t) ? 3500 : 1000);
+      await go(t); await pg.waitForTimeout(FAST ? 300 : (['rank', 'friends', 'esports', 'power'].includes(t) ? 3500 : 1000));
       const r = await pg.evaluate((W) => {
         const sec = document.querySelector('section:not([hidden])'), o = { sw: document.documentElement.scrollWidth, broken: [], hid: [], text: sec ? sec.innerText.length : 0 };
         if (!sec) return o;
@@ -140,7 +162,7 @@ function fresh(file, key, hours) {
       if (r.hid.length) fail(`${tag} ${t}: 숨겼는데 보임 ${r.hid.slice(0, 3).join(', ')}`);
       // 세트가 바뀌어 지난 세트 공략(data-set)을 숨긴 탭은 '준비 중' 한 줄: 실패 대신 참고로 남겨 새 시즌 글을 쓰게 (세트 19 대비)
       if (r.text < 40 && await pg.evaluate((t) => /새 시즌 내용은 준비 중/.test((document.getElementById(t) || {}).textContent || ''), t)) notes.push(`${tag} ${t}: 새 시즌 공략을 아직 안 씀 (지난 세트 글 숨김)`);
-      else if (r.text < 40) fail(`${tag} ${t}: 내용이 거의 없음 (${r.text}자)`);
+      else if (r.text < 40 && !(FAST && ['dc', 'friends', 'rank'].includes(t))) fail(`${tag} ${t}: 내용이 거의 없음 (${r.text}자)`);
       if (errs.length) fail(`${tag} ${t}: 페이지 오류 ${errs.slice(0, 2).join(' ; ')}`);
     }
     if (W !== 360) { await pg.close(); return; }  // 내용·기능 검사는 한 번만
@@ -255,7 +277,7 @@ function fresh(file, key, hours) {
     await go('esports'); await pg.waitForTimeout(800);
     if (await q(() => /\?/.test((document.querySelector('.cr-sum') || {}).innerText || ''))) fail('이스포츠: 월즈 요약에 ?');
     }
-    if (['rank'].some(need)) {
+    if (!FAST && ['rank'].some(need)) {
     await go('rank'); await pg.waitForTimeout(3000);
     if (await q(() => document.querySelectorAll('#rk-rows .rk-row').length) < 30) soft('한국 랭킹: 줄 30개 미만');
     if (await q(() => document.getElementById('rk-upd-btn').hidden)) fail('한국 랭킹: 앱인데 새로고침 버튼이 숨어 있음');
@@ -264,11 +286,11 @@ function fresh(file, key, hours) {
     await go('power'); await pg.waitForTimeout(1500);
     if (await q(() => document.querySelectorAll('#pw-list .pwc').length) < 5) soft('덱파워: 카드 5개 미만');
     }
-    if (['friends'].some(need)) {
+    if (!FAST && ['friends'].some(need)) {
     await go('friends'); await pg.waitForTimeout(6000);
     if (await q(() => document.querySelectorAll('#fr-cards .fr-card').length) < 2) soft('친구: 카드 2개 미만');
     }
-    if (need('rank')) {
+    if (!FAST && need('rank')) {
     // 전적 검색 (좁은 폭에서 판 카드가 화면을 밀던 문제, 덱 이름·LP 그래프·많이 한 덱)
     await go('rank'); await pg.waitForTimeout(500);
     await q(() => { document.querySelector('#rk-seg [data-v=search]').click(); const i = document.getElementById('rk-q'); i.value = 'Synow#KR1'; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); });
@@ -301,7 +323,7 @@ function fresh(file, key, hours) {
     await pg.close();
   });
   // 롤체갤 실시간 (2026-11-13 사용자: "1초에 한 번씩 목록 리로딩"): 목록이 차는지, 1초마다 다시 받는지, 탭을 떠나면 멈추는지
-  task(['dc'], async () => {
+  if (!FAST) task(['dc'], async () => {
     const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
     const errs = []; pg.on('pageerror', e => errs.push(e.message));
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; localStorage.removeItem('tft-guide-dc'); });
@@ -409,7 +431,7 @@ function fresh(file, key, hours) {
   });
   // 월즈 실시간 순위 (2026-11-13 사용자: "월즈 시작했는데 실시간 현황판 바로 안 넣어놓냐"): 일정을 오늘로, MetaTFT 대회 목록에
   // 지난 세트 월즈(TCROWN S17) 게임을 이번 세트 이름으로 넣어 보여주고, 순위표·단계 칩·한국 선수 줄·프로 포인트 접힘을 본다
-  task(['esports'], async () => {
+  if (!FAST) task(['esports'], async () => {
     const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
     const errs = []; pg.on('pageerror', e => errs.push(e.message));
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
@@ -576,12 +598,12 @@ function fresh(file, key, hours) {
   });
   // 휴면 감소 (2026-11-14 사용자: "막판이 -222가 된 게 아니라 휴면 강등"): 마지막 판 뒤에 판 수는 그대로인 LP 기록(휴면 감소)을 끼워 넣어도
   // 그 판 LP는 판 결과대로, 감소는 '이후 휴면'으로 따로 나와야 한다
-  task(['rank'], async () => {
+  if (!FAST) task(['rank'], async () => {
     const pg = await b.newPage({ viewport: { width: 390, height: 900 }, colorScheme: 'dark' });
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     let inj = null, base = null;
     await pg.route('https://lolche.local/**', async (r) => { const u = new URL(r.request().url());
-      if (u.pathname === '/proxy') { const t = u.searchParams.get('u'); let body = ''; try { body = (await execA('curl -s --compressed -H "User-Agent: Mozilla/5.0" -H "Origin: https://www.metatft.com" ' + JSON.stringify(t), { maxBuffer: 1 << 28, timeout: 60000 })).toString(); } catch (e) {}
+      if (u.pathname === '/proxy') { const t = u.searchParams.get('u'); let body = (await proxyGet(t || '')).toString();
         if (/Synow-KR1\/league-logs/.test(t) && /page=1\b/.test(t)) { try { const d = JSON.parse(body), L = d.summonerLeagueLogs; base = L[0].slice(); inj = [L[0][0] + 3 * 864e5, L[0][1], L[0][2], Math.max(0, L[0][3] - 20), L[0][4], L[0][5]]; L.unshift(inj); body = JSON.stringify(d); } catch (e) {} }
         return r.fulfill({ status: 200, contentType: 'application/json', body }); }
       if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
@@ -601,12 +623,12 @@ function fresh(file, key, hours) {
   });
   // 판 목록에 빠진 판 (2026-11-15 사용자: 앙기모링딩둉 15시즌 '시즌 전체'에서 8등 판에 +23LP, 마지막 판이 '기록 대기 중'):
   // 롤체지지 판 목록은 가끔 판이 빠져서, offset 하나로 맞추면 빠진 판 뒤(최근) 판들이 한 판씩 밀린다. 4번째 랭크 판을 빼고 최근 판 LP가 등수와 맞는지
-  task(['rank'], async () => {
+  if (!FAST) task(['rank'], async () => {
     const pg = await b.newPage({ viewport: { width: 390, height: 900 }, colorScheme: 'dark' });
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     let dropped = null;
     await pg.route('https://lolche.local/**', async (r) => { const u = new URL(r.request().url());
-      if (u.pathname === '/proxy') { const t = u.searchParams.get('u'); let body = ''; try { body = (await execA('curl -s --compressed -H "User-Agent: Mozilla/5.0" -H "Origin: https://www.metatft.com" ' + JSON.stringify(t), { maxBuffer: 1 << 28, timeout: 60000 })).toString(); } catch (e) {}
+      if (u.pathname === '/proxy') { const t = u.searchParams.get('u'); let body = (await proxyGet(t || '')).toString();
         if (/Synow-KR1\/matches/.test(t) && /page=1\b/.test(t)) { try { const d = JSON.parse(body), rk = d.matches.filter(m => m.queueId === 1100); if (rk.length >= 12) { dropped = rk[3].matchId; d.matches = d.matches.filter(m => m.matchId !== dropped); body = JSON.stringify(d); } } catch (e) {} }
         return r.fulfill({ status: 200, contentType: 'application/json', body }); }
       if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
@@ -739,7 +761,7 @@ function fresh(file, key, hours) {
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => true, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     await pg.route('https://lolche.local/**', async (r) => {
       const u = new URL(r.request().url());
-      if (u.pathname === '/proxy') { let body = ''; try { body = (await execA('curl -s --compressed -H "User-Agent: Mozilla/5.0" -H "Origin: https://www.metatft.com" ' + JSON.stringify(u.searchParams.get('u')), { maxBuffer: 1 << 28, timeout: 60000 })); } catch (e) {} return r.fulfill({ status: 200, contentType: 'application/json', body }); }
+      if (u.pathname === '/proxy') { const body = await proxyGet(u.searchParams.get('u') || ''); return r.fulfill({ status: 200, contentType: 'application/json', body }); }
       if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
       const f = path.join(SITE, decodeURIComponent(u.pathname)); if (!fs.existsSync(f)) return r.fulfill({ status: 404, body: '' });
       return r.fulfill({ body: fs.readFileSync(f) });
@@ -758,8 +780,8 @@ function fresh(file, key, hours) {
     }
     await pg.close();
   });
-  // PC 웹 모드 (1280px): 왼쪽 사이드 메뉴, 앱 전용 UI 숨김, 덱 목록·상세 2단, 프록시 없이 직접 CORS fetch(덱 새로고침·랭킹·전적 검색), #dc 링크 전용, 개인 친구/계정 미노출
-  task(TABS, async () => {
+  // PC 웹 모드 (1280px): 왼쪽 사이드 메뉴, 앱 전용 UI 숨김, 덱 목록·상세, 프록시 없이 직접 CORS fetch(덱 새로고침·랭킹·전적 검색), #dc 링크 전용, 개인 친구/계정 미노출
+  task([...TABS, 'web'], async () => {
     const WEB_ROOT = fs.existsSync(path.join(__dirname, '..', 'build', 'web', 'index.html')) ? path.join(__dirname, '..', 'build', 'web') : SITE;
     const MIME = { '.html': 'text/html; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
     const srv = http.createServer((req, res) => {
@@ -786,8 +808,9 @@ function fresh(file, key, hours) {
       if (/\/proxy(\?|$)/.test(u)) proxyHits.push(u);
       if (u.startsWith('https://')) { try { directHosts.add(new URL(u).hostname); } catch (e) {} }
     });
+    if (FAST) await pg.route('https://**', r => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
     try {
-      await pg.goto(`http://127.0.0.1:${port}/`); await pg.waitForTimeout(3500);
+      await pg.goto(`http://127.0.0.1:${port}/`); await pg.waitForTimeout(FAST ? 1200 : 3500);
       const go = (t) => pg.evaluate((t) => { const a = document.createElement('a'); a.href = '#' + t; document.body.appendChild(a); a.click(); a.remove(); window.scrollTo(0, 0); }, t);
       const init = await pg.evaluate(() => ({
         web: document.body.classList.contains('web'),
@@ -804,9 +827,9 @@ function fresh(file, key, hours) {
       if (init.nav.left > 1 || init.nav.width > 260 || init.nav.height < 400) fail(`[WEB/1280] 왼쪽 사이드 메뉴 배치 이상 (${Math.round(init.nav.width)}x${Math.round(init.nav.height)})`);
       if (init.extra.width < 150 || init.extra.height < 100) fail('[WEB/1280] 사이드바 도감·도구 바로가기가 안 보임');
 
-      for (const t of TABS.filter(need)) {
+      for (const t of TABS.filter(needWeb)) {
         errs.length = 0;
-        await go(t); await pg.waitForTimeout(['rank', 'esports', 'power'].includes(t) ? 2500 : 700);
+        await go(t); await pg.waitForTimeout(FAST ? 300 : (['rank', 'esports', 'power'].includes(t) ? 2500 : 700));
         const r = await pg.evaluate(() => {
           const sec = document.querySelector('section:not([hidden])'), o = { sw: document.documentElement.scrollWidth, broken: [], hid: [], tiny: [], text: sec ? sec.innerText.length : 0 };
           if (!sec) return o;
@@ -833,7 +856,7 @@ function fresh(file, key, hours) {
         if (errs.length) fail(`[WEB/1280] ${t}: 페이지 오류 ${errs.slice(0, 2).join(' ; ')}`);
       }
 
-      if (['items'].some(need)) {
+      if (['items'].some(needWeb)) {
       // 아이템 티어표 머리줄 정렬 확인 (넓은 화면에서 머리줄이 왼쪽 절반에 쏠리지 않아야 함)
       await go('items'); await pg.waitForTimeout(500);
       const itAl = await pg.evaluate(() => {
@@ -843,7 +866,7 @@ function fresh(file, key, hours) {
       if (!itAl || Math.abs(itAl.hw - itAl.rw) > 12) fail(`[WEB/1280] 아이템 티어표 머리줄 폭 어긋남 (head=${itAl && itAl.hw}px, row=${itAl && itAl.rw}px)`);
 
       }
-      if (['s19'].some(need)) {
+      if (['s19'].some(needWeb)) {
       // 19시즌 덱 PC 줄 (2026-11-21 사용자: "메타TFT처럼, PC는 PC대로"): 넓은 줄에 챔피언·숫자 4칸, 누르면 아래로 펼쳐 큰 배치판
       await go('s19'); await pg.waitForTimeout(500);
       await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]')?.click()); await pg.waitForTimeout(600);
@@ -857,7 +880,7 @@ function fresh(file, key, hours) {
       const s19t = await pg.evaluate(() => ({ open: document.querySelectorAll('#s19-out .pcdk-open').length, second: !!document.querySelectorAll('#s19-out .pcdk')[1]?.classList.contains('open') }));
       if (s19t.open !== 1 || !s19t.second) fail(`[WEB/1280] 19시즌 덱: 다른 줄을 누르면 그 줄만 펼쳐져야 함 (${JSON.stringify(s19t)})`);
       }
-      if (['meta'].some(need)) {
+      if (['meta'].some(needWeb)) {
       // 메타 덱 PC 줄 + 펼치기 + 직접 fetch 새로고침 (2026-11-21: 오른쪽 상세 칸 대신 MetaTFT처럼 줄 아래로 펼침)
       await go('meta'); await pg.waitForTimeout(800);
       const mt2 = await pg.evaluate(() => { const r = [...document.querySelectorAll('#mt-rows .pcdk')], f = r[0]; return { n: r.length, units: f ? f.querySelectorAll('.pcdk-u img').length : 0, stats: f ? [...f.querySelectorAll('.pcdk-stats small')].map(x => x.textContent).join(',') : '', sw: document.documentElement.scrollWidth,
@@ -884,18 +907,20 @@ function fresh(file, key, hours) {
       if (pcr.clip.length) fail(`[WEB/1280] 덱 줄 챔피언 아이콘이 잘림: ${pcr.clip.slice(0, 3).join(', ')}`);
       if (pcr.small.length) fail(`[WEB/1280] 배치판 이름·별 글자가 작음: ${[...new Set(pcr.small)].slice(0, 3).join(', ')}`);
       if (pcr.sb !== 'thin') fail(`[WEB/1280] 스크롤바가 기본 굵은 막대 (scrollbar-width=${pcr.sb})`);
-      await pg.evaluate(() => document.getElementById('mt-upd-btn')?.click()); await pg.waitForTimeout(3500);
-      if (!directHosts.has('api-hc.metatft.com')) fail('[WEB/1280] 덱 새로고침: api-hc.metatft.com 직접 fetch가 일어나지 않음');
+      if (!FAST) {
+        await pg.evaluate(() => document.getElementById('mt-upd-btn')?.click()); await pg.waitForTimeout(3500);
+        if (!directHosts.has('api-hc.metatft.com')) fail('[WEB/1280] 덱 새로고침: api-hc.metatft.com 직접 fetch가 일어나지 않음');
+      }
 
       }
-      if (['tfa'].some(need)) {
+      if (['tfa'].some(needWeb)) {
       // TFT 아카데미 2단 보기
       await go('tfa'); await pg.waitForTimeout(700);
       const tf2 = await pg.evaluate(() => ({ lVis: !document.getElementById('tfa-list').hidden, dVis: !document.getElementById('tfa-detail').hidden, hex: document.querySelectorAll('#tfa-detail .hexboard .hx').length }));
       if (!tf2.lVis || !tf2.dVis || tf2.hex < 20) soft(`[WEB/1280] TFT 아카데미 2단 레이아웃 이상 (list=${tf2.lVis}, det=${tf2.dVis}, hex=${tf2.hex})`);
 
       }
-      if (['rank'].some(need)) {
+      if (!FAST && ['rank'].some(needWeb)) {
       // 직접 fetch로 한국 랭킹 + 전적 검색 + 개인 계정/친구 미노출 확인
       await go('rank'); await pg.waitForTimeout(4000);
       if (await pg.evaluate(() => document.querySelectorAll('#rk-rows .rk-row').length) < 30) soft('[WEB/1280] 한국 랭킹: 직접 fetch로 30줄 미만');
@@ -908,13 +933,13 @@ function fresh(file, key, hours) {
       if (await pg.evaluate(() => document.documentElement.scrollWidth) > 1280) fail('[WEB/1280] 전적 검색: 화면보다 넓음 (가로 밀림)');
 
       }
-      if (['friends'].some(need)) {
+      if (['friends'].some(needWeb)) {
       // 친구 탭: 공개 웹에서 개인 기본 친구 목록이 보이지 않아야 함
       await go('friends'); await pg.waitForTimeout(600);
       if (await pg.evaluate(() => document.querySelectorAll('#fr-cards .fr-card').length) > 0) fail('[WEB/1280] 친구 탭: 공개 웹인데 기본 친구 목록이 노출됨');
 
       }
-      if (['dc'].some(need)) {
+      if (['dc'].some(needWeb)) {
       // #dc: CORS 차단으로 목록 대신 m.dcinside.com/board/tft 링크만 노출
       await go('dc'); await pg.waitForTimeout(500);
       const dcw = await pg.evaluate(() => ({
@@ -931,10 +956,10 @@ function fresh(file, key, hours) {
       srv.close();
     }
   });
-  // 동시에 3개씩 (4코어. 검사마다 기다리는 시간이 많아 겹쳐 돌리면 빨라진다)
-  { let next = 0; await Promise.all([0, 1, 2].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }
+  // 동시에 4개씩 (대부분 I/O·대기 시간이라 겹쳐 돌리면 빨라진다)
+  { let next = 0; await Promise.all([0, 1, 2, 3].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }
   await b.close();
-  console.log(`검사 범위: ${SCOPE.all ? '전부' : [...SCOPE.tags].join(', ') || '바뀐 것 없음'} · ${Math.round((Date.now() - T0) / 1000)}초`);
+  console.log(`검사 범위: ${SCOPE.all ? '전부' : [...SCOPE.tags].join(', ') || '바뀐 것 없음'}${FAST ? ' (fast)' : ''} · ${Math.round((Date.now() - T0) / 1000)}초`);
   if (notes.length) console.log('참고:\n  ' + notes.join('\n  '));
   if (fails.length) { console.log('앱 점검 실패 ' + fails.length + '건:\n  ' + fails.join('\n  ')); process.exit(1); }
   saveBase();

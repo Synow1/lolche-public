@@ -1,0 +1,453 @@
+/* ===== PC 웹 · 데스크톱 반응형 (1024px 이상) ===== */
+.pc-side-extra { display: none; }
+.s19-hgrid { display: contents; }
+.dc-web { text-align: center; padding: 32px 24px; max-width: 520px; margin: 12px auto 0; display: grid; justify-items: center; gap: 10px; }
+.dc-web h3 { margin: 0; font-size: var(--fs-xl); font-weight: 800; }
+.dc-web .sub { margin: 0; max-width: 400px; }
+.dc-web .codebtn.big { display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 180px; text-decoration: none; margin-top: 8px; padding: 11px 24px; background: var(--on-bg); color: var(--on-ink); border-color: var(--on-bg); border-radius: var(--r-ctl); }
+
+@media (min-width: 1024px) {
+  /* PC 가독성: 글자 크기 토큰 전체 한 단계 상향 (최소 12px 보장, 본문 15~16px) */
+  :root {
+    --fs-2xs: 12px;
+    --fs-xs: 12.5px;
+    --fs-s: 13px;
+    --fs-m: 14px;
+    --fs-b: 15px;
+    --fs-l: 16px;
+    --fs-xl: 18px;
+    --fs-2xl: 20px;
+    --fs-3xl: 24px;
+  }
+
+  body:not(.overlay) {
+    padding-left: 232px;
+    padding-bottom: 48px;
+  }
+  body:not(.overlay) .appbar {
+    margin-left: -232px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  body:not(.overlay) .appbar .wrap {
+    max-width: none;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  body:not(.overlay) .ab-search {
+    width: auto;
+    min-width: 260px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--muted);
+    font-size: var(--fs-m);
+    font-weight: 500;
+  }
+  body:not(.overlay) .ab-search svg { width: 17px; height: 17px; flex: none; }
+  body:not(.overlay) .ab-search::after { content: "통합 검색 (/)"; white-space: nowrap; }
+
+  /* 왼쪽 고정 사이드바 (주요 5탭 + 도감·도구 바로가기) */
+  body:not(.overlay) .bnav {
+    top: var(--abh);
+    left: 0;
+    right: auto;
+    bottom: 0;
+    width: 232px;
+    max-width: none;
+    margin: 0;
+    padding: 14px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 3px;
+    border-radius: 0;
+    border: 0;
+    border-right: 1px solid var(--border-subtle);
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+  body:not(.overlay) .bnav a {
+    flex: none;
+    height: 42px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 11px;
+    border-radius: var(--r-ctl);
+    font-size: var(--fs-b);
+    font-weight: 600;
+  }
+  body:not(.overlay) .bnav a svg { width: 20px; height: 20px; flex: none; }
+  body:not(.overlay) .bnav a.on {
+    color: var(--accent);
+    font-weight: 700;
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+  }
+  /* 보조 사이드 메뉴 항목이 활성일 때는 상단 5탭 중복 강조를 눌러 현재 위치만 또렷하게 표시 */
+  body:not(.overlay):has(.pc-side-extra a.on) .bnav a.on {
+    color: var(--muted);
+    font-weight: 600;
+    background: transparent;
+  }
+  body:not(.overlay) .bnav a.on::before { display: none; }
+  body:not(.overlay) .bnav a.on svg { transform: none; }
+
+  body:not(.overlay) .pc-side-extra {
+    position: fixed;
+    left: 0;
+    top: calc(var(--abh) + 252px);
+    bottom: 0;
+    width: 232px;
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 12px 24px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border-subtle);
+    scrollbar-width: thin;
+  }
+  body:not(.overlay) .pc-side-h {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--muted);
+    padding: 10px 12px 4px;
+    letter-spacing: .02em;
+  }
+  body:not(.overlay) .pc-side-h:first-child { padding-top: 2px; }
+  body:not(.overlay) .pc-side-extra a {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: var(--fs-m);
+    font-weight: 600;
+    transition: background .15s, color .15s;
+  }
+  body:not(.overlay) .pc-side-extra a.on {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    font-weight: 700;
+  }
+
+  /* 본문 최대 폭 제한 */
+  body:not(.overlay) main.wrap {
+    max-width: 1200px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  /* 하드코딩된 소형 라벨도 PC에서는 최소 12px 보장 */
+  body:not(.overlay) .dk-tbadge { min-width: 22px; height: 22px; font-size: var(--fs-xs); }
+  body:not(.overlay) .mini .nm { font-size: var(--fs-2xs); }
+  body:not(.overlay) .mini .stars { font-size: var(--fs-2xs); }
+  body:not(.overlay) .odds i { font-size: var(--fs-2xs); }
+  body:not(.overlay) .dk .mt-name { font-size: var(--fs-l); }
+  body:not(.overlay) .dk-kpi2 .dk-avg,
+  body:not(.overlay) .dk-kpi2 .dk-top4-hi { font-size: 21px; }
+  body:not(.overlay) .dk-kpi2 .dk-top4,
+  body:not(.overlay) .dk-kpi2 .dk-avg-sub { font-size: var(--fs-xs); }
+
+  /* PC 전용 아이콘 · 초상 · 육각 보드 한 단계 확대 */
+  body:not(.overlay) .mt-row.dk { grid-template-columns: 64px minmax(0, 1fr) auto; gap: 13px; padding: 12px 14px; }
+  body:not(.overlay) .dk-mc,
+  body:not(.overlay) .dk-hex { width: 62px; height: 66px; }
+  body:not(.overlay) .dk-its img { width: 19px; height: 19px; border-radius: 4px; }
+  body:not(.overlay) .mt-strip { gap: 4px; }
+  body:not(.overlay) .dk .mt-strip img,
+  body:not(.overlay) .mt-strip img,
+  body:not(.overlay) .tfa-strip img,
+  body:not(.overlay) .s19-strip img { width: 30px; height: 30px; border-radius: 7px; }
+  body:not(.overlay) .hexboard { max-width: 540px; margin: 8px auto 6px; }
+  body:not(.overlay) .hexboard .its img { width: 17px; height: 17px; border-radius: 4px; }
+  body:not(.overlay) .s19-hex { max-width: 540px; margin: 8px auto 2px; }
+  body:not(.overlay) .s19-hex .its img { width: 17px; height: 17px; border-radius: 4px; }
+  body:not(.overlay) .s19-bwrap { text-align: left; }
+
+  /* 메타 덱 · TFT 아카데미 · 19시즌 추천 덱: 목록 + 상세 2단 마스터-디테일 */
+  body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single) {
+    display: grid;
+    grid-template-columns: minmax(380px, 445px) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  body:not(.overlay) #meta .mt-list,
+  body:not(.overlay) #tfa #tfa-list { min-width: 0; }
+  body:not(.overlay) #meta .mt-rows,
+  body:not(.overlay) #tfa:not(.tfa-wide-single) .mt-rows {
+    grid-template-columns: 1fr;
+  }
+  body:not(.overlay) #meta .mt-bar {
+    position: static;
+    grid-template-columns: 1fr;
+    background: transparent;
+    padding-top: 0;
+  }
+  body:not(.overlay) #meta .mt-detail,
+  body:not(.overlay) #tfa:not(.tfa-wide-single) .mt-detail {
+    position: sticky;
+    top: calc(var(--abh) + 14px);
+    max-height: calc(100vh - var(--abh) - 28px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-card);
+    padding: 20px 22px 26px;
+    scrollbar-width: thin;
+  }
+  body:not(.overlay) #meta .mt-detail .back,
+  body:not(.overlay) #tfa .mt-detail .back { display: none; }
+  body:not(.overlay) #meta .mt-detail .mt-cols,
+  body:not(.overlay) #tfa .mt-detail .mt-cols { grid-template-columns: 1fr; }
+  body:not(.overlay) .mt-row.dk.sel {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  }
+
+  /* 19시즌 추천 덱 2단 마스터-디테일 */
+  body:not(.overlay) .s19-dk-split {
+    display: grid;
+    grid-template-columns: minmax(380px, 445px) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  body:not(.overlay) .s19-dk-col-list { min-width: 0; }
+  body:not(.overlay) .s19-dk-col-list .mt-rows { grid-template-columns: 1fr; }
+  body:not(.overlay) .s19-dk-col-detail {
+    position: sticky;
+    top: calc(var(--abh) + 14px);
+    max-height: calc(100vh - var(--abh) - 28px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-card);
+    padding: 20px 22px 26px;
+    display: grid;
+    gap: 12px;
+    scrollbar-width: thin;
+  }
+  body:not(.overlay) .s19-dk-head { padding-bottom: 4px; border-bottom: 1px solid var(--border-subtle); }
+  body:not(.overlay) .s19-dk-head .dc-vt { margin: 0 0 4px; font-size: var(--fs-2xl); }
+  body:not(.overlay) .s19-dk-head .dc-vm { margin: 0; font-size: var(--fs-m); }
+  body:not(.overlay) .s19-dk-col-detail .s19-dk-kpi b { font-size: 20px; }
+
+  /* 홈 · 19시즌 개요 · 더보기 · 전적·대회 멀티컬럼 보강 */
+  body:not(.overlay) #home .hm-decks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  body:not(.overlay) #home .hm-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  body:not(.overlay) #home .hm-u7 { min-width: 102px; padding: 12px 10px; }
+  body:not(.overlay) #s19 .s19-hgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+  body:not(.overlay) #s19 .s19-hgrid > .s19-card { margin: 0; }
+  body:not(.overlay) #more .more-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  body:not(.overlay) #s19-out .s19-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  body:not(.overlay) #s19-out .s19-bpool { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  body:not(.overlay) #friends .fr-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  body:not(.overlay) #power #pw-chart { max-width: 660px; margin: 0 auto 14px; }
+  body:not(.overlay) #power #pw-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  body:not(.overlay) #esports #esp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  body:not(.overlay) #esports #esp-list .wd-card { grid-column: 1 / -1; }
+
+  /* 표·읽기형 탭 가독성 보강: 시선 이동 폭 제한 + 열 간격 정돈 */
+  body:not(.overlay) #items #it-tier,
+  body:not(.overlay) #rank #rk-board,
+  body:not(.overlay) #rank #rk-search,
+  body:not(.overlay) #patch,
+  body:not(.overlay) #flow,
+  body:not(.overlay) #numbers,
+  body:not(.overlay) #scout,
+  body:not(.overlay) #wisps {
+    max-width: 980px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  body:not(.overlay) #items .it-head,
+  body:not(.overlay) #items .it-row {
+    grid-template-columns: 32px minmax(0, 1fr) 68px 64px 68px 78px;
+    gap: 12px;
+  }
+  body:not(.overlay) #items .it-head { padding: 4px 14px 6px; font-size: var(--fs-s); }
+  body:not(.overlay) #items .it-row { padding: 11px 14px; }
+  body:not(.overlay) #items .it-main > img { width: 40px; height: 40px; border-radius: 8px; }
+  body:not(.overlay) #items .it-main .mt-strip img { width: 25px; height: 25px; border-radius: 5px; }
+  body:not(.overlay) #patch td:first-child { min-width: 112px; width: 112px; white-space: nowrap; }
+
+  /* 전체 화면 상세 · 시트 · 통합 검색 데스크톱 중앙 배치 */
+  body:not(.overlay) .fs-view .dc-vtop { max-width: 980px; width: 100%; margin: 0 auto; }
+  body:not(.overlay) .fs-view .dc-vbody { max-width: 980px; width: 100%; margin: 0 auto; }
+  body:not(.overlay) .sheet-bg { align-items: center; padding: 24px; }
+  body:not(.overlay) .sheet { max-width: 560px; border-radius: 20px; max-height: 82vh; }
+  body:not(.overlay) .spot-box { max-width: 680px; }
+}
+
+/* 대형 모니터 (1600px 이상): 본문 폭 1440px 확장 + 여유로운 멀티컬럼 */
+/* PC 가독성 2 (v2.3.2): 배치판 이름 12px·별 11px(세 개가 아이콘 폭 안에 들게), 덱 줄 아이콘은 줄 폭에 맞춰 줄여 잘리지 않게 */
+@media (min-width: 1024px) {
+  body:not(.overlay) .hxn { font-size: 12px; letter-spacing: -.2px; }
+  body:not(.overlay) .hxwrap .st { font-size: 11px; letter-spacing: -2px; top: -4px; }
+  body:not(.overlay) .dk-st { font-size: 11px; letter-spacing: -2px; top: -9px; }
+  body:not(.overlay) .tfa-u3 b { font-size: 11px; letter-spacing: -2px; top: -12px; }
+  body:not(.overlay) .dk .mt-strip { -webkit-mask-image: none; mask-image: none; padding-top: 6px; }
+  body:not(.overlay) .dk .mt-strip.tfa-strip { padding-top: 13px; }
+  body:not(.overlay) .dk .mt-strip > img,
+  body:not(.overlay) .dk .mt-strip > .tfa-u3 { flex: 0 1 30px; min-width: 18px; }
+  body:not(.overlay) .dk .mt-strip > img,
+  body:not(.overlay) .dk .mt-strip > .tfa-u3 img { width: 100%; max-width: 30px; height: auto; aspect-ratio: 1; }
+  /* 배치판 (2026-11-21 사용자: "배치판이 진짜 중요함, 아이템·아이콘 크기 키워"): 2단 상세는 칸에 꽉, 전체 화면 상세는 760px까지 */
+  body:not(.overlay) .hexboard .its img,
+  body:not(.overlay) .s19-hex .its img { width: clamp(18px, 26%, 28px); height: auto; max-width: none; border-radius: 4px; }
+  body:not(.overlay) #mt-detail .hexboard,
+  body:not(.overlay) .s19-dk-col-detail .s19-hex,
+  body:not(.overlay) #tfa-detail .hexboard { max-width: 100%; }
+  body:not(.overlay) .fs-view .hexboard,
+  body:not(.overlay) .fs-view .s19-hex { max-width: 760px; margin: 10px auto 8px; }
+  body:not(.overlay) .fs-view .hxn { font-size: 14px; }
+  body:not(.overlay) .fs-view .hxwrap .st { font-size: 14px; top: -6px; }
+}
+/* 스크롤바: 기본 회색 막대 대신 얇고 배경에 묻히는 막대 (마우스 쓰는 화면만) */
+@media (hover: hover) and (pointer: fine) {
+  html, body:not(.overlay) * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 40%, transparent) transparent; }
+  body:not(.overlay) ::-webkit-scrollbar { width: 8px; height: 8px; }
+  body:not(.overlay) ::-webkit-scrollbar-track { background: transparent; }
+  body:not(.overlay) ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--muted) 40%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+  body:not(.overlay) ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--muted) 65%, transparent); }
+  body:not(.overlay) ::-webkit-scrollbar-corner { background: transparent; }
+}
+@media (min-width: 1600px) {
+  body:not(.overlay) main.wrap {
+    max-width: 1440px;
+    padding-left: 36px;
+    padding-right: 36px;
+  }
+  body:not(.overlay) #tfa:not([hidden]):not(.tfa-wide-single),
+  body:not(.overlay) .s19-dk-split {
+    grid-template-columns: minmax(440px, 500px) minmax(0, 1fr);
+    gap: 26px;
+  }
+  body:not(.overlay) #meta .mt-detail .mt-cols,
+  body:not(.overlay) #tfa .mt-detail .mt-cols {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 22px;
+  }
+  body:not(.overlay) #home .hm-quick {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  body:not(.overlay) #home .hm-decks,
+  body:not(.overlay) #s19-out .s19-drows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  body:not(.overlay) #s19 .s19-hgrid {
+    gap: 16px;
+  }
+  body:not(.overlay) #s19-out .s19-dk-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  body:not(.overlay) #power #pw-list,
+  body:not(.overlay) #esports #esp-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (hover: hover) {
+  body:not(.overlay) .bnav a:hover:not(.on),
+  body:not(.overlay) .pc-side-extra a:hover:not(.on) {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    color: var(--ink);
+  }
+  body:not(.overlay) .mt-row.dk:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
+  }
+  body:not(.overlay) .ab-search:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+}
+/* PC 덱 줄 (2026-11-21 사용자: "메타TFT 보고 개선, PC는 PC대로"): 한 줄에 티어 · 이름 · 시너지와 챔피언(별·템·이름) · 숫자 4칸, 누르면 아래로 펼침.
+   폰은 기존 카드 줄 그대로. 메타 덱(#mt-rows.pc-rows)과 19시즌 덱(.s19-pcrows)이 같이 쓴다 */
+@media (min-width: 1024px) {
+  body:not(.overlay) #meta:not([hidden]) { display: block; }
+  body:not(.overlay) #meta .mt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 10px; }
+  body:not(.overlay) #meta .mt-bar #mt-src { flex: none; width: 240px; }
+  body:not(.overlay) #meta .mt-frow { flex: 1 1 320px; }
+  body:not(.overlay) #meta .mt-tools { flex: 1 1 440px; }
+  body:not(.overlay) .pc-rows { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  body:not(.overlay) .pcdk { display: grid; grid-template-columns: 32px minmax(140px, 200px) minmax(0, 1fr) minmax(240px, 300px) 16px; align-items: center; gap: 0 18px;
+    padding: 12px 16px 10px 16px; background: var(--surface); border-radius: 14px; cursor: pointer; position: relative; overflow: hidden; outline: none; }
+  body:not(.overlay) .pcdk::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tc); }
+  body:not(.overlay) .pcdk:hover, body:not(.overlay) .pcdk:focus-visible { background: var(--raise); }
+  body:not(.overlay) .pcdk.open { background: var(--raise); border-radius: 14px 14px 0 0; }
+  body:not(.overlay) .pcdk-tier { width: 30px; height: 30px; font-size: 15px; border-radius: 8px; }
+  body:not(.overlay) .pcdk-name { min-width: 0; }
+  body:not(.overlay) .pcdk-name .mt-name { font-size: 16px; font-weight: 800; line-height: 1.3; }
+  body:not(.overlay) .pcdk-sub { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+  body:not(.overlay) .pcdk-board { min-width: 0; display: grid; gap: 5px; }
+  body:not(.overlay) .pcdk-traits { display: flex; flex-wrap: wrap; gap: 4px 9px; }
+  body:not(.overlay) .pcdk-traits .trx b { font-size: 12.5px; }
+  body:not(.overlay) .pcdk-units { display: flex; gap: 6px; min-width: 0; }
+  body:not(.overlay) .pcdk-u { flex: 0 1 54px; min-width: 36px; display: grid; justify-items: center; position: relative; padding-top: 12px; }
+  body:not(.overlay) .pcdk-st { position: absolute; top: 0; left: -4px; right: -4px; text-align: center; font-size: 11px; line-height: 12px; letter-spacing: -2px; color: #f5c542; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+  body:not(.overlay) .pcdk-pic { width: 100%; max-width: 48px; aspect-ratio: 1; border-radius: 9px; border: 2px solid var(--cc); overflow: hidden; background: var(--sunk); }
+  body:not(.overlay) .pcdk-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  body:not(.overlay) .pcdk-its { display: flex; gap: 1px; height: 16px; margin-top: 2px; }
+  body:not(.overlay) .pcdk-its img { width: 16px; height: 16px; border-radius: 3px; }
+  body:not(.overlay) .pcdk-un { font-size: 12px; color: var(--muted); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  body:not(.overlay) .pcdk-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; gap: 4px; }
+  body:not(.overlay) .pcdk-stats b { display: block; font-size: 20px; font-weight: 800; font-family: var(--mono); line-height: 1.2; }
+  body:not(.overlay) .pcdk-stats small { font-size: 12px; color: var(--muted); }
+  body:not(.overlay) .pcdk-chev { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); justify-self: center; margin-top: -5px; transition: transform .15s; }
+  body:not(.overlay) .pcdk.open .pcdk-chev { transform: rotate(225deg); margin-top: 5px; }
+  body:not(.overlay) .pcdk-open { background: var(--surface); border-radius: 0 0 14px 14px; padding: 8px 24px 24px; margin-top: -8px; display: grid; gap: 12px; }
+  body:not(.overlay) .pcdk-open #mt-detail { position: static; max-height: none; overflow: visible; border: 0; padding: 0; background: transparent; }
+  body:not(.overlay) .pcdk-open .dk-hero, body:not(.overlay) .pcdk-open .dk-kpi, body:not(.overlay) .pcdk-open .s19-dk-kpi { display: none; }
+  body:not(.overlay) .pcdk-open #mt-detail .mt-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; }
+  body:not(.overlay) .pcdk-open .codebtn.big { max-width: 360px; }
+}
+/* PC 덱 줄 폭별 칸: 1024~1279는 챔피언 줄을 아래로, 1280~1599는 좁은 이름·숫자 칸, 1600 이상은 넓게 */
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk { grid-template-areas: "t n b s c"; grid-template-columns: 30px 150px minmax(0, 1fr) 236px 14px; gap: 0 14px; }
+  body:not(.overlay) .pcdk-tier { grid-area: t; } body:not(.overlay) .pcdk-name { grid-area: n; } body:not(.overlay) .pcdk-board { grid-area: b; }
+  body:not(.overlay) .pcdk-stats { grid-area: s; } body:not(.overlay) .pcdk-chev { grid-area: c; }
+  body:not(.overlay) .pcdk-its { width: 100%; justify-content: center; }
+  body:not(.overlay) .pcdk-its img { flex: 0 1 16px; min-width: 0; height: auto; aspect-ratio: 1; }
+  body:not(.overlay) .pcdk-stats b { font-size: 18px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  body:not(.overlay) .pcdk { grid-template-areas: "t n s c" ". b b b"; grid-template-columns: 30px minmax(0, 1fr) 236px 14px; gap: 8px 14px; }
+}
+@media (min-width: 1600px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 32px 200px minmax(0, 1fr) 300px 16px; gap: 0 18px; }
+  body:not(.overlay) .pcdk-stats b { font-size: 20px; }
+}
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-stats b { white-space: nowrap; letter-spacing: -.4px; }
+  body:not(.overlay) .pcdk-stats small { white-space: nowrap; }
+}
+@media (min-width: 1024px) and (max-width: 1599px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 30px 150px minmax(0, 1fr) 256px 14px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  body:not(.overlay) .pcdk { grid-template-columns: 30px minmax(0, 1fr) 256px 14px; }
+}
+/* PC 19시즌 펼친 덱: 1440 이상은 왼쪽 배치판(크게), 오른쪽 팀 코드·증강·시너지·해금. 그 밑 폭은 배치판이 작아져서 한 줄로 */
+@media (min-width: 1440px) {
+  body:not(.overlay) .s19-pcopen { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-auto-flow: row dense; align-items: start; column-gap: 20px; }
+  body:not(.overlay) .s19-pcopen > * { grid-column: 2; }
+  body:not(.overlay) .s19-pcopen > .s19-bwrap { grid-column: 1; grid-row: 1 / span 6; }
+  body:not(.overlay) .s19-pcopen > .s19-card:has(.s19-dk-list), body:not(.overlay) .s19-pcopen > .fnote { grid-column: 1 / -1; }
+  body:not(.overlay) .s19-pcopen .codebtn.big { max-width: none; }
+}
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-open .s19-hex { max-width: 720px; }
+  body:not(.overlay) .pcdk-open .s19-card, body:not(.overlay) .pcdk-open .s19-sqact, body:not(.overlay) .pcdk-open .s19-bunl { margin: 0; }
+}

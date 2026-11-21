@@ -4,19 +4,20 @@
 
 ## 깃허브 (2026-11-20부터 `main` 단일 브랜치, 사용자 결정)
 - **클로드와 제미나이 모두 `main`에서만 작업한다.** PR 없음, 다른 작업 브랜치 없음.
-- **작업·예약 루틴을 시작하기 전에 항상** `git checkout main && git pull --ff-only origin main`으로 최신 커밋을 먼저 받는다 (제미나이가 그사이 푸시했을 수 있음). 끝나면 `git push origin main`. 푸시가 거절되면(그사이 새 커밋) 다시 `git pull --ff-only` 또는 `git pull --rebase origin main` 뒤 점검을 다시 돌리고 푸시. 남의 커밋을 force push로 덮지 않는다.
+- **작업·예약 루틴을 시작하기 전에 항상** `git checkout main && git pull --ff-only origin main`으로 최신 커밋을 먼저 받고 `WORK.md`의 진행 중 작업을 확인한다 (상대가 그사이 푸시했거나 같은 파일을 만지고 있을 수 있음). 끝나면 `WORK.md`를 갱신하고 `git push origin main`. 푸시가 거절되면 `git pull --ff-only` 또는 `git pull --rebase origin main` 뒤 점검을 다시 돌리고 푸시. 남의 커밋을 force push로 덮지 않는다.
 - **역할 (2026-11-21 사용자: "누가 뭐를 담당한다기보다 둘 다 하는 거로, 디자인이랑 구조 등등")**: 클로드와 제미나이 둘 다 디자인·구조·기능·데이터를 모두 한다. 정해진 몫은 없다. 매일 예약 점검(`check_patch.py`·`update.sh`)과 전적 코칭은 이 세션이 돌린다. 상대가 막 바꾼 곳을 고칠 땐 최신 `main`을 받아 그 의도를 읽고, `snap.js`·`qa.js`로 확인한 뒤 푸시한다.
 
 ## 새 세션이면
-- **`guide/HANDOFF.md`부터 읽는다** (세션 ID·예약 작업 옮기기, 사용자 성향, 앱·덱파워 현황, 남은 일). 화면 확인은 `node scripts/ui_check.js`.
+- **`guide/HANDOFF.md`와 `WORK.md`부터 읽는다** (세션 ID·예약 작업 옮기기, 사용자 성향, 앱·덱파워 현황, 진행 중인 작업). 화면 확인은 `node scripts/ui_check.js`.
 
-## 페이지 고치기 (2026-11-13부터)
-- **페이지는 `site/src/` 조각에서 고친다.** `site/tft-guide.html`은 조립 결과물이라 직접 고치지 않는다 (직접 고치면 `build_page.py`가 멈춘다). 조각: `010_style.css`(스타일), `1NN_<탭>.html`(탭별 화면), `300_core.js`~`400_app.js`(기능별 스크립트, 한 IIFE를 이름순으로 이어 붙임). 고친 뒤 `python3 scripts/build_page.py` (`android/build.sh`가 자동으로 돌림). 이 문서 아래쪽에서 "`site/tft-guide.html`의 X를 고친다"는 말은 모두 `site/src/`의 해당 조각을 뜻한다.
+## 페이지 고치기 (2026-11-13부터, 2026-11-21 CSS 5분할)
+- **페이지는 `site/src/` 조각에서 고친다.** `site/tft-guide.html`은 조립 결과물이라 직접 고치지 않는다 (직접 고치면 `build_page.py`가 멈춘다). 조각: CSS 5개(`010_base.css` 토큰·바·기본 / `011_decks.css` 덱·빌더·템·증강 / `012_rank_esports.css` 랭킹·덱파워·이스포츠 / `013_theme_v2.css` v3 테마·디시·19시즌·홈·오버레이 / `014_desktop.css` PC 1024px+ 전용), `1NN_<탭>.html`(탭별 화면), `300_core.js`~`400_app.js`(기능별 스크립트, 한 IIFE를 이름순으로 이어 붙임). 고친 뒤 `python3 scripts/build_page.py` (`android/build.sh`가 자동으로 돌림). 이 문서 아래쪽에서 "`site/tft-guide.html`의 X를 고친다"는 말은 모두 `site/src/`의 해당 조각을 뜻한다.
 - **구조를 바꾸거나 정리할 때는 `node scripts/snap.js base` → 고침 → `node scripts/snap.js cmp`.** 응답·시계를 얼려 23개 화면(탭 19 + 덱 상세·아카데미 상세·조합표·전적 검색)을 찍고 픽셀로 비교한다. 겉을 안 바꾸는 작업이면 "모두 그대로"가 나와야 하고, 일부러 바꾼 작업이면 의도한 화면만 달라야 한다.
 
 ## 앱 문구
 - **앱에 들어가는 글(버튼·설명·상태·버전 노트)은 `guide/WRITING.md` 기준으로 쓴다.** 상용 앱 말투: 해요체, 짧게, 이모지·느낌표·비유·농담·괄호 속사정 없음. 용어 통일(최종 덱, 필드 가치, 덱파워, `11/6 07:57 업데이트`). 새 문구를 넣거나 고칠 때마다 확인.
-- **올리기 전 자동 점검 `node scripts/qa.js`** (2026-11-21부터 바뀐 곳만: 지난번 통과 때 파일 지문 `data/qa_base.json`과 비교해 바뀐 조각·데이터가 쓰이는 탭과 검사 묶음만, 동시에 3개씩. 공통 조각(010_style.css·300_core.js·400_app.js·셸)이나 qa.js가 바뀌면 전부. `--all`로 강제. 새 탭·조각·JSON을 만들면 qa.js의 `JS_TAGS`/`DATA_TAGS`에 탭을 적는다, 안 적으면 전부 검사. 외부 자료는 `execA`(비동기)로 받는다) (publish_app.sh가 자동으로 돌리고 실패하면 안 올림, 2026-11-08 사용자: "도대체 왜 계속 내가 봐줘야 하지"). 모든 탭 × 폭 360·412의 오류·가로 밀림·깨진 이미지·숨김 오류, 탭별 내용이 실제로 있는지(조합표 칸 그림, 덱 줄 수 등), 버튼 동작, 데이터 신선도. **새 기능을 넣거나 버그를 고치면 그걸 잡는 검사를 qa.js에 같이 넣는다** (지적받은 버그 = 검사 하나).
+- **올리기 전 자동 점검 `node scripts/qa.js`** (2026-11-21부터 바뀐 곳만 + 동시에 4개씩 + 외부 `/proxy` 공용 캐시 `proxyGet`): 지난번 통과 때 파일 지문 `data/qa_base.json`과 비교해 바뀐 조각·데이터가 쓰이는 탭과 검사 묶음만 돌린다. 공통 조각(`010_base.css`·`013_theme_v2.css`·`300_core.js`·`400_app.js`·셸)이나 `qa.js`가 바뀌면 전부, `014_desktop.css`만 바뀌면 PC(`WEB/1280`)만 검사한다. `--all`로 전체 강제, `--fast`로 외부 네트워크 없는 15초 로컬 스모크 점검(개발 중 확인용, `qa_base.json` 미갱신). 새 탭·조각·JSON을 만들면 `qa.js`의 `CSS_TAGS`/`JS_TAGS`/`DATA_TAGS`에 탭을 적는다. `publish_app.sh`가 자동으로 돌리고 실패하면 안 올린다. **새 기능을 넣거나 버그를 고치면 그걸 잡는 검사를 `qa.js`에 같이 넣는다** (지적받은 버그 = 검사 하나).
+- **빠른 빌드·배포 안전장치 (2026-11-21)**: `bash android/build.sh`는 Java·`NATIVE`·리소스가 안 바뀌면 APK 재빌드를 자동 생략하고 `data.zip`·`manifest.json`만 ~1초 만에 갱신한다 (`--fast`로 SDK 완전 생략, `--apk`로 강제 APK 빌드). `publish_app.sh`는 ① `build_page.py --check`, ② `origin/main` 최신 여부(뒤처지면 중단), ③ `lolche-public` 버전 역전 차단, ④ `native`·`assets` 해시 동일 시 `lolche-note.apk`·`assets.zip` 재복사 생략(커밋당 ~13.7MB 절감)을 자동 적용한다. `.github/workflows/ci-deploy.yml`에 `PUBLIC_REPO_TOKEN` 시크릿을 넣으면 `main` 푸시만으로 GitHub Actions가 직렬 QA·배포까지 자동 처리한다.
 - **PC(1024px 이상)는 PC대로** (2026-11-21 사용자: "지금 사이트는 너무 모바일 같다, 모바일은 모바일대로 PC는 PC대로"): 덱 목록은 MetaTFT식 넓은 줄(`pcDeckRow`: 티어·이름·시너지·챔피언 별/템/이름·평균/선택률/승률/순방 4칸), 누르면 줄 아래로 펼침(`pcToggle`, 메타 덱은 #mt-detail을 옮겨 넣고 목록을 다시 그리기 전 `pcHome`으로 되돌림). 폰 화면은 기존 카드 그대로.
 - **화면 디자인은 `guide/DESIGN.md` 기준** (색 토큰, 강조색 하나, 테두리 대신 밝기, 덱 줄·상세 머리 모양). 새 화면도 이 틀로.
 

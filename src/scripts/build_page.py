@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """페이지 조립: site/src/ 의 조각을 이름순으로 이어 site/tft-guide.html 을 만든다.
 
-페이지는 site/src/ 에서 고친다 (화면별 HTML, 010_style.css, 기능별 JS). site/tft-guide.html 은 결과물이라
+페이지는 site/src/ 에서 고친다 (화면별 HTML, 010~014_*.css, 기능별 JS). site/tft-guide.html 은 결과물이라
 직접 고치면 안 된다. 직접 고친 흔적이 있으면(마지막 조립 결과와 다름) 덮어쓰지 않고 멈춘다.
   python3 scripts/build_page.py          # 조립
   python3 scripts/build_page.py --check  # 조립 결과와 지금 파일이 같은지만 확인
