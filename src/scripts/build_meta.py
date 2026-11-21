@@ -16,13 +16,14 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import setinfo  # noqa: E402
 import tft_data as T  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "raw" / "comps"
 OUT = ROOT / "site" / "meta.json"
 URL = "https://api-hc.metatft.com/tft-comps-api/comp_details?comp={}&cluster_id={}"
-MIN_GAMES = 3000
+MIN_GAMES = 1000 if setinfo.PBE else 3000  # PBE 최근 1일은 3일 대비 약 1/3 표본
 RANK_GROUP = {"IRON": "low", "BRONZE": "low", "SILVER": "low", "GOLD": "low", "PLATINUM": "mid", "EMERALD": "mid",
               "DIAMOND": "dia", "MASTER": "top", "GRANDMASTER": "top", "CHALLENGER": "top"}
 # 내 메인 덱 (페이지 덱 탭과 맞춘다). 이름에 이 글자가 들어가면 위로 올리고 표시한다.

@@ -146,7 +146,7 @@ def cell_rc(name):
 
 def pbe_decks(mk, units, traits):
     """MetaTFT PBE 덱 묶음 -> s19 덱 목록. 덱마다 최종 보드·자리·별·캐리 템·평균/순방/승률/판수, 묶음 번호 id (앱 새로고침이 이걸로 숫자만 바꾼다)."""
-    cs = get(PBE_API + "comps_stats?queue=PBE")
+    cs = get(PBE_API + "comps_stats?queue=PBE&days=1")
     cd = get(PBE_API + "comps_data?queue=PBE")
     if cd.get("tft_set") != "TFTSet19":
         raise RuntimeError(f"MetaTFT PBE가 19시즌이 아님 ({cd.get('tft_set')})")

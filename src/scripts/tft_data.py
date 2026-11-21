@@ -23,7 +23,7 @@ RAW = ROOT / "raw"
 OUT = ROOT / "guide" / "data"
 
 RANKS = "CHALLENGER,DIAMOND,EMERALD,GRANDMASTER,MASTER"  # 기본 기준 에메+ (2026-11-07 사용자: 플래+ 말고 에메+)
-Q = "queue=PBE" if setinfo.PBE else f"queue=1100&patch=current&days=3&rank={RANKS}&permit_filter_adjustment=true"
+Q = "queue=PBE&days=1" if setinfo.PBE else f"queue=1100&patch=current&days=3&rank={RANKS}&permit_filter_adjustment=true"
 API = "https://api-hc.metatft.com"
 SOURCES = {
     "lookup_ko": f"https://data.metatft.com/lookups/{SET}_{'pbe' if setinfo.PBE else 'latest'}_ko_kr.json",
@@ -43,7 +43,7 @@ TIERS = {
     "ch": "CHALLENGER",
 }
 TIER_LABEL = {"base": "PBE" if setinfo.PBE else "에메+", "ma": "마스터+", "gm": "그마+", "ch": "챌린저"}
-TIER_MIN = {"base": 3000, "ma": 1500, "gm": 350, "ch": 120}
+TIER_MIN = {"base": 1000 if setinfo.PBE else 3000, "ma": 1500, "gm": 350, "ch": 120}
 if not setinfo.PBE:
     for _t, _r in TIERS.items():
         _q = f"queue=1100&patch=current&days=3&rank={_r}&permit_filter_adjustment=true"

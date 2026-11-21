@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611210418">
+<meta name="lolche-web" content="202611210508">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -4694,7 +4694,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var t = document.getElementById("it-upd-t"); if (!t || !ITEMS) return;
     var at = ITEMS.liveAt || Date.parse(ITEMS.updated);
     if (rank == null) { rank = document.getElementById("it-rank").value; games = (ITEMS.tiers[rank] || ITEMS.tiers.all).games; }
-    var head = ITEMS.pbe ? ("19시즌 PBE · " + Math.round(games / 1e4).toLocaleString() + "만 판") : (RANK_LABEL[rank] + " · 최근 3일 " + Math.round(games / 1e4).toLocaleString() + "만 판");
+    var head = ITEMS.pbe ? ("19시즌 PBE 최근 1일 · " + Math.round(games / 1e4).toLocaleString() + "만 판") : (RANK_LABEL[rank] + " · 최근 3일 " + Math.round(games / 1e4).toLocaleString() + "만 판");
     t.textContent = msg || (head + "\n" + updAt(at) + " · " + ago(at) + " · MetaTFT");
   }
   function itGrade(g, avg, freq) {  // scripts/build_items.py grade()와 같게
@@ -4719,7 +4719,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   function itRefresh(btn) {
     btn.disabled = true; btn.textContent = "불러오는 중";
     var req = ITEMS && ITEMS.pbe
-      ? viaApp("https://api-hc.metatft.com/tft-stat-api/items_matches?queue=PBE").then(function (d) {
+      ? viaApp("https://api-hc.metatft.com/tft-stat-api/items_matches?queue=PBE&days=1").then(function (d) {
           var g = (d.games || []).reduce(function (a, x) { return a + (x.count || 0); }, 0) || 1;
           var rec = { g: g, r: (d.results || []).map(function (r) { return [r.itemName, (r.places || []).slice(0, 8)]; }) };
           return { at: Date.now(), t: { all: rec, emer: rec } };
@@ -4847,13 +4847,13 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var b = (document.getElementById("mt-basis") || {}).value || "emer", tot = (META.totals || {})[b];
     var at = META.srcAt || META.src_at || (META.liveAt ? new Date(META.liveAt) : META.updated);
     var ats = typeof at === "number" ? at : at instanceof Date ? +at : Date.parse(at);
-    var srcLbl = META.pbe ? "MetaTFT 19시즌 PBE" : "MetaTFT 최근 3일";
+    var srcLbl = META.pbe ? "MetaTFT 19시즌 PBE 최근 1일" : "MetaTFT 최근 3일";
     t.textContent = msg || ((tot ? "분석된 덱 " + tot.toLocaleString() + " · " + srcLbl + "\n" : "") + updAt(at) + (ats ? " · " + ago(ats) : "") + (tot ? "" : " · " + srcLbl));
   }
   function metaRefresh(btn) {
     btn.disabled = true; btn.textContent = "불러오는 중";
     var req = META && META.pbe
-      ? viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE").then(function (r) {
+      ? viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&days=1").then(function (r) {
           var cid = String(r.cluster_id);
           if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel("덱 구성이 바뀌어 다음 업데이트 때 반영돼요"); return null; }
           var m = {}, tot = 1;
@@ -8326,7 +8326,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
   function s19Refresh(btn, note) {
     btn.disabled = true; btn.textContent = "불러오는 중";
-    viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE").then(function (r) {
+    viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&days=1").then(function (r) {
       if (S19.decksCid && String(r.cluster_id) !== String(S19.decksCid)) { note.textContent = "덱 구성이 바뀌어 다음 업데이트 때 반영돼요"; return; }
       var L = { at: Date.now(), cid: String(r.cluster_id), s: {}, total: 1, src: r.updated || Date.now() };
       (r.results || []).forEach(function (x) { if (x.cluster) L.s[x.cluster] = x.places; else L.total = x.places[0]; });
@@ -8985,7 +8985,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var dbox = document.getElementById("hm-decks");
     if (dbox && META && IDX) {
       var msub = document.getElementById("hm-meta-sub");
-      if (msub) msub.textContent = (META.pbe ? "MetaTFT PBE" : "에메+") + " · " + (META.patch || "");
+      if (msub) msub.textContent = (META.pbe ? "MetaTFT PBE 최근 1일" : "에메+") + " · " + (META.patch || "");
       var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer"); })
         .sort(function (a, b) { return basisSt(a.st, "emer")[0] - basisSt(b.st, "emer")[0]; })
         .slice(0, 4);

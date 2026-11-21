@@ -1,12 +1,12 @@
 # 인수인계 (새 세션이 처음 읽을 것)
 
-마지막 정리: 2026-11-21, 앱 v3.0.0 (android/NATIVE 12). **브랜치는 `main` 하나** (클로드·제미나이 공용, PR 없음). 작업 전 `WORK.md` 확인.
+마지막 정리: 2026-11-21, 앱 v3.0.1 (android/NATIVE 12). **브랜치는 `main` 하나** (클로드·제미나이 공용, PR 없음). 작업 전 `WORK.md` 확인.
 규칙 전체는 `CLAUDE.md`, 앱 문구 기준은 `guide/WRITING.md`, 디자인은 `guide/DESIGN.md`, 게임 지식은 `guide/kb/` (먼저 `python3 scripts/kb.py 키워드`).
 
 ## 0. 지금 상태 (2026-11-21)
-- **v3.0.0 19시즌 전면 전환 (제미나이)**:
+- **v3.0.0~v3.0.1 19시즌 전면 전환 + PBE 최근 1일 (제미나이)**:
   - `scripts/setinfo.py`: `LIVE_NUM`(본섭, 12/1 전 18) · `NUM`(공략 세트 19) · `PBE = LIVE_NUM < NUM` · `SET`/`LIVE_SET` · `SEASON`(dak.gg 본섭) · `GUIDE_SEASON` · `unit_ok()`(DA_*19, 7코스트). **12/1에 `LIVE_NUM = 19`로 올리면** PBE 분기가 꺼지고 전적·랭킹도 19시즌이 된다.
-  - 공략 데이터(`db/items/meta/guides/tfa/icons index`)는 19시즌 PBE(MetaTFT `queue=PBE`, TFT Academy `set=19`) 기준. `META.pbe`/`ITEMS.pbe`면 티어 고르기(에메+ 등)를 숨기고 새로고침도 `queue=PBE`로 받는다. TFT Academy 증강·아이템 티어표가 비면 아카데미의 증강·아이템 보기를 숨긴다.
+  - 공략 데이터(`db/items/meta/guides/tfa/icons index`)는 19시즌 PBE 최근 1일(MetaTFT `queue=PBE&days=1`, TFT Academy `set=19`) 기준. `META.pbe`/`ITEMS.pbe`면 티어 고르기(에메+ 등)를 숨기고 새로고침도 `queue=PBE&days=1`로 받는다. TFT Academy 증강·아이템 티어표가 비면 아카데미의 증강·아이템 보기를 숨긴다.
   - 전적·친구·덱파워·이스포츠는 `LIVE_SET_ID`(본섭 18시즌) 그대로, 18시즌 아이콘은 `site/oldsets.json`의 로컬 `icons/` 경로로 그린다.
   - 하단 5탭: `홈 · 덱(#meta) · 도감(#s19, data-nav=dex) · 전적 · 더보기`. `#s19`는 이제 도감(챔피언·해금·시너지·빌더·증강·아이템)이고 19시즌 덱은 `#meta`에서 본다.
   - `qa.js`: 모든 탭에서 화면에 `undefined`·`NaN` 글자 금지, 폰 검사는 `reducedMotion`(탭 들어오는 움직임 때문에 여백이 5px 커 보이던 흔들림 제거).
