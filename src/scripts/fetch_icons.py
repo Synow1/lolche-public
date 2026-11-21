@@ -21,28 +21,12 @@ RAW = ROOT / "raw"
 OUT = ROOT / "site" / "icons"
 CDN = "https://cdn.metatft.com"
 SIZE = 96
-UNIT_SIZE = 128  # 챔피언은 배치판에 크게 나와서 MetaTFT 원본 크기(128)로 (2026-11-21 사용자: "아이콘 화질이 깨져 보여")
 HEADERS = {"User-Agent": "Mozilla/5.0", "Accept": "image/webp,image/*", "Referer": "https://www.metatft.com/"}
-
-
-def size_of(kind):
-    return UNIT_SIZE if kind == "champions" else SIZE
-
-
-def too_small(path, kind):
-    """예전에 96px로 받은 챔피언 그림이면 다시 받는다"""
-    if kind != "champions" or not path.exists(): return False
-    try:
-        from PIL import Image
-        return Image.open(path).size[0] < UNIT_SIZE
-    except Exception:
-        return False
 
 
 def get(kind, name):
     src = f"{CDN}/file/metatft/{kind}/{name}.png"
-    sz = size_of(kind)
-    url = f"{CDN}/cdn-cgi/image/width={sz},height={sz},quality=88,format=webp/{src}"
+    url = f"{CDN}/cdn-cgi/image/width={SIZE},height={SIZE},format=webp/{src}"
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.read()
@@ -50,12 +34,12 @@ def get(kind, name):
 
 def save(kind, folder, name):
     path = OUT / folder / f"{name}.webp"
-    if not path.exists() or too_small(path, kind):
+    if not path.exists():
         try:
             data = get(kind, name)
-        except Exception as e:
-            print("missing", kind, name, getattr(e, "code", e))
-            return f"icons/{folder}/{name}.webp" if path.exists() else None
+        except urllib.error.HTTPError as e:
+            print("missing", kind, name, e.code)
+            return None
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
         time.sleep(0.05)

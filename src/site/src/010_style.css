@@ -354,7 +354,7 @@ td .row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .hxwrap { position: relative; }
 .hxwrap .st { position: absolute; top: -3px; left: 0; right: 0; text-align: center; font-size: var(--fs-2xs); line-height: 1; color: var(--accent); letter-spacing: -1px; text-shadow: 0 0 2px var(--bg), 0 0 2px var(--bg); z-index: 1; }
 .hxwrap .its { position: absolute; bottom: -2px; left: 0; right: 0; display: flex; justify-content: center; gap: 0; z-index: 1; }
-.hxwrap .its img { width: 34%; max-width: 16px; aspect-ratio: 1; border-radius: 2px; border: 1px solid var(--bg); }
+.hxwrap .its img { width: 34%; max-width: 15px; aspect-ratio: 1; border-radius: 2px; border: 1px solid var(--bg); }
 .hxn { position: absolute; left: -3px; right: -3px; bottom: 4%; z-index: 2; text-align: center; pointer-events: none;
   font-size: clamp(8.5px, 2.6vw, 11px); font-weight: 700; line-height: 1.25; color: #fff; letter-spacing: -.3px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 2px #000, 0 0 3px #000, 0 1px 2px #000; }
@@ -2113,16 +2113,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .dk .mt-strip > .tfa-u3 { flex: 0 1 30px; min-width: 18px; }
   body:not(.overlay) .dk .mt-strip > img,
   body:not(.overlay) .dk .mt-strip > .tfa-u3 img { width: 100%; max-width: 30px; height: auto; aspect-ratio: 1; }
-  /* 배치판 (2026-11-21 사용자: "배치판이 진짜 중요함, 아이템·아이콘 크기 키워"): 2단 상세는 칸에 꽉, 전체 화면 상세는 760px까지 */
-  body:not(.overlay) .hexboard .its img,
-  body:not(.overlay) .s19-hex .its img { width: clamp(18px, 26%, 28px); height: auto; max-width: none; border-radius: 4px; }
-  body:not(.overlay) #mt-detail .hexboard,
-  body:not(.overlay) .s19-dk-col-detail .s19-hex,
-  body:not(.overlay) #tfa-detail .hexboard { max-width: 100%; }
-  body:not(.overlay) .fs-view .hexboard,
-  body:not(.overlay) .fs-view .s19-hex { max-width: 760px; margin: 10px auto 8px; }
-  body:not(.overlay) .fs-view .hxn { font-size: 14px; }
-  body:not(.overlay) .fs-view .hxwrap .st { font-size: 14px; top: -6px; }
 }
 /* 스크롤바: 기본 회색 막대 대신 얇고 배경에 묻히는 막대 (마우스 쓰는 화면만) */
 @media (hover: hover) and (pointer: fine) {

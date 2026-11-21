@@ -565,19 +565,10 @@ function fresh(file, key, hours) {
     const tps = S.units.map(u => u.tp).filter(Boolean), tpDup = tps.filter((c, i) => tps.indexOf(c) !== i);
     if (tps.length < S.units.length * 0.8) fail(`19시즌: 팀 플래너 코드 있는 챔피언이 적음 (${tps.length}/${S.units.length})`);
     if (tpDup.length) fail('19시즌: 팀 플래너 코드가 겹침 ' + tpDup.join(', '));
-    // PBE 덱 통계 (MetaTFT queue=PBE, 2026-11-21~): 묶음 번호(새로고침용)와 배치판 자리가 다 있어야
-    if ((S.decks || []).length < 15) fail(`19시즌: PBE 덱 통계 ${(S.decks || []).length}개 (너무 적음)`);
-    if (!S.decksCid || (S.decks || []).some(d => !d.id)) fail('19시즌: PBE 덱에 묶음 번호(id/decksCid)가 없어 새로고침이 안 됨');
-    const noPos = (S.decks || []).filter(d => d.u.some(c => !c.pos)).map(d => d.n);
-    if (noPos.length) fail('19시즌: 배치판에 자리 없는 챔피언이 있는 PBE 덱 ' + noPos.slice(0, 3).join(', '));
-    const s19Small = S.units.filter(u => { try { const f = path.join(SITE, u.img); return fs.existsSync(f) && fs.statSync(f).size < 2500; } catch (e) { return false; } }).map(u => u.n);
-    if (s19Small.length > 10) notes.push('19시즌: 챔피언 그림이 작은(흐린) 파일이 많음 ' + s19Small.slice(0, 5).join(', '));
     const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     await pg.route('https://lolche.local/**', async (r) => { const u = new URL(r.request().url());
       if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
-      // PBE 통계 새로고침: 첫 덱을 1등만 한 덱으로 바꾼 가짜 MetaTFT 응답 (s19Apply가 숫자를 바꾸는지)
-      if (u.pathname === '/proxy' && /queue=PBE/.test(u.searchParams.get('u') || '') && S.decks[0]) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cluster_id: S.decksCid, updated: Date.now(), results: [{ cluster: '', places: [8000000] }, { cluster: S.decks[0].id, places: [9000, 0, 0, 0, 0, 0, 0, 0, 9000], count: 9000 }] }) });
       if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
       const f = path.join(SITE, decodeURIComponent(u.pathname)); return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' }); });
     const errs = []; pg.on('pageerror', e => errs.push(String(e)));
@@ -590,15 +581,6 @@ function fresh(file, key, hours) {
       if (r.sw > 360) fail(`19시즌 ${v}: 화면보다 넓음 ${r.sw}px`);
       if (r.seg) fail('19시즌: 보기 버튼 글자가 두 줄로 꺾임');
     }
-    // PBE 덱 통계 새로고침 버튼 (2026-11-21 사용자 요청): 누르면 MetaTFT PBE 숫자로 바뀌는지 (가짜 응답: 첫 덱 평균 1.00)
-    await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]').click()); await pg.waitForTimeout(400);
-    await pg.evaluate(() => document.querySelector('#s19-out .s19-dmode button:last-child')?.click()); await pg.waitForTimeout(400);
-    const rfBtn = await pg.evaluate(() => { const b = document.querySelector('#s19-out .s19-upd button'); if (b) b.click(); return !!b; }); await pg.waitForTimeout(800);
-    const rfAvg = await pg.evaluate(() => [...document.querySelectorAll('#s19-out .mt-row.dk .mt-num .dk-avg')].map(x => x.textContent.trim())[0] || '');
-    if (!rfBtn) fail('19시즌 덱: PBE 통계 새로고침 버튼이 없음');
-    else if (rfAvg !== '1.00') fail(`19시즌 덱: 새로고침해도 PBE 통계가 안 바뀜 (첫 덱 평균 ${rfAvg})`);
-    await pg.evaluate(() => { try { localStorage.removeItem('tft-guide-s19-live'); } catch (e) {} });
-    await pg.evaluate(() => document.querySelector('#s19-out .s19-dmode button:first-child')?.click()); await pg.waitForTimeout(300);
     // 19시즌 추천 덱 상세 열기 + '빌더로 불러오기' + 뒤로가기 연쇄 검증 (2026-11-20 사용자: 뒤로가기 멈춤/건너뜀 방지)
     await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]').click()); await pg.waitForTimeout(400);
     await pg.evaluate(() => document.querySelector('#s19-out .mt-row.dk')?.click()); await pg.waitForTimeout(400);
@@ -769,17 +751,17 @@ function fresh(file, key, hours) {
       });
       if (!itAl || Math.abs(itAl.hw - itAl.rw) > 12) fail(`[WEB/1280] 아이템 티어표 머리줄 폭 어긋남 (head=${itAl && itAl.hw}px, row=${itAl && itAl.rw}px)`);
 
-      // 19시즌 추천 덱 2단 보기 확인
+      // 19시즌 추천 덱 2단 보기 + 실시간 새로고침 버튼 확인
       await go('s19'); await pg.waitForTimeout(500);
       await pg.evaluate(() => document.querySelector('#s19-view [data-v=decks]')?.click()); await pg.waitForTimeout(600);
       const s19w = await pg.evaluate(() => {
-        const l = document.querySelector('#s19-out .s19-dk-col-list'), d = document.querySelector('#s19-out .s19-dk-col-detail');
-        return l && d ? { lR: l.getBoundingClientRect().right, dL: d.getBoundingClientRect().left, t0: (d.querySelector('.dc-vt') || {}).textContent || '', hex: d.querySelectorAll('.s19-hex .hx').length } : null;
+        const l = document.querySelector('#s19-out .s19-dk-col-list'), d = document.querySelector('#s19-out .s19-dk-col-detail'), rb = document.getElementById('s19-upd-btn');
+        return l && d ? { lR: l.getBoundingClientRect().right, dL: d.getBoundingClientRect().left, t0: (d.querySelector('.dc-vt') || {}).textContent || '', hex: d.querySelectorAll('.s19-hex .hx').length, btn: !!rb && !rb.hidden } : null;
       });
       if (!s19w || s19w.dL < s19w.lR - 2 || !s19w.t0 || s19w.hex < 20) fail(`[WEB/1280] 19시즌 추천 덱 2단 레이아웃 이상 (${JSON.stringify(s19w)})`);
-      // 배치판이 상세 칸을 채우고 템 아이콘이 18px 이상 (2026-11-21 사용자: "배치판이 진짜 중요함, 아이템·아이콘 키워")
-      const s19b = await pg.evaluate(() => { const d = document.querySelector('#s19-out .s19-dk-col-detail'), h = d && d.querySelector('.s19-hex'), it = h && h.querySelector('.its img'); return h ? { hw: h.getBoundingClientRect().width, dw: d.getBoundingClientRect().width, it: it ? it.getBoundingClientRect().width : 0 } : null; });
-      if (!s19b || s19b.hw < s19b.dw * 0.8 || s19b.it < 18) fail(`[WEB/1280] 19시즌 배치판이 작음 (${JSON.stringify(s19b)})`);
+      if (s19w && !s19w.btn) fail('[WEB/1280] 19시즌 추천 덱: 새로고침 버튼이 안 보임');
+      await pg.evaluate(() => document.getElementById('s19-upd-btn')?.click()); await pg.waitForTimeout(3000);
+      if (await pg.evaluate(() => document.querySelectorAll('#s19-out .s19-dk-col-list .mt-row').length) < 15) fail('[WEB/1280] 19시즌 추천 덱: 새로고침 후 덱 목록 15개 미만');
       await pg.evaluate(() => document.querySelectorAll('#s19-out .s19-dk-col-list .mt-row')[1]?.click()); await pg.waitForTimeout(300);
       const s19t1 = await pg.evaluate(() => (document.querySelector('#s19-out .s19-dk-col-detail .dc-vt') || {}).textContent || '');
       if (!s19t1 || (s19w && s19t1 === s19w.t0)) fail('[WEB/1280] 19시즌 추천 덱 2단: 다른 덱을 눌러도 오른쪽 상세가 안 바뀜');
