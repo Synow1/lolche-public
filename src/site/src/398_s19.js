@@ -41,7 +41,7 @@
   }
   function s19Load() {
     if (S19) return Promise.resolve(S19);
-    return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) { S19 = d; if (typeof homeRender === "function") homeRender(); return d; });
+    return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) { S19 = d; s19LiveLoad(); if (typeof homeRender === "function") homeRender(); return d; });
   }
   function s19Jump(view, opts) {
     var nextV = view || "home";
@@ -107,6 +107,41 @@
   }
 
   // 19시즌 4x7 육각 보드 배치도 (챔피언 누르면 19시즌 상세로 이동)
+  /* ---- PBE 덱 통계 새로고침 (2026-11-21 사용자: "pbe 통계도 새로고침 버튼 만들어 줘야지"): MetaTFT comps_stats?queue=PBE를 바로 받아
+     덱마다 평균·승률·순방·판수·선택률·티어만 바꾼다 (배치·템은 그대로, 덱 묶음 번호가 바뀌면 다음 업데이트 때). 덱 탭 새로고침과 같은 방식 ---- */
+  var S19_LIVE = "tft-guide-s19-live";
+  function s19Apply(L) {
+    var by = {};
+    (S19.decks || []).forEach(function (d) {
+      var a = d.id && L.s[d.id]; if (!a) return;
+      var n = a[8] || 1, sum = 0; for (var i = 0; i < 8; i++) sum += a[i] * (i + 1);
+      d.avg = Math.round(sum / n * 100) / 100; d.win = Math.round(a[0] / n * 1000) / 10; d.top4 = Math.round((a[0] + a[1] + a[2] + a[3]) / n * 1000) / 10;
+      d.plays = n; d.pick = Math.round(n / L.total * 800) / 100;  // 선택률 = 로비 8명 중 평균 몇 명 (덱 탭과 같은 정의)
+    });
+    var order = (S19.decks || []).slice().sort(function (a, b) { return a.avg - b.avg; });
+    order.forEach(function (x, i) { var q = i / order.length; x.tier = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; by[x.id] = x; });
+    (S19.guides || []).forEach(function (g) { var x = g.sid && by[g.sid]; if (x) { g.tier = x.tier; g.avg = x.avg; g.win = x.win; g.top4 = x.top4; g.pick = x.pick; g.plays = x.plays; } });
+    S19.decksPlays = Math.floor(L.total / 8);
+    if (L.src) S19.decksUpdated = new Date(L.src).toISOString();
+    S19.liveAt = L.at;
+  }
+  function s19LiveLoad() {
+    try {
+      var L = JSON.parse(localStorage.getItem(S19_LIVE) || "null");
+      if (L && L.cid === String(S19.decksCid) && L.src > Date.parse(S19.decksUpdated || 0)) s19Apply(L);
+    } catch (e) {}
+  }
+  function s19Refresh(btn, note) {
+    btn.disabled = true; btn.textContent = "불러오는 중";
+    viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE").then(function (r) {
+      if (S19.decksCid && String(r.cluster_id) !== String(S19.decksCid)) { note.textContent = "덱 구성이 바뀌어 다음 업데이트 때 반영돼요"; return; }
+      var L = { at: Date.now(), cid: String(r.cluster_id), s: {}, total: 1, src: r.updated || Date.now() };
+      (r.results || []).forEach(function (x) { if (x.cluster) L.s[x.cluster] = x.places; else L.total = x.places[0]; });
+      try { localStorage.setItem(S19_LIVE, JSON.stringify(L)); } catch (e) {}
+      s19Apply(L); s19Render();
+    }).catch(function () { note.textContent = "불러오지 못했어요. 다시 시도해 주세요"; })
+      .then(function () { btn.disabled = false; btn.textContent = "새로고침"; });
+  }
   function s19HexBoard(units) {
     var wrap = el("div", "hexboard s19-hex"), at = {};
     units.forEach(function (x) { if (x.pos && x.pos.length === 2) at[x.pos[0] + "," + x.pos[1]] = x; });
@@ -218,8 +253,11 @@
     s19Search(tools, "19시즌 덱·챔피언·시너지 검색 (초성 가능)");
     s19Chips(tools, [["avg", "평균 등수순"], ["win", "승률순"], ["plays", "인기순"]], s19St.ds || "avg", function (v) { s19St.ds = v; });
     if (!list.length) { out.appendChild(el("p", "empty", "19시즌 추천 덱 데이터를 불러오는 중이에요")); return; }
-    var metaLine = (mode === "guide" ? "롤체지지 추천 배치 · " : "롤체지지 PBE · ") + (S19.decksPlays ? S19.decksPlays.toLocaleString() + "판 분석" : list.length + "개 덱") + (S19.decksUpdated ? " · " + updAt(S19.decksUpdated) : "");
-    out.appendChild(el("p", "sub s19-lead", metaLine));
+    var metaLine = (mode === "guide" ? "롤체지지 추천 배치 · " : "") + "MetaTFT PBE " + (S19.decksPlays ? S19.decksPlays.toLocaleString() + "판 분석" : list.length + "개 덱");
+    var upd = el("div", "mt-upd s19-upd"), note = el("span", null, metaLine + (S19.decksUpdated ? "\n" + updAt(S19.decksUpdated) + " · " + ago(Date.parse(S19.decksUpdated)) : ""));
+    upd.appendChild(note);
+    if (LIVE && S19.decks && S19.decks.length) { var rb = el("button", null, "새로고침"); rb.type = "button"; rb.addEventListener("click", function () { s19Refresh(rb, note); }); upd.appendChild(rb); }
+    out.appendChild(upd);
     var f = list.filter(function (d) {
       return s19Match(d.n) || (d.t || []).some(function (t) { return s19Match(t[0]); }) || d.u.some(function (x) { var u = s19Unit(x.k); return u && s19Match(u.n); });
     }).slice().sort(function (a, b) {
@@ -356,7 +394,7 @@
       ul.appendChild(row);
     });
     uc.appendChild(ul); b.appendChild(uc);
-    b.appendChild(el("p", "fnote", "출처 롤체지지 PBE · 패치 전 수치와 조합은 바뀔 수 있어요"));
+    b.appendChild(el("p", "fnote", (d.guide ? "배치 롤체지지 · 통계 MetaTFT PBE" : "출처 MetaTFT PBE") + " · 패치 전 수치와 조합은 바뀔 수 있어요"));
   }
   function s19OpenDeck(d) {
     var subTxt = "19시즌 PBE" + (d.tier ? " · " + d.tier + "티어" : "") + (d.plays ? " · " + d.plays.toLocaleString() + "판" : "");
@@ -422,7 +460,7 @@
     [["해금", "일부 챔피언은 조건(시너지 별 레벨 총합, 아이템 장착, 연승 등)을 달성해야 상점에 등장해요. 알리스타·징크스처럼 7레벨부터 조건이 집계되는 챔피언도 있어요"],
      ["프리즘 퀘스트", "K/DA·HEARTSTEEL·펜타킬·Ionic Spark는 상징 외에도 프리즘 퀘스트 아이템이 있어요"],
      ["고유 시너지", "챔피언 1명만 보유한 전용 시너지예요. 필드에 배치하는 즉시 활성화돼요"],
-     ["출처", "MetaTFT PBE 원문과 롤체지지 한국어 데이터예요"]].forEach(function (x) { var li = el("li"); li.appendChild(el("b", null, x[0])); li.appendChild(document.createTextNode(" " + x[1])); ul.appendChild(li); });
+     ["출처", "MetaTFT PBE 원문·덱 통계와 롤체지지 한국어 데이터예요"]].forEach(function (x) { var li = el("li"); li.appendChild(el("b", null, x[0])); li.appendChild(document.createTextNode(" " + x[1])); ul.appendChild(li); });
     rules.appendChild(ul); hgrid.appendChild(rules);
     out.appendChild(hgrid);
   }
