@@ -887,6 +887,10 @@ function fresh(file, key, hours) {
         clip: r.filter(x => { const b = x.querySelector('.pcdk-units'), l = b && b.lastElementChild; return l && l.getBoundingClientRect().right > b.getBoundingClientRect().right + 1; }).length }; });
       if (mt2.n < 15 || mt2.units < 5 || mt2.stats !== '평균 등수,선택률,승률,순방률') fail(`[WEB/1280] 메타 덱: PC 줄 모양이 아님 (${JSON.stringify(mt2)})`);
       if (mt2.clip) fail(`[WEB/1280] 메타 덱: 챔피언이 줄 밖으로 잘린 줄 ${mt2.clip}개`);
+      // 숫자 4칸 색 (2026-11-21 사용자: "덱탭 색깔도 칠해줘, 평등이랑"): 값마다 색이 달라야 (흰 글자 그대로면 실패)
+      const mtCol = await pg.evaluate(() => { const f = document.querySelector('#mt-rows .pcdk'); if (!f) return null; const bs = [...f.querySelectorAll('.pcdk-stats b')], ink = getComputedStyle(f.querySelector('.pcdk-name .mt-name')).color;
+        return { graded: bs.filter(x => x.classList.contains('dk-grad')).length, plain: bs.filter(x => getComputedStyle(x).color === ink).length }; });
+      if (!mtCol || mtCol.graded < 4 || mtCol.plain) fail(`[WEB/1280] 메타 덱: 평균 등수·선택률·승률·순방률 숫자에 색이 안 칠해짐 (${JSON.stringify(mtCol)})`);
       await pg.evaluate(() => document.querySelectorAll('#mt-rows .pcdk')[1]?.click()); await pg.waitForTimeout(500);
       const mt2b = await pg.evaluate(() => { const o = document.querySelector('#mt-rows .pcdk-open'); return { open: document.querySelectorAll('#mt-rows .pcdk-open').length, after: !!(o && o.previousElementSibling === document.querySelectorAll('#mt-rows .pcdk')[1]), hex: o ? o.querySelectorAll('#mt-detail .hexboard .hx').length : 0, code: !!(o && o.querySelector('.codebtn')) }; });
       if (mt2b.open !== 1 || !mt2b.after || mt2b.hex < 20 || !mt2b.code) fail(`[WEB/1280] 메타 덱: 누른 줄 아래로 상세(배치판·팀 코드)가 안 펼쳐짐 (${JSON.stringify(mt2b)})`);

@@ -451,3 +451,14 @@
   body:not(.overlay) .pcdk-open .s19-hex { max-width: 720px; }
   body:not(.overlay) .pcdk-open .s19-card, body:not(.overlay) .pcdk-open .s19-sqact, body:not(.overlay) .pcdk-open .s19-bunl { margin: 0; }
 }
+/* PC 덱 줄 숫자 4칸도 폰 덱 줄처럼 값에 따라 색 (2026-11-21 사용자: "덱탭 색깔도 칠해줘, 평등이랑"). 평균 등수·승률·순방률·선택률 */
+@media (min-width: 1024px) {
+  body:not(.overlay) .pcdk-stats b.dk-grad { color: var(--gl, var(--accent)); }
+  body:not(.overlay) .pcdk-stats b.dk-op { font-weight: 900; text-shadow: 0 0 12px color-mix(in srgb, var(--gl, var(--accent2)) 28%, transparent); }
+  :root[data-theme="dark"] body:not(.overlay) .pcdk-stats b.dk-grad { color: var(--gd, var(--accent)); }
+  :root[data-theme="dark"] body:not(.overlay) .pcdk-stats b.dk-op { text-shadow: 0 0 14px color-mix(in srgb, var(--gd, var(--accent2)) 48%, transparent); }
+}
+@media (min-width: 1024px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body:not(.overlay) .pcdk-stats b.dk-grad { color: var(--gd, var(--accent)); }
+  :root:not([data-theme="light"]) body:not(.overlay) .pcdk-stats b.dk-op { text-shadow: 0 0 14px color-mix(in srgb, var(--gd, var(--accent2)) 48%, transparent); }
+}
