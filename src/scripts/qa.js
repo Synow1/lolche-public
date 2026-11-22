@@ -207,12 +207,56 @@ function fresh(file, key, hours) {
     }
     if (['meta', 'tfa'].some(need)) {
     await go('meta'); await pg.waitForTimeout(800);
-    for (const s of ['guide', 'stat']) {
-      await q((s) => document.querySelector('#mt-src [data-s=' + s + ']').click(), s); await pg.waitForTimeout(600);
+    if (await q(() => !!document.getElementById('mt-src'))) fail('덱 탭: 추천 덱/전체 통계 분리 토글(#mt-src)이 남아 있음');
+    {
       const n = await q(() => [...document.querySelectorAll('#mt-rows .mt-row')].filter(x => x.offsetParent).length);
-      if (n < 15) fail(`덱 탭 ${s}: 덱 줄 ${n}개`);
+      if (n < 15) fail(`덱 탭: 덱 줄 ${n}개`);
       const bad = await q(() => [...document.querySelectorAll('#meta .mt-row.dk')].filter(x => x.offsetParent && !x.querySelector('.dk-hex img')).length);
-      if (bad) fail(`덱 탭 ${s}: 메인 캐리 그림 없는 줄 ${bad}개`);
+      if (bad) fail(`덱 탭: 메인 캐리 그림 없는 줄 ${bad}개`);
+      // v3.2.0: 같은 메인 캐리 + 7명 이상 겹치는 덱이 목록에 두 줄로 나오면 실패, 가이드 연결 덱에 '가이드' 표시 필수
+      const M = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
+      const G = JSON.parse(fs.readFileSync(path.join(SITE, 'guides.json'), 'utf8'));
+      const IDX = JSON.parse(fs.readFileSync(path.join(SITE, 'icons', 'index.json'), 'utf8'));
+      const byId = Object.fromEntries((M.decks || []).map(d => [String(d.id), d]));
+      const gLinked = new Set((G.decks || []).map(g => g.cluster && String(g.cluster)).filter(Boolean));
+      const mainOfD = (d) => {
+        const nm = String(d.name || '').replace(/^\[[^\]]+\]\s*/, '');
+        const real = (d.board || []).filter(b => !b.plant);
+        const held = real.filter(b => b.i && b.i.length);
+        const named = held.filter(b => nm.indexOf(b.u) >= 0).sort((a, b) => nm.indexOf(a.u) - nm.indexOf(b.u));
+        return (named[0] || held.sort((a, b) => b.i.length - a.i.length)[0] || real[0] || {}).u || '';
+      };
+      const rows = await q(() => [...document.querySelectorAll('#mt-rows .mt-row.dk')].map(r => ({
+        id: r.dataset.id || '', subs: (r.dataset.subs || '').split(',').filter(Boolean),
+        gd: [...r.querySelectorAll('.gd-badge')].some(x => x.textContent.trim() === '가이드')
+      })));
+      const metaRows = (rows || []).filter(r => byId[r.id]);
+      for (let i = 0; i < metaRows.length; i++) {
+        const a = byId[metaRows[i].id], ma = mainOfD(a), ua = new Set((a.board || []).filter(b => !b.plant).map(b => b.u));
+        for (let j = i + 1; j < metaRows.length; j++) {
+          const b = byId[metaRows[j].id]; if (ma && ma === mainOfD(b)) {
+            const ov = (b.board || []).filter(u => !u.plant && ua.has(u.u)).length;
+            if (ov >= 7) fail(`덱 탭 중복: 같은 메인 캐리(${ma})·${ov}명 겹치는 덱이 두 줄로 나옴 (${a.name} / ${b.name})`);
+          }
+        }
+      }
+      const missGd = metaRows.filter(r => (r.subs.length ? r.subs : [r.id]).some(id => gLinked.has(id)) && !r.gd);
+      if (missGd.length) fail(`덱 탭: 가이드 연결 덱 ${missGd.length}개에 '가이드' 표시가 없음 (${missGd.slice(0, 3).map(x => x.id).join(', ')})`);
+      if (!metaRows.some(r => r.gd)) fail('덱 탭: 가이드 표시(.gd-badge)가 하나도 없음');
+      // 비슷한 덱 합친 줄 열기 → 칩(tfa-tab) 전환 + 뒤로가기
+      const mergedRow = metaRows.find(r => r.subs.length > 1);
+      if (mergedRow) {
+        await q((id) => document.querySelector('#mt-rows .mt-row[data-id="' + id + '"]')?.click(), mergedRow.id); await pg.waitForTimeout(500);
+        const vr = await q(() => ({
+          h: (document.querySelector('#mt-detail .mt-vars-h') || {}).textContent || '',
+          tabs: [...document.querySelectorAll('#mt-detail .mt-vars .tfa-tab')].map(x => x.textContent.trim()),
+          subs: document.querySelectorAll('#mt-detail .mt-vars .tfa-tab[data-sub]').length
+        }));
+        if (!vr || !/비슷한 덱 \d+개/.test(vr.h) || vr.subs < 2 || vr.tabs.some(t => !/\d+\.\d{2}/.test(t))) fail(`덱 상세: 비슷한 덱 칩·평균 등수 표시 이상 (${JSON.stringify(vr)})`);
+        await q(() => document.querySelectorAll('#mt-detail .mt-vars .tfa-tab[data-sub]')[1]?.click()); await pg.waitForTimeout(400);
+        if (!(await q(() => document.querySelectorAll('#mt-detail .mt-vars .tfa-tab[data-sub]')[1]?.classList.contains('on')))) fail('덱 상세: 비슷한 덱 칩을 눌러도 안 바뀜');
+        await q(() => document.querySelector('#mt-detail .back')?.click()); await pg.waitForTimeout(350);
+      }
     }
     // 덱 탭: 선택률(로비 평균 인원) + 상단 메타 줄(.dk-meta .dk-tbadge) + 2단 KPI(.dk-kpi2 평균/순방)
     await go('meta'); await pg.waitForTimeout(600);
@@ -250,7 +294,6 @@ function fresh(file, key, hours) {
       }
     }
     await go('meta'); await pg.waitForTimeout(400);
-    await q(() => document.querySelector('#mt-src [data-s=guide]').click()); await pg.waitForTimeout(300);
     await q(() => document.querySelector('#mt-rows .mt-row').click()); await pg.waitForTimeout(500);
     const kpi = await q(() => [...document.querySelectorAll('#mt-detail .dk-kpi > div')].map(x => x.textContent));
     if (kpi.length !== 4) notes.push('덱 상세: 숫자 칸이 4개가 아님 (통계 없는 추천 덱일 수 있음)');
@@ -744,6 +787,51 @@ function fresh(file, key, hours) {
     if (errs.length) fail('19시즌: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
     await pg.close();
   });
+  // v3.2.0: 메타 덱 새로고침 뒤 합친 덱의 숫자가 판수 가중 평균과 같은지 검증 (가짜 comps_stats 응답으로 fast에서도 동작)
+  task(['meta'], async () => {
+    const M = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
+    const ds = M.decks || [];
+    const mainOfD = (d) => {
+      const nm = String(d.name || '').replace(/^\[[^\]]+\]\s*/, '');
+      const real = (d.board || []).filter(b => !b.plant);
+      const held = real.filter(b => b.i && b.i.length);
+      const named = held.filter(b => nm.indexOf(b.u) >= 0).sort((a, b) => nm.indexOf(a.u) - nm.indexOf(b.u));
+      return (named[0] || held.sort((a, b) => b.i.length - a.i.length)[0] || real[0] || {}).u || '';
+    };
+    let pair = null;
+    for (let i = 0; i < ds.length && !pair; i++) {
+      const ma = mainOfD(ds[i]), ua = new Set((ds[i].board || []).filter(b => !b.plant).map(b => b.u));
+      for (let j = i + 1; j < ds.length && !pair; j++) {
+        if (ma && ma === mainOfD(ds[j]) && (ds[j].board || []).filter(b => !b.plant && ua.has(b.u)).length >= 7) pair = [ds[i], ds[j]];
+      }
+    }
+    if (!pair) return;
+    // pair[0]: 6000판 전원 2등(avg=2.00), pair[1]: 4000판 4등 2000 + 5등 2000(avg=4.50) -> 판수 가중 평균 = (2*6000 + 4.5*4000)/10000 = 3.00
+    const mockRes = [{ cluster: '', places: [1000000] }];
+    ds.forEach(d => {
+      if (d.id === pair[0].id) mockRes.push({ cluster: d.id, places: [0, 6000, 0, 0, 0, 0, 0, 0, 6000], count: 6000 });
+      else if (d.id === pair[1].id) mockRes.push({ cluster: d.id, places: [0, 0, 0, 2000, 2000, 0, 0, 0, 4000], count: 4000 });
+      else mockRes.push({ cluster: d.id, places: [0, 0, 0, 500, 500, 0, 0, 0, 1000], count: 1000 });
+    });
+    const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+    await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
+    await pg.route('https://lolche.local/**', async (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
+      if (u.pathname === '/proxy' && /comps_stats/.test(u.searchParams.get('u') || '')) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cluster_id: M.cluster_id, updated: Date.now(), results: mockRes }) });
+      if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      const f = path.join(SITE, decodeURIComponent(u.pathname)); return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+    });
+    await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(1800);
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#meta'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(600);
+    await pg.evaluate(() => document.getElementById('mt-upd-btn')?.click()); await pg.waitForTimeout(800);
+    const got = await pg.evaluate(([id1, id2]) => {
+      const row = [...document.querySelectorAll('#mt-rows .mt-row.dk')].find(r => { const s = (r.dataset.subs || '').split(','); return s.includes(id1) && s.includes(id2); });
+      return row ? { id: row.dataset.id, avg: (row.querySelector('.dk-avg') || {}).textContent?.trim(), tier: (row.querySelector('.dk-tbadge') || {}).textContent?.trim() } : null;
+    }, [String(pair[0].id), String(pair[1].id)]);
+    if (!got || got.avg !== '3.00' || got.id !== String(pair[0].id)) fail(`덱 새로고침 합산: 판수 가중 평균이 3.00(대표 ${pair[0].id})이어야 하는데 ${JSON.stringify(got)}`);
+    await pg.close();
+  });
   // 업데이트 소식 (2026-11-16 사용자: "업뎃되면 뭐가 업뎃됐는지 한번 띄워"): 새 버전이면 창이 뜨고, 확인을 누르면 닫히고 다시 안 뜬다
   task(['whatsnew'], async () => {
     const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
@@ -895,6 +983,7 @@ function fresh(file, key, hours) {
         clip: r.filter(x => { const b = x.querySelector('.pcdk-units'), l = b && b.lastElementChild; return l && l.getBoundingClientRect().right > b.getBoundingClientRect().right + 1; }).length }; });
       if (mt2.n < 15 || mt2.units < 5 || mt2.stats !== '평균 등수,선택률,승률,순방률') fail(`[WEB/1280] 메타 덱: PC 줄 모양이 아님 (${JSON.stringify(mt2)})`);
       if (mt2.clip) fail(`[WEB/1280] 메타 덱: 챔피언이 줄 밖으로 잘린 줄 ${mt2.clip}개`);
+      if (!(await pg.evaluate(() => document.querySelectorAll('#mt-rows .pcdk .gd-badge').length))) fail('[WEB/1280] 메타 덱: PC 줄에 가이드 표시(.gd-badge)가 없음');
       if (JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).pbe && !(await pg.evaluate(() => document.querySelectorAll('#mt-rows .pcdk .lk').length))) fail('[WEB/1280] 메타 덱: PC 줄에 해금 챔피언 자물쇠가 없음');
       // 숫자 4칸 색 (2026-11-21 사용자: "덱탭 색깔도 칠해줘, 평등이랑"): 값마다 색이 달라야 (흰 글자 그대로면 실패)
       const mtCol = await pg.evaluate(() => { const f = document.querySelector('#mt-rows .pcdk'); if (!f) return null; const bs = [...f.querySelectorAll('.pcdk-stats b')], ink = getComputedStyle(f.querySelector('.pcdk-name .mt-name')).color;

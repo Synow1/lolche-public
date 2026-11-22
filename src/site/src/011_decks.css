@@ -228,6 +228,14 @@
 .emb-req img { width: 16px; height: 16px; border-radius: 3px; }
 .emb-reqline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: var(--fs-s); color: var(--muted); }
 .mt-name .hot { font-size: var(--fs-2xs); font-weight: 800; color: #fff; background: #e5484d; border-radius: 4px; padding: 0 4px; letter-spacing: .3px; }
+.gd-badge { display: inline-flex; align-items: center; font-size: var(--fs-2xs); font-weight: 700; color: var(--accent2); background: var(--accent2-soft); border: 1px solid color-mix(in srgb, var(--accent2) 32%, transparent); border-radius: 5px; padding: 1px 6px; white-space: nowrap; line-height: 1.35; }
+.dk-hero h3 .gd-badge { margin-left: 6px; vertical-align: 3px; }
+.mt-subhd { grid-column: 1 / -1; margin: 14px 0 4px; font-size: var(--fs-m); font-weight: 800; color: var(--muted); }
+.mt-vars { margin: 2px 0 6px; }
+.mt-vars-h { font-size: var(--fs-xs); font-weight: 700; color: var(--muted); margin: 0 0 4px; }
+.mt-vars .tfa-tab { cursor: pointer; }
+.mt-vars .tfa-tab.mt-var-all { padding-left: 11px; }
+.mt-var-avg { font-family: var(--mono); font-size: var(--fs-xs); font-weight: 700; }
 .mt-num b, .mt-num { font-family: var(--mono); }
 .empty { color: var(--muted); text-align: center; padding: 28px 0; font-size: var(--fs-b); }
 .synrow { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; min-width: 0; }

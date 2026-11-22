@@ -120,9 +120,10 @@
   }
 
   function buildGuides(data) {
-    GUIDES = data; setPatch();
+    GUIDES = data; META_GRP = null; setPatch();
     if (!metaReady) return;
     metaList();
+    if (typeof homeRender === "function") homeRender();
     if (metaPending && deckView(metaPending)) { metaShow(metaPending, true); metaPending = null; }
   }
   var VER = null;

@@ -378,7 +378,6 @@
 @media (min-width: 1024px) {
   body:not(.overlay) #meta:not([hidden]) { display: block; }
   body:not(.overlay) #meta .mt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 10px; }
-  body:not(.overlay) #meta .mt-bar #mt-src { flex: none; width: 240px; }
   body:not(.overlay) #meta .mt-frow { flex: 1 1 320px; }
   body:not(.overlay) #meta .mt-tools { flex: 1 1 440px; }
   body:not(.overlay) .pc-rows { display: grid; grid-template-columns: 1fr; gap: 8px; }
@@ -410,6 +409,9 @@
   body:not(.overlay) .pcdk-open { background: var(--surface); border-radius: 0 0 14px 14px; padding: 8px 24px 24px; margin-top: -8px; display: grid; gap: 12px; }
   body:not(.overlay) .pcdk-open #mt-detail { position: static; max-height: none; overflow: visible; border: 0; padding: 0; background: transparent; }
   body:not(.overlay) .pcdk-open .dk-hero, body:not(.overlay) .pcdk-open .dk-kpi, body:not(.overlay) .pcdk-open .s19-dk-kpi { display: none; }
+  body:not(.overlay) .pcdk-open #mt-detail.is-sub .dk-kpi { display: grid; max-width: 520px; margin: 4px 0 12px; }
+  body:not(.overlay) .pcdk-open #mt-detail .tfa-tabs { margin: 4px 0 10px; padding: 2px 0 4px; flex-wrap: wrap; }
+  body:not(.overlay) .pcdk-open #mt-detail .tfa-tab:not(.on) { background: var(--raise); }
   body:not(.overlay) .pcdk-open #mt-detail .mt-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; }
   body:not(.overlay) .pcdk-open .codebtn.big { max-width: 360px; }
 }
@@ -491,5 +493,7 @@
   body:not(.overlay) .pcdk-chip.ch-d2 { --chc: #4b9dff; }
   body:not(.overlay) .pcdk-chip.ch-d3 { --chc: #ff9f1a; }
   body:not(.overlay) .pcdk-chip.ch-d4 { --chc: #ff5a5f; }
+  body:not(.overlay) .pcdk-chip.gd-badge { --chc: var(--accent2); border: 0; }
+  body:not(.overlay) .pcdk-chip.ch-var { --chc: var(--accent); }
   body:not(.overlay) .pcdk-sub { margin-top: 4px; }
 }

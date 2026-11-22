@@ -455,8 +455,8 @@
       localStorage.setItem("tft-guide-basis-emer", "1");
     }
   } catch (e) {}
-  /* ---- 메타 덱: 롤체지지 추천 덱(site/guides.json) + MetaTFT 통계(site/meta.json). 앱의 떠있는 창 첫 화면 ---- */
-  var META = null, GUIDES = null, mtFilter = "all", mtSrc = "guide", MT_KEY = "tft-guide-meta";
+  /* ---- 메타 덱: MetaTFT 덱 묶음(site/meta.json) 기준 통합 목록 + 롤체지지 가이드(site/guides.json) 연결 ---- */
+  var META = null, GUIDES = null, META_GRP = null, mtFilter = "all", MT_KEY = "tft-guide-meta";
   var BASIS_LABEL = { all: "플래+", emer: "에메+", dia: "다이아", top: "마스터+", gmc: "그마·챌", low: "플래 미만" };
   var mtSort = "avg";
   var STYLE_ORDER = { chromatic: 0, gold: 1, silver: 2, bronze: 3, unique: 4 };
@@ -560,23 +560,115 @@
     return r;
   }
 
-  // 목록용 공통 모양: 추천 덱(g)과 통계 덱(c)을 같은 형태로
-  function deckView(id) {
+  function guideOfCluster(cid) {
+    if (!GUIDES || !cid) return null;
+    var s = String(cid);
+    return GUIDES.decks.filter(function (x) { return x.cluster && String(x.cluster) === s; })[0] || null;
+  }
+  function guideLevels(g, st) {
+    var lvs = {};
+    Object.keys((g && g.levels) || {}).forEach(function (k) { lvs[k] = g.levels[k].board; });
+    if (!Object.keys(lvs).length && st && st.lvb) {
+      lvs = Object.assign({}, st.lvb);
+      if (g && g.board && g.board.length) lvs[String(st.level || g.board.filter(function (u) { return !u.plant; }).length)] = g.board;
+    }
+    return lvs;
+  }
+  // 같은 메인 캐리 + 최종 보드 7명 이상 겹치는 MetaTFT 묶음을 한 줄로 합친다 (대표 = 최다 판수, 숫자는 판수 가중 합, 티어는 합친 뒤 재계산)
+  function metaGroups() {
+    if (META_GRP) return META_GRP;
+    if (!META || !META.decks) return { list: [], byId: {} };
+    var ds = META.decks, N = ds.length, par = [], us = [], ms = [];
+    for (var i = 0; i < N; i++) {
+      par.push(i);
+      var set = {}; (ds[i].board || []).forEach(function (b) { if (!b.plant) set[b.u] = 1; });
+      us.push(set);
+      var mc = mainOf(ds[i]); ms.push(mc ? mc.u : "");
+    }
+    function find(x) { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; }
+    for (var a = 0; a < N; a++) {
+      if (!ms[a]) continue;
+      for (var b = a + 1; b < N; b++) {
+        if (ms[a] !== ms[b]) continue;
+        var ov = 0, ka = Object.keys(us[a]);
+        for (var k = 0; k < ka.length; k++) if (us[b][ka[k]]) ov++;
+        if (ov >= 7) { var ra = find(a), rb = find(b); if (ra !== rb) par[rb] = ra; }
+      }
+    }
+    var buckets = {};
+    for (var j = 0; j < N; j++) { var r = find(j); (buckets[r] = buckets[r] || []).push(ds[j]); }
+    var list = [], byId = {}, bKeys = Object.keys(BASIS_LABEL);
+    Object.keys(buckets).forEach(function (rk) {
+      var mem = buckets[rk].slice().sort(function (x, y) { return (y.n || 0) - (x.n || 0) || (x.avg || 9) - (y.avg || 9); });
+      var rep = mem[0], st = Object.assign({}, rep);
+      st.st = Object.assign({}, rep.st || {});
+      st.tiers = Object.assign({}, rep.tiers || {});
+      if (mem.length > 1) {
+        var tn = 0, savg = 0, st4 = 0, swin = 0, spk = 0;
+        mem.forEach(function (m) {
+          var n = m.n || 0; tn += n; savg += (m.avg || 0) * n; st4 += (m.top4 || 0) * n; swin += (m.win || 0) * n; spk += (m.pick || 0);
+        });
+        if (tn > 0) {
+          st.n = tn;
+          st.avg = Math.round(savg / tn * 100) / 100;
+          st.top4 = Math.round(st4 / tn);
+          st.win = Math.round(swin / tn * 10) / 10;
+          st.pick = Math.round(spk * 10) / 10;
+        }
+        bKeys.forEach(function (bk) {
+          var bn = 0, ba = 0, bt = 0, bw = 0;
+          mem.forEach(function (m) {
+            var bs = basisSt(m, bk); if (!bs || !bs[3]) return;
+            bn += bs[3]; ba += bs[0] * bs[3]; bt += bs[1] * bs[3]; bw += bs[2] * bs[3];
+          });
+          if (bn > 0) st.st[bk] = [Math.round(ba / bn * 100) / 100, Math.round(bt / bn), Math.round(bw / bn * 10) / 10, bn];
+          else delete st.st[bk];
+        });
+      }
+      var gs = guideOfCluster(rep.id);
+      if (!gs) for (var mi = 1; mi < mem.length && !gs; mi++) gs = guideOfCluster(mem[mi].id);
+      var grp = { id: rep.id, rep: rep, st: st, members: mem, guide: gs };
+      list.push(grp);
+      mem.forEach(function (m) { byId[String(m.id)] = grp; });
+    });
+    // 합친 뒤 평균 등수로 티어(S/A/B/C) 재계산
+    var allOrd = list.slice().sort(function (x, y) { return (x.st.avg || 9) - (y.st.avg || 9); });
+    allOrd.forEach(function (g, idx) { var q = idx / allOrd.length; g.st.tier = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; });
+    bKeys.forEach(function (bk) {
+      var ok = list.filter(function (g) { return !!basisSt(g.st, bk); }).sort(function (x, y) { return basisSt(x.st, bk)[0] - basisSt(y.st, bk)[0]; });
+      ok.forEach(function (g, idx) { var q = idx / ok.length; g.st.tiers[bk] = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; });
+      list.forEach(function (g) { if (!basisSt(g.st, bk)) delete g.st.tiers[bk]; });
+    });
+    META_GRP = { list: list, byId: byId };
+    return META_GRP;
+  }
+  // 목록용 공통 모양: 통합 MetaTFT 묶음(대표 + 연결 가이드)과 통계 없는 단독 가이드(g)를 같은 형태로
+  function deckView(id, subId) {
     if (/^g/.test(id)) {
       var g = GUIDES && GUIDES.decks[+id.slice(1)]; if (!g) return null;
-      var st = statOf(g.cluster);
-      var lvs = {};
-      Object.keys(g.levels || {}).forEach(function (k) { lvs[k] = g.levels[k].board; });
-      if (!Object.keys(lvs).length && st && st.lvb) lvs = st.lvb;
-      return { id: id, name: g.name, tag: g.tag, st: st, board: g.board, syn: g.syn, augs: g.augments, guide: true, lvs: lvs, lvup: g.lvup, gd: g.guide };
+      if (g.cluster && statOf(g.cluster)) return deckView(g.cluster);
+      return { id: id, name: g.name, tag: g.tag, st: null, board: g.board, syn: g.syn, gboard: g.board, gsyn: g.syn, augs: g.augments, guide: true, lvs: guideLevels(g, null), lvup: g.lvup, gd: g.guide, subs: null, grp: null, sub: null };
     }
-    var d = statOf(id); if (!d) return null;
-    var gs = GUIDES ? GUIDES.decks.filter(function (x) { return x.cluster === d.id; })[0] : null;
-    return { id: id, name: d.name, tag: "", st: d, board: d.board, syn: synOf(d.board), augs: gs ? gs.augments : [], guide: false, lvs: d.lvb || {}, lvup: null, gd: gs ? gs.guide : null };
+    var G = metaGroups(), grp = G.byId[String(id)]; if (!grp) return null;
+    var activeSub = subId !== undefined ? subId : (String(id) !== String(grp.id) ? String(id) : null);
+    var d = activeSub ? (grp.members.filter(function (m) { return String(m.id) === String(activeSub); })[0] || grp.rep) : grp.rep;
+    var st = activeSub ? d : grp.st;
+    var gs = activeSub ? guideOfCluster(d.id) : grp.guide;
+    return {
+      id: grp.id, name: d.name, tag: gs ? gs.tag : "", st: st, board: d.board, syn: synOf(d.board),
+      gboard: gs ? gs.board : null, gsyn: gs ? gs.syn : null, augs: gs ? gs.augments : [],
+      guide: !!gs, lvs: gs ? guideLevels(gs, st) : (st.lvb || {}), lvup: gs ? gs.lvup : null,
+      gd: gs ? gs.guide : null, subs: grp.members, grp: grp, sub: activeSub ? d.id : null
+    };
   }
   function allViews() {
-    if (mtSrc === "guide" && GUIDES) return GUIDES.decks.map(function (g, i) { return deckView("g" + i); });
-    return META ? META.decks.map(function (d) { return deckView(d.id); }) : [];
+    return metaGroups().list.map(function (g) { return deckView(g.id); });
+  }
+  function unlinkedGuides() {
+    if (!GUIDES) return [];
+    var out = [];
+    GUIDES.decks.forEach(function (g, i) { if (!g.cluster || !statOf(g.cluster)) out.push(deckView("g" + i)); });
+    return out;
   }
   // 덱 이름: 앞의 [증강 이름]은 따로 붙이고, "팀 구성"처럼 이름이 없는 덱은 캐리 둘로
   // 상징이 꼭 필요한 덱: 그 덱 판의 절반 넘게 쓴 상징 (meta.json emb: [판수, 평균, 덱 판 중 %, 누구에게])
@@ -596,10 +688,10 @@
     if (!n || /^팀 ?구성$/.test(n)) n = carriesFirst(v.board).slice(0, 2).map(function (b) { return b.u; }).join(" ");
     return n;
   }
-  // 메인 캐리: 덱 이름에 나오는 템 든 유닛(뒤에 나온 쪽), 없으면 템 많은 유닛
+  // 메인 캐리: 덱 이름에 나오는 템 든 유닛(앞에 나온 쪽 — MetaTFT 이름 규칙이 [시너지, 메인 캐리, 보조/탱커]), 없으면 템 많은 유닛
   function mainOf(v) {
     var nm = deckName(v), c = carriesFirst(v.board), held = c.filter(function (b) { return b.i && b.i.length; });
-    var named = held.filter(function (b) { return nm.indexOf(b.u) >= 0; }).sort(function (a, b) { return nm.lastIndexOf(b.u) - nm.lastIndexOf(a.u); });
+    var named = held.filter(function (b) { return nm.indexOf(b.u) >= 0; }).sort(function (a, b) { return nm.indexOf(a.u) - nm.indexOf(b.u); });
     return named[0] || held.sort(function (a, b) { return b.i.length - a.i.length; })[0] || c[0] || null;
   }
   var COST_C = { 1: "var(--c1)", 2: "var(--c2)", 3: "var(--c3)", 4: "var(--c4)", 5: "var(--c5)" };

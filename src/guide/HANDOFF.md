@@ -1,9 +1,12 @@
 # 인수인계 (새 세션이 처음 읽을 것)
 
-마지막 정리: 2026-11-21, 앱 v3.0.1 (android/NATIVE 12). **브랜치는 `main` 하나** (클로드·제미나이 공용, PR 없음). 작업 전 `WORK.md` 확인.
+마지막 정리: 2026-11-22, 앱 v3.2.0 (android/NATIVE 12). **브랜치는 `main` 하나** (클로드·제미나이 공용, PR 없음). 작업 전 `WORK.md` 확인.
 규칙 전체는 `CLAUDE.md`, 앱 문구 기준은 `guide/WRITING.md`, 디자인은 `guide/DESIGN.md`, 게임 지식은 `guide/kb/` (먼저 `python3 scripts/kb.py 키워드`).
 
-## 0. 지금 상태 (2026-11-21)
+## 0. 지금 상태 (2026-11-22)
+- **v3.2.0 덱 탭 목록 통합 + 같은 덱 묶음 합치기 (제미나이)**:
+  - `#mt-src` 토글 제거, MetaTFT 묶음을 단일 기준 목록으로 두고 가이드 연결 덱엔 `가이드` 배지 + 펼치면 가이드 배치·증강·공략 우선 표시, 연결 없는 가이드만 `통계 없는 가이드`로 분리.
+  - `mainOf`를 첫 이름 캐리 기준으로 고치고(`300_core.js`), 같은 메인 캐리 + 최종 보드 7명↑ 겹치는 묶음을 한 줄로 합쳐 판수 가중 평균·티어를 재계산(`metaGroups()`, 새로고침 `metaApply()` 뒤에도 재계산). 펼치면 `비슷한 덱 N개` 칩으로 각 묶음을 따로 본다.
 - **v3.0.0~v3.0.1 19시즌 전면 전환 + PBE 최근 1일 (제미나이)**:
   - `scripts/setinfo.py`: `LIVE_NUM`(본섭, 12/1 전 18) · `NUM`(공략 세트 19) · `PBE = LIVE_NUM < NUM` · `SET`/`LIVE_SET` · `SEASON`(dak.gg 본섭) · `GUIDE_SEASON` · `unit_ok()`(DA_*19, 7코스트). **12/1에 `LIVE_NUM = 19`로 올리면** PBE 분기가 꺼지고 전적·랭킹도 19시즌이 된다.
   - 공략 데이터(`db/items/meta/guides/tfa/icons index`)는 19시즌 PBE 최근 1일(MetaTFT `queue=PBE&days=1`, TFT Academy `set=19`) 기준. `META.pbe`/`ITEMS.pbe`면 티어 고르기(에메+ 등)를 숨기고 새로고침도 `queue=PBE&days=1`로 받는다. TFT Academy 증강·아이템 티어표가 비면 아카데미의 증강·아이템 보기를 숨긴다.

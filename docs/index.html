@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611220841">
+<meta name="lolche-web" content="202611220903">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -461,6 +461,14 @@ td .row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .emb-req img { width: 16px; height: 16px; border-radius: 3px; }
 .emb-reqline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: var(--fs-s); color: var(--muted); }
 .mt-name .hot { font-size: var(--fs-2xs); font-weight: 800; color: #fff; background: #e5484d; border-radius: 4px; padding: 0 4px; letter-spacing: .3px; }
+.gd-badge { display: inline-flex; align-items: center; font-size: var(--fs-2xs); font-weight: 700; color: var(--accent2); background: var(--accent2-soft); border: 1px solid color-mix(in srgb, var(--accent2) 32%, transparent); border-radius: 5px; padding: 1px 6px; white-space: nowrap; line-height: 1.35; }
+.dk-hero h3 .gd-badge { margin-left: 6px; vertical-align: 3px; }
+.mt-subhd { grid-column: 1 / -1; margin: 14px 0 4px; font-size: var(--fs-m); font-weight: 800; color: var(--muted); }
+.mt-vars { margin: 2px 0 6px; }
+.mt-vars-h { font-size: var(--fs-xs); font-weight: 700; color: var(--muted); margin: 0 0 4px; }
+.mt-vars .tfa-tab { cursor: pointer; }
+.mt-vars .tfa-tab.mt-var-all { padding-left: 11px; }
+.mt-var-avg { font-family: var(--mono); font-size: var(--fs-xs); font-weight: 700; }
 .mt-num b, .mt-num { font-family: var(--mono); }
 .empty { color: var(--muted); text-align: center; padding: 28px 0; font-size: var(--fs-b); }
 .synrow { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; min-width: 0; }
@@ -2214,7 +2222,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 @media (min-width: 1024px) {
   body:not(.overlay) #meta:not([hidden]) { display: block; }
   body:not(.overlay) #meta .mt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 10px; }
-  body:not(.overlay) #meta .mt-bar #mt-src { flex: none; width: 240px; }
   body:not(.overlay) #meta .mt-frow { flex: 1 1 320px; }
   body:not(.overlay) #meta .mt-tools { flex: 1 1 440px; }
   body:not(.overlay) .pc-rows { display: grid; grid-template-columns: 1fr; gap: 8px; }
@@ -2246,6 +2253,9 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .pcdk-open { background: var(--surface); border-radius: 0 0 14px 14px; padding: 8px 24px 24px; margin-top: -8px; display: grid; gap: 12px; }
   body:not(.overlay) .pcdk-open #mt-detail { position: static; max-height: none; overflow: visible; border: 0; padding: 0; background: transparent; }
   body:not(.overlay) .pcdk-open .dk-hero, body:not(.overlay) .pcdk-open .dk-kpi, body:not(.overlay) .pcdk-open .s19-dk-kpi { display: none; }
+  body:not(.overlay) .pcdk-open #mt-detail.is-sub .dk-kpi { display: grid; max-width: 520px; margin: 4px 0 12px; }
+  body:not(.overlay) .pcdk-open #mt-detail .tfa-tabs { margin: 4px 0 10px; padding: 2px 0 4px; flex-wrap: wrap; }
+  body:not(.overlay) .pcdk-open #mt-detail .tfa-tab:not(.on) { background: var(--raise); }
   body:not(.overlay) .pcdk-open #mt-detail .mt-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; }
   body:not(.overlay) .pcdk-open .codebtn.big { max-width: 360px; }
 }
@@ -2327,6 +2337,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .pcdk-chip.ch-d2 { --chc: #4b9dff; }
   body:not(.overlay) .pcdk-chip.ch-d3 { --chc: #ff9f1a; }
   body:not(.overlay) .pcdk-chip.ch-d4 { --chc: #ff5a5f; }
+  body:not(.overlay) .pcdk-chip.gd-badge { --chc: var(--accent2); border: 0; }
+  body:not(.overlay) .pcdk-chip.ch-var { --chc: var(--accent); }
   body:not(.overlay) .pcdk-sub { margin-top: 4px; }
 }
 </style>
@@ -2514,9 +2526,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" class="on" aria-selected="true">메타 덱</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" aria-selected="false">상징</a></div>
     <div class="mt-upd" id="mt-upd"><span id="mt-upd-t"></span><button type="button" id="mt-upd-btn" hidden>새로고침</button></div>
     <div class="mt-bar">
-      <div class="seg2" id="mt-src" role="group" aria-label="덱 목록">
-        <button type="button" data-s="guide" class="on">추천 덱</button><button type="button" data-s="stat">전체 통계</button>
-      </div>
       <div class="mt-frow">
         <div class="mt-chips" id="mt-filter" role="group" aria-label="덱 거르기">
           <button type="button" data-f="all" class="on">전체</button>
@@ -3591,8 +3600,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       localStorage.setItem("tft-guide-basis-emer", "1");
     }
   } catch (e) {}
-  /* ---- 메타 덱: 롤체지지 추천 덱(site/guides.json) + MetaTFT 통계(site/meta.json). 앱의 떠있는 창 첫 화면 ---- */
-  var META = null, GUIDES = null, mtFilter = "all", mtSrc = "guide", MT_KEY = "tft-guide-meta";
+  /* ---- 메타 덱: MetaTFT 덱 묶음(site/meta.json) 기준 통합 목록 + 롤체지지 가이드(site/guides.json) 연결 ---- */
+  var META = null, GUIDES = null, META_GRP = null, mtFilter = "all", MT_KEY = "tft-guide-meta";
   var BASIS_LABEL = { all: "플래+", emer: "에메+", dia: "다이아", top: "마스터+", gmc: "그마·챌", low: "플래 미만" };
   var mtSort = "avg";
   var STYLE_ORDER = { chromatic: 0, gold: 1, silver: 2, bronze: 3, unique: 4 };
@@ -3696,23 +3705,115 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     return r;
   }
 
-  // 목록용 공통 모양: 추천 덱(g)과 통계 덱(c)을 같은 형태로
-  function deckView(id) {
+  function guideOfCluster(cid) {
+    if (!GUIDES || !cid) return null;
+    var s = String(cid);
+    return GUIDES.decks.filter(function (x) { return x.cluster && String(x.cluster) === s; })[0] || null;
+  }
+  function guideLevels(g, st) {
+    var lvs = {};
+    Object.keys((g && g.levels) || {}).forEach(function (k) { lvs[k] = g.levels[k].board; });
+    if (!Object.keys(lvs).length && st && st.lvb) {
+      lvs = Object.assign({}, st.lvb);
+      if (g && g.board && g.board.length) lvs[String(st.level || g.board.filter(function (u) { return !u.plant; }).length)] = g.board;
+    }
+    return lvs;
+  }
+  // 같은 메인 캐리 + 최종 보드 7명 이상 겹치는 MetaTFT 묶음을 한 줄로 합친다 (대표 = 최다 판수, 숫자는 판수 가중 합, 티어는 합친 뒤 재계산)
+  function metaGroups() {
+    if (META_GRP) return META_GRP;
+    if (!META || !META.decks) return { list: [], byId: {} };
+    var ds = META.decks, N = ds.length, par = [], us = [], ms = [];
+    for (var i = 0; i < N; i++) {
+      par.push(i);
+      var set = {}; (ds[i].board || []).forEach(function (b) { if (!b.plant) set[b.u] = 1; });
+      us.push(set);
+      var mc = mainOf(ds[i]); ms.push(mc ? mc.u : "");
+    }
+    function find(x) { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; }
+    for (var a = 0; a < N; a++) {
+      if (!ms[a]) continue;
+      for (var b = a + 1; b < N; b++) {
+        if (ms[a] !== ms[b]) continue;
+        var ov = 0, ka = Object.keys(us[a]);
+        for (var k = 0; k < ka.length; k++) if (us[b][ka[k]]) ov++;
+        if (ov >= 7) { var ra = find(a), rb = find(b); if (ra !== rb) par[rb] = ra; }
+      }
+    }
+    var buckets = {};
+    for (var j = 0; j < N; j++) { var r = find(j); (buckets[r] = buckets[r] || []).push(ds[j]); }
+    var list = [], byId = {}, bKeys = Object.keys(BASIS_LABEL);
+    Object.keys(buckets).forEach(function (rk) {
+      var mem = buckets[rk].slice().sort(function (x, y) { return (y.n || 0) - (x.n || 0) || (x.avg || 9) - (y.avg || 9); });
+      var rep = mem[0], st = Object.assign({}, rep);
+      st.st = Object.assign({}, rep.st || {});
+      st.tiers = Object.assign({}, rep.tiers || {});
+      if (mem.length > 1) {
+        var tn = 0, savg = 0, st4 = 0, swin = 0, spk = 0;
+        mem.forEach(function (m) {
+          var n = m.n || 0; tn += n; savg += (m.avg || 0) * n; st4 += (m.top4 || 0) * n; swin += (m.win || 0) * n; spk += (m.pick || 0);
+        });
+        if (tn > 0) {
+          st.n = tn;
+          st.avg = Math.round(savg / tn * 100) / 100;
+          st.top4 = Math.round(st4 / tn);
+          st.win = Math.round(swin / tn * 10) / 10;
+          st.pick = Math.round(spk * 10) / 10;
+        }
+        bKeys.forEach(function (bk) {
+          var bn = 0, ba = 0, bt = 0, bw = 0;
+          mem.forEach(function (m) {
+            var bs = basisSt(m, bk); if (!bs || !bs[3]) return;
+            bn += bs[3]; ba += bs[0] * bs[3]; bt += bs[1] * bs[3]; bw += bs[2] * bs[3];
+          });
+          if (bn > 0) st.st[bk] = [Math.round(ba / bn * 100) / 100, Math.round(bt / bn), Math.round(bw / bn * 10) / 10, bn];
+          else delete st.st[bk];
+        });
+      }
+      var gs = guideOfCluster(rep.id);
+      if (!gs) for (var mi = 1; mi < mem.length && !gs; mi++) gs = guideOfCluster(mem[mi].id);
+      var grp = { id: rep.id, rep: rep, st: st, members: mem, guide: gs };
+      list.push(grp);
+      mem.forEach(function (m) { byId[String(m.id)] = grp; });
+    });
+    // 합친 뒤 평균 등수로 티어(S/A/B/C) 재계산
+    var allOrd = list.slice().sort(function (x, y) { return (x.st.avg || 9) - (y.st.avg || 9); });
+    allOrd.forEach(function (g, idx) { var q = idx / allOrd.length; g.st.tier = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; });
+    bKeys.forEach(function (bk) {
+      var ok = list.filter(function (g) { return !!basisSt(g.st, bk); }).sort(function (x, y) { return basisSt(x.st, bk)[0] - basisSt(y.st, bk)[0]; });
+      ok.forEach(function (g, idx) { var q = idx / ok.length; g.st.tiers[bk] = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; });
+      list.forEach(function (g) { if (!basisSt(g.st, bk)) delete g.st.tiers[bk]; });
+    });
+    META_GRP = { list: list, byId: byId };
+    return META_GRP;
+  }
+  // 목록용 공통 모양: 통합 MetaTFT 묶음(대표 + 연결 가이드)과 통계 없는 단독 가이드(g)를 같은 형태로
+  function deckView(id, subId) {
     if (/^g/.test(id)) {
       var g = GUIDES && GUIDES.decks[+id.slice(1)]; if (!g) return null;
-      var st = statOf(g.cluster);
-      var lvs = {};
-      Object.keys(g.levels || {}).forEach(function (k) { lvs[k] = g.levels[k].board; });
-      if (!Object.keys(lvs).length && st && st.lvb) lvs = st.lvb;
-      return { id: id, name: g.name, tag: g.tag, st: st, board: g.board, syn: g.syn, augs: g.augments, guide: true, lvs: lvs, lvup: g.lvup, gd: g.guide };
+      if (g.cluster && statOf(g.cluster)) return deckView(g.cluster);
+      return { id: id, name: g.name, tag: g.tag, st: null, board: g.board, syn: g.syn, gboard: g.board, gsyn: g.syn, augs: g.augments, guide: true, lvs: guideLevels(g, null), lvup: g.lvup, gd: g.guide, subs: null, grp: null, sub: null };
     }
-    var d = statOf(id); if (!d) return null;
-    var gs = GUIDES ? GUIDES.decks.filter(function (x) { return x.cluster === d.id; })[0] : null;
-    return { id: id, name: d.name, tag: "", st: d, board: d.board, syn: synOf(d.board), augs: gs ? gs.augments : [], guide: false, lvs: d.lvb || {}, lvup: null, gd: gs ? gs.guide : null };
+    var G = metaGroups(), grp = G.byId[String(id)]; if (!grp) return null;
+    var activeSub = subId !== undefined ? subId : (String(id) !== String(grp.id) ? String(id) : null);
+    var d = activeSub ? (grp.members.filter(function (m) { return String(m.id) === String(activeSub); })[0] || grp.rep) : grp.rep;
+    var st = activeSub ? d : grp.st;
+    var gs = activeSub ? guideOfCluster(d.id) : grp.guide;
+    return {
+      id: grp.id, name: d.name, tag: gs ? gs.tag : "", st: st, board: d.board, syn: synOf(d.board),
+      gboard: gs ? gs.board : null, gsyn: gs ? gs.syn : null, augs: gs ? gs.augments : [],
+      guide: !!gs, lvs: gs ? guideLevels(gs, st) : (st.lvb || {}), lvup: gs ? gs.lvup : null,
+      gd: gs ? gs.guide : null, subs: grp.members, grp: grp, sub: activeSub ? d.id : null
+    };
   }
   function allViews() {
-    if (mtSrc === "guide" && GUIDES) return GUIDES.decks.map(function (g, i) { return deckView("g" + i); });
-    return META ? META.decks.map(function (d) { return deckView(d.id); }) : [];
+    return metaGroups().list.map(function (g) { return deckView(g.id); });
+  }
+  function unlinkedGuides() {
+    if (!GUIDES) return [];
+    var out = [];
+    GUIDES.decks.forEach(function (g, i) { if (!g.cluster || !statOf(g.cluster)) out.push(deckView("g" + i)); });
+    return out;
   }
   // 덱 이름: 앞의 [증강 이름]은 따로 붙이고, "팀 구성"처럼 이름이 없는 덱은 캐리 둘로
   // 상징이 꼭 필요한 덱: 그 덱 판의 절반 넘게 쓴 상징 (meta.json emb: [판수, 평균, 덱 판 중 %, 누구에게])
@@ -3732,10 +3833,10 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     if (!n || /^팀 ?구성$/.test(n)) n = carriesFirst(v.board).slice(0, 2).map(function (b) { return b.u; }).join(" ");
     return n;
   }
-  // 메인 캐리: 덱 이름에 나오는 템 든 유닛(뒤에 나온 쪽), 없으면 템 많은 유닛
+  // 메인 캐리: 덱 이름에 나오는 템 든 유닛(앞에 나온 쪽 — MetaTFT 이름 규칙이 [시너지, 메인 캐리, 보조/탱커]), 없으면 템 많은 유닛
   function mainOf(v) {
     var nm = deckName(v), c = carriesFirst(v.board), held = c.filter(function (b) { return b.i && b.i.length; });
-    var named = held.filter(function (b) { return nm.indexOf(b.u) >= 0; }).sort(function (a, b) { return nm.lastIndexOf(b.u) - nm.lastIndexOf(a.u); });
+    var named = held.filter(function (b) { return nm.indexOf(b.u) >= 0; }).sort(function (a, b) { return nm.indexOf(a.u) - nm.indexOf(b.u); });
     return named[0] || held.sort(function (a, b) { return b.i.length - a.i.length; })[0] || c[0] || null;
   }
   var COST_C = { 1: "var(--c1)", 2: "var(--c2)", 3: "var(--c3)", 4: "var(--c4)", 5: "var(--c5)" };
@@ -4267,8 +4368,9 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
-    var chips = d ? [d.style ? [styleKo(d.style), isReroll(d) ? "ch-reroll" : /^Fast/.test(d.style) ? "ch-fast" : "ch-std"] : null,
-      d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null].filter(Boolean) : [];
+    var chips = (d ? [d.style ? [styleKo(d.style), isReroll(d) ? "ch-reroll" : /^Fast/.test(d.style) ? "ch-fast" : "ch-std"] : null,
+      d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null] : [])
+      .concat([v.guide ? ["가이드", "gd-badge"] : null, v.subs && v.subs.length > 1 ? ["비슷한 덱 " + v.subs.length, "ch-var"] : null]).filter(Boolean);
     var units = starOrder(v.board, mc && mc.u).map(function (b) {
       var ic = IDX.units[b.u] || {};
       return { name: b.u, unit: b.u, lock: !!unlockOf(b.u), c: b.c || ic.cost, s: b.s, img: ic.icon, items: (b.i || []).map(function (n) { return [n, (IDX.items[n] || {}).icon]; }) };
@@ -4276,8 +4378,59 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var traits = (v.syn || []).filter(function (s) { return s.style !== "unique"; }).slice(0, 8).map(function (s) { return { t: s.t, n: s.n, style: s.style, img: IDX.traits[s.t] }; });
     var stats = bs ? [["평균 등수", bs[0].toFixed(2), dkAvgT(bs[0])], ["선택률", pl != null ? pl : "-", pl != null ? "pick" : null], ["승률", bs[2].toFixed(1) + "%", dkWinT(bs[2])], ["순방률", bs[1] + "%", dkTop4T(bs[1])]]
       : [["평균 등수", "-"], ["선택률", "-"], ["승률", "-"], [d ? "판수 부족" : "통계 없음", "-"]];
-    return pcDeckRow({ id: v.id, tier: basisTier(d, basis), name: nm, chips: chips, traits: traits, units: units, stats: stats,
+    var row = pcDeckRow({ id: v.id, tier: basisTier(d, basis), name: nm, chips: chips, traits: traits, units: units, stats: stats,
       open: function (box) { var md = document.getElementById("mt-detail"); box.appendChild(md); metaShow(v.id, true); } });
+    if (v.subs && v.subs.length) row.dataset.subs = v.subs.map(function (m) { return m.id; }).join(",");
+    return row;
+  }
+
+  function mobMetaRow(v, basis) {
+    var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
+    r.dataset.id = v.id;
+    if (v.subs && v.subs.length) r.dataset.subs = v.subs.map(function (m) { return m.id; }).join(",");
+    var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
+    r.classList.add("dk", "t-" + bt);
+    r.appendChild(dkPortrait(mc, null));
+    var mid = el("div", "mt-mid");
+    var meta = el("div", "dk-meta");
+    meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
+    var mtxt = el("span", "dk-sub");
+    if (d && d.style) mtxt.appendChild(document.createTextNode(styleKo(d.style)));
+    if (d && d.diff) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dd" + d.diff, DIFF[d.diff])); }
+    var pl = perLobby(d, basis);
+    if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
+    if (mtxt.textContent) meta.appendChild(mtxt);
+    mid.appendChild(meta);
+    var nm = el("div", "mt-name", deckName(v));
+    var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
+    if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
+    if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+    if (v.guide) nm.appendChild(el("span", "gd-badge", "가이드"));
+    if (v.subs && v.subs.length > 1) nm.appendChild(el("span", "tfa-more", "비슷한 덱 " + v.subs.length));
+    if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
+    if (d && d.mine) nm.appendChild(el("span", "tag", d.mine));
+    mid.appendChild(nm);
+    var rest = starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; });
+    mid.appendChild(rest.some(function (b) { return (b.s || 0) >= 3; }) ? tfaUnitIcons(rest) : strip(rest.map(function (b) { return b.u; })));
+    r.appendChild(mid);
+    var num = el("div", "mt-num dk-kpi2");
+    if (bs) {
+      if (mtSort === "win") {
+        num.appendChild(dkGrad(el("b", "dk-avg", bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
+        num.appendChild(dkGrad(el("span", "dk-top4", "평균 " + bs[0].toFixed(2)), dkAvgT(bs[0])));
+      } else if (mtSort === "top4") {
+        num.appendChild(dkGrad(el("b", "dk-top4-hi", bs[1] + "%"), dkTop4T(bs[1])));
+        num.appendChild(dkGrad(el("span", "dk-avg-sub", "평균 " + bs[0].toFixed(2)), dkAvgT(bs[0])));
+      } else {
+        num.appendChild(dkGrad(el("b", "dk-avg", bs[0].toFixed(2)), dkAvgT(bs[0])));
+        num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
+      }
+    } else {
+      num.appendChild(el("small", null, d ? "판수 부족" : "통계 없음"));
+    }
+    r.appendChild(num);
+    r.addEventListener("click", function () { metaShow(v.id); });
+    return r;
   }
 
   function metaList() {
@@ -4287,68 +4440,33 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var q = document.getElementById("mt-q").value.trim();
     var basis = document.getElementById("mt-basis").value;
     box.innerHTML = "";
+    var matchQ = function (v) {
+      if (!q) return true;
+      var hit = function (b) { return matches(b.u, q); };
+      return v.board.some(hit) || (v.gboard && v.gboard.some(hit)) || matches(v.name, q)
+        || (v.subs && v.subs.some(function (m) { return matches(m.name, q); }));
+    };
     var list = allViews().filter(function (v) {
       if (!v) return false;
       var d = v.st;
       if (mtFilter === "mine" && !(d && d.mine)) return false;
       if (mtFilter === "reroll" && !isReroll(d)) return false;
       if ((mtFilter === "8" || mtFilter === "9") && (!d || isReroll(d) || (mtFilter === "8" ? d.level !== 8 : d.level < 9))) return false;
-      if (q && !v.board.some(function (b) { return matches(b.u, q); }) && !matches(v.name, q)) return false;
-      return true;
+      return matchQ(v);
     }).sort(function (a, b) {  // 그 기준에 판수가 모자란 덱은 맨 아래
       var x = basisSt(a.st, basis), y = basisSt(b.st, basis);
       if (!x || !y) return (x ? 0 : 1) - (y ? 0 : 1);
       return mtSort === "win" ? y[2] - x[2] : mtSort === "top4" ? y[1] - x[1] : mtSort === "pick" ? (y[3] || 0) - (x[3] || 0) : x[0] - y[0];
     });
+    var unlinked = mtFilter === "all" ? unlinkedGuides().filter(function (v) { return v && matchQ(v); }) : [];
     var wideNow = isWide();
     box.classList.toggle("pc-rows", wideNow);
-    list.forEach(function (v) {
-      if (wideNow) { box.appendChild(pcMetaRow(v, basis)); return; }
-      var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
-      r.dataset.id = v.id;
-      var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
-      r.classList.add("dk", "t-" + bt);
-      r.appendChild(dkPortrait(mc, null));
-      var mid = el("div", "mt-mid");
-      var meta = el("div", "dk-meta");
-      meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
-      var mtxt = el("span", "dk-sub");
-      if (d && d.style) mtxt.appendChild(document.createTextNode(styleKo(d.style)));
-      if (d && d.diff) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dd" + d.diff, DIFF[d.diff])); }
-      var pl = perLobby(d, basis);
-      if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
-      if (mtxt.textContent) meta.appendChild(mtxt);
-      mid.appendChild(meta);
-      var nm = el("div", "mt-name", deckName(v));
-      var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
-      if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
-      if (req) nm.insertBefore(embBadge(req), nm.firstChild);
-      if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
-      if (d && d.mine) nm.appendChild(el("span", "tag", d.mine));
-      mid.appendChild(nm);
-      var rest = starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; });
-      mid.appendChild(rest.some(function (b) { return (b.s || 0) >= 3; }) ? tfaUnitIcons(rest) : strip(rest.map(function (b) { return b.u; })));
-      r.appendChild(mid);
-      var num = el("div", "mt-num dk-kpi2");
-      if (bs) {
-        if (mtSort === "win") {
-          num.appendChild(dkGrad(el("b", "dk-avg", bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
-          num.appendChild(dkGrad(el("span", "dk-top4", "평균 " + bs[0].toFixed(2)), dkAvgT(bs[0])));
-        } else if (mtSort === "top4") {
-          num.appendChild(dkGrad(el("b", "dk-top4-hi", bs[1] + "%"), dkTop4T(bs[1])));
-          num.appendChild(dkGrad(el("span", "dk-avg-sub", "평균 " + bs[0].toFixed(2)), dkAvgT(bs[0])));
-        } else {
-          num.appendChild(dkGrad(el("b", "dk-avg", bs[0].toFixed(2)), dkAvgT(bs[0])));
-          num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
-        }
-      } else {
-        num.appendChild(el("small", null, d ? "판수 부족" : "통계 없음"));
-      }
-      r.appendChild(num);
-      r.addEventListener("click", function () { metaShow(v.id); });
-      box.appendChild(r);
-    });
-    if (!list.length) {
+    list.forEach(function (v) { box.appendChild(wideNow ? pcMetaRow(v, basis) : mobMetaRow(v, basis)); });
+    if (unlinked.length) {
+      box.appendChild(el("h3", "mt-subhd", "통계 없는 가이드"));
+      unlinked.forEach(function (v) { box.appendChild(wideNow ? pcMetaRow(v, basis) : mobMetaRow(v, basis)); });
+    }
+    if (!list.length && !unlinked.length) {
       box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
       if (isWide()) document.getElementById("mt-detail").hidden = true;
     } else if (wideNow && mtCurId) {  // PC: 펼쳐 두었던 덱은 다시 그려도 펼친 채로
@@ -4440,14 +4558,40 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     return wrap;
   }
 
-  function metaShow(id, noScroll) {
-    var v = deckView(id); if (!v) return;
+  function metaShow(id, noScroll, subId) {
+    var v = deckView(id, subId); if (!v) return;
     var wide = isWide();
     if (!wide && !noScroll && document.getElementById("mt-detail").hidden) { var ly = window.scrollY; navPush("deck", function () { metaBack(); window.scrollTo(0, ly); }); }
-    mtCurId = id;
+    mtCurId = v.id;
     var d = v.st, box = document.getElementById("mt-detail"), basis = document.getElementById("mt-basis").value;
+    var detailBoard = v.gboard || v.board;
+    var detailSyn = (v.gsyn && v.gsyn.length) ? v.gsyn : synOf(detailBoard);
+    var dv = v.gboard ? Object.assign({}, v, { board: detailBoard, syn: detailSyn }) : v;
+    box.classList.toggle("is-sub", !!v.sub);
     box.innerHTML = "";
     var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("deck", metaBack); }); box.appendChild(back);
+    if (v.subs && v.subs.length > 1) {  // 합쳐진 비슷한 덱 묶음: 칩마다 평균 등수를 보여주고 눌러서 따로 본다 (tfa-tab과 같은 방식)
+      var vw = el("div", "mt-vars");
+      vw.appendChild(el("div", "mt-vars-h", "비슷한 덱 " + v.subs.length + "개"));
+      var tb = el("div", "tfa-tabs"); tb.setAttribute("role", "tablist");
+      var gbs = basisSt(v.grp.st, basis) || basisSt(v.grp.st, "all");
+      var ab = el("button", "tfa-tab mt-var-all" + (!v.sub ? " on" : "")); ab.type = "button"; ab.setAttribute("role", "tab");
+      ab.appendChild(el("span", null, "전체"));
+      if (gbs) ab.appendChild(dkGrad(el("span", "mt-var-avg", gbs[0].toFixed(2)), dkAvgT(gbs[0])));
+      ab.addEventListener("click", function () { if (v.sub) metaShow(v.grp.id, true, null); });
+      tb.appendChild(ab);
+      v.subs.forEach(function (m) {
+        var mt = basisTier(m, basis), mbs = basisSt(m, basis) || basisSt(m, "all");
+        var b = el("button", "tfa-tab" + (v.sub === m.id ? " on" : "")); b.type = "button"; b.setAttribute("role", "tab");
+        b.dataset.sub = m.id;
+        b.appendChild(el("span", "tierb " + mt, mt === "X" ? "-" : mt));
+        b.appendChild(el("span", null, deckName(m)));
+        if (mbs) b.appendChild(dkGrad(el("span", "mt-var-avg", mbs[0].toFixed(2)), dkAvgT(mbs[0])));
+        b.addEventListener("click", function () { if (v.sub !== m.id) metaShow(v.grp.id, true, m.id); });
+        tb.appendChild(b);
+      });
+      vw.appendChild(tb); box.appendChild(vw);
+    }
     var hbt = basisTier(d, basis), hmc = mainOf(v), head = el("div", "dk-hero t-" + hbt);
     if (hmc && IDX.units[hmc.u]) { var art = img(IDX.units[hmc.u].icon, ""); art.className = "art"; head.appendChild(art); }
     head.appendChild(dkPortrait(hmc && { u: hmc.u }, null));
@@ -4455,6 +4599,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     t.appendChild(el("span", "tk", hbt === "X" ? "티어 없음" : hbt + " 티어"));
     var th = el("h3", null, deckName(v)), tp = /^\[([^\]]+)\]/.exec(v.name);
     if (tp) th.insertBefore(el("span", "pre", PRE_KO[tp[1]] || tp[1]), th.firstChild);
+    if (v.guide) th.appendChild(el("span", "gd-badge", "가이드"));
     t.appendChild(th);
     if (d) t.appendChild(el("p", null, [styleKo(d.style), d.level + "렙 완성", d.diff ? DIFF[d.diff] : "", d.mine].filter(Boolean).join(" · ")));
     var dreq = embReq(d); if (dreq) { var rq = el("p", "emb-reqline"); rq.appendChild(embBadge(dreq)); rq.appendChild(document.createTextNode("이 덱 판의 " + Math.round(dreq[1]) + "%가 사용해요")); t.appendChild(rq); }
@@ -4470,8 +4615,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       });
       box.appendChild(st);
     }
-    box.appendChild(synRow(v.syn, true));
-    var names = v.board.filter(function (b) { return !b.plant; }).map(function (b) { return b.u; });
+    box.appendChild(synRow(detailSyn, true));
+    var names = detailBoard.filter(function (b) { return !b.plant; }).map(function (b) { return b.u; });
     var code = codeOfNames(names);
     var acts = el("div", "tb-actions");
     if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big"));
@@ -4480,7 +4625,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     acts.appendChild(tbb); box.appendChild(acts);
 
     var cols = el("div", "mt-cols"), A = el("div"), B = el("div");
-    A.appendChild(levelBoards(v, d));
+    A.appendChild(levelBoards(dv, d));
     // 추천 증강: 프리즘·골드·실버 3개씩. 롤체지지 가이드 픽(★)이 먼저, 다음은 MetaTFT 프로 가이드 등급 또는 이 덱 시너지 증강
     // 롤체지지 가이드 공략 원문 (scripts/build_guides.py parse_guide)
     var GD = v.gd || null;
@@ -4501,7 +4646,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     // -> PBE에선 채우기 없이 롤체지지 가이드가 직접 고른 증강만. 없으면 추천 증강 칸을 안 그린다
     var augNoInfo = META && META.pbe && !(d && d.augsrc === "pro");
     var pool = !augNoInfo && d && d.augs ? d.augs : null;
-    if (!pool) { pool = { "프리즘": [], "골드": [], "실버": [] }; if (!augNoInfo) synAugs(v.syn, []).forEach(function (n) { var r = DB && DB.info.a[n] && DB.info.a[n].r; if (pool[r]) pool[r].push(n); }); }
+    if (!pool) { pool = { "프리즘": [], "골드": [], "실버": [] }; if (!augNoInfo) synAugs(detailSyn, []).forEach(function (n) { var r = DB && DB.info.a[n] && DB.info.a[n].r; if (pool[r]) pool[r].push(n); }); }
     Object.keys(rows).forEach(function (r) { (pool[r] || []).forEach(function (n) { if (rows[r].length < 3 && !picked[n]) { rows[r].push(n); picked[n] = 1; } }); });
     if (GD && GD.augs && GD.augs.length) {  // 롤체지지 가이드: 등급마다 공통·전투·경제·아이템
       var sg = sec("추천 증강", "출처 롤체지지");
@@ -4532,7 +4677,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       A.appendChild(sa);
     }
     // 캐리 템: 추천 덱의 템, 통계가 있으면 다른 빌드도
-    var carriers = v.board.filter(function (b) { return !b.plant && b.i && b.i.length; });
+    var carriers = detailBoard.filter(function (b) { return !b.plant && b.i && b.i.length; });
     if (carriers.length) {
       var sb = sec("캐리 템");
       carriers.forEach(function (b) {
@@ -4621,8 +4766,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     cols.appendChild(A); cols.appendChild(B); box.appendChild(cols);
     document.getElementById("mt-list-view").hidden = !wide;
     box.hidden = false;
-    document.querySelectorAll("#mt-rows .mt-row").forEach(function (row) { row.classList.toggle("sel", row.dataset.id === id); });
-    try { localStorage.setItem(MT_KEY, JSON.stringify({ id: id, f: mtFilter, b: basis, s: mtSrc, o: mtSort })); } catch (e) {}
+    document.querySelectorAll("#mt-rows .mt-row").forEach(function (row) { row.classList.toggle("sel", row.dataset.id === v.id); });
+    try { localStorage.setItem(MT_KEY, JSON.stringify({ id: v.id, f: mtFilter, b: basis, o: mtSort })); } catch (e) {}
     if (!noScroll) { if (wide) box.scrollTop = 0; else window.scrollTo(0, 0); }
   }
 
@@ -4647,7 +4792,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     metaSave();
   }
   function metaSave() {
-    try { localStorage.setItem(MT_KEY, JSON.stringify({ id: null, f: mtFilter, b: document.getElementById("mt-basis").value, s: mtSrc, o: mtSort })); } catch (e) {}
+    try { localStorage.setItem(MT_KEY, JSON.stringify({ id: null, f: mtFilter, b: document.getElementById("mt-basis").value, o: mtSort })); } catch (e) {}
   }
   // 기본 <select> 목록은 떠있는 창(오버레이) 웹뷰에서 안 열려서, 페이지 안에서 그리는 목록으로 바꾼다.
   function pickify(sel) {
@@ -4813,7 +4958,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     if (saved.b) basis.value = saved.b;
     if (META.pbe) basis.value = "emer";
     if (saved.f && saved.f !== "mine") mtFilter = saved.f;
-    if (saved.s) mtSrc = saved.s === "win" || saved.s === "tfa" ? "guide" : saved.s;
     metaPending = saved.id || null;
     function chips(sel, attr, get, set) {
       document.querySelectorAll(sel + " button[data-" + attr + "]").forEach(function (b) {
@@ -4822,7 +4966,6 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       });
     }
     chips("#mt-filter", "f", function () { return mtFilter; }, function (v) { mtFilter = v; });  // (정렬 버튼은 data-f가 없어서 아래에서 따로)
-    chips("#mt-src", "s", function () { return mtSrc; }, function (v) { mtSrc = v; });
     if (saved.o) mtSort = saved.o;
     var sortSel = document.getElementById("mt-sort");
     sortSel.value = mtSort; if (sortSel.value !== mtSort) { mtSort = "avg"; sortSel.value = "avg"; }
@@ -4835,12 +4978,13 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     document.getElementById("mt-q").addEventListener("input", metaList);
     metaList();
     if (metaPending && deckView(metaPending)) {
-      if (isWide()) { mtCurId = metaPending; var rw = document.querySelector('#mt-rows .pcdk[data-id="' + metaPending + '"]'); if (rw) rw._toggle(true); }
+      var pv = deckView(metaPending);
+      if (isWide()) { mtCurId = pv.id; var rw = document.querySelector('#mt-rows .pcdk[data-id="' + pv.id + '"]'); if (rw) rw._toggle(true); }
       else metaShow(metaPending, true);
       metaPending = null;
     }
   }
-  function buildMeta(data) { META = data; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
+  function buildMeta(data) { META = data; META_GRP = null; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
 
   /* ---- 덱 통계 새로고침: 앱·PC 웹은 MetaTFT comps_stats를 바로 받아 숫자만 바꾼다 (보드·템은 그대로). ---- */
   var META_LIVE = "tft-guide-meta-live";
@@ -4868,6 +5012,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     META.liveAt = L.at;
     if (L.src) META.srcAt = L.src;
     if (L.totals) META.totals = Object.assign({}, META.totals, L.totals);
+    META_GRP = null;  // 합친 덱의 판수 가중 평균·티어를 새 통계로 다시 계산
   }
   function metaLoadLive() {
     try {
@@ -4910,7 +5055,9 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     req.then(function (L) {
       if (!L) return;
       try { localStorage.setItem(META_LIVE, JSON.stringify(L)); } catch (e) {}
-      metaApply(L); metaUpdLabel(); metaList(); if (typeof homeRender === "function") homeRender();
+      metaApply(L); metaUpdLabel(); metaList();
+      if (!isWide() && mtCurId && !document.getElementById("mt-detail").hidden) metaShow(mtCurId, true);
+      if (typeof homeRender === "function") homeRender();
     }).catch(function (e) { metaUpdLabel("불러오지 못했어요. 다시 시도해 주세요"); })
       .then(function () { btn.disabled = false; btn.textContent = "새로고침"; });
   }
@@ -5055,9 +5202,10 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
 
   function buildGuides(data) {
-    GUIDES = data; setPatch();
+    GUIDES = data; META_GRP = null; setPatch();
     if (!metaReady) return;
     metaList();
+    if (typeof homeRender === "function") homeRender();
     if (metaPending && deckView(metaPending)) { metaShow(metaPending, true); metaPending = null; }
   }
   var VER = null;
