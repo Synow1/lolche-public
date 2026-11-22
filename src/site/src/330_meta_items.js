@@ -266,7 +266,7 @@
       cur = k;
       [].forEach.call(tabs.children, function (b) { b.classList.toggle("on", +b.dataset.lv === k); });
       var b = names(lvs[k]) === finalKey ? v.board : lvs[k];
-      bar.innerHTML = ""; bar.appendChild(synRow(synOf(b), false, 7));
+      bar.innerHTML = ""; bar.appendChild(synRow(synOf(b), false, 0, true));  // 개수 제한 없이 고유 특성까지 (2026-11-22 사용자: "하트스틸이 위에만 있고 배치판엔 왜 없냐" — 7개 제한에 1명짜리 HEARTSTEEL이 잘렸음)
       var code = codeOfNames(b.filter(function (u) { return !u.plant; }).map(function (u) { return u.u; }));
       if (code) bar.appendChild(codeButton(code, "코드"));
       slot.innerHTML = ""; slot.appendChild(hexBoard(b));

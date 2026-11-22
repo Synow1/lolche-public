@@ -559,9 +559,10 @@
     if (withName) c.appendChild(el("span", "tn", s.t));
     return c;
   }
-  function synRow(list, withName, max) {
+  // all: 이름 없이 그려도 고유 특성까지 다 (덱 상세 레벨별 보드 줄)
+  function synRow(list, withName, max, all) {
     var r = el("div", "synrow");
-    list.filter(function (s) { return withName || s.style !== "unique"; }).slice(0, max || 99).forEach(function (s) { r.appendChild(synChip(s, withName)); });
+    list.filter(function (s) { return withName || all || s.style !== "unique"; }).slice(0, max || 99).forEach(function (s) { r.appendChild(synChip(s, withName)); });
     return r;
   }
 

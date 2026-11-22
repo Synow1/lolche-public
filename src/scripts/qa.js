@@ -827,6 +827,29 @@ function fresh(file, key, hours) {
       if (d2 !== '최근 1일') fail(`덱 통계 기간: 다시 켜면 고른 기간을 잊음 (${d2})`);
       await pg.evaluate(() => localStorage.removeItem('tft-guide-meta-days'));
     }
+    // 레벨별 보드 위 시너지 줄이 켜진 시너지를 빠뜨리지 않는지 (2026-11-22 사용자: "하트스틸이 위에만 있고 배치판엔 왜 없냐" — 7개 제한에 잘렸음)
+    const DBJ = JSON.parse(fs.readFileSync(path.join(SITE, 'db.json'), 'utf8')), STY = JSON.parse(fs.readFileSync(path.join(SITE, 'guides.json'), 'utf8')).styles || {};
+    const lvRows = await pg.evaluate(async () => {
+      const out = [], rows = [...document.querySelectorAll('#mt-rows .mt-row.dk')].slice(0, 25);
+      for (const r of rows) {
+        r.click(); await new Promise(f => setTimeout(f, 60));
+        const tabs = [...document.querySelectorAll('#mt-detail .lvtabs button')];
+        for (const t of tabs) {
+          t.click(); await new Promise(f => setTimeout(f, 10));
+          const w = t.closest('.lvwrap');
+          out.push({ deck: (document.querySelector('#mt-detail h3, #mt-detail .mt-name') || {}).textContent, lv: t.dataset.lv,
+            units: [...w.querySelectorAll('[data-unit]')].map(e => e.dataset.unit), traits: [...w.querySelectorAll('.lvbar [data-trait]')].map(e => e.dataset.trait) });
+        }
+      }
+      return out;
+    });
+    const lvMiss = [];
+    lvRows.forEach(x => {
+      const c = {}; [...new Set(x.units)].forEach(u => ((DBJ.units[u] || {}).traits || []).forEach(t => { c[t] = (c[t] || 0) + 1; }));
+      Object.keys(c).forEach(t => { const st = (STY[t] || []).filter(y => y[0] != null && c[t] >= y[0]); if (st.length && !x.traits.includes(t)) lvMiss.push(`${(x.deck || '').trim().slice(0, 12)} ${x.lv}렙 ${t}`); });
+    });
+    if (!lvRows.length) soft('덱 상세: 레벨별 보드가 있는 덱을 못 찾음');
+    if (lvMiss.length) fail(`덱 상세: 레벨별 보드 시너지 줄에 켜진 시너지가 빠짐 (${lvMiss.length}곳, 예: ${lvMiss.slice(0, 3).join(', ')})`);
     await pg.close();
   });
   // 업데이트 소식 (2026-11-16 사용자: "업뎃되면 뭐가 업뎃됐는지 한번 띄워"): 새 버전이면 창이 뜨고, 확인을 누르면 닫히고 다시 안 뜬다
@@ -988,7 +1011,7 @@ function fresh(file, key, hours) {
       if (!mtCol || mtCol.graded < 4 || mtCol.plain) fail(`[WEB/1280] 메타 덱: 평균 등수·선택률·승률·순방률 숫자에 색이 안 칠해짐 (${JSON.stringify(mtCol)})`);
       // 운영 칩·글자 가독성 (2026-11-21 사용자: "5렙 리롤 같은 표시 강조, 색깔", "폰트 가독성"): 칩에 색, PC는 자간을 안 좁히고 글자 복사 가능
       const mtTy = await pg.evaluate(() => { const c = [...document.querySelectorAll('#mt-rows .pcdk-chip')], bs = getComputedStyle(document.body);
-        return { chips: c.length, styled: c.filter(x => /ch-(reroll|fast|std)/.test(x.className)).length, bg: c[0] ? getComputedStyle(c[0]).backgroundColor : '', ls: bs.letterSpacing, sel: bs.userSelect || bs.webkitUserSelect }; });
+        return { chips: c.length, styled: c.filter(x => /\bst-(r5|r6|r7|f8|f9|std)\b/.test(x.className)).length, bg: c[0] ? getComputedStyle(c[0]).backgroundColor : '', ls: bs.letterSpacing, sel: bs.userSelect || bs.webkitUserSelect }; });
       if (mtTy.chips < 20 || mtTy.styled < 10 || /rgba\(0, 0, 0, 0\)|transparent/.test(mtTy.bg)) fail(`[WEB/1280] 메타 덱: 운영 방식 칩(리롤·운영)이 안 보이거나 색이 없음 (${JSON.stringify(mtTy)})`);
       if (mtTy.ls !== 'normal' && mtTy.ls !== '0px') fail(`[WEB/1280] PC 글자 자간이 좁혀져 있음 (${mtTy.ls})`);
       if (mtTy.sel === 'none') fail('[WEB/1280] PC에서 글자를 선택·복사할 수 없음 (user-select: none)');
