@@ -26,8 +26,12 @@
 .mt-bar { position: sticky; top: calc(var(--abh) + env(safe-area-inset-top, 0px)); z-index: 6; background: var(--bg); padding: 4px 0 8px; display: grid; gap: 6px; }
 #mt-upd-t, .mt-upd > span { white-space: pre-line; line-height: 1.5; }
 .mt-upd { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--fs-s); color: var(--muted); margin: 0 0 6px; min-height: 28px; }
-.mt-upd button { all: unset; cursor: pointer; flex: none; font-size: var(--fs-m); font-weight: 700; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 8px; padding: 3px 10px; }
-.mt-upd button:disabled { opacity: .5; }
+.mt-upd > button { all: unset; cursor: pointer; flex: none; font-size: var(--fs-m); font-weight: 700; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 8px; padding: 3px 10px; }
+.mt-upd > button:disabled { opacity: .5; }
+/* 통계 기간 고르기 (최근 1~7일): 업데이트 줄 오른쪽, 새로고침 앞 */
+.mt-upd > span { flex: 1 1 auto; min-width: 0; }
+.mt-upd .dd > button { width: auto; gap: 8px; padding: 4px 9px; font-size: var(--fs-s); font-weight: 600; }
+.mt-upd .dd.busy { opacity: .5; pointer-events: none; }
 .mt-chips { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
 .mt-chips::-webkit-scrollbar { display: none; }
 .mt-chips button { flex: none; font: inherit; font-size: var(--fs-m); font-weight: 700; padding: 6px 12px; border-radius: 9px; border: 0; background: var(--surface); color: var(--muted); }
@@ -384,6 +388,12 @@
 .dk .mt-name { font-size: 15.5px; font-weight: 800; letter-spacing: -.25px; line-height: 1.25; position: relative; }
 .dk-sub { font-size: var(--fs-xs); color: var(--muted); position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .dk-sub .dd1 { color: #2fbf7f; } .dk-sub .dd2 { color: var(--c3); } .dk-sub .dd3 { color: #ff9f1a; } .dk-sub .dd4 { color: #ff5a5f; }
+/* 운영 방식 색 (styleTag, 폰·PC 공통): 리롤 5렙 분홍·6렙 보라·7렙 남색, 8렙 운영 하늘·9렙 운영 금색, 기본 회색 */
+:root { --st-r5: #e0529f; --st-r6: #9d6bff; --st-r7: #5a76f0; --st-f8: #1fa8c9; --st-f9: #d49a1c; --st-std: #7f8ca3; }
+.stc { --chc: var(--st-std); display: inline-block; font-weight: 700; padding: 0 6px; border-radius: 5px; line-height: 1.5; white-space: nowrap;
+  color: color-mix(in srgb, var(--chc) 80%, var(--ink)); background: color-mix(in srgb, var(--chc) 18%, transparent); }
+.stc.st-r5 { --chc: var(--st-r5); } .stc.st-r6 { --chc: var(--st-r6); } .stc.st-r7 { --chc: var(--st-r7); }
+.stc.st-f8 { --chc: var(--st-f8); } .stc.st-f9 { --chc: var(--st-f9); }
 .dk .mt-strip { position: relative; gap: 3px; padding-top: 1px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent); }
 .dk .mt-strip img { width: 24px; height: 24px; border-radius: 6px; border-width: 1.5px; }
 .dk .mt-num { position: relative; font-size: 20px; font-weight: 800; }

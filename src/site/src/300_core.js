@@ -490,6 +490,10 @@
   function basisTier(d, b) { return !d ? "X" : d.tiers && d.tiers[b] ? d.tiers[b] : b === "all" && !d.tiers ? d.tier : "X"; }
   var STYLE_KO = { "Fast 8": "8렙 운영", "Fast 9": "9렙 운영", "lvl 7": "7렙 리롤", "lvl 6": "6렙 리롤", "lvl 5": "5렙 리롤", "lvl 4": "4렙 리롤", "Standard": "기본 운영" };
   function styleKo(x) { return STYLE_KO[x] || x || ""; }
+  // 운영 방식마다 색 (2026-11-22 사용자: "모바일도 9렙 운영·8렙 리롤 이런 거 색깔로 구분되게"): 리롤은 5렙 분홍·6렙 보라·7렙 남색, 8렙 운영 하늘·9렙 운영 금색, 기본 회색
+  var STYLE_CLS = { "lvl 4": "st-r5", "lvl 5": "st-r5", "lvl 6": "st-r6", "lvl 7": "st-r7", "Fast 8": "st-f8", "Fast 9": "st-f9", "Standard": "st-std" };
+  function styleCls(x) { return STYLE_CLS[x] || "st-std"; }
+  function styleTag(x) { return el("span", "stc " + styleCls(x), styleKo(x)); }
   var PRE_KO = { "영브": "영원한 브론즈" };
   function isReroll(d) { return d && /^lvl [5-7]/.test(d.style); }
   function statOf(id) { return META && id ? META.decks.filter(function (x) { return x.id === id; })[0] : null; }
@@ -578,9 +582,9 @@
   // MetaTFT 덱 묶음 하나 = 줄 하나 (숫자는 MetaTFT 그대로). 예전엔 비슷한 묶음을 합쳐 가중 평균 냈으나 2026-11-22 사용자 결정으로 뺌
   // MetaTFT 덱 티어 (사이트 코드의 표, 2026-11-22): 평균 등수 S < 4.25 · A < 4.5 · B < 4.75 · C < 5 · D. tft_data.mt_tier와 같다
   // PBE 빌드 이름 (MetaTFT 화면 '19.1 Nov-20'과 같은 기준): 'PBE 11/20 빌드 · 최근 3일'. 빌드는 check_patch.py가 매일 추적 -> meta.json pbe_build
-  function pbeLabel() {
+  function pbeLabel(days) {
     var b = META && META.pbe_build, m = b && /^\d{4}-(\d\d)-(\d\d)/.exec(b.since || "");
-    return "PBE " + (m ? (+m[1]) + "/" + (+m[2]) + " 빌드" : "최신 빌드") + " · 최근 3일";
+    return "PBE " + (m ? (+m[1]) + "/" + (+m[2]) + " 빌드" : "최신 빌드") + (days === 0 ? "" : " · 최근 " + (days || 3) + "일");  // 0: 기간은 옆 고르기 칸에 보임
   }
   function mtTier(avg) { return avg == null ? "X" : avg < 4.25 ? "S" : avg < 4.5 ? "A" : avg < 4.75 ? "B" : avg < 5 ? "C" : "D"; }
   function metaGroups() {

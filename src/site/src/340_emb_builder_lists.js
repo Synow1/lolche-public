@@ -246,7 +246,7 @@
     scored.forEach(function (x) {
       var d = x[2], r = el("button", "mt-row" + (d.mine ? " mine" : "")); r.type = "button";
       r.appendChild(el("span", "tierb " + d.tier, d.tier));
-      var nm = el("div", "mt-name", d.name); nm.appendChild(el("small", null, x[1] + "개 겹침 · " + styleKo(d.style))); r.appendChild(nm);
+      var nm = el("div", "mt-name", d.name); var sm = el("small", null, x[1] + "개 겹침 · "); if (d.style) sm.appendChild(styleTag(d.style)); nm.appendChild(sm); r.appendChild(nm);
       var num = el("div", "mt-num", d.avg.toFixed(2)); num.appendChild(el("small", null, "승률 " + Math.round(d.win) + "%")); r.appendChild(num);
       r.appendChild(strip(d.board.map(function (u) { return u.u; })));
       r.addEventListener("click", function () { openDeck(d.id); });

@@ -96,7 +96,7 @@
       var meta = el("div", "dk-meta");
       meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
       var sub = el("span", "dk-sub"); sub.appendChild(el("span", "pt-fit", "재료 궁합 " + Math.round(x.fit * 100) + "%"));
-      sub.appendChild(document.createTextNode(" · " + styleKo(d.style))); meta.appendChild(sub);
+      if (d.style) { sub.appendChild(document.createTextNode(" · ")); sub.appendChild(styleTag(d.style)); } meta.appendChild(sub);
       mid.appendChild(meta);
       var nm = el("div", "mt-name", deckName(d)), req = embReq(d); if (req) nm.insertBefore(embBadge(req), nm.firstChild);
       mid.appendChild(nm);

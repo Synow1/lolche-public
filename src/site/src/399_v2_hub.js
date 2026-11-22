@@ -68,7 +68,7 @@
     var dbox = document.getElementById("hm-decks");
     if (dbox && META && IDX) {
       var msub = document.getElementById("hm-meta-sub");
-      if (msub) msub.textContent = (META.pbe ? "MetaTFT " + pbeLabel() : "에메+") + " · " + (META.patch || "");
+      if (msub) msub.textContent = (META.pbe ? "MetaTFT " + pbeLabel(metaShownDays()) : "에메+") + " · " + (META.patch || "");
       var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer"); })
         .sort(function (a, b) { return basisSt(a.st, "emer")[0] - basisSt(b.st, "emer")[0]; })
         .slice(0, 4);
@@ -81,7 +81,7 @@
         var meta = el("div", "dk-meta");
         meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
         var mtxt = el("span", "dk-sub");
-        if (d && d.style) mtxt.appendChild(document.createTextNode(styleKo(d.style)));
+        if (d && d.style) mtxt.appendChild(styleTag(d.style));
         var pl = perLobby(d, "emer");
         if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
         if (mtxt.textContent) meta.appendChild(mtxt);

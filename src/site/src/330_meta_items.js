@@ -92,7 +92,7 @@
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
-    var chips = (d ? [d.style ? [styleKo(d.style), isReroll(d) ? "ch-reroll" : /^Fast/.test(d.style) ? "ch-fast" : "ch-std"] : null,
+    var chips = (d ? [d.style ? [styleKo(d.style), styleCls(d.style)] : null,
       d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null] : [])
       .concat([v.guide ? ["가이드", "gd-badge"] : null, v.subs && v.subs.length > 1 ? ["비슷한 덱 " + v.subs.length, "ch-var"] : null]).filter(Boolean);
     var units = starOrder(v.board, mc && mc.u).map(function (b) {
@@ -119,7 +119,7 @@
     var meta = el("div", "dk-meta");
     meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
     var mtxt = el("span", "dk-sub");
-    if (d && d.style) mtxt.appendChild(document.createTextNode(styleKo(d.style)));
+    if (d && d.style) mtxt.appendChild(styleTag(d.style));
     if (d && d.diff) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dd" + d.diff, DIFF[d.diff])); }
     var pl = perLobby(d, basis);
     if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
@@ -540,7 +540,7 @@
     document.addEventListener("click", function (e) { if (!box.contains(e.target)) ul.hidden = true; });
     sel.hidden = true; sel.parentNode.insertBefore(box, sel);
     box.appendChild(btn); box.appendChild(ul); box.appendChild(sel);
-    sync();
+    sync(); sel._sync = sync;
   }
   /* ---- 아이템 티어표: site/items.json (scripts/build_items.py) ---- */
   var ITEMS = null, IT_KEY = "tft-guide-items", itGrp = "조합템";
@@ -597,7 +597,7 @@
     var t = document.getElementById("it-upd-t"); if (!t || !ITEMS) return;
     var at = ITEMS.liveAt || Date.parse(ITEMS.updated);
     if (rank == null) { rank = document.getElementById("it-rank").value; games = (ITEMS.tiers[rank] || ITEMS.tiers.all).games; }
-    var head = ITEMS.pbe ? ("19시즌 " + pbeLabel() + " · " + Math.round(games / 1e4).toLocaleString() + "만 판") : (RANK_LABEL[rank] + " · 최근 3일 " + Math.round(games / 1e4).toLocaleString() + "만 판");
+    var head = ITEMS.pbe ? ("19시즌 " + pbeLabel(3) + " · " + Math.round(games / 1e4).toLocaleString() + "만 판") : (RANK_LABEL[rank] + " · 최근 3일 " + Math.round(games / 1e4).toLocaleString() + "만 판");
     t.textContent = msg || (head + "\n" + updAt(at) + " · " + ago(at) + " · MetaTFT");
   }
   function itGrade(g, avg, freq) {  // scripts/build_items.py grade()와 같게
@@ -698,7 +698,13 @@
     if (!BASIS_LABEL[basis.value]) basis.value = "emer";
     basis.addEventListener("change", function () { metaList(); metaSave(); });
     pickify(basis);
-    if (META.pbe && basis.parentNode && basis.parentNode.classList.contains("dd")) basis.parentNode.hidden = true;  // PBE 통계엔 티어 구분이 없음 (pickify가 만든 .dd 상자째 숨김)
+    if (META.pbe && basis.parentNode && basis.parentNode.classList.contains("dd")) basis.parentNode.hidden = true;
+    var daysSel = document.getElementById("mt-days");
+    if (LIVE && daysSel) {
+      daysSel.hidden = false; daysSel.value = String(mtDays); pickify(daysSel);
+      daysSel.addEventListener("change", function () { mtDays = +daysSel.value || 3; metaDaysSave(); metaRefresh(document.getElementById("mt-upd-btn")); });
+      if (mtDays !== metaShownDays()) setTimeout(function () { metaRefresh(document.getElementById("mt-upd-btn")); }, 0);
+    } else mtDays = 3;  // PBE 통계엔 티어 구분이 없음 (pickify가 만든 .dd 상자째 숨김)
     document.getElementById("mt-q").addEventListener("input", metaList);
     metaList();
     if (metaPending && deckView(metaPending)) {
@@ -712,12 +718,18 @@
 
   /* ---- 덱 통계 새로고침: 앱·PC 웹은 MetaTFT comps_stats를 바로 받아 숫자만 바꾼다 (보드·템은 그대로). ---- */
   var META_LIVE = "tft-guide-meta-live";
+  // 통계 기간 (2026-11-22 사용자: "MetaTFT처럼 최근 3일 등등 선택 가능하게"): MetaTFT 화면과 같은 최근 1~7일, 기본 3일.
+  // 앱·PC 웹만 (comps_stats를 바로 받음). 기본 묶음(meta.json)은 3일이라 다른 기간은 고를 때 받는다
+  var MT_DAYS = "tft-guide-meta-days";
+  var mtDays = (function () { try { var v = +localStorage.getItem(MT_DAYS); return v >= 1 && v <= 7 ? v : 3; } catch (e) { return 3; } })();
+  function metaDaysSave() { try { localStorage.setItem(MT_DAYS, String(mtDays)); } catch (e) {} }
+  function metaShownDays() { return META && META.liveDays || 3; }
   var RANK_Q = { all: "CHALLENGER,DIAMOND,EMERALD,GRANDMASTER,MASTER,PLATINUM", emer: "CHALLENGER,DIAMOND,EMERALD,GRANDMASTER,MASTER", low: "IRON,BRONZE,SILVER,GOLD", dia: "DIAMOND", top: "MASTER,GRANDMASTER,CHALLENGER", gmc: "GRANDMASTER,CHALLENGER" };
   var RANK_MIN = { gmc: 60, top: 200, dia: 250 };
   function plAvg(a) { var n = a[8] || 1, s = 0; for (var i = 0; i < 8; i++) s += a[i] * (i + 1); return Math.round(s / n * 100) / 100; }
   function metaApply(L) {
     META.decks.forEach(function (d) {
-      var a = L.s.all[d.id]; if (!a) return;
+      var a = L.s.all[d.id]; if (!a) { d.n = 0; return; }
       var n = a[8];
       d.n = n; d.avg = plAvg(a); d.top4 = Math.round((a[0] + a[1] + a[2] + a[3]) / n * 100); d.win = Math.round(a[0] / n * 1000) / 10; d.pick = Math.round(n / L.total * 1000) / 10;
     });
@@ -733,7 +745,7 @@
     });
     var order = META.decks.slice().sort(function (a, b) { return a.avg - b.avg; });
     order.forEach(function (x) { x.tier = mtTier(x.avg); });
-    META.liveAt = L.at;
+    META.liveAt = L.at; META.liveDays = L.days || 3;
     if (L.src) META.srcAt = L.src;
     if (L.totals) META.totals = Object.assign({}, META.totals, L.totals);
     META_GRP = null;  // 합친 덱의 판수 가중 평균·티어를 새 통계로 다시 계산
@@ -741,7 +753,7 @@
   function metaLoadLive() {
     try {
       var L = JSON.parse(localStorage.getItem(META_LIVE) || "null");
-      if (L && L.cid === String(META.cluster_id || L.cid) && L.at > metaAt()) metaApply(L);
+      if (L && L.cid === String(META.cluster_id || L.cid) && (L.days || 3) === mtDays && (L.at > metaAt() || mtDays !== 3)) metaApply(L);
     } catch (e) {}
   }
   function metaUpdLabel(msg) {
@@ -750,25 +762,28 @@
     var b = (document.getElementById("mt-basis") || {}).value || "emer", tot = (META.totals || {})[b];
     var at = META.srcAt || META.src_at || (META.liveAt ? new Date(META.liveAt) : META.updated);
     var ats = typeof at === "number" ? at : at instanceof Date ? +at : Date.parse(at);
-    var srcLbl = META.pbe ? "MetaTFT 19시즌 " + pbeLabel() : "MetaTFT 최근 3일";
+    var dsel = document.getElementById("mt-days"), shown = dsel && !dsel.hidden || !!(dsel && dsel.parentNode.classList.contains("dd"));  // 기간 고르기 칸이 보이면 글에서는 뺀다
+    var srcLbl = META.pbe ? "MetaTFT 19시즌 " + pbeLabel(shown ? 0 : metaShownDays()) : "MetaTFT" + (shown ? "" : " 최근 " + metaShownDays() + "일");
     t.textContent = msg || ((tot ? "분석된 덱 " + tot.toLocaleString() + " · " + srcLbl + "\n" : "") + updAt(at) + (ats ? " · " + ago(ats) : "") + (tot ? "" : " · " + srcLbl));
   }
   function metaRefresh(btn) {
     btn.disabled = true; btn.textContent = "불러오는 중";
+    var days = mtDays, daysSel = document.getElementById("mt-days");
+    if (daysSel && daysSel.parentNode.classList.contains("dd")) daysSel.parentNode.classList.add("busy");
     var req = META && META.pbe
-      ? viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&patch=current&days=3").then(function (r) {
+      ? viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&patch=current&days=" + days).then(function (r) {
           var cid = String(r.cluster_id);
           if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel("덱 구성이 바뀌어 다음 업데이트 때 반영돼요"); return null; }
           var m = {}, tot = 1;
           (r.results || []).forEach(function (x) { if (x.cluster) m[x.cluster] = x.places; else tot = x.places[0]; });
-          return { at: Date.now(), cid: cid, s: { all: m, emer: m }, total: tot, totals: { all: tot, emer: tot }, src: r.updated || 0 };
+          return { at: Date.now(), cid: cid, days: days, s: { all: m, emer: m }, total: tot, totals: { all: tot, emer: tot }, src: r.updated || 0 };
         })
       : (function () {
           var keys = Object.keys(RANK_Q);
-          return Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=3&permit_filter_adjustment=false&rank=" + RANK_Q[k]); })).then(function (rs) {
+          return Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=" + days + "&permit_filter_adjustment=false&rank=" + RANK_Q[k]); })).then(function (rs) {
             var cid = String(rs[0].cluster_id);
             if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel(WEB ? "덱 구성이 바뀌어 다음 업데이트 때 반영돼요" : "덱 구성이 바뀌어서 다음 앱 업데이트 때 반영돼요"); return null; }
-            var L = { at: Date.now(), cid: cid, s: {}, total: 1, totals: {}, src: 0 };
+            var L = { at: Date.now(), cid: cid, days: days, s: {}, total: 1, totals: {}, src: 0 };
             keys.forEach(function (k, i) {
               L.s[k] = {}; L.src = Math.max(L.src, rs[i].updated || 0);
               (rs[i].results || []).forEach(function (r) { if (r.cluster) L.s[k][r.cluster] = r.places; else { L.totals[k] = r.places[0]; if (k === "all") L.total = r.places[0]; } });
@@ -782,8 +797,11 @@
       metaApply(L); metaUpdLabel(); metaList();
       if (!isWide() && mtCurId && !document.getElementById("mt-detail").hidden) metaShow(mtCurId, true);
       if (typeof homeRender === "function") homeRender();
-    }).catch(function (e) { metaUpdLabel("불러오지 못했어요. 다시 시도해 주세요"); })
-      .then(function () { btn.disabled = false; btn.textContent = "새로고침"; });
+    }).catch(function (e) {
+      // 기간을 바꾸다 실패하면 지금 보이는 숫자의 기간으로 되돌린다
+      if (daysSel && mtDays !== metaShownDays()) { mtDays = metaShownDays(); daysSel.value = String(mtDays); if (daysSel._sync) daysSel._sync(); metaDaysSave(); }
+      metaUpdLabel("불러오지 못했어요. 다시 시도해 주세요");
+    }).then(function () { btn.disabled = false; btn.textContent = "새로고침"; if (daysSel && daysSel.parentNode.classList.contains("dd")) daysSel.parentNode.classList.remove("busy"); });
   }
   function setupMetaRefresh() {
     var btn = document.getElementById("mt-upd-btn");

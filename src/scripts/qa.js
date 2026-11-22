@@ -789,12 +789,13 @@ function fresh(file, key, hours) {
       else if (d.id === pair[1].id) mockRes.push({ cluster: d.id, places: [0, 0, 0, 2000, 2000, 0, 0, 0, 4000], count: 4000 });
       else mockRes.push({ cluster: d.id, places: [0, 0, 0, 500, 500, 0, 0, 0, 1000], count: 1000 });
     });
+    const csUrls = [];
     const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     await pg.route('https://lolche.local/**', async (r) => {
       const u = new URL(r.request().url());
       if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
-      if (u.pathname === '/proxy' && /comps_stats/.test(u.searchParams.get('u') || '')) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cluster_id: M.cluster_id, updated: Date.now(), results: mockRes }) });
+      if (u.pathname === '/proxy' && /comps_stats/.test(u.searchParams.get('u') || '')) { csUrls.push(u.searchParams.get('u')); return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cluster_id: M.cluster_id, updated: Date.now(), results: mockRes }) }); }
       if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
       const f = path.join(SITE, decodeURIComponent(u.pathname)); return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
     });
@@ -804,6 +805,28 @@ function fresh(file, key, hours) {
     const got = await pg.evaluate((ids) => ids.map(id => { const row = document.querySelector('#mt-rows .mt-row.dk[data-id="' + id + '"]');
       return row ? { avg: (row.querySelector('.dk-avg') || {}).textContent?.trim(), tier: (row.querySelector('.dk-tbadge') || {}).textContent?.trim() } : null; }), [String(pair[0].id), String(pair[1].id)]);
     if (!got[0] || got[0].avg !== '2.00' || got[0].tier !== 'S' || !got[1] || got[1].avg !== '4.50' || got[1].tier !== 'B') fail(`덱 새로고침: MetaTFT 숫자 그대로·티어 표대로가 아님 (기대 2.00 S / 4.50 B, 실제 ${JSON.stringify(got)})`);
+    // 운영 방식 색 (2026-11-22 사용자: "모바일도 9렙 운영·8렙 리롤 이런 거 색깔로 구분"): 폰 덱 줄에 색 칩, 리롤·운영 색이 서로 다름
+    const stc = await pg.evaluate(() => { const m = {}; document.querySelectorAll('#mt-rows .mt-row .dk-sub .stc').forEach(e => { const c = [...e.classList].find(x => /^st-/.test(x)); m[c] = getComputedStyle(e).backgroundColor; }); return m; });
+    const stKeys = Object.keys(stc);
+    if (stKeys.length < 2) fail(`덱 운영 방식: 폰 덱 줄에 색 칩이 없음 (${JSON.stringify(stc)})`);
+    else if (new Set(Object.values(stc)).size < stKeys.length) fail(`덱 운영 방식: 운영 방식마다 색이 다르지 않음 (${JSON.stringify(stc)})`);
+    // 통계 기간 (2026-11-22 사용자: "MetaTFT처럼 최근 3일 등등 선택 가능하게"): 최근 1~7일을 고르면 그 기간으로 받고, 다시 켜도 기억
+    const dd0 = await pg.evaluate(() => { const s = document.getElementById('mt-days'), box = s && s.parentNode; return box && box.classList.contains('dd') ? { n: box.querySelectorAll('li').length, txt: box.querySelector('button').textContent.trim(), sw: document.documentElement.scrollWidth } : null; });
+    if (!dd0 || dd0.n !== 7 || dd0.txt !== '최근 3일') fail(`덱 통계 기간: 최근 1~7일 고르기 칸이 없음 (${JSON.stringify(dd0)})`);
+    else {
+      if (dd0.sw > 360) fail(`덱 통계 기간: 360px 폰에서 가로로 넘침 (${dd0.sw}px)`);
+      csUrls.length = 0;
+      await pg.evaluate(() => { const box = document.getElementById('mt-days').parentNode; box.querySelector('button').click(); box.querySelector('li[data-v="1"]').click(); }); await pg.waitForTimeout(800);
+      const d1 = await pg.evaluate(() => ({ txt: document.getElementById('mt-days').parentNode.querySelector('button').textContent.trim(), saved: localStorage.getItem('tft-guide-meta-days') }));
+      if (!csUrls.length || !csUrls.every(x => /[?&]days=1(&|$)/.test(x))) fail(`덱 통계 기간: 최근 1일을 골라도 days=1로 받지 않음 (${csUrls.slice(0, 2).join(' ; ')})`);
+      if (d1.txt !== '최근 1일' || d1.saved !== '1') fail(`덱 통계 기간: 고른 기간이 표시·저장되지 않음 (${JSON.stringify(d1)})`);
+      csUrls.length = 0;
+      await pg.reload(); await pg.waitForTimeout(1800);
+      await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#meta'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(800);
+      const d2 = await pg.evaluate(() => document.getElementById('mt-days').parentNode.querySelector('button').textContent.trim());
+      if (d2 !== '최근 1일') fail(`덱 통계 기간: 다시 켜면 고른 기간을 잊음 (${d2})`);
+      await pg.evaluate(() => localStorage.removeItem('tft-guide-meta-days'));
+    }
     await pg.close();
   });
   // 업데이트 소식 (2026-11-16 사용자: "업뎃되면 뭐가 업뎃됐는지 한번 띄워"): 새 버전이면 창이 뜨고, 확인을 누르면 닫히고 다시 안 뜬다

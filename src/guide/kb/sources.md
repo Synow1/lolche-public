@@ -1,14 +1,105 @@
-# 출처 모음
+# 롤체 정보 출처 지도 & 클로드 매일 수집·판단 프로토콜
 
-## 사이트 (데이터)
-- MetaTFT: 덱 묶음·Explorer·프로 가이드 증강 (`scripts/tft_data.py`, `scripts/explorer.py`)
-- tactics.tools: 다이아+ 유닛 템·템 조합 (`d3.tft.tools/stats2/...`)
-- 롤체지지(dakgg): 전적·리그 로그·리더보드·티어 분포 (`tft.dakgg.io/api/v1`)
-- Liquipedia TFT: 대회 구조·순위 (`data/esports/`)
-- 공식 패치노트: teamfighttactics.leagueoflegends.com/ko-kr/news
-- DC 롤체갤: `dc_index.md`
+> 목적: **새로운 패치·숨은 메커니즘·버그·메타 킥이 어디에 가장 먼저 올라오는지** 정확히 기록해 두고, 클로드 예약 루틴(`롤체 노트 매일 점검`)이 매일 스스로 확인·선별해 `guide/kb/`를 최신 상태로 유지하게 한다.
 
-## 유튜브 (제목·채널만. 클라우드에서 자막이 막혀 내용은 못 받음)
+---
+
+## 1. 신뢰도별 출처 지도 (URL · 엔드포인트 · 수집 방법 · 주기)
+
+### Tier 1 — 공식 · 게임 원문 · PBE 패치 최속 추적 (팩트 최우선)
+| 출처 | 정확한 위치 (URL / API / 스크립트) | 얻을 수 있는 정보 | 확인 주기 | 수집 방법 |
+|---|---|---|---|---|
+| **Riot 공식 패치노트 (KR/EN)** | `https://teamfighttactics.leagueoflegends.com/ko-kr/news/`<br>`https://teamfighttactics.leagueoflegends.com/en-us/news/tags/patch-notes/` | 본섭 정식 패치노트, 시스템 개편(Roles Revamped 등), 개발자 일기 | 본섭 패치일(`notify`) | WebFetch / 웹검색 |
+| **MetaTFT 게임 원문 JSON** | PBE: `https://data.metatft.com/lookups/TFTSet19_pbe_ko_kr.json` (`_en_us.json`)<br>본섭: `https://data.metatft.com/lookups/TFTSet19_latest_ko_kr.json` | `_metadata.release`(PBE 빌드 번호), 챔피언·스킬·해금 조건(`unlock`), 시너지 수치, 아이템·증강 원문 | 매일(`check_patch.py`) | `curl` / Python (`build_s19.py`, `tft_data.py`) |
+| **CommunityDragon 원문** | PBE: `https://raw.communitydragon.org/pbe/cdragon/tft/ko_kr.json` (2026-11-22: 받아지지만 세트 19가 아직 없음 → PBE 19는 MetaTFT 원문으로)<br>본섭: `https://raw.communitydragon.org/latest/cdragon/tft/ko_kr.json` | 라이엇 클라이언트 추출 전체 데이터(숨은 툴팁·특수 아이템·아이콘 경로) | 패치일·신규 항목 누락 시 | `curl` / Python |
+| **TFTFlow (19시즌 PBE 최속 정리)** | 패치 변경점: `https://tftflow.com/patch-changes/set19`<br>캐시아웃·보상표: `https://tftflow.com/tables/set19`<br>조우자 확률표: `https://tftflow.com/tables/set19/encounter-odds`<br>해금 전체표: `https://tftflow.com/how-to-unlock-every-champion-set19` | **PBE 일일 패치 diff**(라이엇이 공식 노트 안 쓰는 PBE 수정 내역), 하이퍼팝·TD·8비트 캐시아웃 표, 조우자 확률·제외 증강, 세라핀 등 숨은 팁 | **PBE 빌드 변경 시 필수** / 주 1회 | **`python3 scripts/tftflow_diff.py [--to "PBE 19.1c"]`** (정적 HTML, curl로 받아 태그를 벗겨 항목별 `전 -> 후` 한 줄씩. 2026-11-22 확인). 수치는 MetaTFT 원문 curveValues로 다시 대조 (tftflow가 curve 변경을 빠뜨린 적 있음: 하이퍼팝 배수) |
+| **TFT Odds (기물 풀·확률)** | `https://tftodds.com/data/champion-bags` | 세트별 기물 풀, 레벨별 상점 확률, 초기하 롤 확률 검증 | 세트 시작·확률 패치 시 | WebFetch |
+
+### Tier 2 — 실시간 통계 & 프로 티어표 (수치·메타 검증)
+| 출처 | 정확한 위치 (URL / API / 스크립트) | 얻을 수 있는 정보 | 확인 주기 | 수집 방법 |
+|---|---|---|---|---|
+| **MetaTFT API** | 덱 통계: `https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&patch=current&days=3`<br>덱 구조: `https://api-hc.metatft.com/tft-comps-api/comps_data?queue=PBE`<br>템 통계: `https://api-hc.metatft.com/tft-stat-api/items_matches?queue=PBE&patch=current&days=3`<br>조합 질의: `python3 scripts/explorer.py "유닛+템+템"` | 덱 묶음별 평균 등수·순방·승률·픽률, 유닛+템 2/3조합 승률(Data Explorer), 프로 가이드 증강 | 매일 (`update.sh` / `build_meta.py`) | Python / `curl` (CORS 허용) |
+| **TFT Academy (Dishsoap·Frodan)** | `https://tftacademy.com/`<br>스크립트: `python3 scripts/build_tfa.py` | 챌린저·월즈 우승자 기준 티어표, 덱별 스테이지 팁, Flex 유닛, 증강·템 티어 | 매일 (`build_tfa.py`) | `build_tfa.py` |
+| **tactics.tools** | `https://tactics.tools/`<br>API: `https://d3.tft.tools/stats2/unit/1100/<유닛ID>/<패치>/1` | 다이아+ 유닛별 템 페어·트리오(`itemPairs`/`itemTrios`), 상성 교차 검증 | 패치 후(`build_db.py`) | `build_db.py` |
+| **롤체지지 / dak.gg API** | `https://tft.dakgg.io/api/v1/summoners/kr/<이름-태그>/{profile,matches,league-logs}`<br>`https://tft.dakgg.io/api/v1/data/champions?season=set19` (한국어 원문) | 한국 전적·랭킹·티어 컷·최근 1등·세트 한국어 설명 | 매일 (`build_s19.py`, `snap_rank.py`) | Python (`build_*.py`) |
+| **Liquipedia TFT** | `https://liquipedia.net/tft/api.php?action=parse&page=<페이지>&format=json&prop=wikitext` | 대회 일정·규정·공식 최종 순위·선수 국적 | 대회 기간(`esports`) | **30초 간격 준수** (429 주의) |
+
+### Tier 3 — 숨은 메커니즘 · 버그 · 고티어 팁 · 커뮤니티 (교차 검증 후 승격)
+| 출처 | 정확한 위치 (URL / API / 스크립트) | 얻을 수 있는 정보 | 확인 주기 | 수집 방법 |
+|---|---|---|---|---|
+| **Reddit `r/CompetitiveTFT`** | 일간 인기 JSON: `https://old.reddit.com/r/CompetitiveTFT/top.json?t=day&limit=25`<br>주간 인기 JSON: `https://old.reddit.com/r/CompetitiveTFT/top.json?t=week&limit=25`<br>최신 글 JSON: `https://old.reddit.com/r/CompetitiveTFT/new.json?limit=25` | **PBE Day N 패치노트 요약**, 버그 메가스레드, 챌린저 덱 공략, **PSA 숨은 상호작용**(예: True Damage A/B면 연패 유지) | **매일 1회** (PBE/신패치 직후 최우선) | `curl -A "lolche-kb/1.0"` JSON 직접 파싱 (빠르고 안정적) |
+| **DC 롤체갤 (한국 최속 실전)** | `python3 scripts/dc_crawl.py list 1 | head -25` (인자는 **쪽 수**, 1쪽 ≈ 개념글 50개. `list 20`은 20쪽이라 매일 쓰기엔 과함)<br>`python3 scripts/dc_crawl.py search <키워드>`<br>`python3 scripts/dc_crawl.py get <번호>` | 한국 챌린저·그마 덱 킥, 1스테 각 보기, 숨은 버그, 한국 서버 특화 메타 | **매일 1회** (개념글 20개 스캔) | `scripts/dc_crawl.py` |
+| **TFT Ninja (메커니즘 심화)** | `https://tft.ninja/guides/game-mechanics/` (301 → `curl -L` 필요)<br>예: `items/item-bags`, `combat` 등 | 아이템 가방, 매칭, 타게팅, 데미지 공식 등 시즌 불변 영구 메커니즘 검증 | 큰 시스템 개편 시 | WebFetch / 웹검색 |
+| **Mobalytics / MetaTFT 가이드** | `https://mobalytics.gg/tft/new-set-release` (**이 서버 403**, 웹검색 결과 요약으로만)<br>`https://mobalytics.gg/tft/set19/unlocks`<br>`https://www.metatft.com/new-set` | 세트 개편 요약, 해금 조건 2차 교차 확인, 초반 가이드 | 새 세트/대규모 패치 시 | WebFetch / 웹검색 |
+| **X (구 Twitter) 개발자 계정** | Mortdog (`@Mortdog`), Riot Julien (`@RiotJulien`), TFT 공식 (`@TFT`), CompeteTFT (`@CompeteTFT`) | 긴급 B패치·핫픽스 예고, 의도된 메커니즘 vs 버그 확정 답변, 월즈 시트 링크 | 핫픽스·대회·의문 발생 시 | 웹검색 (`site:x.com` 또는 `r/CompetitiveTFT` 전재본 확인) |
+
+### 접근 제한 · 금지 규칙
+- **2026-11-22 이 클라우드 서버 접근 테스트 (클로드)**:
+  | 출처 | 결과 | 매일 루틴에서 쓰는 법 |
+  |---|---|---|
+  | `old.reddit.com/.../top.json` | **302 → www.reddit.com 403** (`api.reddit.com`도 403) | 브라우저 UA 흉내 등 **우회 금지**(자동 차단 대상). 웹검색으로 `r/CompetitiveTFT` 전재·요약만 찾고, 못 찾으면 그날 레딧은 건너뛴다. 원문이 꼭 필요하면 사용자에게 Reddit OAuth 앱 키(`oauth.reddit.com`)를 요청한다 |
+  | `tftflow.com/patch-changes/set19`, `/tables/set19`, `/tables/set19/encounter-odds`, 해금 글 | 200 | `scripts/tftflow_diff.py` |
+  | `teamfighttactics.leagueoflegends.com` 패치노트 | 200 | curl 또는 웹검색 |
+  | MetaTFT 원문·API | 200 | `check_patch.py`·`build_s19.py` |
+  | CommunityDragon PBE | 200 (세트 19 없음) | 본섭 19 출시 뒤 `latest`로 |
+  | `tftodds.com` | 200 | curl |
+  | `tft.ninja` | 301 | `curl -L` |
+  | `mobalytics.gg` | **403** | 우회 금지, 웹검색 |
+  | DC 롤체갤 (`dc_crawl.py`) | 정상 | `list 1`, `get <번호>` |
+- `lolchess.gg/decks?queue=pbe`: 이 서버 IP에서 403 차단됨 → **우회 시도 금지**, MetaTFT PBE API로 대체.
+- `liquipedia.net`: 요청당 최소 30초 간격, 429 시 즉시 중단.
+- YouTube: 클라우드 환경에서 자막 추출 차단 → 아래 목록은 제목·채널 참고용으로만 유지.
+
+---
+
+## 2. 클로드 예약 루틴용 신규 정보 수집·판단 프로토콜 (Daily Discovery Playbook)
+
+매일 예약 점검(`롤체 노트 매일 점검`, 09:41 KST)이 기존 `check_patch.py`·`update.sh`를 돌린 뒤, **아래 순서대로 새 지식을 확인하고 판단해 `guide/kb/`에 반영**한다.
+
+### 2.1 실행 시점별 확인 순서
+1. **매일 공통 (2~3분 컷, 조용히 실행)**:
+   - `r/CompetitiveTFT` 일간 상위 글: **이 서버에서 레딧이 403이라** 웹검색(`r/CompetitiveTFT PBE <날짜>`, `Mortdog PBE`)으로 `PSA`·`PBE`·`Patch`·`Bug`·`Unlock`·`Set 19` 소식만 찾는다. 검색에 안 잡히면 그날은 건너뛴다(우회 금지). 레딧 키가 생기면 `top.json?t=day&limit=20`으로 바꾼다.
+   - `python3 scripts/dc_crawl.py list 1 | head -25`로 최근 개념글 제목 훑기 → **패치·버그·해금·19시즌 팁·운영 공략** 글만 `get <번호>`로 읽기.
+2. **PBE 새 빌드 감지(`check_patch.py`에서 `pbe` 액션) 시 필수**:
+   - `python3 scripts/tftflow_diff.py --to "<새 빌드 라벨>"`로 PBE 변경점 확인 (라벨은 `tftflow_diff.py` 전체 출력의 `PBE a->PBE b`에서 가장 새 것). 바뀐 수치는 MetaTFT 원문(`TFTSet19_pbe_en_us.json`의 `curveValues`·스킬 변수)과 대조해 지금 빌드에 들어갔는지 확인하고 적는다. tftflow에 아직 안 올라왔으면 다음 날 다시 본다.
+   - `site/s19.json` 갱신 전/후 비교로 **해금 조건·7코스트·시너지 수치 변경**이 있으면 `guide/kb/set19.md` 즉시 수정.
+   - `r/CompetitiveTFT`의 해당 날짜 PBE 패치노트 스레드 확인.
+3. **본섭 새 패치(`notify` / `full` 액션) 시 필수**:
+   - Riot 공식 패치노트(KR/EN) 확인 → 시스템/확률/경험치 변경은 `rules.md`·`fundamentals.md`, 19시즌 밸런스·해금·시너지 변경은 `set19.md`에 반영.
+   - `tftflow.com/tables/set19` 및 `encounter-odds` 변동 확인.
+
+### 2.2 판단 기준 — KB에 적을 것(Promote) vs 버릴 것(Skip)
+**즉시 기록 (Promote)**:
+- **1차 팩트 변경**: 공식 패치·B패치·PBE 빌드에서 바뀐 수치, 해금 조건, 확률, 조우자, 아이템 효과.
+- **검증된 숨은 메커니즘(Tech / PSA)**: 게임 툴팁에 안 적혀 있지만 실제 전투·경제에 큰 영향을 주는 규칙 (예: True Damage A/B면 연패 유지, 세라핀 대기석 테일러링). 가능하면 댓글·실험·게임 원문으로 **2곳 이상 교차 확인**.
+- **실전 영향 버그**: 아이템 미발동, 해금 조건 버그, 판 기록 누락 등(수정 패치 나오면 `수정됨` 표기).
+- **고티어 검증 덱 킥·운영법**: 마스터+/챌린저 인증 또는 MetaTFT/Explorer 통계가 뒷받침된 배치·템·해금 루트.
+- **기존 KB 오류 발견**: 기존 문서가 틀렸으면 원문 수정 + `corrections.md`에 1줄 기록.
+
+**무시 (Skip)**:
+- 표본 없는 1~2판짜리 PBE 감상/징징글 ("XX 너프 시급", "YY 버그급 사기").
+- 근거·재현 방법 없는 추측성 루머.
+- 이미 `site/meta.json`·`site/s19.json`에 매일 자동 저장되는 단순 일일 등수 등락(메타 축 자체가 바뀐 경우만 1~2줄 요약).
+- `guide/kb/`에 이미 적혀 있는 내용의 중복 요약.
+
+### 2.3 파일 라우팅 표 (어디에 적을지)
+| 새 정보의 성격 | 저장할 파일 | 필수 표기 |
+|---|---|---|
+| 시즌 불변 원리 (역할군, 전투 수학, 아이템 가방, 매칭, 경제·배치 이론) | `guide/kb/fundamentals.md` | `(YYYY-MM-DD, 출처)` |
+| 기본 규칙 숫자 (골드·경험치·상점 확률·기물 풀·피해량·LP·덱파워) | `guide/kb/rules.md` | 패치 버전 + 출처 |
+| 19시즌 전용 (해금 조건, 7코, 시너지·캐시아웃, 조우자, 영웅증강, 특수템, PBE/본섭 패치 타임라인) | `guide/kb/set19.md` | 날짜 + PBE/본섭 구분 |
+| 실전 메타 팁·덱별 킥·첫 초밥·배치·버그 사례 | `guide/kb/strategy.md` | `(YYYY-MM-DD, DC <번호> 또는 r/CompetitiveTFT)` |
+| 기존 KB·에이전트 오답 정정 | `guide/kb/corrections.md` | 틀린 내용 → 맞는 내용 + 근거 |
+| 새 유력 출처/API 발견 또는 기존 URL 차단·변경 | `guide/kb/sources.md` | 날짜 + 접근 가능 여부 |
+
+### 2.4 반영·알림 규칙
+- `guide/kb/`만 갱신한 날은 **앱을 다시 빌드·배포할 필요 없다** (`site/`·`android/` 미변경). `git commit && git push origin main`만 하면 된다.
+- 사용자가 꼭 알면 좋은 **대형 변경(PBE 해금 조건 변경, 중요 숨은 메커니즘/버그 발견, B패치)**이 있었을 때만 매일 점검 요약에 1~2줄 덧붙인다. 사소한 보강은 조용히 커밋한다.
+
+---
+
+## 3. 참고 유튜브 목록 (시즌 18 / 기본기 — 제목·채널만, 클라우드 자막 불가)
+
 
 | 채널 | 제목 | 올린 때 | 조회수 | 링크 |
 |---|---|---|---|---|

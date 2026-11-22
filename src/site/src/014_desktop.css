@@ -485,9 +485,9 @@
   body:not(.overlay) .pcdk-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
   body:not(.overlay) .pcdk-chip { --chc: var(--muted); font-size: 12.5px; font-weight: 700; line-height: 1.45; padding: 2px 8px; border-radius: 6px; white-space: nowrap;
     color: color-mix(in srgb, var(--chc) 82%, var(--ink)); background: color-mix(in srgb, var(--chc) 17%, transparent); }
-  body:not(.overlay) .pcdk-chip.ch-reroll { --chc: #b57bff; }
-  body:not(.overlay) .pcdk-chip.ch-fast { --chc: #e8b94f; }
-  body:not(.overlay) .pcdk-chip.ch-std { --chc: #7fa7d9; }
+  body:not(.overlay) .pcdk-chip.st-r5 { --chc: var(--st-r5); } body:not(.overlay) .pcdk-chip.st-r6 { --chc: var(--st-r6); }
+  body:not(.overlay) .pcdk-chip.st-r7 { --chc: var(--st-r7); } body:not(.overlay) .pcdk-chip.st-f8 { --chc: var(--st-f8); }
+  body:not(.overlay) .pcdk-chip.st-f9 { --chc: var(--st-f9); } body:not(.overlay) .pcdk-chip.st-std { --chc: var(--st-std); }
   body:not(.overlay) .pcdk-chip.ch-lv { --chc: var(--muted); font-weight: 600; }
   body:not(.overlay) .pcdk-chip.ch-d1 { --chc: #2fbf7f; }
   body:not(.overlay) .pcdk-chip.ch-d2 { --chc: #4b9dff; }

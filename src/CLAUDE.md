@@ -91,7 +91,7 @@ python3 scripts/snap_rank.py        # 한국 1~1000위 매일 스냅샷 -> data/
 
 ## 자동 갱신 루틴 (예약 작업이 매일 아침 이 세션을 깨운다)
 0. `git checkout main && git pull --ff-only origin main` (제미나이 커밋을 먼저 받는다).
-1. `python3 scripts/check_patch.py` → `actions` 확인. 비어 있으면 아무것도 하지 말고 끝낸다 (알림도 없음).
+1. `python3 scripts/check_patch.py` → `actions` 확인. 비어 있으면 데이터 갱신(2~6)은 건너뛰고 7번(지식 노트)만 한다. 7번에서도 새 게 없으면 알림 없이 끝낸다.
 2. `notify`: 새 패치. 바로 사용자에게 알린다 (PushNotification, 없으면 다음 답장 맨 앞에). 패치 내용은 DC 롤체갤(`dc_crawl.py search <패치>`)·웹에서 찾아 `#patch` 섹션에 추가.
 3. `newset`(새 세트 첫날, 맨 앞) / `quick` / `full` / `esports`가 있으면 `bash scripts/update.sh <모드들>` (APK까지 만든다). 한 모드씩 끝날 때마다 `python3 scripts/check_patch.py --done <모드>`.
    - `update.sh`는 `scripts/check_data.py`로 원문·앱 데이터가 비지 않았는지 확인하고, 이상하면 앱에 올리지 않고 멈춘다. 멈추면 원인(어느 파일의 무엇이 비었는지)을 찾아 고친 뒤 다시 돌리고, 못 고치면 사용자에게 한 줄로 알린다.
@@ -101,6 +101,10 @@ python3 scripts/snap_rank.py        # 한국 1~1000위 매일 스냅샷 -> data/
    - `friends`만 있으면 (매일 나옴, 티어 분포 저장 포함) 커밋·푸시하고 조용히 끝낸다 (알림 없음).
 5. 대회 기간(`esports`)엔 우승자·한국 선수 결과를 한 줄로 알린다.
 6. `pbe`: PBE 새 빌드(MetaTFT PBE 원문 `_metadata.release`가 바뀜, `check_patch.pbe_release`). 사용자에게 "PBE 새 빌드(월/일)가 나왔어요" 한 줄로 알린다. 통계는 `patch=current&days=3`(MetaTFT 화면 기본값: 최신 빌드 + 최근 3일)이라 friends가 다시 받으면 새 빌드 기준이 된다. 빌드 첫날은 판이 적어 덱 수가 줄 수 있다.
+7. **지식 노트 매일 수집·판단 (`guide/kb/sources.md` 2절, actions가 비어도 매일)**:
+   - 매일: `r/CompetitiveTFT` 일간 상위글(이 서버는 레딧 403 → 웹검색으로만, 우회 금지) + DC 롤체갤 최근 개념글 20개(`dc_crawl.py list 1 | head -25` → 쓸 만한 것만 `get`). `sources.md` 2.2 Promote 기준(공식/PBE 패치 변경, 교차 검증된 숨은 메커니즘·PSA, 실전 버그, 고티어 검증 킥)에 맞는 것만 날짜·출처와 함께 `guide/kb/`(`set19.md`·`strategy.md`·`fundamentals.md`·`rules.md`·`corrections.md`)에 적는다. 1~2판 징징글·근거 없는 루머·중복 통계는 Skip. 한 번만 나온 주장은 '미확인'으로 표시.
+   - `pbe`·`notify`가 뜬 날은 반드시: `python3 scripts/tftflow_diff.py --to "<새 빌드>"`, 공식 패치노트, `site/s19.json` 해금·시너지 변경(갱신 전 `git show HEAD:site/s19.json`과 비교)을 보고 `set19.md`를 최신으로. 수치는 MetaTFT 원문 curveValues로 최종 확인 (tftflow가 빠뜨린 적 있음).
+   - 커밋·푸시. `guide/kb/`만 바뀐 날은 앱 재배포 생략. 큰 변경(해금 조건 변경, 핵심 숨은 메커니즘·버그, B패치)은 점검 알림에 1~2줄 요약, 사소한 보강은 조용히 커밋만.
 - SDK·raw 데이터는 컨테이너가 새로 뜨면 없다. `android/build.sh`와 `tft_data.py`가 알아서 다시 받는다.
 - 예약 작업: '롤체 노트 매일 점검' (매일 09:41 KST). 끄려면 사용자에게 묻고 update_trigger로 enabled=false.
 
