@@ -83,6 +83,16 @@ const needWeb = (t) => SCOPE.all || SCOPE.webAll || SCOPE.tags.has(t);
 const saveBase = () => { if (FAST) return; try { fs.writeFileSync(BASE, JSON.stringify(SCOPE.now, null, 0)); } catch (e) {} };
 const T0 = Date.now();
 
+// 띄어쓰기 없는 짧은 글(S18, 21.2%, 하이퍼팝 등)이 두 줄로 꺾이면 실패 (2026-11-22 사용자 폰 스크린샷: 전적 시즌 배지 'S1 / 8').
+// root 안 보이는 요소 중 자기 글이 공백 없이 2~12자인데 높이가 줄 높이의 1.6배를 넘는 것. 반환: ['클래스:글', ...]
+const WRAP_FN = `(root) => { const out = []; (root || document).querySelectorAll('*').forEach(e => {
+  if (!e.offsetParent || e.closest('svg, input, textarea, select, .sr-title, [aria-hidden=true]') || e.children.length) return;
+  const tn = [...e.childNodes].filter(n => n.nodeType === 3), t = tn.map(n => n.textContent).join('').trim();
+  if (t.length < 2 || t.length > 12 || /\\s/.test(t)) return;
+  // 글자가 실제로 그려진 줄 수: 글 조각의 줄마다 사각형이 하나씩 (높이·여백과 무관)
+  const tops = new Set(); tn.forEach(n => { const r = document.createRange(); r.selectNodeContents(n); [...r.getClientRects()].forEach(c => { if (c.width > 0.5) tops.add(Math.round(c.top)); }); });
+  if (tops.size > 1) out.push((String(e.className || e.tagName).split(' ')[0]) + ':' + t);
+}); return out; }`;
 function fresh(file, key, hours) {
   try {
     const d = JSON.parse(fs.readFileSync(path.join(SITE, file), 'utf8'));
@@ -174,6 +184,7 @@ function fresh(file, key, hours) {
       if (r.sw > W) fail(`${tag} ${t}: 화면보다 넓음 ${r.sw}px (가로 밀림)`);
       if (r.broken.length) fail(`${tag} ${t}: 깨진 이미지 ${[...new Set(r.broken)].slice(0, 3).join(', ')}`);
       if (r.hid.length) fail(`${tag} ${t}: 숨겼는데 보임 ${r.hid.slice(0, 3).join(', ')}`);
+      { const wr = await pg.evaluate(new Function('return ' + WRAP_FN)()); if (wr.length) fail(`${tag} ${t}: 짧은 글이 두 줄로 꺾임 ${[...new Set(wr)].slice(0, 4).join(', ')}`); }
       if (r.bad) fail(`${tag} ${t}: 화면에 undefined·NaN 글자 ${r.bad}개`);
       // 세트가 바뀌어 지난 세트 공략(data-set)을 숨긴 탭은 '준비 중' 한 줄: 실패 대신 참고로 남겨 새 시즌 글을 쓰게 (세트 19 대비)
       if (r.text < 40 && await pg.evaluate((t) => /새 시즌 내용은 준비 중/.test((document.getElementById(t) || {}).textContent || ''), t)) notes.push(`${tag} ${t}: 새 시즌 공략을 아직 안 씀 (지난 세트 글 숨김)`);
@@ -366,6 +377,10 @@ function fresh(file, key, hours) {
     const ov = await q(() => [...document.querySelectorAll('.rk-gm .gm-head')].filter(h => { const dk = h.querySelector('.gm-dk'), cb = h.querySelector('.codebtn'); if (!dk || !cb) return false; const L = cb.getBoundingClientRect().left; return [...dk.children].some(c => c.getBoundingClientRect().right > L + 1) || dk.getBoundingClientRect().right > L + 1; }).length);
     if (ov) fail(`전적 검색: 판 카드 ${ov}개에서 덱 이름·평균이 팀 코드 버튼과 겹침`);
     if (await q(() => !/S\d+/.test((document.querySelector('.rk-sb') || {}).textContent || ''))) fail('전적 검색: 시즌 배지(S18) 없음');
+    { const wr = await pg.evaluate(new Function('return ' + WRAP_FN)()); if (wr && wr.length) fail(`[${W}] 전적 검색: 짧은 글이 두 줄로 꺾임 ${[...new Set(wr)].slice(0, 4).join(', ')}`); }
+    // 본섭(지난 세트) 판의 시너지 그림 (2026-11-22: PBE 기간 18시즌 판 시너지가 19시즌 그림표에 없어 빈 육각형으로 나왔음)
+    { const tr = await q(() => { const hx = [...document.querySelectorAll('#rk-prof .trx .hx2')]; return [hx.length, hx.filter(h => !h.querySelector('img')).length]; });
+      if (tr && tr[0] && tr[1] > tr[0] * 0.05) fail(`전적 검색: 시너지 그림이 빈칸 ${tr[1]}/${tr[0]}개`); }
     // 기본 범위 50판, 등수 줄은 최근 20판까지 (2026-11-11 사용자)
     if (await q(() => ((document.querySelector('.rk-range .mt-chips button.on') || {}).textContent || '')) !== '50판') soft('전적 검색: 기본 범위가 50판이 아님');
     if (await q(() => document.querySelectorAll('.rk-sum .plstr span').length) > 20) fail('전적 검색: 등수 줄이 20판 넘게 보임');

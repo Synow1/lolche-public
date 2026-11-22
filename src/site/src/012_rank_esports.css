@@ -110,8 +110,9 @@
 .rk-bigemb { width: 84px; height: 84px; flex: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,.2)); }
 .rk-rt { display: grid; gap: 2px; min-width: 0; }
 .rk-rt small { font-size: var(--fs-s); color: var(--muted); font-weight: 600; }
-.rk-sl { display: flex; align-items: center; gap: 6px; }
-.rk-sb { font-size: var(--fs-s); font-weight: 900; padding: 1px 7px; border-radius: 6px; background: var(--on-bg); color: var(--on-ink); letter-spacing: .2px; }
+.rk-sl { display: flex; align-items: flex-start; gap: 6px; }  /* 시즌 배지(S18)는 안 줄고, 옆 설명만 줄바꿈 (2026-11-22 사용자 스크린샷: S1 / 8) */
+.rk-sl small { min-width: 0; line-height: 1.5; padding-top: 1px; }
+.rk-sb { flex: none; white-space: nowrap; font-size: var(--fs-s); font-weight: 900; padding: 1px 7px; border-radius: 6px; background: var(--on-bg); color: var(--on-ink); letter-spacing: .2px; }
 .rk-sb.old { background: var(--raise); color: var(--muted); }
 .rk-ps.now { border-color: var(--accent); }
 .rk-ps.now small { color: var(--accent); font-weight: 800; }
@@ -220,7 +221,7 @@
 .pw-bar { width: 34px; height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; margin-left: 3px; }
 .pw.sm .pw-bar { display: none; }
 .pw-bar i { display: block; height: 100%; background: #d99a16; }
-.pw-p b { font-size: var(--fs-m); padding: 0 5px; border-radius: 5px; color: #fff; background: #7b8794; font-variant-numeric: tabular-nums; }
+.pw-p b { white-space: nowrap; flex: none; font-size: var(--fs-m); padding: 0 5px; border-radius: 5px; color: #fff; background: #7b8794; font-variant-numeric: tabular-nums; }
 .pw.sm .pw-p b { font-size: var(--fs-s); padding: 0 4px; }
 .pw-p small { color: var(--muted); font-size: var(--fs-s); }
 .pw.sm .pw-p small { font-size: var(--fs-xs); }

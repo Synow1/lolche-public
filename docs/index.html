@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611220915">
+<meta name="lolche-web" content="202611221012">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -878,8 +878,9 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .rk-bigemb { width: 84px; height: 84px; flex: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,.2)); }
 .rk-rt { display: grid; gap: 2px; min-width: 0; }
 .rk-rt small { font-size: var(--fs-s); color: var(--muted); font-weight: 600; }
-.rk-sl { display: flex; align-items: center; gap: 6px; }
-.rk-sb { font-size: var(--fs-s); font-weight: 900; padding: 1px 7px; border-radius: 6px; background: var(--on-bg); color: var(--on-ink); letter-spacing: .2px; }
+.rk-sl { display: flex; align-items: flex-start; gap: 6px; }  /* 시즌 배지(S18)는 안 줄고, 옆 설명만 줄바꿈 (2026-11-22 사용자 스크린샷: S1 / 8) */
+.rk-sl small { min-width: 0; line-height: 1.5; padding-top: 1px; }
+.rk-sb { flex: none; white-space: nowrap; font-size: var(--fs-s); font-weight: 900; padding: 1px 7px; border-radius: 6px; background: var(--on-bg); color: var(--on-ink); letter-spacing: .2px; }
 .rk-sb.old { background: var(--raise); color: var(--muted); }
 .rk-ps.now { border-color: var(--accent); }
 .rk-ps.now small { color: var(--accent); font-weight: 800; }
@@ -988,7 +989,7 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .pw-bar { width: 34px; height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; margin-left: 3px; }
 .pw.sm .pw-bar { display: none; }
 .pw-bar i { display: block; height: 100%; background: #d99a16; }
-.pw-p b { font-size: var(--fs-m); padding: 0 5px; border-radius: 5px; color: #fff; background: #7b8794; font-variant-numeric: tabular-nums; }
+.pw-p b { white-space: nowrap; flex: none; font-size: var(--fs-m); padding: 0 5px; border-radius: 5px; color: #fff; background: #7b8794; font-variant-numeric: tabular-nums; }
 .pw.sm .pw-p b { font-size: var(--fs-s); padding: 0 4px; }
 .pw-p small { color: var(--muted); font-size: var(--fs-s); }
 .pw.sm .pw-p small { font-size: var(--fs-xs); }
@@ -3682,7 +3683,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var tc = t.tier_current != null ? t.tier_current : t.tierCurrent;
       if (!nm && OLD) {  // 지난 시즌 시너지: 색은 라이엇 기록의 style (1 동 · 2 은 · 3 금 · 4 프리즘)
         var o = OLD.t[String(t.name).toLowerCase()];
-        if (o && tc > 0 && t.style) { OLD_TI[o[0]] = o[1]; out.push({ t: o[0], n: n || "", style: ({ 1: "bronze", 2: "silver", 3: "gold", 4: "chromatic", 5: "chromatic" })[t.style] || "gold" }); }
+        if (o && tc > 0 && t.style) { OLD_TI[o[0]] = o[1]; out.push({ t: o[0], n: n || "", ic: o[1], style: ({ 1: "bronze", 2: "silver", 3: "gold", 4: "chromatic", 5: "chromatic" })[t.style] || "gold" }); }
         return;
       }
       if (nm && !n && tc > 0) { out.push({ t: nm, n: "", style: "gold" }); return; }  // 일월식처럼 인원 없이 켜지는 조합 시너지
@@ -3696,7 +3697,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   }
   function synChip(s, withName) {
     var c = el("span", "trx s-" + s.style); c.dataset.trait = s.t; c.title = s.t + " " + s.n;
-    var hx = el("span", "hx2"), ti = RK_SEASON && OLD_TI[s.t] ? OLD_TI[s.t] : IDX.traits[s.t]; if (ti) hx.appendChild(img(ti, ""));
+    // ic: 판 기록에서 찾은 그 세트의 시너지 그림 (PBE 기간 본섭 18시즌 판은 지금 시즌(19) 그림표에 없어 빈칸이던 것, 2026-11-22)
+    var hx = el("span", "hx2"), ti = s.ic || (RK_SEASON && OLD_TI[s.t] ? OLD_TI[s.t] : IDX.traits[s.t]); if (ti) hx.appendChild(img(ti, ""));
     c.appendChild(hx); c.appendChild(el("b", null, s.n));
     if (withName) c.appendChild(el("span", "tn", s.t));
     return c;

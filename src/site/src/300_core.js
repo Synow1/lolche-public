@@ -535,7 +535,7 @@
       var tc = t.tier_current != null ? t.tier_current : t.tierCurrent;
       if (!nm && OLD) {  // 지난 시즌 시너지: 색은 라이엇 기록의 style (1 동 · 2 은 · 3 금 · 4 프리즘)
         var o = OLD.t[String(t.name).toLowerCase()];
-        if (o && tc > 0 && t.style) { OLD_TI[o[0]] = o[1]; out.push({ t: o[0], n: n || "", style: ({ 1: "bronze", 2: "silver", 3: "gold", 4: "chromatic", 5: "chromatic" })[t.style] || "gold" }); }
+        if (o && tc > 0 && t.style) { OLD_TI[o[0]] = o[1]; out.push({ t: o[0], n: n || "", ic: o[1], style: ({ 1: "bronze", 2: "silver", 3: "gold", 4: "chromatic", 5: "chromatic" })[t.style] || "gold" }); }
         return;
       }
       if (nm && !n && tc > 0) { out.push({ t: nm, n: "", style: "gold" }); return; }  // 일월식처럼 인원 없이 켜지는 조합 시너지
@@ -549,7 +549,8 @@
   }
   function synChip(s, withName) {
     var c = el("span", "trx s-" + s.style); c.dataset.trait = s.t; c.title = s.t + " " + s.n;
-    var hx = el("span", "hx2"), ti = RK_SEASON && OLD_TI[s.t] ? OLD_TI[s.t] : IDX.traits[s.t]; if (ti) hx.appendChild(img(ti, ""));
+    // ic: 판 기록에서 찾은 그 세트의 시너지 그림 (PBE 기간 본섭 18시즌 판은 지금 시즌(19) 그림표에 없어 빈칸이던 것, 2026-11-22)
+    var hx = el("span", "hx2"), ti = s.ic || (RK_SEASON && OLD_TI[s.t] ? OLD_TI[s.t] : IDX.traits[s.t]); if (ti) hx.appendChild(img(ti, ""));
     c.appendChild(hx); c.appendChild(el("b", null, s.n));
     if (withName) c.appendChild(el("span", "tn", s.t));
     return c;
