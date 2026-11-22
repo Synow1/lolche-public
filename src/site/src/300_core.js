@@ -574,7 +574,14 @@
     }
     return lvs;
   }
-  // 같은 메인 캐리 + 최종 보드 7명 이상 겹치는 MetaTFT 묶음을 한 줄로 합친다 (대표 = 최다 판수, 숫자는 판수 가중 합, 티어는 합친 뒤 재계산)
+  // MetaTFT 덱 묶음 하나 = 줄 하나 (숫자는 MetaTFT 그대로). 예전엔 비슷한 묶음을 합쳐 가중 평균 냈으나 2026-11-22 사용자 결정으로 뺌
+  // MetaTFT 덱 티어 (사이트 코드의 표, 2026-11-22): 평균 등수 S < 4.25 · A < 4.5 · B < 4.75 · C < 5 · D. tft_data.mt_tier와 같다
+  // PBE 빌드 이름 (MetaTFT 화면 '19.1 Nov-20'과 같은 기준): 'PBE 11/20 빌드 · 최근 3일'. 빌드는 check_patch.py가 매일 추적 -> meta.json pbe_build
+  function pbeLabel() {
+    var b = META && META.pbe_build, m = b && /^\d{4}-(\d\d)-(\d\d)/.exec(b.since || "");
+    return "PBE " + (m ? (+m[1]) + "/" + (+m[2]) + " 빌드" : "최신 빌드") + " · 최근 3일";
+  }
+  function mtTier(avg) { return avg == null ? "X" : avg < 4.25 ? "S" : avg < 4.5 ? "A" : avg < 4.75 ? "B" : avg < 5 ? "C" : "D"; }
   function metaGroups() {
     if (META_GRP) return META_GRP;
     if (!META || !META.decks) return { list: [], byId: {} };
@@ -586,15 +593,7 @@
       var mc = mainOf(ds[i]); ms.push(mc ? mc.u : "");
     }
     function find(x) { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; }
-    for (var a = 0; a < N; a++) {
-      if (!ms[a]) continue;
-      for (var b = a + 1; b < N; b++) {
-        if (ms[a] !== ms[b]) continue;
-        var ov = 0, ka = Object.keys(us[a]);
-        for (var k = 0; k < ka.length; k++) if (us[b][ka[k]]) ov++;
-        if (ov >= 7) { var ra = find(a), rb = find(b); if (ra !== rb) par[rb] = ra; }
-      }
-    }
+    // (2026-11-22) 비슷한 묶음을 합쳐 평균 내던 단계는 뺐다. 사용자: "왜 평균을 내냐, MetaTFT 그대로". 묶음 하나 = 줄 하나
     var buckets = {};
     for (var j = 0; j < N; j++) { var r = find(j); (buckets[r] = buckets[r] || []).push(ds[j]); }
     var list = [], byId = {}, bKeys = Object.keys(BASIS_LABEL);
@@ -631,13 +630,10 @@
       list.push(grp);
       mem.forEach(function (m) { byId[String(m.id)] = grp; });
     });
-    // 합친 뒤 평균 등수로 티어(S/A/B/C) 재계산
-    var allOrd = list.slice().sort(function (x, y) { return (x.st.avg || 9) - (y.st.avg || 9); });
-    allOrd.forEach(function (g, idx) { var q = idx / allOrd.length; g.st.tier = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; });
-    bKeys.forEach(function (bk) {
-      var ok = list.filter(function (g) { return !!basisSt(g.st, bk); }).sort(function (x, y) { return basisSt(x.st, bk)[0] - basisSt(y.st, bk)[0]; });
-      ok.forEach(function (g, idx) { var q = idx / ok.length; g.st.tiers[bk] = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; });
-      list.forEach(function (g) { if (!basisSt(g.st, bk)) delete g.st.tiers[bk]; });
+    // 티어: MetaTFT 덱 티어 표(평균 등수) 그대로
+    list.forEach(function (g) {
+      g.st.tier = mtTier(g.st.avg);
+      bKeys.forEach(function (bk) { var x = basisSt(g.st, bk); if (x) g.st.tiers[bk] = mtTier(x[0]); else delete g.st.tiers[bk]; });
     });
     META_GRP = { list: list, byId: byId };
     return META_GRP;

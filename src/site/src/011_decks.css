@@ -531,3 +531,5 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .pcdk-u .lk { top: 8px; right: -2px; width: 17px; height: 17px; }
 .pcdk-u .lk svg { width: 10px; height: 10px; }
 .sh-unl { margin: 10px 0 4px; }
+/* D티어 (MetaTFT 덱 티어 표: 평균 5등 넘음, 2026-11-22) */
+.tbar.t-D, .dk.t-D, .dk-hero.t-D, .dk-tbadge.t-D { --tc: #8a93a6; }

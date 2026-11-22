@@ -213,50 +213,24 @@ function fresh(file, key, hours) {
       if (n < 15) fail(`덱 탭: 덱 줄 ${n}개`);
       const bad = await q(() => [...document.querySelectorAll('#meta .mt-row.dk')].filter(x => x.offsetParent && !x.querySelector('.dk-hex img')).length);
       if (bad) fail(`덱 탭: 메인 캐리 그림 없는 줄 ${bad}개`);
-      // v3.2.0: 같은 메인 캐리 + 7명 이상 겹치는 덱이 목록에 두 줄로 나오면 실패, 가이드 연결 덱에 '가이드' 표시 필수
+      // MetaTFT 그대로 (2026-11-22 사용자: "왜 평균을 내냐, MetaTFT 그대로"): MetaTFT 묶음 하나 = 줄 하나, 비슷한 묶음을 합치지 않는다. 가이드 연결 덱엔 '가이드' 표시
+      const mtFilterAll = await q(() => (document.querySelector('#mt-filter button.on') || {}).dataset?.f === 'all' && !document.getElementById('mt-q').value);
       const M = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
       const G = JSON.parse(fs.readFileSync(path.join(SITE, 'guides.json'), 'utf8'));
-      const IDX = JSON.parse(fs.readFileSync(path.join(SITE, 'icons', 'index.json'), 'utf8'));
       const byId = Object.fromEntries((M.decks || []).map(d => [String(d.id), d]));
       const gLinked = new Set((G.decks || []).map(g => g.cluster && String(g.cluster)).filter(Boolean));
-      const mainOfD = (d) => {
-        const nm = String(d.name || '').replace(/^\[[^\]]+\]\s*/, '');
-        const real = (d.board || []).filter(b => !b.plant);
-        const held = real.filter(b => b.i && b.i.length);
-        const named = held.filter(b => nm.indexOf(b.u) >= 0).sort((a, b) => nm.indexOf(a.u) - nm.indexOf(b.u));
-        return (named[0] || held.sort((a, b) => b.i.length - a.i.length)[0] || real[0] || {}).u || '';
-      };
       const rows = await q(() => [...document.querySelectorAll('#mt-rows .mt-row.dk')].map(r => ({
         id: r.dataset.id || '', subs: (r.dataset.subs || '').split(',').filter(Boolean),
         gd: [...r.querySelectorAll('.gd-badge')].some(x => x.textContent.trim() === '가이드')
       })));
       const metaRows = (rows || []).filter(r => byId[r.id]);
-      for (let i = 0; i < metaRows.length; i++) {
-        const a = byId[metaRows[i].id], ma = mainOfD(a), ua = new Set((a.board || []).filter(b => !b.plant).map(b => b.u));
-        for (let j = i + 1; j < metaRows.length; j++) {
-          const b = byId[metaRows[j].id]; if (ma && ma === mainOfD(b)) {
-            const ov = (b.board || []).filter(u => !u.plant && ua.has(u.u)).length;
-            if (ov >= 7) fail(`덱 탭 중복: 같은 메인 캐리(${ma})·${ov}명 겹치는 덱이 두 줄로 나옴 (${a.name} / ${b.name})`);
-          }
-        }
-      }
+      if (mtFilterAll && metaRows.length !== (M.decks || []).length) fail(`덱 탭: MetaTFT 덱 묶음 ${(M.decks || []).length}개인데 줄은 ${metaRows.length}개 (합치거나 빠짐)`);
+      if (metaRows.some(r => r.subs.length > 1)) fail('덱 탭: 비슷한 덱 묶음을 한 줄로 합침 (MetaTFT 그대로 따로 보여야 함)');
+      const badTier = (M.decks || []).filter(d => d.tier !== (d.avg < 4.25 ? 'S' : d.avg < 4.5 ? 'A' : d.avg < 4.75 ? 'B' : d.avg < 5 ? 'C' : 'D')).map(d => d.name);
+      if (badTier.length) fail('덱 자료: 티어가 MetaTFT 표(S<4.25·A<4.5·B<4.75·C<5·D)와 다름 ' + badTier.slice(0, 3).join(', '));
       const missGd = metaRows.filter(r => (r.subs.length ? r.subs : [r.id]).some(id => gLinked.has(id)) && !r.gd);
       if (missGd.length) fail(`덱 탭: 가이드 연결 덱 ${missGd.length}개에 '가이드' 표시가 없음 (${missGd.slice(0, 3).map(x => x.id).join(', ')})`);
       if (!metaRows.some(r => r.gd)) fail('덱 탭: 가이드 표시(.gd-badge)가 하나도 없음');
-      // 비슷한 덱 합친 줄 열기 → 칩(tfa-tab) 전환 + 뒤로가기
-      const mergedRow = metaRows.find(r => r.subs.length > 1);
-      if (mergedRow) {
-        await q((id) => document.querySelector('#mt-rows .mt-row[data-id="' + id + '"]')?.click(), mergedRow.id); await pg.waitForTimeout(500);
-        const vr = await q(() => ({
-          h: (document.querySelector('#mt-detail .mt-vars-h') || {}).textContent || '',
-          tabs: [...document.querySelectorAll('#mt-detail .mt-vars .tfa-tab')].map(x => x.textContent.trim()),
-          subs: document.querySelectorAll('#mt-detail .mt-vars .tfa-tab[data-sub]').length
-        }));
-        if (!vr || !/비슷한 덱 \d+개/.test(vr.h) || vr.subs < 2 || vr.tabs.some(t => !/\d+\.\d{2}/.test(t))) fail(`덱 상세: 비슷한 덱 칩·평균 등수 표시 이상 (${JSON.stringify(vr)})`);
-        await q(() => document.querySelectorAll('#mt-detail .mt-vars .tfa-tab[data-sub]')[1]?.click()); await pg.waitForTimeout(400);
-        if (!(await q(() => document.querySelectorAll('#mt-detail .mt-vars .tfa-tab[data-sub]')[1]?.classList.contains('on')))) fail('덱 상세: 비슷한 덱 칩을 눌러도 안 바뀜');
-        await q(() => document.querySelector('#mt-detail .back')?.click()); await pg.waitForTimeout(350);
-      }
     }
     // 덱 탭: 선택률(로비 평균 인원) + 상단 메타 줄(.dk-meta .dk-tbadge) + 2단 KPI(.dk-kpi2 평균/순방)
     await go('meta'); await pg.waitForTimeout(600);
@@ -787,26 +761,13 @@ function fresh(file, key, hours) {
     if (errs.length) fail('19시즌: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
     await pg.close();
   });
-  // v3.2.0: 메타 덱 새로고침 뒤 합친 덱의 숫자가 판수 가중 평균과 같은지 검증 (가짜 comps_stats 응답으로 fast에서도 동작)
+  // 메타 덱 새로고침 뒤 줄 숫자가 MetaTFT comps_stats 그대로인지 + 티어가 MetaTFT 표대로인지 (가짜 응답, fast에서도 동작)
   task(['meta'], async () => {
     const M = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
     const ds = M.decks || [];
-    const mainOfD = (d) => {
-      const nm = String(d.name || '').replace(/^\[[^\]]+\]\s*/, '');
-      const real = (d.board || []).filter(b => !b.plant);
-      const held = real.filter(b => b.i && b.i.length);
-      const named = held.filter(b => nm.indexOf(b.u) >= 0).sort((a, b) => nm.indexOf(a.u) - nm.indexOf(b.u));
-      return (named[0] || held.sort((a, b) => b.i.length - a.i.length)[0] || real[0] || {}).u || '';
-    };
-    let pair = null;
-    for (let i = 0; i < ds.length && !pair; i++) {
-      const ma = mainOfD(ds[i]), ua = new Set((ds[i].board || []).filter(b => !b.plant).map(b => b.u));
-      for (let j = i + 1; j < ds.length && !pair; j++) {
-        if (ma && ma === mainOfD(ds[j]) && (ds[j].board || []).filter(b => !b.plant && ua.has(b.u)).length >= 7) pair = [ds[i], ds[j]];
-      }
-    }
+    const pair = ds.length >= 2 ? [ds[0], ds[1]] : null;
     if (!pair) return;
-    // pair[0]: 6000판 전원 2등(avg=2.00), pair[1]: 4000판 4등 2000 + 5등 2000(avg=4.50) -> 판수 가중 평균 = (2*6000 + 4.5*4000)/10000 = 3.00
+    // pair[0]: 6000판 전원 2등(평균 2.00 -> S), pair[1]: 4000판 4등 2000 + 5등 2000(평균 4.50 -> B). 합치지 않고 각자 그대로
     const mockRes = [{ cluster: '', places: [1000000] }];
     ds.forEach(d => {
       if (d.id === pair[0].id) mockRes.push({ cluster: d.id, places: [0, 6000, 0, 0, 0, 0, 0, 0, 6000], count: 6000 });
@@ -825,11 +786,9 @@ function fresh(file, key, hours) {
     await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(1800);
     await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#meta'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(600);
     await pg.evaluate(() => document.getElementById('mt-upd-btn')?.click()); await pg.waitForTimeout(800);
-    const got = await pg.evaluate(([id1, id2]) => {
-      const row = [...document.querySelectorAll('#mt-rows .mt-row.dk')].find(r => { const s = (r.dataset.subs || '').split(','); return s.includes(id1) && s.includes(id2); });
-      return row ? { id: row.dataset.id, avg: (row.querySelector('.dk-avg') || {}).textContent?.trim(), tier: (row.querySelector('.dk-tbadge') || {}).textContent?.trim() } : null;
-    }, [String(pair[0].id), String(pair[1].id)]);
-    if (!got || got.avg !== '3.00' || got.id !== String(pair[0].id)) fail(`덱 새로고침 합산: 판수 가중 평균이 3.00(대표 ${pair[0].id})이어야 하는데 ${JSON.stringify(got)}`);
+    const got = await pg.evaluate((ids) => ids.map(id => { const row = document.querySelector('#mt-rows .mt-row.dk[data-id="' + id + '"]');
+      return row ? { avg: (row.querySelector('.dk-avg') || {}).textContent?.trim(), tier: (row.querySelector('.dk-tbadge') || {}).textContent?.trim() } : null; }), [String(pair[0].id), String(pair[1].id)]);
+    if (!got[0] || got[0].avg !== '2.00' || got[0].tier !== 'S' || !got[1] || got[1].avg !== '4.50' || got[1].tier !== 'B') fail(`덱 새로고침: MetaTFT 숫자 그대로·티어 표대로가 아님 (기대 2.00 S / 4.50 B, 실제 ${JSON.stringify(got)})`);
     await pg.close();
   });
   // 업데이트 소식 (2026-11-16 사용자: "업뎃되면 뭐가 업뎃됐는지 한번 띄워"): 새 버전이면 창이 뜨고, 확인을 누르면 닫히고 다시 안 뜬다

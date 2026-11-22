@@ -68,7 +68,7 @@
     var dbox = document.getElementById("hm-decks");
     if (dbox && META && IDX) {
       var msub = document.getElementById("hm-meta-sub");
-      if (msub) msub.textContent = (META.pbe ? "MetaTFT PBE 최근 1일" : "에메+") + " · " + (META.patch || "");
+      if (msub) msub.textContent = (META.pbe ? "MetaTFT " + pbeLabel() : "에메+") + " · " + (META.patch || "");
       var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer"); })
         .sort(function (a, b) { return basisSt(a.st, "emer")[0] - basisSt(b.st, "emer")[0]; })
         .slice(0, 4);

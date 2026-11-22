@@ -9,6 +9,8 @@
 - 감지한 날: quick (유닛·템·증강 원문, 검색 DB, 추천 덱, 아이콘)
 - 감지 1일 뒤: full (덱 통계·티어 비교·가이드 문서까지 전부, 페이지의 덱 노트·패치 노트 손보기)
 - 대회가 진행 중이거나 3일 안에 열리거나 끝난 지 4일 안이면 매일 esports (우승자가 비어 있으면 2주까지)
+- PBE 기간(setinfo.PBE): MetaTFT PBE 원문의 빌드 번호(_metadata.release, 예: rls-19.1.0.6014015)가 바뀌면 pbe -> 사용자에게 한 줄 알림.
+  덱·템 통계는 '최신 PBE 빌드 + 최근 3일'(MetaTFT 화면 기본값)이라 매일 점검(friends)이 다시 받으면 새 빌드 기준이 된다 (2026-11-22 사용자: "PBE도 버전 바뀌는 거 매일 추적")
 """
 import json
 import re
@@ -58,6 +60,19 @@ def esports_window(today):
     return False
 
 
+def pbe_release():
+    """MetaTFT PBE 원문의 빌드 번호 (못 받으면 빈 값)"""
+    import setinfo
+    if not getattr(setinfo, "PBE", False):
+        return ""
+    try:
+        req = urllib.request.Request(f"https://data.metatft.com/lookups/TFTSet{setinfo.NUM}_pbe_ko_kr.json", headers=T.HEADERS)
+        with urllib.request.urlopen(req, timeout=90) as r:
+            return (json.loads(r.read()).get("_metadata") or {}).get("release", "")
+    except Exception:
+        return ""
+
+
 def main():
     st = json.loads(STATE.read_text()) if STATE.exists() else {}
     today = date.today()
@@ -91,8 +106,15 @@ def main():
         actions.append("esports")
     if st.get("friends_done") != today.isoformat():
         actions.append("friends")
+    rel = pbe_release()
+    if rel and rel != st.get("pbe_release"):
+        if st.get("pbe_release"):
+            actions.insert(0, "pbe")  # 첫 기록이 아니면 새 빌드 알림
+        hist = st.get("pbe_builds") or []
+        hist.insert(0, {"release": rel, "since": today.isoformat()})
+        st["pbe_release"], st["pbe_since"], st["pbe_builds"] = rel, today.isoformat(), hist[:20]
     STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1))
-    print(json.dumps({"patch": live, "metatft": metatft, "lolchess": lolchess, "detected": st["detected"],
+    print(json.dumps({"patch": live, "metatft": metatft, "lolchess": lolchess, "detected": st["detected"], "pbe": st.get("pbe_release", ""), "pbe_since": st.get("pbe_since", ""),
                       "days": days, "actions": actions, "checked": datetime.now().isoformat(timespec="minutes")}, ensure_ascii=False))
 
 

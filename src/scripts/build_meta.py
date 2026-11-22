@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "raw" / "comps"
 OUT = ROOT / "site" / "meta.json"
 URL = "https://api-hc.metatft.com/tft-comps-api/comp_details?comp={}&cluster_id={}"
-MIN_GAMES = 1000 if setinfo.PBE else 3000  # PBE 최근 1일은 3일 대비 약 1/3 표본
+MIN_GAMES = 1000 if setinfo.PBE else 3000  # PBE는 최신 빌드만이라 표본이 작다 (빌드 첫날은 더)
 RANK_GROUP = {"IRON": "low", "BRONZE": "low", "SILVER": "low", "GOLD": "low", "PLATINUM": "mid", "EMERALD": "mid",
               "DIAMOND": "dia", "MASTER": "top", "GRANDMASTER": "top", "CHALLENGER": "top"}
 # 내 메인 덱 (페이지 덱 탭과 맞춘다). 이름에 이 글자가 들어가면 위로 올리고 표시한다.
@@ -287,8 +287,8 @@ def basis_stats(decks):
                 d.setdefault("st", {})[k] = st_row
             ok.append(d)
         ok.sort(key=lambda d: d["st"]["emer"][0])
-        for i, d in enumerate(ok):
-            t_lbl = tier_of(i / len(ok))
+        for d in ok:
+            t_lbl = T.mt_tier(d["st"]["emer"][0])
             for k in ("all", "emer"):
                 d.setdefault("tiers", {})[k] = t_lbl
         totals = {"all": tot, "emer": tot}
@@ -316,8 +316,8 @@ def basis_stats(decks):
             d.setdefault("st", {})[k] = [round(sum(p[i] * (i + 1) for i in range(8)) / n, 2), round(sum(p[:4]) / n * 100), round(p[0] / n * 100, 1), n]
             ok.append(d)
         ok.sort(key=lambda d: d["st"][k][0])
-        for i, d in enumerate(ok):
-            d.setdefault("tiers", {})[k] = tier_of(i / len(ok))
+        for d in ok:
+            d.setdefault("tiers", {})[k] = T.mt_tier(d["st"][k][0])
         time.sleep(1)
     print("기준별 통계:", {k: sum(1 for d in decks if k in d.get("st", {})) for k in BASIS}, "분석된 덱:", totals)
     return totals, src_at
@@ -423,12 +423,13 @@ def main():
         x["counters"] = [[names[str(c["against"])], round(c["place_change"], 2)] for c in x["counters"] if str(c["against"]) in names][:3]
         x["mine"] = next((tag for k, tag in MINE.items() if k in x["name"]), "")
     decks.sort(key=lambda x: x["avg"])
-    for i, x in enumerate(decks):  # 평균 등수 순위로 티어
-        q = i / len(decks)
-        x["tier"] = "S" if q < 0.12 else "A" if q < 0.35 else "B" if q < 0.7 else "C"
+    for x in decks:  # MetaTFT 덱 티어 표 (평균 등수)
+        x["tier"] = T.mt_tier(x["avg"])
     totals, src_at = basis_stats(decks)
     totals.setdefault("all", total)
+    _ps = json.loads((ROOT / "data" / "patch_state.json").read_text()) if (ROOT / "data" / "patch_state.json").exists() else {}
     meta = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "pbe": setinfo.PBE,
+            "pbe_build": {"release": _ps.get("pbe_release", ""), "since": _ps.get("pbe_since", "")} if setinfo.PBE else None,
             "cluster_id": str(cid), "src_at": src_at or T.load("comps_stats").get("updated") or 0, "totals": totals,
             "source": "MetaTFT PBE 전체 통계" if setinfo.PBE else "MetaTFT 최근 3일 에메+ (티어별 평균은 같은 기간 전 티어)", "decks": decks}
     # 새 패치 첫날은 판이 적어 덱 묶음이 몇 개 안 나온다 (18.7 첫날 15개). 그러면 지난 파일을 그대로 두고 다음 점검에서 다시 (2026-11-18)

@@ -23,7 +23,7 @@ RAW = ROOT / "raw"
 OUT = ROOT / "guide" / "data"
 
 RANKS = "CHALLENGER,DIAMOND,EMERALD,GRANDMASTER,MASTER"  # 기본 기준 에메+ (2026-11-07 사용자: 플래+ 말고 에메+)
-Q = "queue=PBE&days=1" if setinfo.PBE else f"queue=1100&patch=current&days=3&rank={RANKS}&permit_filter_adjustment=true"
+Q = "queue=PBE&patch=current&days=3" if setinfo.PBE else f"queue=1100&patch=current&days=3&rank={RANKS}&permit_filter_adjustment=true"
 API = "https://api-hc.metatft.com"
 SOURCES = {
     "lookup_ko": f"https://data.metatft.com/lookups/{SET}_{'pbe' if setinfo.PBE else 'latest'}_ko_kr.json",
@@ -220,6 +220,13 @@ class Names:
 
     def i(self, a):
         return self.item.get(a, a.replace("DA_", ""))
+
+
+def mt_tier(avg):
+    """MetaTFT 덱 티어 (사이트 코드의 표 그대로, 2026-11-22 확인): 평균 등수 S < 4.25 · A < 4.5 · B < 4.75 · C < 5 · D.
+    2026-11-22 사용자: "그냥 MetaTFT 가져온다는 마인드로" -> 우리 식 순위 비율(상위 12% = S) 대신 이 표를 쓴다"""
+    if avg is None: return "X"
+    return "S" if avg < 4.25 else "A" if avg < 4.5 else "B" if avg < 4.75 else "C" if avg < 5 else "D"
 
 
 def junk_cluster(d, early_max=0.45, top_min=0.5):

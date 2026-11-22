@@ -148,7 +148,7 @@ def cell_rc(name):
 
 def pbe_decks(mk, units, traits):
     """MetaTFT PBE 덱 묶음 -> s19 덱 목록. 덱마다 최종 보드·자리·별·캐리 템·평균/순방/승률/판수, 묶음 번호 id (앱 새로고침이 이걸로 숫자만 바꾼다)."""
-    cs = get(PBE_API + "comps_stats?queue=PBE&days=1")
+    cs = get(PBE_API + "comps_stats?queue=PBE&patch=current&days=3")  # MetaTFT 화면 기본값: 최신 PBE 빌드 + 최근 3일
     cd = get(PBE_API + "comps_data?queue=PBE")
     if cd.get("tft_set") != "TFTSet19":
         raise RuntimeError(f"MetaTFT PBE가 19시즌이 아님 ({cd.get('tft_set')})")
@@ -249,9 +249,8 @@ def pbe_decks(mk, units, traits):
             extra = next((uname[c["k"]] for c in x["u"] if c["k"] != x["mc"] and uname.get(c["k"], "") not in x["n"]), "")
             if extra: x["n"] += " " + extra.split(" ")[0]
     out.sort(key=lambda x: x["avg"])
-    for i, x in enumerate(out):
-        q = i / max(len(out), 1)
-        x["tier"] = "S" if q < 0.12 else "A" if q < 0.35 else "B" if q < 0.7 else "C"
+    for x in out:
+        x["tier"] = T.mt_tier(x["avg"])
     upd = datetime.fromtimestamp((cs.get("updated") or 0) / 1000, timezone.utc).isoformat(timespec="minutes") if cs.get("updated") else ""
     if len(out) < 10:
         raise RuntimeError(f"PBE 덱 {len(out)}개뿐")

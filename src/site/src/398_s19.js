@@ -128,7 +128,7 @@
       d.plays = n; d.pick = Math.round(n / L.total * 800) / 100;  // 선택률 = 로비 8명 중 평균 몇 명 (덱 탭과 같은 정의)
     });
     var order = (S19.decks || []).slice().sort(function (a, b) { return a.avg - b.avg; });
-    order.forEach(function (x, i) { var q = i / order.length; x.tier = q < 0.12 ? "S" : q < 0.35 ? "A" : q < 0.7 ? "B" : "C"; by[x.id] = x; });
+    order.forEach(function (x) { x.tier = mtTier(x.avg); by[x.id] = x; });
     (S19.guides || []).forEach(function (g) { var x = g.sid && by[g.sid]; if (x) { g.tier = x.tier; g.avg = x.avg; g.win = x.win; g.top4 = x.top4; g.pick = x.pick; g.plays = x.plays; } });
     S19.decksPlays = Math.floor(L.total / 8);
     if (L.src) S19.decksUpdated = new Date(L.src).toISOString();
@@ -142,7 +142,7 @@
   }
   function s19Refresh(btn, note) {
     btn.disabled = true; btn.textContent = "불러오는 중";
-    viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&days=1").then(function (r) {
+    viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&patch=current&days=3").then(function (r) {
       if (S19.decksCid && String(r.cluster_id) !== String(S19.decksCid)) { note.textContent = "덱 구성이 바뀌어 다음 업데이트 때 반영돼요"; return; }
       var L = { at: Date.now(), cid: String(r.cluster_id), s: {}, total: 1, src: r.updated || Date.now() };
       (r.results || []).forEach(function (x) { if (x.cluster) L.s[x.cluster] = x.places; else L.total = x.places[0]; });
