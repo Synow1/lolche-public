@@ -409,6 +409,9 @@ def main():
         if not s["cluster"] or s["count"] < MIN_GAMES or s["cluster"] not in details:
             continue
         d = fetch(s["cluster"], cid)
+        if d and T.junk_cluster(d)[0]:
+            print("잡다한 묶음 제외:", s["cluster"], T.comp_name(nm, details[s["cluster"]]), T.junk_cluster(d)[1:])
+            continue
         if d:
             x = deck(nm, s["cluster"], details[s["cluster"]], s, d, total, codes)
             x["augs"], x["augsrc"] = deck_augs(actx, s["cluster"], x["board"])

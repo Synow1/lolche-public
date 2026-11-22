@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+import tft_data as T  # noqa: E402  (junk_cluster)
 OUT = ROOT / "site" / "s19.json"
 ICONS = ROOT / "site" / "icons" / "s19"
 KO = ROOT / "data" / "s19_ko.json"
@@ -183,6 +185,8 @@ def pbe_decks(mk, units, traits):
             except Exception as e:
                 print("PBE 덱 상세 실패", s["cluster"], e, file=sys.stderr); continue
             cpath.write_text(json.dumps(d)); time.sleep(0.3)
+        if T.junk_cluster(d)[0]:  # 4~6렙에 끝난 판이 모인 잡다한 묶음은 덱이 아님 (tft_data.junk_cluster)
+            continue
         v = details[s["cluster"]]
         opts = d.get("options") or {}
         fl = sorted(d.get("final_levels") or [], key=lambda x: -x["count"])

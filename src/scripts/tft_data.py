@@ -222,6 +222,20 @@ class Names:
         return self.item.get(a, a.replace("DA_", ""))
 
 
+def junk_cluster(d, early_max=0.45, top_min=0.5):
+    """덱이 아니라 잡다한 판이 모인 묶음인지 (2026-11-21 사용자: '고밸류 제리'가 '신속타격대 제리'와 같은 덱인데 C·S로 갈림).
+    PBE는 초반에 나가거나 대충 하는 판이 많아, MetaTFT가 4~6렙에 끝난 판을 한 묶음으로 모으고 그 대표 보드가 우연히 어떤 덱처럼 보인다
+    (그 묶음: 판의 49%가 6렙 이하 종료, 제리 22%·잭스 17%만 등장). 가장 흔한 유닛도 절반 미만이거나 6렙 이하 종료가 45% 넘으면 버린다 (30%로 하면 신속타격대 애니·HEARTSTEEL 케인처럼 유닛이 90% 겹치는 진짜 덱까지 빠짐).
+    돌려주는 값: (버릴지, 6렙 이하 종료 비율, 가장 흔한 유닛 비율)"""
+    fl = d.get("final_levels") or []
+    tot = sum(x.get("count", 0) for x in fl)
+    if not tot:
+        return False, 0.0, 1.0
+    early = sum(x["count"] for x in fl if int(x["level"]) <= 6) / tot
+    top = max((sum(t.get("count", 0) for t in u.get("tiers") or []) for u in d.get("unit_stats") or []), default=tot) / tot
+    return (early > early_max or top < top_min), round(early, 3), round(top, 3)
+
+
 def write(name, title, note, lines):
     OUT.mkdir(parents=True, exist_ok=True)
     body = f"# {title}\n\n> {note}\n\n" + "\n".join(lines) + "\n"

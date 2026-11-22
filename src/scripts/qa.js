@@ -99,6 +99,11 @@ function fresh(file, key, hours) {
   { const m = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')), bad = new Set();
     for (const d of m.decks || []) { for (const b of [d.board || [], ...Object.values(d.lvb || {})]) for (const u of b) if (/^[\x00-\x7f]+$/.test(u.u)) bad.add(u.u); }
     if (bad.size) fail('덱 자료: 한국어로 안 바뀐 유닛 이름 ' + [...bad].slice(0, 6).join(', ')); }
+  // 추천 덱이 같은 덱의 '잡다한 묶음'에 연결되면 같은 덱이 S·C로 갈려 보인다 (2026-11-21 사용자: 고밸류 제리 C 5.69 vs 신속타격대 제리 S 3.98).
+  // 추천 덱이 붙은 묶음은 같은 이름의 덱 목록에 있어야 한다 (build_meta가 잡다한 묶음을 빼므로 목록에 없으면 잘못 연결된 것)
+  { const m = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')), g = JSON.parse(fs.readFileSync(path.join(SITE, 'guides.json'), 'utf8')), ids = new Set((m.decks || []).map(d => String(d.id)));
+    const orphan = (g.decks || []).filter(x => x.cluster && !ids.has(String(x.cluster))).map(x => x.name);
+    if (m.pbe && orphan.length) fail('추천 덱: 덱 목록에 없는 묶음(잡다한 묶음일 수 있음)에 연결됨 ' + orphan.slice(0, 4).join(', ')); }
   // PBE 추천 증강: 시너지로 채운 증강은 덱마다 거의 같아 넣지 않는다 (2026-11-21 사용자: "추천 증강 다 똑같다, 정보 없으면 지워라")
   { const m = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
     if (m.pbe && (m.decks || []).some(d => d.augs && d.augsrc !== 'pro')) fail('덱 자료: PBE인데 근거 없는(시너지로 채운) 추천 증강이 들어 있음'); }
