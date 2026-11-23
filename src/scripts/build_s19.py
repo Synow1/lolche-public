@@ -54,6 +54,7 @@ def norm(s):
 
 def fmt(v, f=None):
     if v is None: return "?"
+    if f in ("percent", "Percent"): f = "p"  # MetaTFT 원문은 format="percent" (0.15 -> 15%)
     if f == "p": v = v * 100
     elif f == "minus1": v = (v - 1) * 100
     elif f is None and 0 < abs(v) < 1 and v != round(v, 0):  # 형식 표시가 없는 0~1 소수는 비율 (0.22 -> 22%)
@@ -64,12 +65,15 @@ def fmt(v, f=None):
 
 
 def curve_val(curve, row, idx):
+    """곡선 표 값. 점 사이는 직선으로 잇는다 (2026-11-23 tftflow 게임 툴팁과 대조: 하이퍼팝 체력 [1,100]·[3,200] -> 3단계 150,
+    비전 마법사 [0,0]·[3,0.75] -> 25/50/75%. 앞 점 값을 그대로 쓰면 100·0%로 틀렸음)"""
     vals = (curve or {}).get(row)
     if not vals: return None
-    best = vals[0][1]
-    for k, v in vals:
-        if k <= idx: best = v
-    return best
+    if idx <= vals[0][0]: return vals[0][1]
+    for (k0, v0), (k1, v1) in zip(vals, vals[1:]):
+        if k0 <= idx <= k1:
+            return v0 if k1 == k0 else v0 + (v1 - v0) * (idx - k0) / (k1 - k0)
+    return vals[-1][1]
 
 
 def render(desc, curve=None, attrs=None, idx=1, nstar=3, collect=None):

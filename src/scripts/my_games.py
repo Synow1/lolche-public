@@ -74,7 +74,7 @@ def fetch():
             break
         time.sleep(5)
     url = (f"https://api.metatft.com/public/profile/lookup_by_riotid/{cfg['region'].upper()}/"
-           f"{urllib.parse.quote(name)}/{urllib.parse.quote(tag)}?source=full_profile&tft_set={T.SET}")
+           f"{urllib.parse.quote(name)}/{urllib.parse.quote(tag)}?source=full_profile&tft_set={__import__('setinfo').LIVE_SET}")
     prof = get_json(url)
     (ME / "profile.json").write_text(json.dumps(prof, ensure_ascii=False), encoding="utf-8")
     MATCHES.mkdir(parents=True, exist_ok=True)

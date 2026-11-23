@@ -103,7 +103,7 @@ python3 scripts/snap_rank.py        # 한국 1~1000위 매일 스냅샷 -> data/
 6. `pbe`: PBE 새 빌드(MetaTFT PBE 원문 `_metadata.release`가 바뀜, `check_patch.pbe_release`). 사용자에게 "PBE 새 빌드(월/일)가 나왔어요" 한 줄로 알린다. 통계는 `patch=current&days=3`(MetaTFT 화면 기본값: 최신 빌드 + 최근 3일)이라 friends가 다시 받으면 새 빌드 기준이 된다. 빌드 첫날은 판이 적어 덱 수가 줄 수 있다.
 7. **지식 노트 매일 수집·판단 (`guide/kb/sources.md` 2절, actions가 비어도 매일)**:
    - 매일: `r/CompetitiveTFT` 일간 상위글(이 서버는 레딧 403 → 웹검색으로만, 우회 금지) + DC 롤체갤 최근 개념글 20개(`dc_crawl.py list 1 | head -25` → 쓸 만한 것만 `get`). `sources.md` 2.2 Promote 기준(공식/PBE 패치 변경, 교차 검증된 숨은 메커니즘·PSA, 실전 버그, 고티어 검증 킥)에 맞는 것만 날짜·출처와 함께 `guide/kb/`(`set19.md`·`strategy.md`·`fundamentals.md`·`rules.md`·`corrections.md`)에 적는다. 1~2판 징징글·근거 없는 루머·중복 통계는 Skip. 한 번만 나온 주장은 '미확인'으로 표시.
-   - `pbe`·`notify`가 뜬 날은 반드시: `python3 scripts/tftflow_diff.py --to "<새 빌드>"`, 공식 패치노트, `site/s19.json` 해금·시너지 변경(갱신 전 `git show HEAD:site/s19.json`과 비교)을 보고 `set19.md`를 최신으로. 수치는 MetaTFT 원문 curveValues로 최종 확인 (tftflow가 빠뜨린 적 있음).
+   - `pbe`·`notify`·`kbdiff`가 뜬 날은 반드시: `python3 scripts/tftflow_diff.py --to "<새 빌드>"`(`kbdiff`는 tftflow에 새 빌드 diff가 올라온 날, `check_patch.py` 출력 `tftflow_new`. tftflow는 MetaTFT 빌드보다 며칠 늦게 올리기도 한다), 공식 패치노트, `site/s19.json` 해금·시너지 변경(갱신 전 `git show HEAD:site/s19.json`과 비교)을 보고 `set19.md`를 최신으로. 수치는 MetaTFT 원문 curveValues로 최종 확인 (곡선 점 사이는 직선 보간).
    - 커밋·푸시. `guide/kb/`만 바뀐 날은 앱 재배포 생략. 큰 변경(해금 조건 변경, 핵심 숨은 메커니즘·버그, B패치)은 점검 알림에 1~2줄 요약, 사소한 보강은 조용히 커밋만.
 - SDK·raw 데이터는 컨테이너가 새로 뜨면 없다. `android/build.sh`와 `tft_data.py`가 알아서 다시 받는다.
 - 예약 작업: '롤체 노트 매일 점검' (매일 09:41 KST). 끄려면 사용자에게 묻고 update_trigger로 enabled=false.

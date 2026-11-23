@@ -42,7 +42,8 @@ def num(tier, rank, lp):
 def profile(riot_id):
     name, tag = riot_id.split("#")
     key = "summoners/kr/" + urllib.parse.quote(f"{name}-{tag}")
-    season = "set" + T.SET.replace("TFTSet", "").replace("_2", ".5")
+    import setinfo
+    season = setinfo.SEASON  # 본섭 랭크 season (PBE 기간에 set19로 잡혀 친구 판이 0이던 것, 2026-11-23)
     try:
         get(f"rpc/summoner-sync/by-name/kr/{urllib.parse.quote(f'{name}-{tag}')}?web=1")  # 새 판 받아오기
     except Exception:

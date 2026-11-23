@@ -18,7 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tft_data as T  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-SEASON = "set" + T.SET.replace("TFTSet", "").replace("_2", ".5")
+import setinfo  # noqa: E402
+SEASON = setinfo.SEASON  # 본섭 랭크 season (12/1 전 set18). T.SET(공략 세트 19)을 쓰면 PBE 기간에 빈 분포가 됐다 (2026-11-23)
 URL = f"https://tft.dakgg.io/api/v1/leaderboards/tier-distributions/kr?season={SEASON}&queueId=1100"
 
 

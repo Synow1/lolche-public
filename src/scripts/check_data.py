@@ -75,6 +75,30 @@ def check_site():
             if cr.get("name") and len(names) >= n(cr.get("players")) + sum(x.get("n", 0) for x in cr["pending"]) and len(names) > n(cr.get("players")):
                 bad.append(f"esports.json 월즈 미정 {sum(x.get('n', 0) for x in cr['pending'])}자리인데 Liquipedia 본 페이지엔 {len(names)}명 다 있음 ({Path(f).name})")
 
+    # 본섭 랭크 기록 (2026-11-23: PBE 기간에 snap_rank·snap_dist·build_friends가 공략 세트(set19)로 받아 이틀 동안 빈 채로 넘어갔다)
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import setinfo
+    from datetime import date, timedelta
+    for kind, label in (("rank", "한국 랭킹 스냅샷(snap_rank)"), ("dist", "티어 분포(snap_dist)")):
+        files = sorted((ROOT / "data" / kind / setinfo.SEASON).glob("20*.json"))
+        last = files[-1].stem if files else ""
+        if not last or last < (date.today() - timedelta(days=2)).isoformat():
+            bad.append(f"{label} {setinfo.SEASON} 마지막 {last or '없음'} (이틀 넘게 안 쌓임)")
+    fr = (load("site/friends.json") or {}).get("players") or []
+    if fr and not any(p.get("matches") or p.get("_logs") for p in fr):
+        bad.append(f"friends.json 친구 {len(fr)}명 전원 판·LP 기록 0 ({setinfo.SEASON})")
+
+    # 19시즌 도감 수치 (2026-11-23): format="percent"를 못 읽어 '0.12 주문력', 곡선 점 사이를 안 이어 비전 마법사 2·4단계 '0 주문력'이던 것
+    s19 = load("site/s19.json") or {}
+    import re as _re
+    raw_frac = []
+    for t in s19.get("traits") or []:
+        for st in t.get("steps") or []:
+            if _re.search(r"(?<![\d.])(0\.\d+|0) (주문력|공격 속도|공격력|체력|방어력|마법 저항력)", st.get("d", "")):
+                raw_frac.append(f"{t.get('n')}: {st.get('d')[:40]}")
+    if raw_frac:
+        bad.append(f"s19.json 시너지 수치가 소수·0 그대로 {len(raw_frac)}곳 (예: {raw_frac[0]})")
+
     pw = load("site/power.json") or {}
     if not pw.get("off") and n(pw.get("w")) < 100:
         bad.append(f"power.json 가중치 {n(pw.get('w'))}개")

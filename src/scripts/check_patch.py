@@ -73,6 +73,20 @@ def pbe_release():
         return ""
 
 
+def tftflow_labels():
+    """tftflow 패치 변경 페이지에 있는 빌드 쌍 ('PBE 19.1b->PBE 19.1c'). tftflow는 diff를 며칠 늦게 올려서
+    MetaTFT 빌드 번호(pbe)가 그대로인 날에도 새 쌍이 생긴다 (2026-11-23: 11/20 빌드의 19.1c diff가 이날 올라옴)"""
+    try:
+        import tftflow_diff as F, setinfo
+        out = set()
+        for _, _, _, body in F.entities(F.tokens(F.fetch(setinfo.NUM))):
+            ab = F.split_ab(body)
+            if ab: out.add(f"{ab[0]}->{ab[1]}")
+        return sorted(out)
+    except Exception:
+        return None
+
+
 def main():
     st = json.loads(STATE.read_text()) if STATE.exists() else {}
     today = date.today()
@@ -113,8 +127,17 @@ def main():
         hist = st.get("pbe_builds") or []
         hist.insert(0, {"release": rel, "since": today.isoformat()})
         st["pbe_release"], st["pbe_since"], st["pbe_builds"] = rel, today.isoformat(), hist[:20]
+    tf = tftflow_labels()
+    tf_new = []
+    if tf:
+        tf_new = [x for x in tf if x not in (st.get("tftflow_labels") or [])]
+        if tf_new and st.get("tftflow_labels") is not None:
+            actions.append("kbdiff")  # 지식 노트: tftflow_diff.py --to "<새 빌드>"로 set19.md 갱신 (CLAUDE.md 7번)
+        else:
+            tf_new = []
+        st["tftflow_labels"] = tf
     STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1))
-    print(json.dumps({"patch": live, "metatft": metatft, "lolchess": lolchess, "detected": st["detected"], "pbe": st.get("pbe_release", ""), "pbe_since": st.get("pbe_since", ""),
+    print(json.dumps({"patch": live, "tftflow_new": tf_new, "metatft": metatft, "lolchess": lolchess, "detected": st["detected"], "pbe": st.get("pbe_release", ""), "pbe_since": st.get("pbe_since", ""),
                       "days": days, "actions": actions, "checked": datetime.now().isoformat(timespec="minutes")}, ensure_ascii=False))
 
 
