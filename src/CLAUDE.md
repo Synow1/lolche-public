@@ -106,7 +106,7 @@ python3 scripts/snap_rank.py        # 한국 1~1000위 매일 스냅샷 -> data/
    - `pbe`·`notify`·`kbdiff`가 뜬 날은 반드시: `python3 scripts/tftflow_diff.py --to "<새 빌드>"`(`kbdiff`는 tftflow에 새 빌드 diff가 올라온 날, `check_patch.py` 출력 `tftflow_new`. tftflow는 MetaTFT 빌드보다 며칠 늦게 올리기도 한다), 공식 패치노트, `site/s19.json` 해금·시너지 변경(갱신 전 `git show HEAD:site/s19.json`과 비교)을 보고 `set19.md`를 최신으로. 수치는 MetaTFT 원문 curveValues로 최종 확인 (곡선 점 사이는 직선 보간).
    - 커밋·푸시. `guide/kb/`만 바뀐 날은 앱 재배포 생략. 큰 변경(해금 조건 변경, 핵심 숨은 메커니즘·버그, B패치)은 점검 알림에 1~2줄 요약, 사소한 보강은 조용히 커밋만.
 - SDK·raw 데이터는 컨테이너가 새로 뜨면 없다. `android/build.sh`와 `tft_data.py`가 알아서 다시 받는다.
-- 예약 작업: '롤체 노트 매일 점검' (매일 09:41 KST). 끄려면 사용자에게 묻고 update_trigger로 enabled=false.
+- 예약 작업: '롤체 노트 매일 점검' (매일 09:41 KST, `trig_01C1T7muQ9pUZnGUcE62nvec`) + **'롤체 노트 저녁 점검'** (매일 17:19 KST, `trig_01R61y3qSeaTFYspCtuZgYXR`. 2026-11-24 사용자: "17:30에 한 번 더, 폰 받는 시간"). 저녁은 `check_patch.py`로 새 빌드·패치만 확인하고 `bash scripts/update.sh decks`(MetaTFT 덱·템·도감·아카데미만)로 올린다. 판 모으기·덱파워·친구·랭킹 스냅샷은 아침에만. 끄려면 사용자에게 묻고 update_trigger로 enabled=false.
 
 ## 이스포츠 탭
 - APAC은 공식 사이트(set<N>.apactft.com) 순위표, 나머지는 MetaTFT 게임 기록. 결승 우승자는 체크메이트(20점 넘긴 뒤 1등)로 정한다 (점수 1위가 우승이 아니다).

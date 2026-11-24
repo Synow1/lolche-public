@@ -875,6 +875,12 @@ function fresh(file, key, hours) {
     await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#more'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(500);
     await pg.evaluate(() => document.getElementById('wn-again')?.click()); await pg.waitForTimeout(1500);
     if (!(await pg.evaluate(() => !!document.querySelector('#wn li')))) fail('업데이트 소식: 더보기의 다시 보기 버튼을 눌러도 안 열림');
+    // 줄이지 않고 다 (2026-11-24 사용자: "외 10개 이러지 말고 다 알려줘"): 기록·창에 '외 N건'이 없고, 탭마다 줄 수가 기록과 같다
+    const CH = JSON.parse(fs.readFileSync(path.join(SITE, 'changes.json'), 'utf8'));
+    const chLines = JSON.stringify(CH).match(/외 \d+건/g) || [];
+    if (chLines.length) fail(`업데이트 소식: changes.json에 '외 N건'으로 줄인 줄 ${chLines.length}곳`);
+    const wnCut = await pg.evaluate(() => [...document.querySelectorAll('#wn li')].filter(l => /^외 \d+(건|개)$/.test(l.textContent.trim())).length);
+    if (wnCut) fail(`업데이트 소식: 창에 '외 N건' 줄 ${wnCut}곳`);
     await pg.close();
   });
   // 게임 위 창(?overlay=1): 앱 바가 숨는데 붙는 머리가 앱 바 높이만큼 내려와 목록 중간에 떠 있던 문제 (2026-11-13)

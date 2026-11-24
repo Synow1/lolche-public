@@ -79,10 +79,10 @@ def tier_moves(old, new, label, only_top=True):
 
 def diff(old, new):
     items = []
-    def add(tab, name, lines, cap=8):
+    def add(tab, name, lines, cap=None):
+        # 줄이지 않고 다 적는다 (2026-11-24 사용자: "외 10개 이러지 말고 다 알려줘야지")
         if not lines: return
-        more = len(lines) - cap
-        items.append({"tab": tab, "name": name, "lines": lines[:cap] + ([f"외 {more}건"] if more > 0 else [])})
+        items.append({"tab": tab, "name": name, "lines": list(lines)})
     om, nm = str(old.get("patch", "")).split(".")[0], str(new.get("patch", "")).split(".")[0]
     if om and nm and om != nm:  # 새 세트: 덱·템이 통째로 바뀌니 줄줄이 말고 요약만
         lines = [f"시즌 {nm} 시작 · 패치 {new['patch']}", f"덱 탭: 새 시즌 덱 {len(new.get('meta', {}))}개"]
@@ -97,7 +97,7 @@ def diff(old, new):
         if k not in op: continue
         ch = [p for p, v in parts.items() if op[k].get(p) != v]
         if ch: tl.append(f"{k} · {', '.join(ch)} 변경")
-    add("tfa", "아카데미", tl, cap=12)
+    add("tfa", "아카데미", tl)
     add("augments", "증강", tier_moves(old.get("tfa_aug", {}), new.get("tfa_aug", {}), "", only_top=True))
     add("meta", "덱", tier_moves(old.get("meta", {}), new.get("meta", {}), "", only_top=True))
     add("items", "아이템", tier_moves(old.get("items", {}), new.get("items", {}), "", only_top=True))

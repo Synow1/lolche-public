@@ -3,6 +3,7 @@
 #   quick   : 유닛·템·증강 원문, 검색 DB, 추천 덱, 아이콘 (패치 하루 뒤)
 #   full    : quick + 덱 통계·티어 비교·시너지 통계·가이드 문서 (패치 사흘 뒤)
 #   esports : 대회 결과·프로 포인트·랭킹 스냅샷 (대회 기간 매일)
+#   decks   : 저녁 점검용. MetaTFT 덱·템·도감·아카데미만 (매일 17:19)
 #   friends : 친구 탭 스냅샷 + 그날 티어 분포 저장 + 덱파워 판 기록 모으고 다시 학습 + TFT 아카데미 티어표 + 덱·아이템 통계 (매일)
 # 끝나면 APK·앱 업데이트 파일을 만들어 Synow1/lolche-public 에 올린다. 게시·커밋·알림은 CLAUDE.md '자동 갱신 루틴'대로.
 set -euo pipefail
@@ -33,6 +34,14 @@ for mode in "$@"; do
       python3 scripts/build_tfa.py || echo "TFT 아카데미 못 받음"
       python3 scripts/fetch_icons.py
       python3 scripts/build_rank.py ;;
+    decks)  # 저녁 점검 17:19 KST (2026-11-24 사용자: "17:30에 한 번 더, 폰 받는 시간"): MetaTFT 덱·템·도감·아카데미만 새로 (판 모으기·덱파워·친구는 아침에만)
+      fetch_raw fetch
+      python3 scripts/build_s19.py || echo "19시즌 도감 못 받음"
+      python3 scripts/build_meta.py
+      python3 scripts/build_db.py
+      python3 scripts/build_items.py
+      python3 scripts/build_tfa.py || echo "TFT 아카데미 못 받음"
+      python3 scripts/fetch_icons.py ;;
     newset)  # 새 세트 첫날 (check_patch.py): 방금 끝난 세트를 지난 시즌 이름·아이콘 표에 넣는다. 나머지는 quick/full이 새 세트로 받는다
       python3 scripts/build_oldsets.py
       python3 scripts/setinfo.py ;;

@@ -43,7 +43,8 @@
         var go = el("button", "wn-go", t.name); go.type = "button";
         go.addEventListener("click", function () { closeUI(function () { goTab(k); }); });
         s2.appendChild(go);
-        var u2 = el("ul"); t.lines.slice(0, 10).forEach(function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
+        var u2 = el("ul"); t.lines.forEach(  // 다 보여 준다 (2026-11-24 사용자: "외 10개 이러지 말고 다 알려줘")
+function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
         body.appendChild(s2);
       });
     }
