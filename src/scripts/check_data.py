@@ -55,8 +55,12 @@ def check_site():
 
     meta = load("site/meta.json") or {}
     decks = meta.get("decks") or []
-    if len(decks) < 20:
+    if len(decks) < 5:  # 새 빌드 첫날은 덱이 적어도 MetaTFT 그대로 (2026-11-24 사용자). 받기 실패 수준만 막는다
         bad.append(f"meta.json 덱 {len(decks)}개")
+    # 덱 탭은 MetaTFT 지금 묶음 그대로여야 한다 (2026-11-24 사용자: "표본 적어도 MetaTFT 데이터 바로 가져와". 지난 목록을 붙잡고 있으면 안 됨)
+    rc = ((load("raw/comps_data.json") or {}).get("results") or {}).get("data") or {}
+    if rc.get("cluster_id") and str(meta.get("cluster_id")) != str(rc["cluster_id"]):
+        bad.append(f"meta.json 덱 묶음 {meta.get('cluster_id')} != MetaTFT 지금 묶음 {rc['cluster_id']} (지난 목록을 붙잡고 있음)")
     if sum(1 for d in decks if n(d.get("board")) >= 5) < len(decks) * 0.9:
         bad.append("meta.json 보드가 빈 덱이 많음")
 

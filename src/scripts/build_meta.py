@@ -23,7 +23,6 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "raw" / "comps"
 OUT = ROOT / "site" / "meta.json"
 URL = "https://api-hc.metatft.com/tft-comps-api/comp_details?comp={}&cluster_id={}"
-MIN_GAMES = 1000 if setinfo.PBE else 3000  # PBE는 최신 빌드만이라 표본이 작다 (빌드 첫날은 더)
 RANK_GROUP = {"IRON": "low", "BRONZE": "low", "SILVER": "low", "GOLD": "low", "PLATINUM": "mid", "EMERALD": "mid",
               "DIAMOND": "dia", "MASTER": "top", "GRANDMASTER": "top", "CHALLENGER": "top"}
 # 내 메인 덱 (페이지 덱 탭과 맞춘다). 이름에 이 글자가 들어가면 위로 올리고 표시한다.
@@ -404,9 +403,10 @@ def main():
     res = T.load("comps_stats")["results"]
     actx = aug_ctx(lk, cid)
     total = res[0]["places"][0]
+    min_games = T.comp_min(total)
     decks = []
     for s in res:
-        if not s["cluster"] or s["count"] < MIN_GAMES or s["cluster"] not in details:
+        if not s["cluster"] or s["count"] < min_games or s["cluster"] not in details:
             continue
         d = fetch(s["cluster"], cid)
         if d and T.junk_cluster(d)[0]:
@@ -435,10 +435,10 @@ def main():
     # 새 패치 첫날은 판이 적어 덱 묶음이 몇 개 안 나온다 (18.7 첫날 15개). 그러면 지난 파일을 그대로 두고 다음 점검에서 다시 (2026-11-18)
     try: old_n = len(json.loads(OUT.read_text()).get("decks") or [])
     except Exception: old_n = 0
-    if len(meta.get("decks") or []) < 20 and old_n >= 20:
-        print(f"덱 {len(meta.get('decks') or [])}개뿐 (새 패치 초반) -> 지난 meta.json({old_n}개) 유지"); return
+    if not meta.get("decks") and old_n:  # 받기 실패로 0개일 때만 지난 파일 유지 (적어도 MetaTFT 그대로, 2026-11-24)
+        print(f"덱 0개 -> 지난 meta.json({old_n}개) 유지"); return
     OUT.write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"{OUT.relative_to(ROOT)}: 덱 {len(decks)}개, {OUT.stat().st_size // 1024}KB")
+    print(f"{OUT.relative_to(ROOT)}: 덱 {len(decks)}개 (최소 {min_games}판), {OUT.stat().st_size // 1024}KB")
     if setinfo.PBE:
         _sync_pbe_guides(decks)
 

@@ -141,7 +141,6 @@ def icon(kind, folder, name):
 
 PBE_API = "https://api-hc.metatft.com/tft-comps-api/"
 PBE_CACHE = ROOT / "raw" / "s19_comps"
-PBE_MIN = 3000  # 이보다 적은 판의 덱 묶음은 뺀다 (PBE 판이 많아 라이브 덱 탭과 같은 기준)
 
 
 def cell_rc(name):
@@ -178,7 +177,7 @@ def pbe_decks(mk, units, traits):
     PBE_CACHE.mkdir(parents=True, exist_ok=True)
     out = []
     for s in res:
-        if not s["cluster"] or s["count"] < PBE_MIN or s["cluster"] not in details:
+        if not s["cluster"] or s["count"] < T.comp_min(total) or s["cluster"] not in details:  # 덱 탭(build_meta)과 같은 기준
             continue
         cpath = PBE_CACHE / f"{s['cluster']}.json"
         if cpath.exists() and time.time() - cpath.stat().st_mtime < 6 * 3600:
@@ -256,8 +255,8 @@ def pbe_decks(mk, units, traits):
     for x in out:
         x["tier"] = T.mt_tier(x["avg"])
     upd = datetime.fromtimestamp((cs.get("updated") or 0) / 1000, timezone.utc).isoformat(timespec="minutes") if cs.get("updated") else ""
-    if len(out) < 10:
-        raise RuntimeError(f"PBE 덱 {len(out)}개뿐")
+    if not out:
+        raise RuntimeError("PBE 덱 0개")
     return out, total // 8, upd, str(cid)
 
 
