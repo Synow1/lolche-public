@@ -1,6 +1,31 @@
 {
 "log": [
 {
+"id": "2026-11-24T10:04",
+"items": [
+{
+"tab": "tfa",
+"name": "아카데미",
+"lines": [
+"애쉬 리롤 B티어 진입",
+"안전 요원 근무 중 레넥톤 X티어 진입",
+"티버, 무대가 안 보여 애니 X티어 진입",
+"Ashe Reroll 티어표 제외 (이전 B티어)",
+"Lifeguard on Duty Renekton 티어표 제외 (이전 X티어)",
+"Tibbers, I Can't See the Stage Annie 티어표 제외 (이전 X티어)"
+]
+},
+{
+"tab": "augments",
+"name": "증강",
+"lines": [
+"DA_HardCommit A티어 진입",
+"극진한 헌신 티어표 제외 (이전 A티어)"
+]
+}
+]
+},
+{
 "id": "2026-11-24T10:01",
 "items": [
 {

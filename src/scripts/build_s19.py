@@ -291,6 +291,7 @@ def main():
         for i, ef in enumerate(t.get("effects") or []):
             txt = render(ef.get("desc"), t.get("curveValues"), None, i + 1)
             if not HANGUL.search(txt): txt = ko(txt, ko_map, "")
+            txt = re.sub(r"^(\(\d+\)) (.+?) per stack$", r"\1 중첩당 \2", txt)  # 한국어 원문에 영어가 남은 단계 (신속타격대 3~5단계, 2026-11-24)
             steps.append({"m": ef.get("minUnits"), "s": ef.get("style"), "d": txt})
         desc = render(t.get("desc"), t.get("curveValues"))
         if not desc and d: desc = render(d.get("desc"))  # MetaTFT에 설명이 비면 롤체지지 한국어 설명 (EDM·HEARTSTEEL)

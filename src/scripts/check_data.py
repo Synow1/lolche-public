@@ -96,6 +96,10 @@ def check_site():
         for st in t.get("steps") or []:
             if _re.search(r"(?<![\d.])(0\.\d+|0) (주문력|공격 속도|공격력|체력|방어력|마법 저항력)", st.get("d", "")):
                 raw_frac.append(f"{t.get('n')}: {st.get('d')[:40]}")
+    eng = [f"{t.get('n')}: {st.get('d')[:40]}" for t in s19.get("traits") or [] for st in t.get("steps") or []
+           if _re.search(r"\b(per|and|the|with|for|stack|gain|gains)\b", st.get("d", ""))]
+    if eng:
+        bad.append(f"s19.json 시너지 단계 글에 영어가 남음 {len(eng)}곳 (예: {eng[0]})")
     if raw_frac:
         bad.append(f"s19.json 시너지 수치가 소수·0 그대로 {len(raw_frac)}곳 (예: {raw_frac[0]})")
 
