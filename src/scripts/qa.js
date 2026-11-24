@@ -830,9 +830,16 @@ function fresh(file, key, hours) {
     // 레벨별 보드 위 시너지 줄이 켜진 시너지를 빠뜨리지 않는지 (2026-11-22 사용자: "하트스틸이 위에만 있고 배치판엔 왜 없냐" — 7개 제한에 잘렸음)
     const DBJ = JSON.parse(fs.readFileSync(path.join(SITE, 'db.json'), 'utf8')), STY = JSON.parse(fs.readFileSync(path.join(SITE, 'guides.json'), 'utf8')).styles || {};
     const lvRows = await pg.evaluate(async () => {
-      const out = [], rows = [...document.querySelectorAll('#mt-rows .mt-row.dk')].slice(0, 25);
+      const out = [], codeGap = [], rows = [...document.querySelectorAll('#mt-rows .mt-row.dk')].slice(0, 25);
       for (const r of rows) {
         r.click(); await new Promise(f => setTimeout(f, 60));
+        // 팀 코드: 배치판 챔피언이 코드에 들었거나 '빠진 챔피언'으로 알린다 (2026-11-24 사용자: "팀 코드 복사했는데 나서스가 없던데")
+        const cb = document.querySelector('#mt-detail .codebtn.big');
+        if (cb) {
+          const n = (cb.title.slice(2, 32).match(/.{3}/g) || []).filter(x => x !== '000').length, miss = (cb.dataset.miss || '').split(',').filter(Boolean).length;
+          const lw = document.querySelector('#mt-detail .lvwrap'), units = new Set([...(lw || document.getElementById('mt-detail')).querySelectorAll('[data-unit]')].map(e => e.dataset.unit));
+          if (n + miss < Math.min(units.size, 10)) codeGap.push(`${(r.querySelector('.mt-name') || {}).textContent} 보드 ${units.size} · 코드 ${n} · 알림 ${miss}`);
+        }
         const tabs = [...document.querySelectorAll('#mt-detail .lvtabs button')];
         for (const t of tabs) {
           t.click(); await new Promise(f => setTimeout(f, 10));
@@ -841,8 +848,8 @@ function fresh(file, key, hours) {
             units: [...w.querySelectorAll('[data-unit]')].map(e => e.dataset.unit), traits: [...w.querySelectorAll('.lvbar [data-trait]')].map(e => e.dataset.trait) });
         }
       }
-      return out;
-    });
+      return { out, codeGap };
+    }).then(x => { if (x.codeGap.length) fail(`덱 상세: 팀 코드에서 말없이 빠진 챔피언 (${x.codeGap.slice(0, 3).join(' ; ')})`); return x.out; });
     const lvMiss = [];
     lvRows.forEach(x => {
       const c = {}; [...new Set(x.units)].forEach(u => ((DBJ.units[u] || {}).traits || []).forEach(t => { c[t] = (c[t] || 0) + 1; }));

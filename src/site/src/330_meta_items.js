@@ -268,7 +268,7 @@
       var b = names(lvs[k]) === finalKey ? v.board : lvs[k];
       bar.innerHTML = ""; bar.appendChild(synRow(synOf(b), false, 0, true));  // 개수 제한 없이 고유 특성까지 (2026-11-22 사용자: "하트스틸이 위에만 있고 배치판엔 왜 없냐" — 7개 제한에 1명짜리 HEARTSTEEL이 잘렸음)
       var code = codeOfNames(b.filter(function (u) { return !u.plant; }).map(function (u) { return u.u; }));
-      if (code) bar.appendChild(codeButton(code, "코드"));
+      if (code) bar.appendChild(codeButton(code, "코드", null, codeMiss(b.filter(function (u) { return !u.plant; }).map(function (u) { return u.u; }))));
       slot.innerHTML = ""; slot.appendChild(hexBoard(b));
     }
     keys.forEach(function (k) {
@@ -343,7 +343,7 @@
     var names = detailBoard.filter(function (b) { return !b.plant; }).map(function (b) { return b.u; });
     var code = codeOfNames(names);
     var acts = el("div", "tb-actions");
-    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big"));
+    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));
     var tbb = el("button", "tb-clear", "빌더로"); tbb.type = "button";
     tbb.addEventListener("click", function () { tbLoad(names); });
     acts.appendChild(tbb); box.appendChild(acts);

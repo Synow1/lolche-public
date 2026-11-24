@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611240945">
+<meta name="lolche-web" content="202611241010">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -3585,14 +3585,23 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     t.classList.add("on");
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("on"); }, code ? 9000 : 2600);
   }
-  function codeButton(code, label, cls) {
+  // miss: 게임 팀 플래너 코드가 없어 코드에서 빠지는 챔피언 이름 (2026-11-24 사용자: "이즈 덱 팀 코드 복사했는데 나서스가 없던데".
+  // MetaTFT 19시즌 원문이 나서스·그레이브즈·모데카이저에 같은 코드 449를 붙여 어느 것인지 알 수 없음) -> 말없이 빼지 않고 알린다
+  function codeButton(code, label, cls, miss) {
     var b = el("button", cls || "codebtn", label); b.type = "button"; b.title = code;
+    if (miss && miss.length) b.dataset.miss = miss.join(",");
     b.addEventListener("click", function (e) {
       e.stopPropagation();
-      copyText(code).then(function () { toast("팀 코드를 복사했어요. 게임의 팀 플래너에 붙여넣어 주세요"); })
+      var tail = miss && miss.length ? " 빠진 챔피언: " + miss.join(", ") + ". 게임 코드가 아직 없어서 팀 플래너에서 직접 넣어 주세요" : " 게임의 팀 플래너에 붙여넣어 주세요";
+      copyText(code).then(function () { toast("팀 코드를 복사했어요." + tail); })
         .catch(function () { toast("복사하지 못했어요. 아래 코드를 길게 눌러 복사해 주세요", code); });
     });
     return b;
+  }
+  function codeMiss(names) {
+    if (!DB) return [];
+    var has = {}; Object.keys(DB.names.u).forEach(function (k) { var x = DB.names.u[k]; if (x[2]) has[x[0]] = 1; });
+    return names.filter(function (n, i) { return !has[n] && names.indexOf(n) === i && (IDX.units[n] || DB.units[n]); });
   }
   function codeOfNames(names) {
     if (!DB) return null;
@@ -4218,7 +4227,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     head.appendChild(t); box.appendChild(head);
     if (DB && GUIDES) box.appendChild(synRow(synOf(c.board), true));
     var names = c.board.map(function (b) { return b.u; }), code = codeOfNames(names), acts = el("div", "tb-actions");
-    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big"));
+    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));
     var tbb = el("button", "tb-clear", "빌더로"); tbb.type = "button"; tbb.addEventListener("click", function () { tbLoad(names); }); acts.appendChild(tbb);
     box.appendChild(acts);
     var cols = el("div", "mt-cols"), A = el("div"), B = el("div");
@@ -4559,7 +4568,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var b = names(lvs[k]) === finalKey ? v.board : lvs[k];
       bar.innerHTML = ""; bar.appendChild(synRow(synOf(b), false, 0, true));  // 개수 제한 없이 고유 특성까지 (2026-11-22 사용자: "하트스틸이 위에만 있고 배치판엔 왜 없냐" — 7개 제한에 1명짜리 HEARTSTEEL이 잘렸음)
       var code = codeOfNames(b.filter(function (u) { return !u.plant; }).map(function (u) { return u.u; }));
-      if (code) bar.appendChild(codeButton(code, "코드"));
+      if (code) bar.appendChild(codeButton(code, "코드", null, codeMiss(b.filter(function (u) { return !u.plant; }).map(function (u) { return u.u; }))));
       slot.innerHTML = ""; slot.appendChild(hexBoard(b));
     }
     keys.forEach(function (k) {
@@ -4634,7 +4643,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var names = detailBoard.filter(function (b) { return !b.plant; }).map(function (b) { return b.u; });
     var code = codeOfNames(names);
     var acts = el("div", "tb-actions");
-    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big"));
+    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));
     var tbb = el("button", "tb-clear", "빌더로"); tbb.type = "button";
     tbb.addEventListener("click", function () { tbLoad(names); });
     acts.appendChild(tbb); box.appendChild(acts);
@@ -6473,7 +6482,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     t.appendChild(el("div", "gm-l2", [s.level + "렙", mmss(m.game_duration || s.time_eliminated), m.lobby_label || (m.avg_rating ? "로비 " + tierText(m.avg_rating, true) : "")].filter(Boolean).join(" · ")));
     h.appendChild(t);
     var code = codeOfNames(board.map(function (u) { return u.u; }));
-    if (code) h.appendChild(codeButton(code, "팀 코드"));
+    if (code) h.appendChild(codeButton(code, "팀 코드", null, codeMiss(board.map(function (u) { return u.u; }))));
     g.appendChild(h);
     var pt = pwOtherSet(m.patch) ? null : powerTag(s.units, s.traits, s.level, false); if (pt) { if (pwOld(m.patch)) pt.appendChild(el("span", "pw-old", m.patch + " 판 · 지금 패치 기준")); g.appendChild(pt); }
     g.appendChild(synRow(synOfMatch(s.traits, board), false, 8));
@@ -8591,6 +8600,9 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
   // 19시즌 PBE 추천 덱 행 & 상세 (롤체지지 추천 가이드 배치 + PBE 메타 통계)
   var s19CurDeck = "";
   // 19시즌 팀 플래너 코드: "02" + 칸 번호 10개(3자리, 빈칸 000) + "TFTSet19" (덱 탭 codeOfNames와 같은 틀)
+  function s19CodeMiss(keys) {
+    return keys.map(s19Unit).filter(function (u, i, a) { return u && !u.tp && a.indexOf(u) === i; }).map(function (u) { return u.n; });
+  }
   function s19CodeOf(keys) {
     var cs = [];
     keys.forEach(function (k) { var u = s19Unit(k); if (u && u.tp && cs.indexOf(u.tp) < 0 && cs.length < 10) cs.push(u.tp); });
@@ -8733,7 +8745,7 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     // 팀 코드 복사 (2026-11-21 사용자: "19시즌 덱들도 팀코드 복사 해줘야지"). 19시즌 팀 플래너에 붙여넣는 코드라 PBE·19시즌 시작 뒤에 쓸 수 있다
     var code = s19CodeOf(d.u.map(function (x) { return x.k; }));
     if (code) {
-      var cb = codeButton(code, "팀 코드 복사", "codebtn big s19-code"); b.appendChild(cb);
+      var cb = codeButton(code, "팀 코드 복사", "codebtn big s19-code", s19CodeMiss(d.u.map(function (x) { return x.k; }))); b.appendChild(cb);
       var miss = d.u.filter(function (x) { var u = s19Unit(x.k); return u && !u.tp; }).map(function (x) { return s19Unit(x.k).n; });
       b.appendChild(el("p", "s19-codenote", "19시즌 팀 플래너용 코드예요" + (miss.length ? ". " + miss.join(", ") + "의 코드는 아직 PBE에 없어서 빠져요" : "")));
     }
@@ -9016,7 +9028,7 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     var clr = el("button", "s19-bclr", "초기화"); clr.type = "button"; clr.disabled = !s19Sq.length;
     clr.addEventListener("click", function () { s19Sq = []; s19SqSave(); s19Render(); });
     var sqCode = s19CodeOf(s19Sq);
-    if (sqCode) hd.appendChild(codeButton(sqCode, "팀 코드"));
+    if (sqCode) hd.appendChild(codeButton(sqCode, "팀 코드", null, s19CodeMiss(s19Sq)));
     hd.appendChild(clr); top.appendChild(hd);
     var slots = el("div", "s19-bslots");
     for (var i = 0; i < 10; i++) {

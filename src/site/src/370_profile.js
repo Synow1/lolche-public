@@ -53,7 +53,7 @@
     t.appendChild(el("div", "gm-l2", [s.level + "렙", mmss(m.game_duration || s.time_eliminated), m.lobby_label || (m.avg_rating ? "로비 " + tierText(m.avg_rating, true) : "")].filter(Boolean).join(" · ")));
     h.appendChild(t);
     var code = codeOfNames(board.map(function (u) { return u.u; }));
-    if (code) h.appendChild(codeButton(code, "팀 코드"));
+    if (code) h.appendChild(codeButton(code, "팀 코드", null, codeMiss(board.map(function (u) { return u.u; }))));
     g.appendChild(h);
     var pt = pwOtherSet(m.patch) ? null : powerTag(s.units, s.traits, s.level, false); if (pt) { if (pwOld(m.patch)) pt.appendChild(el("span", "pw-old", m.patch + " 판 · 지금 패치 기준")); g.appendChild(pt); }
     g.appendChild(synRow(synOfMatch(s.traits, board), false, 8));

@@ -180,7 +180,7 @@
     head.appendChild(t); box.appendChild(head);
     if (DB && GUIDES) box.appendChild(synRow(synOf(c.board), true));
     var names = c.board.map(function (b) { return b.u; }), code = codeOfNames(names), acts = el("div", "tb-actions");
-    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big"));
+    if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));
     var tbb = el("button", "tb-clear", "빌더로"); tbb.type = "button"; tbb.addEventListener("click", function () { tbLoad(names); }); acts.appendChild(tbb);
     box.appendChild(acts);
     var cols = el("div", "mt-cols"), A = el("div"), B = el("div");

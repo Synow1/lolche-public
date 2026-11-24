@@ -427,14 +427,23 @@
     t.classList.add("on");
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("on"); }, code ? 9000 : 2600);
   }
-  function codeButton(code, label, cls) {
+  // miss: 게임 팀 플래너 코드가 없어 코드에서 빠지는 챔피언 이름 (2026-11-24 사용자: "이즈 덱 팀 코드 복사했는데 나서스가 없던데".
+  // MetaTFT 19시즌 원문이 나서스·그레이브즈·모데카이저에 같은 코드 449를 붙여 어느 것인지 알 수 없음) -> 말없이 빼지 않고 알린다
+  function codeButton(code, label, cls, miss) {
     var b = el("button", cls || "codebtn", label); b.type = "button"; b.title = code;
+    if (miss && miss.length) b.dataset.miss = miss.join(",");
     b.addEventListener("click", function (e) {
       e.stopPropagation();
-      copyText(code).then(function () { toast("팀 코드를 복사했어요. 게임의 팀 플래너에 붙여넣어 주세요"); })
+      var tail = miss && miss.length ? " 빠진 챔피언: " + miss.join(", ") + ". 게임 코드가 아직 없어서 팀 플래너에서 직접 넣어 주세요" : " 게임의 팀 플래너에 붙여넣어 주세요";
+      copyText(code).then(function () { toast("팀 코드를 복사했어요." + tail); })
         .catch(function () { toast("복사하지 못했어요. 아래 코드를 길게 눌러 복사해 주세요", code); });
     });
     return b;
+  }
+  function codeMiss(names) {
+    if (!DB) return [];
+    var has = {}; Object.keys(DB.names.u).forEach(function (k) { var x = DB.names.u[k]; if (x[2]) has[x[0]] = 1; });
+    return names.filter(function (n, i) { return !has[n] && names.indexOf(n) === i && (IDX.units[n] || DB.units[n]); });
   }
   function codeOfNames(names) {
     if (!DB) return null;
