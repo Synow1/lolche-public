@@ -68,8 +68,31 @@ def entities(L):
             pc, pn, pk, pb = out[-1]
             out[-1] = (pc, pn, pk, pb + [L[s]] + body)
             continue
+        # 같은 항목이 여러 빌드에 걸쳐 바뀌면 이름은 한 번만 나오고 'PBE a | PBE b | 글 | 글 | PBE b | PBE c | 글 | 글'이 이어진다.
+        # 두 번째 쌍은 앞 글의 마지막 낱말이 이름처럼 보이므로, 새 쌍의 첫 글이 앞 항목 첫 글과 같으면 같은 항목으로 본다 (2026-11-24 19.1d)
+        if out and len(body) > 2 and LABEL.match(body[0]) and LABEL.match(body[1]):
+            pc, pn, pk, pb = out[-1]
+            last_to = pb[1] if len(pb) > 1 and LABEL.match(pb[0]) and LABEL.match(pb[1]) else None
+            # 이어지는 쌍은 앞 쌍의 '후' 빌드 이후에서 시작한다 (같은 쌍이 두 번이면 서로 다른 항목: Stats On Stats / II. 빌드를 건너뛰기도 함: 릴리아 19.1→b, c→d)
+            ab = split_ab(pb) if last_to else None
+            # 새 쌍의 '전' 글 = 앞 쌍의 '후' 글 (첫 낱말만 같으면 'Passive:'로 시작하는 쓰레쉬·쉬바나가 섞였음)
+            if last_to and last_to <= body[0] and ab and ab[3] and ab[3][:6] == body[2:2 + len(ab[3][:6])] and pk == kind:
+                out[-1] = (pc, pn, pk, pb + [L[s]])
+                out.append((cat, pn, kind, body))
+                continue
+        # 이름 자리에 글 조각(마침표로 끝남·숫자·소문자 시작·긴 문장)이 오면 앞 항목에 이어지는 것 (같은 챔피언의 다른 스킬·능력치 표 다음 스킬)
+        if out and not looks_like_name(L[s]):
+            pc, pn, pk, pb = out[-1]
+            out[-1] = (pc, pn, pk, pb + [L[s]])
+            out.append((cat, pn, kind, body))
+            continue
         out.append((cat, L[s], kind, body))
     return out
+
+
+def looks_like_name(n):
+    return not (n.endswith(".") or n.endswith("!") or re.fullmatch(r"[\d./%s]+", n) or len(n) > 32 or n[:1].islower()
+                or n[:1] in ")(;:," or ": " in n)
 
 
 def is_table(body):
@@ -122,8 +145,10 @@ def main():
             n = setinfo.NUM
         page = fetch(n)
     for cat, name, kind, body in entities(tokens(page)):
-        if a.to and a.to not in body:
-            continue
+        if a.to:  # 이 빌드'로' 바뀐 것만 ('전' 빌드로 이 라벨이 든 다음 쌍은 빼고)
+            ab = split_ab(body)
+            if (ab and ab[1] != a.to) or (not ab and a.to not in body):
+                continue
         print(describe(cat, name, kind, body))
 
 

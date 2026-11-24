@@ -975,10 +975,6 @@
    "icon": "icons/i/da_bluebuffradiant.webp",
    "recipe": []
   },
-  "찬란한 덤불 조끼": {
-   "icon": "icons/i/da_bramblevestradiant.webp",
-   "recipe": []
-  },
   "Prismatic Crownguard": {
    "icon": "icons/i/da_crownguardradiant.webp",
    "recipe": []
@@ -993,10 +989,6 @@
   },
   "찬란한 밤의 끝자락": {
    "icon": "icons/i/da_edgeofnightradiant.webp",
-   "recipe": []
-  },
-  "찬란한 저녁갑주": {
-   "icon": "icons/i/da_evenshroudradiant.webp",
    "recipe": []
   },
   "찬란한 가고일 돌갑옷": {
@@ -1023,10 +1015,6 @@
    "icon": "icons/i/da_infinityedgeradiant.webp",
    "recipe": []
   },
-  "찬란한 이온 충격기": {
-   "icon": "icons/i/da_ionicsparkradiant.webp",
-   "recipe": []
-  },
   "찬란한 보석 건틀릿": {
    "icon": "icons/i/da_jeweledgauntletradiant.webp",
    "recipe": []
@@ -1051,10 +1039,6 @@
    "icon": "icons/i/da_protectorsvowradiant.webp",
    "recipe": []
   },
-  "찬란한 수은": {
-   "icon": "icons/i/da_quicksilverradiant.webp",
-   "recipe": []
-  },
   "찬란한 라바돈의 죽음모자": {
    "icon": "icons/i/da_rabadonsdeathcap_radiant.webp",
    "recipe": []
@@ -1069,10 +1053,6 @@
   },
   "찬란한 정령의 형상": {
    "icon": "icons/i/da_spiritvisage_radiant.webp",
-   "recipe": []
-  },
-  "찬란한 굳건한 심장": {
-   "icon": "icons/i/da_steadfastheartradiant.webp",
    "recipe": []
   },
   "찬란한 스테락의 도전": {
@@ -1143,7 +1123,7 @@
  "traits": {
   "프리스타일": "icons/s19/t/da_akali_truedamage19_uniquetrait.webp",
   "컨트리": "icons/s19/t/da_alistar19_uniquetrait.webp",
-  "이모키드": "icons/s19/t/da_amumu19_uniquetrait.webp",
+  "이모코어": "icons/s19/t/da_amumu19_uniquetrait.webp",
   "원 몬스터 밴드": "icons/s19/t/da_baronnashor19_uniquetrait.webp",
   "음반계 거물": "icons/s19/t/da_drmundo19_uniquetrait.webp",
   "신스웨이브": "icons/s19/t/da_garen19_uniquetrait.webp",
@@ -1406,7 +1386,6 @@
   "결과 예측": "icons/s19/a/t_augmenticon_calledshot.webp",
   "도둑 무리 II": "icons/s19/a/t_augmenticon_bandofthieves.webp",
   "최적화": "icons/s19/a/t_augmenticon_minmax_prismatic.webp",
-  "극진한 헌신": "icons/a/t_augmenticon_hard-commit_tft_set12.webp",
   "황금 알": "icons/a/t_augmenticon_the-golden-egg-iii.webp",
   "저주받은 왕관": "icons/s19/a/t_augmenticon_cursedcrown.webp",
   "찬란한 장난꾸러기": "icons/s19/a/t_augmenticon_radiantrascal.webp",
@@ -1448,7 +1427,6 @@
   "4/4 박자": "icons/s19/a/t_augmenticon_4_4_time.webp",
   "3/4 박자": "icons/s19/a/t_augmenticon_3_4_time.webp",
   "21골드 획득": "icons/s19/a/t_augmenticon_gaingold.webp",
-  "21골드 획득+": "icons/s19/a/t_augmenticon_gaingold.webp",
   "행운의 4단계": "icons/s19/a/t_augmenticon_good_fourtune.webp",
   "템포 유지": "icons/s19/a/t_augmenticon_keepingtempo.webp",
   "지식 다운로드": "icons/s19/a/t_augmenticon_knowledgedownload.webp",
@@ -1498,6 +1476,7 @@
   "위대한 솔로": "icons/s19/a/t_augmenticon_big_solo.webp",
   "HEARTSTEEL 머리띠": "icons/s19/a/t_augmenticon_heartsteel_crown.webp",
   "HEARTSTEEL 왕관": "icons/s19/a/t_augmenticon_heartsteel_crown.webp",
+  "Heartsteel Prismatic Tour": "icons/s19/a/t_augmenticon_heartsteel_prismatic_tour.webp",
   "HEARTSTEEL 프리즘 투어+": "icons/s19/a/t_augmenticon_heartsteel_prismatic_tour.webp",
   "소규모 팀": "icons/s19/a/t_augmenticon_small_squad.webp",
   "불멸의 영웅": "icons/s19/a/t_augmenticon_the_immortal_journey.webp",
@@ -1509,6 +1488,7 @@
   "Ionic Spark 왕관": "icons/s19/a/t_augmenticon_ionicspark_crown.webp",
   "영원히 불타는 빛": "icons/s19/a/t_augmenticon_forever_burning_brighter.webp",
   "Ionic Spark 프리즘 투어": "icons/s19/a/t_augmenticon_ionic_spark_prismatic_tour.webp",
+  "Ionic Spark Prismatic Tour+": "icons/s19/a/t_augmenticon_ionic_spark_prismatic_tour.webp",
   "하늘을 수놓는 불꽃": "icons/s19/a/t_augmenticon_light_up_the_sky.webp",
   "하나된 마음으로": "icons/s19/a/t_augmenticon_our_hearts_aligned_.webp",
   "재즈 머리띠": "icons/s19/a/t_augmenticon_jazz_crown.webp",
@@ -1541,7 +1521,7 @@
   "True Damage 머리띠": "icons/s19/a/t_augmenticon_truedamage_crown.webp",
   "True Damage 왕관": "icons/s19/a/t_augmenticon_truedamage_crown.webp",
   "고통을 열정으로": "icons/s19/a/t_augmenticon_pain_into_passion.webp",
-  "True Damage 프리즘 투어": "icons/s19/a/t_augmenticon_true_damage_prismatic_tour.webp",
+  "True Damage Prismatic Tour": "icons/s19/a/t_augmenticon_true_damage_prismatic_tour.webp",
   "불멸로 남을 무대": "icons/s19/a/t_augmenticon_forever_immortalized_in_theater.webp",
   "클래식 머리띠": "icons/s19/a/t_augmenticon_classical_crown.webp",
   "클래식 왕관": "icons/s19/a/t_augmenticon_classical_crown.webp"
