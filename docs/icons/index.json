@@ -827,7 +827,7 @@
    "icon": "icons/i/da_zekesherald.webp",
    "recipe": []
   },
-  "Zz'Rot Portal": {
+  "즈롯 차원문": {
    "icon": "icons/i/da_zzrotportal.webp",
    "recipe": []
   },
@@ -975,16 +975,8 @@
    "icon": "icons/i/da_bluebuffradiant.webp",
    "recipe": []
   },
-  "Prismatic Crownguard": {
-   "icon": "icons/i/da_crownguardradiant.webp",
-   "recipe": []
-  },
   "찬란한 죽음의 검": {
    "icon": "icons/i/da_deathbladeradiant.webp",
-   "recipe": []
-  },
-  "찬란한 용의 발톱": {
-   "icon": "icons/i/da_dragonsclawradiant.webp",
    "recipe": []
   },
   "찬란한 밤의 끝자락": {
@@ -1027,18 +1019,6 @@
    "icon": "icons/i/da_lastwhisperradiant.webp",
    "recipe": []
   },
-  "찬란한 모렐로노미콘": {
-   "icon": "icons/i/da_morellonomiconradiant.webp",
-   "recipe": []
-  },
-  "찬란한 내셔의 이빨": {
-   "icon": "icons/i/da_nashorstoothradiant.webp",
-   "recipe": []
-  },
-  "찬란한 수호자의 맹세": {
-   "icon": "icons/i/da_protectorsvowradiant.webp",
-   "recipe": []
-  },
   "찬란한 라바돈의 죽음모자": {
    "icon": "icons/i/da_rabadonsdeathcap_radiant.webp",
    "recipe": []
@@ -1063,20 +1043,12 @@
    "icon": "icons/i/da_strikersflailradiant.webp",
    "recipe": []
   },
-  "찬란한 태양불꽃 망토": {
-   "icon": "icons/i/da_sunfirecape_radiant.webp",
-   "recipe": []
-  },
   "찬란한 도적의 장갑": {
    "icon": "icons/i/da_thiefsglovesradiant.webp",
    "recipe": []
   },
   "찬란한 거인의 결의": {
    "icon": "icons/i/da_titansresolve_radiant.webp",
-   "recipe": []
-  },
-  "찬란한 공허의 지팡이": {
-   "icon": "icons/i/da_voidstaffradiant.webp",
    "recipe": []
   },
   "찬란한 워모그의 갑옷": {
@@ -1191,7 +1163,6 @@
   "영원한 브론즈 II": "icons/a/t_augmenticon_bronzeforlife.webp",
   "고단수 II": "icons/s19/a/t_augmenticon_verticality.webp",
   "고단수 III": "icons/s19/a/t_augmenticon_verticality.webp",
-  "고단수 I": "icons/s19/a/t_augmenticon_verticality.webp",
   "유연함": "icons/s19/a/t_augmenticon_flexible.webp",
   "진형 유지": "icons/s19/a/t_augmenticon_holdtheline.webp",
   "가지 뻗기": "icons/s19/a/t_augmenticon_branchingout.webp",
@@ -1199,10 +1170,10 @@
   "챔피언 배달+": "icons/s19/a/t_augmenticon_champdelivery.webp",
   "챔피언 배달": "icons/s19/a/t_augmenticon_champdelivery.webp",
   "입맛대로 고르는 부품": "icons/s19/a/t_augmenticon_componentbuffet_silver_big.webp",
-  "단체 포옹 I": "icons/a/t_augmenticon_group-hug-1_tft_set17.webp",
+  "단체 포옹": "icons/a/t_augmenticon_group-hug-1_tft_set17.webp",
   "불완전한 초월": "icons/s19/a/t_augmenticon_ascension.webp",
   "유용한 금속": "icons/s19/a/t_augmenticon_ironassets_silver_big.webp",
-  "아이템 꾸러미 I": "icons/s19/a/t_augmenticon_itemgrabbag_gold_big.webp",
+  "아이템 꾸러미": "icons/s19/a/t_augmenticon_itemgrabbag_gold_big.webp",
   "은빛 운명+": "icons/s19/a/t_augmenticon_destiny.webp",
   "참는 자에게 복을": "icons/s19/a/t_augmenticon_patienceisavirtue.webp",
   "시동 걸기": "icons/s19/a/t_augmenticon_kickstart.webp",
@@ -1241,7 +1212,7 @@
   "탐사": "icons/s19/a/t_augmenticon_expedition.webp",
   "시간 건너뛰기": "icons/s19/a/t_augmenticon_timeskip.webp",
   "특별 맞춤 설정": "icons/s19/a/t_augmenticon_exclusivecustomization.webp",
-  "자본 이익 I": "icons/s19/a/t_augmenticon_capitalgains.webp",
+  "자본 이익 II": "icons/s19/a/t_augmenticon_capitalgains.webp",
   "고위천사의 지팡이": "icons/s19/a/t_augmenticon_seraphimsstaff.webp",
   "후반 성장": "icons/s19/a/t_augmenticon_lategamescaling.webp",
   "국왕시해자": "icons/s19/a/t_augmenticon_kingslayer_silver.webp",
@@ -1255,7 +1226,7 @@
   "투자++": "icons/s19/a/t_augmenticon_invested.webp",
   "기다림의 미학 II": "icons/s19/a/t_augmenticon_worththewait.webp",
   "예상된 예상 밖의 결과": "icons/s19/a/t_augmenticon_expectedunexpectedness.webp",
-  "영원한 브론즈 I": "icons/a/t_augmenticon_bronzeforlife.webp",
+  "영원한 브론즈": "icons/a/t_augmenticon_bronzeforlife.webp",
   "조합 아이템 퀘스트": "icons/s19/a/t_augmenticon_componentquest.webp",
   "파묻힌 보물 III": "icons/s19/a/t_augmenticon_buriedtreasures_gold_big.webp",
   "넘치는 대검": "icons/s19/a/t_augmenticon_bladeoverflow.webp",
@@ -1277,7 +1248,7 @@
   "엄청나게! 이로운! 효과!": "icons/s19/a/t_augmenticon_tonsofstats.webp",
   "권투 교습": "icons/s19/a/t_augmenticon_boxinglessons.webp",
   "판도라의 아이템 II+": "icons/s19/a/t_augmenticon_pandorasitems.webp",
-  "천상의 축복 I": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
+  "천상의 축복": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
   "인지세": "icons/a/t_augmenticon_cognitive-tax_tft_set17.webp",
   "인지세+": "icons/a/t_augmenticon_cognitive-tax_tft_set17.webp",
   "부식": "icons/s19/a/t_augmenticon_corrosion.webp",
@@ -1289,12 +1260,12 @@
   "행운의 기운+": "icons/s19/a/t_augmenticon_feelinglucky.webp",
   "중심 잡기": "icons/s19/a/t_augmenticon_findyourcenter_silver.webp",
   "신중한 제작": "icons/s19/a/t_augmenticon_latentforge_gold_big.webp",
-  "임시변통 방어구 I": "icons/s19/a/t_augmenticon_makeshiftarmor.webp",
+  "임시변통 방어구 II": "icons/s19/a/t_augmenticon_makeshiftarmor.webp",
   "대격변 생성기": "icons/s19/a/t_augmenticon_recombobulator.webp",
   "미래 집중": "icons/s19/a/t_augmenticon_futurefocused.webp",
   "흐르는 눈물": "icons/s19/a/t_augmenticon_flowingtears_i.webp",
-  "전기 충전 I": "icons/a/t_augmenticon_electrocharge-i.webp",
-  "유리 대포 I": "icons/s19/a/t_augmenticon_glasscannon.webp",
+  "전기 충전": "icons/a/t_augmenticon_electrocharge-i.webp",
+  "유리 대포 II": "icons/s19/a/t_augmenticon_glasscannon.webp",
   "회복의 구 I": "icons/s19/a/t_augmenticon_healingorbs_gold_big.webp",
   "사기 주사위": "icons/a/t_augmenticon_loaded_dice.webp",
   "대출 선지급": "icons/s19/a/t_augmenticon_advancedloan.webp",
@@ -1305,14 +1276,12 @@
   "초월": "icons/s19/a/t_augmenticon_ascension.webp",
   "유리한 조건": "icons/s19/a/t_augmenticon_hardbargain.webp",
   "단체 포옹 II": "icons/s19/a/t_augmenticon_grouphug_gold.webp",
-  "자본 이익 II": "icons/s19/a/t_augmenticon_capitalgains.webp",
   "천상의 축복 II": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
   "도전자의 은총": "icons/s19/a/t_augmenticon_challengersgrace.webp",
   "투자 전략 I": "icons/s19/a/t_augmenticon_investmentstrategy.webp",
   "악의적 수익 창출": "icons/a/t_augmenticon_maliciousmonetization.webp",
   "시계태엽 윤활유": "icons/a/t_augmenticon_clockworkaccelerator.webp",
   "인지 과부하": "icons/s19/a/t_augmenticon_cognitiveoverload.webp",
-  "유리 대포 II": "icons/s19/a/t_augmenticon_glasscannon.webp",
   "동료 제작": "icons/s19/a/t_augmenticon_constructacompanion.webp",
   "새로운 시대": "icons/s19/a/t_augmenticon_epoch.webp",
   "새로운 시대+": "icons/s19/a/t_augmenticon_epoch.webp",
@@ -1320,7 +1289,7 @@
   "휴대용 대장간": "icons/s19/a/t_augmenticon_portableforge_gold_big.webp",
   "요리용 냄비": "icons/s19/a/t_augmenticon_cookingpot.webp",
   "강철의 심장": "icons/s19/a/t_augmenticon_heartofsteel.webp",
-  "보석 연꽃 I": "icons/a/t_augmenticon_jeweledlotus.webp",
+  "보석 연꽃": "icons/a/t_augmenticon_jeweledlotus.webp",
   "문제가 두 배": "icons/s19/a/t_augmenticon_doubletrouble_gold.webp",
   "단일 조합 사수": "icons/s19/a/t_augmenticon_noscoutnopivot_ii_tft_set13.webp",
   "수호자의 호의": "icons/s19/a/t_augmenticon_caretakersally.webp",
@@ -1370,8 +1339,6 @@
   "출세가도": "icons/s19/a/t_augmenticon_upwardmobility.webp",
   "도둑 무리 II++": "icons/s19/a/t_augmenticon_bandofthieves.webp",
   "경품 추첨": "icons/s19/a/t_augmenticon_goldengamble.webp",
-  "임시변통 방어구 II": "icons/s19/a/t_augmenticon_makeshiftarmor.webp",
-  "친구 만들기": "icons/s19/a/t_augmenticon_constructacompanion.webp",
   "하나, 둘, 다섯!": "icons/s19/a/t_augmenticon_onetwofive.webp",
   "빠른 연승 및 연패": "icons/s19/a/t_augmenticon_rapidstreaker.webp",
   "4단계 집중": "icons/s19/a/t_augmenticon_fourcing.webp",
@@ -1385,6 +1352,7 @@
   "적을 알라": "icons/a/t_augmenticon_know-your-enemy-ii.webp",
   "결과 예측": "icons/s19/a/t_augmenticon_calledshot.webp",
   "도둑 무리 II": "icons/s19/a/t_augmenticon_bandofthieves.webp",
+  "친구 만들기": "icons/s19/a/t_augmenticon_buildabud.webp",
   "최적화": "icons/s19/a/t_augmenticon_minmax_prismatic.webp",
   "황금 알": "icons/a/t_augmenticon_the-golden-egg-iii.webp",
   "저주받은 왕관": "icons/s19/a/t_augmenticon_cursedcrown.webp",
@@ -1418,6 +1386,7 @@
   "치트 코드 III": "icons/s19/a/t_augmenticon_cheatcode.webp",
   "복제 생성": "icons/s19/a/t_augmenticon_cloning.webp",
   "치명타 룬": "icons/s19/a/t_augmenticon_crit_quintessence.webp",
+  "치명타 룬+": "icons/s19/a/t_augmenticon_crit_quintessence.webp",
   "2인조": "icons/s19/a/t_augmenticon_duoqueue.webp",
   "복제기 거래": "icons/s19/a/t_augmenticon_duplicator_deal.webp",
   "행운의 기운": "icons/s19/a/t_augmenticon_feelinglucky.webp",
@@ -1449,7 +1418,7 @@
   "힘의 성배": "icons/s19/a/t_augmenticon_rename_chalice_of_power.webp",
   "란두인의 예언": "icons/s19/a/t_augmenticon_immovable_object.webp",
   "지크의 전령": "icons/s19/a/t_augmenticon_rename_zeke_s_herald.webp",
-  "Zz'Rot Portal": "icons/a/t_augmenticon_zzrot_portal.webp",
+  "즈롯 차원문": "icons/s19/a/t_augmenticon_zzrot_portal.webp",
   "탱커 수습생": "icons/s19/a/t_augmenticon_tank_apprentice.webp",
   "에스프레소": "icons/s19/a/t_augmenticon_espresso.webp",
   "절정 II": "icons/s19/a/t_augmenticon_the_drop.webp",
