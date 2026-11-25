@@ -495,5 +495,5 @@ footer { padding-block: 30px 40px; color: var(--muted); font-size: var(--fs-m); 
   .stage { grid-template-columns: 68px 1fr; gap: 10px; }
   .stage .code { font-size: var(--fs-s); }
 }
-@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+/* 부드러운 스크롤은 뺐다 (2026-11-25 사용자: "아카데미에서 뒤로 가기 누르면 위아래 무빙이 있는데 이런 건 없애라"). 화면 이동은 바로 */
 

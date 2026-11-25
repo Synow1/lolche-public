@@ -219,4 +219,6 @@ td .row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips .ag { background: var(--surface); border: 1px solid transparent; border-radius: 999px; padding: 3px 10px 3px 4px; font-size: var(--fs-m); }
-
+/* 화면 전체가 옆으로 밀리지 않게 (2026-11-25 사용자: 게임 위 창에 좌우 스크롤바). 가로로 밀어야 하는 곳은 자기 상자 안에서만 (.tbl·.sht·칩 줄). html에만 걸어 sticky는 그대로 */
+html { overflow-x: hidden; }
+@supports (overflow: clip) { html { overflow-x: clip; } }

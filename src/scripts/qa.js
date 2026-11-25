@@ -913,6 +913,14 @@ function fresh(file, key, hours) {
       });
       if (bad.length) fail(`[게임 위 창] ${t}: 붙는 머리가 맨 위가 아니라 중간에 붙음 (${bad.slice(0, 3).join(', ')})`);
     }
+    // 좌우 스크롤바·뒤로 가기 위아래 무빙 (2026-11-25 사용자): 화면 전체는 옆으로 안 밀리고, 스크롤 이동은 애니메이션 없이 바로
+    const ovx = await pg.evaluate(() => { const cs = getComputedStyle(document.documentElement); return { ox: cs.overflowX, sb: cs.scrollBehavior }; });
+    if (!/hidden|clip/.test(ovx.ox)) fail(`[게임 위 창] 화면 전체가 옆으로 밀릴 수 있음 (html overflow-x=${ovx.ox})`);
+    if (ovx.sb === 'smooth') fail('[게임 위 창] 스크롤 이동에 애니메이션이 있음 (뒤로 가기 때 위아래로 움직임)');
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#tfa'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(800);
+    await pg.evaluate(() => (document.querySelector('#tfa-list [data-slug]') || document.querySelector('#tfa-rows > *'))?.click()); await pg.waitForTimeout(800);
+    const tfaW = await pg.evaluate(() => { window.scrollTo(400, 0); return { x: window.scrollX, det: !document.getElementById('tfa-detail').hidden }; });
+    if (tfaW.det && tfaW.x > 0) fail(`[게임 위 창] 아카데미 상세가 옆으로 ${tfaW.x}px 밀림`);
     await pg.close();
   });
   // PC 웹 모드 (1280px): 왼쪽 사이드 메뉴, 앱 전용 UI 숨김, 덱 목록·상세, 프록시 없이 직접 CORS fetch(덱 새로고침·랭킹·전적 검색), #dc 링크 전용, 개인 친구/계정 미노출
