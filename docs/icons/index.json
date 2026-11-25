@@ -780,7 +780,7 @@
     "여신의 눈물"
    ]
   },
-  "Pentakill Emblem": {
+  "펜타킬 상징": {
    "icon": "icons/i/da_pentakill19_emblem.webp",
    "recipe": [
     "뒤집개",
@@ -1049,6 +1049,10 @@
   },
   "찬란한 거인의 결의": {
    "icon": "icons/i/da_titansresolve_radiant.webp",
+   "recipe": []
+  },
+  "찬란한 공허의 지팡이": {
+   "icon": "icons/i/da_voidstaffradiant.webp",
    "recipe": []
   },
   "찬란한 워모그의 갑옷": {
@@ -1369,9 +1373,8 @@
   "무장한 관대함": "icons/s19/a/t_augmenticon_armedandgenerous.webp",
   "갑옷 받침대": "icons/s19/a/t_augmenticon_armor_stand.webp",
   "밴드 대결": "icons/s19/a/t_augmenticon_battleofthebands.webp",
-  "Blind Box": "icons/s19/a/t_augmenticon_blindbox.webp",
+  "무작위 상자": "icons/s19/a/t_augmenticon_blindbox.webp",
   "무작위 상자 II": "icons/s19/a/t_augmenticon_bargain_bin.webp",
-  "무작위 상자": "icons/s19/a/t_augmenticon_bargain_bin.webp",
   "부스터 박스": "icons/s19/a/t_augmenticon_boosterbox.webp",
   "버섯 한 다발 II": "icons/s19/a/t_augmenticon_bundle_o__shrooms.webp",
   "버섯 한 다발": "icons/s19/a/t_augmenticon_bundle_o__shrooms.webp",
@@ -1383,6 +1386,7 @@
   "검 제작자": "icons/s19/a/t_augmenticon_swordsmith1.webp",
   "챔피언 공중 보급": "icons/s19/a/t_augmenticon_champion_airdrop.webp",
   "치트 코드": "icons/s19/a/t_augmenticon_cheatcode.webp",
+  "치트 코드 II": "icons/s19/a/t_augmenticon_cheatcode.webp",
   "치트 코드 III": "icons/s19/a/t_augmenticon_cheatcode.webp",
   "복제 생성": "icons/s19/a/t_augmenticon_cloning.webp",
   "치명타 룬": "icons/s19/a/t_augmenticon_crit_quintessence.webp",
@@ -1396,6 +1400,7 @@
   "4/4 박자": "icons/s19/a/t_augmenticon_4_4_time.webp",
   "3/4 박자": "icons/s19/a/t_augmenticon_3_4_time.webp",
   "21골드 획득": "icons/s19/a/t_augmenticon_gaingold.webp",
+  "28골드 획득": "icons/s19/a/t_augmenticon_gaingold.webp",
   "행운의 4단계": "icons/s19/a/t_augmenticon_good_fourtune.webp",
   "템포 유지": "icons/s19/a/t_augmenticon_keepingtempo.webp",
   "지식 다운로드": "icons/s19/a/t_augmenticon_knowledgedownload.webp",
@@ -1457,7 +1462,6 @@
   "Ionic Spark 왕관": "icons/s19/a/t_augmenticon_ionicspark_crown.webp",
   "영원히 불타는 빛": "icons/s19/a/t_augmenticon_forever_burning_brighter.webp",
   "Ionic Spark 프리즘 투어": "icons/s19/a/t_augmenticon_ionic_spark_prismatic_tour.webp",
-  "Ionic Spark Prismatic Tour+": "icons/s19/a/t_augmenticon_ionic_spark_prismatic_tour.webp",
   "하늘을 수놓는 불꽃": "icons/s19/a/t_augmenticon_light_up_the_sky.webp",
   "하나된 마음으로": "icons/s19/a/t_augmenticon_our_hearts_aligned_.webp",
   "재즈 머리띠": "icons/s19/a/t_augmenticon_jazz_crown.webp",
@@ -1475,16 +1479,17 @@
   "투자자 관리+": "icons/s19/a/t_augmenticon_stakeholder_management.webp",
   "학살자 머리띠": "icons/s19/a/t_augmenticon_slayer_crown.webp",
   "학살자 왕관": "icons/s19/a/t_augmenticon_slayer_crown.webp",
+  "비치 팝 머리띠": "icons/s19/a/t_augmenticon_beachpop_crown.webp",
   "비치 팝 왕관": "icons/s19/a/t_augmenticon_beachpop_crown.webp",
   "발굴된 보물": "icons/s19/a/t_augmenticon_unearthed_treasure.webp",
   "펜타킬 머리띠": "icons/s19/a/t_augmenticon_pentakill_crown.webp",
   "펜타킬 왕관": "icons/s19/a/t_augmenticon_pentakill_crown.webp",
   "폭풍의 결집": "icons/s19/a/t_augmenticon_forever_gathering_storm.webp",
   "펜타킬 프리즘 투어": "icons/s19/a/t_augmenticon_pentakill_prismatic_tour.webp",
-  "Pentakill Prismatic Tour+": "icons/a/t_missing-t3.webp",
   "무법자 머리띠": "icons/s19/a/t_augmenticon_renegade_crown.webp",
   "무법자 왕관": "icons/s19/a/t_augmenticon_renegade_crown.webp",
   "간 큰 도박": "icons/s19/a/t_augmenticon_forever_high_rolling.webp",
+  "신속타격대 머리띠": "icons/s19/a/t_augmenticon_swiftstriker_crown.webp",
   "신속타격대 왕관": "icons/s19/a/t_augmenticon_swiftstriker_crown.webp",
   "난도질": "icons/s19/a/t_augmenticon_death_by_a_thousand_cuts.webp",
   "True Damage 머리띠": "icons/s19/a/t_augmenticon_truedamage_crown.webp",
