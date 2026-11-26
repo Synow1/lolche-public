@@ -975,12 +975,28 @@
    "icon": "icons/i/da_bluebuffradiant.webp",
    "recipe": []
   },
+  "찬란한 덤불 조끼": {
+   "icon": "icons/i/da_bramblevestradiant.webp",
+   "recipe": []
+  },
+  "프리즘 크라운가드": {
+   "icon": "icons/i/da_crownguardradiant.webp",
+   "recipe": []
+  },
   "찬란한 죽음의 검": {
    "icon": "icons/i/da_deathbladeradiant.webp",
    "recipe": []
   },
+  "찬란한 용의 발톱": {
+   "icon": "icons/i/da_dragonsclawradiant.webp",
+   "recipe": []
+  },
   "찬란한 밤의 끝자락": {
    "icon": "icons/i/da_edgeofnightradiant.webp",
+   "recipe": []
+  },
+  "찬란한 저녁갑주": {
+   "icon": "icons/i/da_evenshroudradiant.webp",
    "recipe": []
   },
   "찬란한 가고일 돌갑옷": {
@@ -1007,6 +1023,10 @@
    "icon": "icons/i/da_infinityedgeradiant.webp",
    "recipe": []
   },
+  "찬란한 이온 충격기": {
+   "icon": "icons/i/da_ionicsparkradiant.webp",
+   "recipe": []
+  },
   "찬란한 보석 건틀릿": {
    "icon": "icons/i/da_jeweledgauntletradiant.webp",
    "recipe": []
@@ -1017,6 +1037,22 @@
   },
   "찬란한 최후의 속삭임": {
    "icon": "icons/i/da_lastwhisperradiant.webp",
+   "recipe": []
+  },
+  "찬란한 모렐로노미콘": {
+   "icon": "icons/i/da_morellonomiconradiant.webp",
+   "recipe": []
+  },
+  "찬란한 내셔의 이빨": {
+   "icon": "icons/i/da_nashorstoothradiant.webp",
+   "recipe": []
+  },
+  "찬란한 수호자의 맹세": {
+   "icon": "icons/i/da_protectorsvowradiant.webp",
+   "recipe": []
+  },
+  "찬란한 수은": {
+   "icon": "icons/i/da_quicksilverradiant.webp",
    "recipe": []
   },
   "찬란한 라바돈의 죽음모자": {
@@ -1035,12 +1071,20 @@
    "icon": "icons/i/da_spiritvisage_radiant.webp",
    "recipe": []
   },
+  "찬란한 굳건한 심장": {
+   "icon": "icons/i/da_steadfastheartradiant.webp",
+   "recipe": []
+  },
   "찬란한 스테락의 도전": {
    "icon": "icons/i/da_steraksgageradiant.webp",
    "recipe": []
   },
   "찬란한 타격대의 철퇴": {
    "icon": "icons/i/da_strikersflailradiant.webp",
+   "recipe": []
+  },
+  "찬란한 태양불꽃 망토": {
+   "icon": "icons/i/da_sunfirecape_radiant.webp",
    "recipe": []
   },
   "찬란한 도적의 장갑": {
@@ -1167,6 +1211,7 @@
   "영원한 브론즈 II": "icons/a/t_augmenticon_bronzeforlife.webp",
   "고단수 II": "icons/s19/a/t_augmenticon_verticality.webp",
   "고단수 III": "icons/s19/a/t_augmenticon_verticality.webp",
+  "고단수": "icons/s19/a/t_augmenticon_verticality.webp",
   "유연함": "icons/s19/a/t_augmenticon_flexible.webp",
   "진형 유지": "icons/s19/a/t_augmenticon_holdtheline.webp",
   "가지 뻗기": "icons/s19/a/t_augmenticon_branchingout.webp",
@@ -1182,7 +1227,7 @@
   "참는 자에게 복을": "icons/s19/a/t_augmenticon_patienceisavirtue.webp",
   "시동 걸기": "icons/s19/a/t_augmenticon_kickstart.webp",
   "연결 불가": "icons/s19/a/t_augmenticon_missedconnections_gold_big.webp",
-  "판도라의 아이템 I": "icons/s19/a/t_augmenticon_pandorasitems.webp",
+  "판도라의 아이템": "icons/s19/a/t_augmenticon_pandorasitems.webp",
   "일상물": "icons/s19/a/t_augmenticon_sliceoflife.webp",
   "작은 꾸러미": "icons/s19/a/t_augmenticon_smallgrabbag.webp",
   "경호대 훈련": "icons/s19/a/t_augmenticon_bodyguardtraining.webp",
@@ -1216,7 +1261,7 @@
   "탐사": "icons/s19/a/t_augmenticon_expedition.webp",
   "시간 건너뛰기": "icons/s19/a/t_augmenticon_timeskip.webp",
   "특별 맞춤 설정": "icons/s19/a/t_augmenticon_exclusivecustomization.webp",
-  "자본 이익 II": "icons/s19/a/t_augmenticon_capitalgains.webp",
+  "자본 이익": "icons/s19/a/t_augmenticon_capitalgains.webp",
   "고위천사의 지팡이": "icons/s19/a/t_augmenticon_seraphimsstaff.webp",
   "후반 성장": "icons/s19/a/t_augmenticon_lategamescaling.webp",
   "국왕시해자": "icons/s19/a/t_augmenticon_kingslayer_silver.webp",
@@ -1251,6 +1296,7 @@
   "부스터 팩+": "icons/s19/a/t_augmenticon_boosterpack3.webp",
   "엄청나게! 이로운! 효과!": "icons/s19/a/t_augmenticon_tonsofstats.webp",
   "권투 교습": "icons/s19/a/t_augmenticon_boxinglessons.webp",
+  "큰 꾸러미": "icons/a/t_augmenticon_biggrabbag_gold_big.webp",
   "판도라의 아이템 II+": "icons/s19/a/t_augmenticon_pandorasitems.webp",
   "천상의 축복": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
   "인지세": "icons/a/t_augmenticon_cognitive-tax_tft_set17.webp",
@@ -1264,13 +1310,13 @@
   "행운의 기운+": "icons/s19/a/t_augmenticon_feelinglucky.webp",
   "중심 잡기": "icons/s19/a/t_augmenticon_findyourcenter_silver.webp",
   "신중한 제작": "icons/s19/a/t_augmenticon_latentforge_gold_big.webp",
-  "임시변통 방어구 II": "icons/s19/a/t_augmenticon_makeshiftarmor.webp",
+  "임시변통 방어구": "icons/s19/a/t_augmenticon_makeshiftarmor.webp",
   "대격변 생성기": "icons/s19/a/t_augmenticon_recombobulator.webp",
   "미래 집중": "icons/s19/a/t_augmenticon_futurefocused.webp",
   "흐르는 눈물": "icons/s19/a/t_augmenticon_flowingtears_i.webp",
   "전기 충전": "icons/a/t_augmenticon_electrocharge-i.webp",
-  "유리 대포 II": "icons/s19/a/t_augmenticon_glasscannon.webp",
-  "회복의 구 I": "icons/s19/a/t_augmenticon_healingorbs_gold_big.webp",
+  "유리 대포": "icons/s19/a/t_augmenticon_glasscannon.webp",
+  "회복의 구": "icons/s19/a/t_augmenticon_healingorbs_gold_big.webp",
   "사기 주사위": "icons/a/t_augmenticon_loaded_dice.webp",
   "대출 선지급": "icons/s19/a/t_augmenticon_advancedloan.webp",
   "대출 선지급+": "icons/s19/a/t_augmenticon_advancedloanplus.webp",
@@ -1280,12 +1326,14 @@
   "초월": "icons/s19/a/t_augmenticon_ascension.webp",
   "유리한 조건": "icons/s19/a/t_augmenticon_hardbargain.webp",
   "단체 포옹 II": "icons/s19/a/t_augmenticon_grouphug_gold.webp",
+  "자본 이익 II": "icons/s19/a/t_augmenticon_capitalgains.webp",
   "천상의 축복 II": "icons/a/t_augmenticon_celestial-blessings-i_tft_set16.webp",
   "도전자의 은총": "icons/s19/a/t_augmenticon_challengersgrace.webp",
-  "투자 전략 I": "icons/s19/a/t_augmenticon_investmentstrategy.webp",
+  "투자 전략": "icons/s19/a/t_augmenticon_investmentstrategy.webp",
   "악의적 수익 창출": "icons/a/t_augmenticon_maliciousmonetization.webp",
   "시계태엽 윤활유": "icons/a/t_augmenticon_clockworkaccelerator.webp",
   "인지 과부하": "icons/s19/a/t_augmenticon_cognitiveoverload.webp",
+  "유리 대포 II": "icons/s19/a/t_augmenticon_glasscannon.webp",
   "동료 제작": "icons/s19/a/t_augmenticon_constructacompanion.webp",
   "새로운 시대": "icons/s19/a/t_augmenticon_epoch.webp",
   "새로운 시대+": "icons/s19/a/t_augmenticon_epoch.webp",
@@ -1343,6 +1391,8 @@
   "출세가도": "icons/s19/a/t_augmenticon_upwardmobility.webp",
   "도둑 무리 II++": "icons/s19/a/t_augmenticon_bandofthieves.webp",
   "경품 추첨": "icons/s19/a/t_augmenticon_goldengamble.webp",
+  "임시변통 방어구 II": "icons/s19/a/t_augmenticon_makeshiftarmor.webp",
+  "친구 사귀기": "icons/s19/a/t_augmenticon_constructacompanion.webp",
   "하나, 둘, 다섯!": "icons/s19/a/t_augmenticon_onetwofive.webp",
   "빠른 연승 및 연패": "icons/s19/a/t_augmenticon_rapidstreaker.webp",
   "4단계 집중": "icons/s19/a/t_augmenticon_fourcing.webp",
@@ -1352,7 +1402,7 @@
   "후방 설계도": "icons/s19/a/t_augmenticon_backlineblueprint.webp",
   "장기 투자": "icons/a/t_augmenticon_goinglong.webp",
   "가지 뻗기+": "icons/s19/a/t_augmenticon_branchingout.webp",
-  "다 쓸 데가 있다니까 I": "icons/s19/a/t_augmenticon_goodforsomething.webp",
+  "다 쓸 데가 있다니까": "icons/s19/a/t_augmenticon_goodforsomething.webp",
   "적을 알라": "icons/a/t_augmenticon_know-your-enemy-ii.webp",
   "결과 예측": "icons/s19/a/t_augmenticon_calledshot.webp",
   "도둑 무리 II": "icons/s19/a/t_augmenticon_bandofthieves.webp",
@@ -1372,7 +1422,7 @@
   "반짝이는 것들+": "icons/s19/a/t_augmenticon_allthatshimmers_gold_big.webp",
   "무장한 관대함": "icons/s19/a/t_augmenticon_armedandgenerous.webp",
   "갑옷 받침대": "icons/s19/a/t_augmenticon_armor_stand.webp",
-  "밴드 대결": "icons/s19/a/t_augmenticon_battleofthebands.webp",
+  "밴드 배틀": "icons/s19/a/t_augmenticon_battleofthebands.webp",
   "무작위 상자": "icons/s19/a/t_augmenticon_blindbox.webp",
   "무작위 상자 II": "icons/s19/a/t_augmenticon_bargain_bin.webp",
   "부스터 박스": "icons/s19/a/t_augmenticon_boosterbox.webp",
@@ -1380,9 +1430,9 @@
   "버섯 한 다발": "icons/s19/a/t_augmenticon_bundle_o__shrooms.webp",
   "수호자의 친구": "icons/s19/a/t_augmenticon_caretakersally.webp",
   "마법사 수습생": "icons/s19/a/t_augmenticon_caster_apprentice.webp",
-  "허리띠 제작자 I": "icons/s19/a/t_augmenticon_beltsmith.webp",
+  "허리띠 제작자": "icons/s19/a/t_augmenticon_beltsmith.webp",
   "허리띠 제작자 II": "icons/s19/a/t_augmenticon_beltsmith.webp",
-  "지팡이 제작자 I": "icons/s19/a/t_augmenticon_staffsmith1.webp",
+  "지팡이 제작자": "icons/s19/a/t_augmenticon_staffsmith1.webp",
   "검 제작자": "icons/s19/a/t_augmenticon_swordsmith1.webp",
   "챔피언 공중 보급": "icons/s19/a/t_augmenticon_champion_airdrop.webp",
   "치트 코드": "icons/s19/a/t_augmenticon_cheatcode.webp",
@@ -1397,8 +1447,8 @@
   "전사 수습생": "icons/s19/a/t_augmenticon_fighter_apprentice.webp",
   "전사 출격 II": "icons/s19/a/t_augmenticon_fighterflight.webp",
   "전사 출격": "icons/s19/a/t_augmenticon_fighterflight.webp",
-  "4/4 박자": "icons/s19/a/t_augmenticon_4_4_time.webp",
-  "3/4 박자": "icons/s19/a/t_augmenticon_3_4_time.webp",
+  "4/4박자": "icons/s19/a/t_augmenticon_4_4_time.webp",
+  "3/4박자": "icons/s19/a/t_augmenticon_3_4_time.webp",
   "21골드 획득": "icons/s19/a/t_augmenticon_gaingold.webp",
   "28골드 획득": "icons/s19/a/t_augmenticon_gaingold.webp",
   "행운의 4단계": "icons/s19/a/t_augmenticon_good_fourtune.webp",
@@ -1415,10 +1465,12 @@
   "재결합 공연 II": "icons/s19/a/t_augmenticon_reunion_show_i_ii.webp",
   "저작권료": "icons/s19/a/t_augmenticon_royalties.webp",
   "제물 봇": "icons/s19/a/t_augmenticon_omelas.webp",
-  "무대의 주인공": "icons/s19/a/t_augmenticon_starsoftheshow.webp",
+  "쇼의 주인공": "icons/s19/a/t_augmenticon_starsoftheshow.webp",
   "능력치 더하기 능력치": "icons/s19/a/t_augmenticon_stats_on_stats.webp",
   "능력치 더하기 능력치 II": "icons/s19/a/t_augmenticon_stats_on_stats.webp",
-  "기묘한 듀엣": "icons/s19/a/t_augmenticon_duet.webp",
+  "기묘한 이중주 II": "icons/s19/a/t_augmenticon_duet.webp",
+  "기묘한 이중주 III": "icons/s19/a/t_augmenticon_duet.webp",
+  "기묘한 이중주": "icons/s19/a/t_augmenticon_duet.webp",
   "구덩이에 굴복하라": "icons/s19/a/t_augmenticon_submittothepit.webp",
   "힘의 성배": "icons/s19/a/t_augmenticon_rename_chalice_of_power.webp",
   "란두인의 예언": "icons/s19/a/t_augmenticon_immovable_object.webp",
@@ -1430,7 +1482,7 @@
   "절정": "icons/s19/a/t_augmenticon_the_drop.webp",
   "세 발짝 더 빠르게": "icons/s19/a/t_augmenticon_huanmie_championship_augment.webp",
   "월드 투어": "icons/s19/a/t_augmenticon_worldtour.webp",
-  "Tibbers! I Can't See the Stage": "icons/s19/a/t_augmenticon_annie_augment.webp",
+  "티버! 무대가 안 보여": "icons/s19/a/t_augmenticon_annie_augment.webp",
   "물린 자국": "icons/s19/a/t_augmenticon_bite_marks.webp",
   "짜릿한 사나이": "icons/s19/a/t_augmenticon_forever_hes_electric.webp",
   "춤추고 뛰놀기": "icons/s19/a/t_augmenticon_dancin__n_prancin_.webp",
@@ -1450,7 +1502,7 @@
   "위대한 솔로": "icons/s19/a/t_augmenticon_big_solo.webp",
   "HEARTSTEEL 머리띠": "icons/s19/a/t_augmenticon_heartsteel_crown.webp",
   "HEARTSTEEL 왕관": "icons/s19/a/t_augmenticon_heartsteel_crown.webp",
-  "Heartsteel Prismatic Tour": "icons/s19/a/t_augmenticon_heartsteel_prismatic_tour.webp",
+  "HEARTSTEEL 프리즘 투어": "icons/s19/a/t_augmenticon_heartsteel_prismatic_tour.webp",
   "HEARTSTEEL 프리즘 투어+": "icons/s19/a/t_augmenticon_heartsteel_prismatic_tour.webp",
   "소규모 팀": "icons/s19/a/t_augmenticon_small_squad.webp",
   "불멸의 영웅": "icons/s19/a/t_augmenticon_the_immortal_journey.webp",
@@ -1462,6 +1514,7 @@
   "Ionic Spark 왕관": "icons/s19/a/t_augmenticon_ionicspark_crown.webp",
   "영원히 불타는 빛": "icons/s19/a/t_augmenticon_forever_burning_brighter.webp",
   "Ionic Spark 프리즘 투어": "icons/s19/a/t_augmenticon_ionic_spark_prismatic_tour.webp",
+  "Ionic Spark 프리즘 투어+": "icons/s19/a/t_augmenticon_ionic_spark_prismatic_tour.webp",
   "하늘을 수놓는 불꽃": "icons/s19/a/t_augmenticon_light_up_the_sky.webp",
   "하나된 마음으로": "icons/s19/a/t_augmenticon_our_hearts_aligned_.webp",
   "재즈 머리띠": "icons/s19/a/t_augmenticon_jazz_crown.webp",
@@ -1486,6 +1539,7 @@
   "펜타킬 왕관": "icons/s19/a/t_augmenticon_pentakill_crown.webp",
   "폭풍의 결집": "icons/s19/a/t_augmenticon_forever_gathering_storm.webp",
   "펜타킬 프리즘 투어": "icons/s19/a/t_augmenticon_pentakill_prismatic_tour.webp",
+  "펜타킬 프리즘 투어+": "icons/s19/a/t_augmenticon_pentakill_prismatic_tour.webp",
   "무법자 머리띠": "icons/s19/a/t_augmenticon_renegade_crown.webp",
   "무법자 왕관": "icons/s19/a/t_augmenticon_renegade_crown.webp",
   "간 큰 도박": "icons/s19/a/t_augmenticon_forever_high_rolling.webp",
@@ -1495,7 +1549,7 @@
   "True Damage 머리띠": "icons/s19/a/t_augmenticon_truedamage_crown.webp",
   "True Damage 왕관": "icons/s19/a/t_augmenticon_truedamage_crown.webp",
   "고통을 열정으로": "icons/s19/a/t_augmenticon_pain_into_passion.webp",
-  "True Damage Prismatic Tour": "icons/s19/a/t_augmenticon_true_damage_prismatic_tour.webp",
+  "True Damage 프리즘 투어": "icons/s19/a/t_augmenticon_true_damage_prismatic_tour.webp",
   "불멸로 남을 무대": "icons/s19/a/t_augmenticon_forever_immortalized_in_theater.webp",
   "클래식 머리띠": "icons/s19/a/t_augmenticon_classical_crown.webp",
   "클래식 왕관": "icons/s19/a/t_augmenticon_classical_crown.webp"
