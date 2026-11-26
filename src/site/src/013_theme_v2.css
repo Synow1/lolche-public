@@ -290,6 +290,7 @@ body.dc-open { overflow: hidden; }
 /* ===== v2.0.0: 19시즌 프리즘 스튜디오 · 홈 허브 · 통합 스포트라이트 · 더보기 허브 ===== */
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
 .deck-seg, .rank-seg, .codex-seg { margin: 0 0 10px; }
+.deck-seg a { padding: 8px 4px; font-size: var(--fs-m); white-space: nowrap; }
 #mt-list-view > :first-child, #tfa-list > :first-child { margin-top: 0; }
 
 /* 19시즌 스튜디오 (120_s19.html, 398_s19.js) */

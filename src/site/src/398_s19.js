@@ -45,6 +45,7 @@
     return fetch("s19.json").then(function (r) { return r.json(); }).then(function (d) {
       S19 = d; UNL_IDX = null; s19LiveLoad(); if (typeof homeRender === "function") homeRender();
       if (META && metaReady) metaList();  // 덱 줄에 해금 자물쇠를 붙이려고 다시 그림
+      if (typeof unReady !== "undefined" && unReady) unitsRender();
       return d;
     });
   }
@@ -527,6 +528,11 @@
     s19Search(tools, "챔피언·시너지 이름 (초성 가능)");
     var costs = [[0, "전체"]]; [1, 2, 3, 4, 5, 7].forEach(function (c) { if (S19.units.some(function (u) { return u.c === c; })) costs.push([c, c + "코"]); });
     s19Chips(tools, costs, s19St.cf, function (v) { s19St.cf = v; });
+    var statGo = el("button", "s19-statgo"); statGo.type = "button";
+    statGo.appendChild(el("b", null, "챔피언 통계 · 삼신기 표 보기"));
+    statGo.appendChild(el("span", null, "평균 등수·승률·추천 템 순위 ›"));
+    statGo.addEventListener("click", function () { goTab("units"); });
+    out.appendChild(statGo);
     var list = S19.units.filter(function (u) { return (!s19St.cf || u.c === s19St.cf) && (s19Match(u.n) || u.t.some(s19Match)); });
     if (!list.length) { out.appendChild(el("p", "empty", "맞는 챔피언이 없어요")); return; }
     var last = null, grid = null;
@@ -534,14 +540,32 @@
       if (u.c !== last) { last = u.c; out.appendChild(el("h3", "s19-h " + (S19_COST[u.c] || ""), u.c + "코스트")); grid = el("div", "s19-grid"); out.appendChild(grid); }
       var b = el("button", "s19-card s19-uc"); b.type = "button";
       b.appendChild(s19Pic(u, 48));
-      var m = el("div", "s19-ucm"); m.appendChild(el("b", null, u.n)); m.appendChild(el("small", null, u.t.join(" · ")));
-      if (u.sk && u.sk.n) m.appendChild(el("small", "s19-skn", u.sk.n));
+      var m = el("div", "s19-ucm");
+      var nmRow = el("div", "s19-ucn");
+      nmRow.appendChild(el("b", null, u.n));
+      var du = DB && DB.units && DB.units[u.n];
+      if (du && du.base && du.base.avg != null) nmRow.appendChild(dkGrad(el("span", "s19-uavg", fmt(du.base.avg)), unAvgT(du.base.avg)));
+      m.appendChild(nmRow);
+      m.appendChild(el("small", null, u.t.join(" · ")));
+      var top3 = du && typeof unTopItems === "function" ? unTopItems(du, 3) : [];
+      if (top3.length && IDX) {
+        var iw = el("div", "s19-uits");
+        top3.forEach(function (it) { var iic = IDX.items[it[0]]; if (iic && iic.icon) iw.appendChild(img(iic.icon, it[0])); });
+        m.appendChild(iw);
+      } else if (u.sk && u.sk.n) {
+        m.appendChild(el("small", "s19-skn", u.sk.n));
+      }
       b.appendChild(m); if (u.unl) b.appendChild(el("i", "s19-lock", "해금"));
       b.addEventListener("click", function () { s19OpenUnit(u); }); grid.appendChild(b);
     });
   }
   function s19OpenUnit(u) {
     fsOpen(u.n, u.c + "코스트 · " + u.t.join(" · "), function (b) {
+      var closeFs = function (afterFn) {
+        var fv = b.closest(".fs-view");
+        if (fv && fv._navClose) fv._navClose(afterFn);
+        else if (afterFn) afterFn();
+      };
       var top = el("div", "s19-uhead"); top.appendChild(s19Pic(u, 72));
       var tr = el("div", "s19-tchips"); u.t.forEach(function (n) { var t = s19Trait(n); var x = el("button", "s19-tchip"); x.type = "button"; if (t) x.appendChild(s19Ti(t, 18)); x.appendChild(el("span", null, n)); if (t) x.addEventListener("click", function () { s19OpenTrait(t); }); tr.appendChild(x); });
       top.appendChild(tr); b.appendChild(top);
@@ -558,6 +582,13 @@
       if (u.unl) {
         var ub = el("div", "note gold s19-unl"); ub.appendChild(el("b", null, "해금 조건" + (u.unl.lv ? " · " + u.unl.lv + "레벨부터" : "")));
         u.unl.c.forEach(function (c, i) { ub.appendChild(el("p", null, (u.unl.c.length > 1 ? (i ? "또는 " : "") : "") + c)); }); b.appendChild(ub);
+      }
+      var statsBlock = typeof buildUnitStatsBlock === "function" ? buildUnitStatsBlock(u.n, { mode: "full", closeFn: closeFs }) : null;
+      if (statsBlock) {
+        var scard = el("div", "s19-card s19-ust-card");
+        scard.appendChild(el("h3", null, "통계 · 삼신기 · 추천 아이템"));
+        scard.appendChild(statsBlock);
+        b.appendChild(scard);
       }
       var sk = el("div", "s19-card"); sk.appendChild(el("h3", null, "스킬 · " + (u.sk.n || "")));
       if (u.st.m) sk.appendChild(el("p", "sub", "마나 " + (u.st.m0 || 0) + "/" + u.st.m));

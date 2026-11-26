@@ -129,21 +129,8 @@
       box.appendChild(ub);
     }
     if (u) {
-      var tiles = el("div", "sh-kv");
-      // PBE는 티어 구분이 없어 '에메+·그마+'가 같은 숫자 -> 'PBE 평균' 하나로
-      (META && META.pbe ? [["PBE 평균", u.meta.base]] : [["에메+ 평균", u.meta.base], ["그마+", u.meta.gm]]).concat([["2성", u.stars["2"] && u.stars["2"].avg], ["3성", u.stars["3"] && u.stars["3"].avg]]).forEach(function (k) {
-        if (k[1] == null) return;
-        var sp = el("span", null, k[0]); sp.appendChild(el("b", null, Number(k[1]).toFixed(2))); tiles.appendChild(sp);
-      });
-      box.appendChild(tiles);
-      var best = u.trios.slice().sort(function (a, b) { return b[1].n - a[1].n; })[0];
-      if (best) {
-        var s1 = shSec("많이 쓰는 템 3개");
-        var row = el("div", "sh-items"); best[0].forEach(function (n) { row.appendChild(itemSpan(n)); });
-        s1.appendChild(row);
-        s1.appendChild(el("p", "fnote", "평균 " + best[1].avg.toFixed(2) + " · 사용률 " + best[1].pick + "% · 다이아+"));
-        box.appendChild(s1);
-      }
+      var statsBlock = typeof buildUnitStatsBlock === "function" ? buildUnitStatsBlock(base, { mode: "sheet", closeFn: closeSheetUI }) : null;
+      if (statsBlock) box.appendChild(statsBlock);
       if (u.skill && u.skill.desc) {
         // PBE 원문은 스킬 이름이 영어로 오는 챔피언이 있어 19시즌 도감(s19.json)의 한국어 이름을 먼저
         var s19u = S19 && S19.units && S19.units.filter(function (x) { return x.n.replace(/ \([^)]+\)$/, "") === base; })[0];
@@ -155,7 +142,7 @@
       }
     }
     var acts = el("div", "sh-acts");
-    if (u) acts.appendChild(shAction("템·상성 자세히", function () { goTab("find"); setFindMode("u"); findShow("u", base, false); }));
+    if (u) acts.appendChild(shAction("챔피언 통계 표", function () { goTab("units"); }));
     if (u) acts.appendChild(shAction(tbUnits.indexOf(base) >= 0 ? "팀 빌더에서 제외" : "팀 빌더에 추가", function () {
       var i = tbUnits.indexOf(base);
       if (i >= 0) tbUnits.splice(i, 1); else if (tbUnits.length < 10) tbUnits.push(base);
@@ -364,7 +351,7 @@
     if (prev && prev !== id) navPush("tab", function () { applyTab(prev, false, y); });
     showTab(id, true);
   }
-  var DECK_TABS = ["meta", "tfa", "parts", "emb"], DECK_KEY = "tft-guide-decktab", deckLast = "meta";
+  var DECK_TABS = ["meta", "units", "tfa", "parts", "emb"], DECK_KEY = "tft-guide-decktab", deckLast = "meta";
   var RANK_TABS = ["rank", "friends", "power"], RANK_KEY = "tft-guide-ranktab", rankLast = "rank";
   try { var dl = localStorage.getItem(DECK_KEY); if (DECK_TABS.indexOf(dl) >= 0) deckLast = dl; } catch (e) {}
   try { var rl = localStorage.getItem(RANK_KEY); if (RANK_TABS.indexOf(rl) >= 0) rankLast = rl; } catch (e) {}
@@ -385,6 +372,7 @@
     else if (scroll) window.scrollTo(0, same ? 0 : TAB_Y[id] || 0);  // 다른 탭에서 돌아오면 보던 위치, 같은 탭을 다시 누르면 맨 위
     if (id === "home") { setTimeout(homeRender, 0); if (window.v2PrismKick) setTimeout(window.v2PrismKick, 60); }
     if (id === "meta" && isWide() && META) setTimeout(metaEnsureWide, 0);
+    if (id === "units") setTimeout(unitsRender, 0);
     if (id === "tfa") setTimeout(tfaRender, 0);
     if (id === "s19") setTimeout(s19Render, 0);
     var isDeck = DECK_TABS.indexOf(id) >= 0, isRank = RANK_TABS.indexOf(id) >= 0;

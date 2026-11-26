@@ -47,7 +47,12 @@
       c.appendChild(el("span", "pcdk-st", u.s >= 3 ? "★★★" : ""));
       var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[Math.min(u.c || 1, 5)] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
       if (u.lock) { c.appendChild(lockBadge()); c.title += " · 해금 챔피언"; }
-      if (u.unit) c.dataset.unit = u.unit;
+      if (u.unit) {
+        c.dataset.unit = u.unit;
+        c.addEventListener("click", function (e) {
+          if (openSheet("u", u.unit)) { e.stopPropagation(); e.preventDefault(); }
+        });
+      }
       var it = el("span", "pcdk-its");
       (u.items || []).slice(0, 3).forEach(function (x) { if (x[1]) { var im = img(x[1], x[0]); im.title = x[0]; it.appendChild(im); } });
       c.appendChild(it);

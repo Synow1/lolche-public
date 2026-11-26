@@ -496,4 +496,32 @@
   body:not(.overlay) .pcdk-chip.gd-badge { --chc: var(--accent2); border: 0; }
   body:not(.overlay) .pcdk-chip.ch-var { --chc: var(--accent); }
   body:not(.overlay) .pcdk-sub { margin-top: 4px; }
+  body:not(.overlay) .pcdk-u[data-unit] { cursor: pointer; }
+  body:not(.overlay) .pcdk-u[data-unit]:hover .pcdk-pic { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  body:not(.overlay) .pcdk-pic { transition: transform .12s, box-shadow .12s; }
+
+  /* PC 챔피언 통계 (#units) 6열 표 레이아웃 */
+  body:not(.overlay) #units { max-width: 1020px; margin-left: auto; margin-right: auto; }
+  body:not(.overlay) #units .un-bar { position: static; background: transparent; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 0; }
+  body:not(.overlay) #units .un-tools { min-width: 280px; }
+  body:not(.overlay) #units .un-head,
+  body:not(.overlay) #units .un-row {
+    grid-template-columns: minmax(220px, 1.4fr) 74px 72px 76px 76px 124px;
+    gap: 12px;
+  }
+  body:not(.overlay) #units .un-head { padding: 4px 14px 6px; font-size: var(--fs-s); }
+  body:not(.overlay) #units .un-head span:nth-child(5),
+  body:not(.overlay) #units .un-head span:nth-child(6) { display: block; }
+  body:not(.overlay) #units .un-head span:nth-child(6) { text-align: left; }
+  body:not(.overlay) #units .un-row { padding: 10px 14px; }
+  body:not(.overlay) #units .un-row:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle)); background: var(--raise); }
+  body:not(.overlay) #units .un-face { width: 44px; height: 44px; }
+  body:not(.overlay) #units .un-its-mob { display: none; }
+  body:not(.overlay) #units .un-fq { display: block; }
+  body:not(.overlay) #units .un-its-pc { display: flex; align-items: center; gap: 5px; }
+  body:not(.overlay) #units .un-its-pc img { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-subtle); display: block; }
+  body:not(.overlay) .ust-gt,
+  body:not(.overlay) .ust-gi { grid-template-columns: minmax(0, 1fr) 68px 60px 68px; gap: 10px; }
+  body:not(.overlay) .ust-tics img,
+  body:not(.overlay) .ust-ileft img { width: 30px; height: 30px; }
 }

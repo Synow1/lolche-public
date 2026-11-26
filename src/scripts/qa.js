@@ -38,21 +38,22 @@ const BASE = path.join(__dirname, '..', 'data', 'qa_base.json');
 // 모든 탭에 걸리는 조각: 바뀌면 전부
 const CORE = ['000_head.html', '010_base.css', '013_theme_v2.css', '020_shell.html', '200_script_open.html', '300_core.js', '399_v2_hub.js', '400_app.js', '900_script_close.html'];
 const CSS_TAGS = {
-  '011_decks.css': ['meta', 'tfa', 'parts', 'builder', 'items', 'augments', 'traits', 'emb', 'home', 'overlay'],
+  '011_decks.css': ['meta', 'units', 'tfa', 'parts', 'builder', 'items', 'augments', 'traits', 'emb', 'home', 'overlay'],
   '012_rank_esports.css': ['rank', 'friends', 'power', 'esports', 'home'],
   '014_desktop.css': ['web'],
 };
 const JS_TAGS = {
   '310_parts.js': ['parts'], '320_tfa.js': ['tfa'], '330_meta_items.js': ['meta', 'items', 'home', 'overlay'],
+  '335_units.js': ['units', 's19', 'meta', 'find'],
   '340_emb_builder_lists.js': ['emb', 'builder', 'traits', 'find', 'flow', 'wisps', 'numbers', 'scout', 'patch', 'augments'],
   '350_rank.js': ['rank', 'friends'], '360_power.js': ['power', 'rank'], '370_profile.js': ['rank', 'friends'], '380_friends.js': ['friends'],
-  '390_esports.js': ['esports', 'home'], '395_dc.js': ['dc'], '397_whatsnew.js': ['whatsnew'], '398_s19.js': ['s19', 'home'],
+  '390_esports.js': ['esports', 'home'], '395_dc.js': ['dc'], '397_whatsnew.js': ['whatsnew'], '398_s19.js': ['s19', 'home', 'units'],
 };
 const DATA_TAGS = {
-  'meta.json': ['meta', 'home', 'parts', 'emb', 'overlay'], 'guides.json': ['meta', 'home', 'parts', 'emb'], 'tfa.json': ['tfa', 'augments'],
-  'items.json': ['items'], 'db.json': ['find', 'builder', 'items', 'traits', 'meta', 'rank', 'augments'], 'esports.json': ['esports', 'home'],
+  'meta.json': ['meta', 'home', 'parts', 'emb', 'overlay', 'units'], 'guides.json': ['meta', 'home', 'parts', 'emb'], 'tfa.json': ['tfa', 'augments'],
+  'items.json': ['items'], 'db.json': ['find', 'builder', 'items', 'traits', 'meta', 'rank', 'augments', 'units', 's19'], 'esports.json': ['esports', 'home'],
   'friends.json': ['friends'], 'rank.json': ['rank'], 'rank_hist.json': ['rank'], 'dist.json': ['rank'], 'cutoffs.json': ['rank'],
-  'power.json': ['power', 'rank', 'friends'], 'power_top.json': ['power'], 's19.json': ['s19', 'home'], 'oldsets.json': ['rank'],
+  'power.json': ['power', 'rank', 'friends'], 'power_top.json': ['power'], 's19.json': ['s19', 'home', 'units'], 'oldsets.json': ['rank'],
   'changes.json': ['whatsnew'], 'version.json': ['whatsnew', 'more'],
 };
 const SCOPE = (() => {
@@ -148,7 +149,7 @@ function fresh(file, key, hours) {
 
   const b = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
   const tasks = []; const task = (tags, fn) => { if (tags.some(need)) tasks.push(fn); };
-  const TABS = ['home', 's19', 'meta', 'tfa', 'dc', 'rank', 'augments', 'items', 'more', 'traits', 'find', 'builder', 'esports', 'friends', 'power', 'parts', 'emb', 'flow', 'wisps', 'numbers', 'scout', 'patch'];
+  const TABS = ['home', 's19', 'meta', 'units', 'tfa', 'dc', 'rank', 'augments', 'items', 'more', 'traits', 'find', 'builder', 'esports', 'friends', 'power', 'parts', 'emb', 'flow', 'wisps', 'numbers', 'scout', 'patch'];
   for (const [W, scheme] of [[360, 'dark'], [412, 'light']]) task(TABS, async () => {
     const pg = await b.newPage({ viewport: { width: W, height: 860 }, colorScheme: scheme, reducedMotion: 'reduce' });  // 탭 들어올 때 움직임(v2in)이 끝나기 전에 재면 여백이 5px 커 보임
     const errs = []; pg.on('pageerror', e => errs.push(e.message));
@@ -1061,9 +1062,30 @@ function fresh(file, key, hours) {
       const dx = await pg.evaluate(() => ({ n: document.querySelectorAll('#s19-out .s19-uc').length, sw: document.documentElement.scrollWidth }));
       if (dx.n < 60 || dx.sw > 1280) fail(`[WEB/1280] 도감: 챔피언 ${dx.n}개, 폭 ${dx.sw}px`);
       }
+      if (['units'].some(needWeb)) {
+      await go('units'); await pg.waitForTimeout(500);
+      const unW = await pg.evaluate(() => {
+        const h = document.querySelector('#units .un-head'), r = document.querySelector('#units .un-row');
+        const visCols = h ? [...h.children].filter(x => getComputedStyle(x).display !== 'none').length : 0;
+        const pcIts = r ? r.querySelectorAll('.un-its-pc img').length : 0;
+        return { n: document.querySelectorAll('#un-rows .un-row').length, visCols, pcIts, sw: document.documentElement.scrollWidth };
+      });
+      if (unW.n < 60 || unW.visCols !== 6 || unW.pcIts < 1 || unW.sw > 1280) fail(`[WEB/1280] 챔피언 통계(#units): 표 레이아웃 이상 (${JSON.stringify(unW)})`);
+      }
       if (['meta'].some(needWeb)) {
       // 메타 덱 PC 줄 + 펼치기 + 직접 fetch 새로고침 (2026-11-21: 오른쪽 상세 칸 대신 MetaTFT처럼 줄 아래로 펼침)
       await go('meta'); await pg.waitForTimeout(800);
+      // PC 덱 줄 안의 챔피언(.pcdk-u)을 누르면 덱 아코디언 대신 챔피언 통계·삼신기 시트가 열려야 함
+      const pcuClick = await pg.evaluate(() => {
+        const u = document.querySelector('#mt-rows .pcdk .pcdk-u[data-unit]');
+        if (!u) return null;
+        u.click();
+        const sh = document.getElementById('sheet');
+        const res = { open: !!(sh && !sh.hidden), trios: sh ? sh.querySelectorAll('.ust-gt.ust-row').length : 0, dkOpen: document.querySelectorAll('#mt-rows .pcdk-open').length };
+        document.querySelector('#sheet .sh-btn[aria-label="닫기"]')?.click();
+        return res;
+      });
+      if (!pcuClick || !pcuClick.open || pcuClick.trios < 1 || pcuClick.dkOpen) fail(`[WEB/1280] 메타 덱 PC 줄 챔피언 클릭: 시트/삼신기 이상 (${JSON.stringify(pcuClick)})`);
       const mt2 = await pg.evaluate(() => { const r = [...document.querySelectorAll('#mt-rows .pcdk')], f = r[0]; return { n: r.length, units: f ? f.querySelectorAll('.pcdk-u img').length : 0, stats: f ? [...f.querySelectorAll('.pcdk-stats small')].map(x => x.textContent).join(',') : '', sw: document.documentElement.scrollWidth,
         clip: r.filter(x => { const b = x.querySelector('.pcdk-units'), l = b && b.lastElementChild; return l && l.getBoundingClientRect().right > b.getBoundingClientRect().right + 1; }).length }; });
       if (mt2.n < 15 || mt2.units < 5 || mt2.stats !== '평균 등수,선택률,승률,순방률') fail(`[WEB/1280] 메타 덱: PC 줄 모양이 아님 (${JSON.stringify(mt2)})`);
@@ -1308,6 +1330,59 @@ function fresh(file, key, hours) {
     }, S);
     if (bldCh.badSt5.length) fail('회귀 검사 ②: 도감 빌더에서 비프리즘·고유 시너지에 st5(프리즘)가 붙음 ' + JSON.stringify(bldCh.badSt5));
     if (bldCh.badUniq.length) fail('회귀 검사 ②: 도감 빌더에서 고유 시너지가 st6이 아님 ' + JSON.stringify(bldCh.badUniq));
+
+    // ④ 챔피언 통계(#units) 및 스미치 삼신기·아이템 통계 검사 (2026-11-26)
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#units'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(500);
+    const unStat = await pg.evaluate(() => {
+      const rows = [...document.querySelectorAll('#un-rows .un-row')];
+      const smeech = rows.find(r => (r.querySelector('.un-nm b') || {}).textContent === '스미치');
+      return { total: rows.length, hasSmeech: !!smeech, sw: document.documentElement.scrollWidth };
+    });
+    if (unStat.total < 60 || !unStat.hasSmeech) fail(`챔피언 통계(#units): 목록 이상 (rows=${unStat.total}, smeech=${unStat.hasSmeech})`);
+    if (unStat.sw > 360) fail(`챔피언 통계(#units): 화면보다 넓음 ${unStat.sw}px`);
+    // 스미치 클릭 -> 시트에 KPI 4칸 + 삼신기 3개 이상 + 추천 아이템 5개 이상 + 인기순/평균순 전환
+    await pg.evaluate(() => {
+      const r = [...document.querySelectorAll('#un-rows .un-row')].find(x => (x.querySelector('.un-nm b') || {}).textContent === '스미치');
+      if (r) r.click();
+    }); await pg.waitForTimeout(400);
+    const shRes = await pg.evaluate(() => {
+      const sh = document.getElementById('sheet');
+      if (!sh || sh.hidden) return null;
+      const trios = sh.querySelectorAll('.ust-gt.ust-row').length;
+      const items = sh.querySelectorAll('.ust-gi.ust-row').length;
+      const kpi = sh.querySelectorAll('.ust-kpi .ust-k').length;
+      const firstTrio = (sh.querySelector('.ust-gt.ust-row .ust-tnm') || {}).textContent || '';
+      const avgBtn = [...sh.querySelectorAll('.ust-tog button')].find(b => b.textContent === '평균순');
+      if (avgBtn) avgBtn.click();
+      const afterSort = (sh.querySelector('.ust-gt.ust-row .ust-tnm') || {}).textContent || '';
+      return { kpi, trios, items, firstTrio, afterSort, sw: sh.scrollWidth, cw: sh.clientWidth };
+    });
+    if (!shRes || shRes.kpi !== 4 || shRes.trios < 3 || shRes.items < 5) fail('챔피언 시트(스미치): 통계·삼신기 누락 ' + JSON.stringify(shRes));
+    if (shRes && shRes.sw > shRes.cw + 2) fail(`챔피언 시트(스미치): 가로 밀림 ${shRes.sw}>${shRes.cw}`);
+    await pg.evaluate(() => { document.querySelector('#sheet .sh-btn[aria-label="닫기"]')?.click(); }); await pg.waitForTimeout(250);
+
+    // ⑤ 도감(#s19)에서 스미치 클릭 -> s19OpenUnit 안에도 삼신기·아이템 통계 노출 + 아이템 탭 시 시트가 위에 열림
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#s19'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(400);
+    await pg.evaluate(() => { document.querySelector('#s19-view [data-v=units]')?.click(); }); await pg.waitForTimeout(350);
+    await pg.evaluate(() => {
+      const c = [...document.querySelectorAll('#s19-out .s19-uc')].find(x => (x.querySelector('.s19-ucn b') || {}).textContent === '스미치');
+      if (c) c.click();
+    }); await pg.waitForTimeout(400);
+    const fsRes = await pg.evaluate(() => {
+      const fv = document.querySelector('.fs-view');
+      if (!fv) return null;
+      const trios = fv.querySelectorAll('.ust-gt.ust-row').length;
+      const items = fv.querySelectorAll('.ust-gi.ust-row').length;
+      const kpi = fv.querySelectorAll('.ust-kpi .ust-k').length;
+      const firstIt = fv.querySelector('.ust-tics img[data-item]');
+      if (firstIt) firstIt.click();
+      const sh = document.getElementById('sheet');
+      const shZ = sh ? +getComputedStyle(sh).zIndex : 0;
+      const fvZ = +getComputedStyle(fv).zIndex;
+      return { kpi, trios, items, shOpen: !!(sh && !sh.hidden), above: shZ > fvZ };
+    });
+    if (!fsRes || fsRes.kpi !== 4 || fsRes.trios < 3 || fsRes.items < 5) fail('도감 챔피언 상세(스미치): 통계·삼신기 누락 ' + JSON.stringify(fsRes));
+    if (fsRes && (!fsRes.shOpen || !fsRes.above)) fail('도감 챔피언 상세: 삼신기 아이템 클릭 시 아이템 시트가 위에 안 열림 ' + JSON.stringify(fsRes));
 
     if (errs.length) fail('회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
     await pg.close();

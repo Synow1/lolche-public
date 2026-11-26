@@ -294,13 +294,16 @@
     head.appendChild(t); card.appendChild(head);
 
     var tiles = el("div", "tiles");
-    [[fmt(u.meta.base), "에메+ 평균"], [fmt(u.meta.gm), "그마+ 평균"], [u.base.win + "%", "다이아+ 승률"]].forEach(function (x) {
+    var tlist = DB && DB.pbe
+      ? [[fmt(u.base.avg), "PBE 평균"], [u.base.top4 + "%", "순방률"], [u.base.win + "%", "승률"]]
+      : [[fmt(u.meta.base), "에메+ 평균"], [fmt(u.meta.gm), "그마+ 평균"], [u.base.win + "%", "다이아+ 승률"]];
+    tlist.forEach(function (x) {
       var d = el("div", "tile"); d.appendChild(el("b", null, x[0])); d.appendChild(el("span", null, x[1])); tiles.appendChild(d);
     });
     card.appendChild(tiles);
 
     var base = u.base.avg;
-    var sh = el("h4", null, "몇 성으로 끝났나"); sh.appendChild(el("small", null, "다이아+ 평균 " + fmt(base))); card.appendChild(sh);
+    var sh = el("h4", null, "몇 성으로 끝났나"); sh.appendChild(el("small", null, (DB && DB.pbe ? "PBE 평균 " : "다이아+ 평균 ") + fmt(base))); card.appendChild(sh);
     card.appendChild(headRow("성급", "평균", "비율"));
     ["1", "2", "3"].forEach(function (k) {
       var s = u.stars[k]; if (!s) return;
@@ -311,9 +314,9 @@
       card.appendChild(row);
     });
 
-    buildRows(card, "템 3개", "평균 낮은 순", u.trios, base);
-    buildRows(card, "템 2개 조합", "평균 낮은 순", u.pairs, base);
-    buildRows(card, "템 하나씩", "평균 낮은 순", u.items, base);
+    buildRows(card, "삼신기 (템 3개)", "인기·평균 상위", u.trios, u.base.b3 || base);
+    buildRows(card, "템 2개 조합", "평균 낮은 순", u.pairs, u.base.b3 || base);
+    buildRows(card, "추천 아이템", "평균 낮은 순", u.items, u.base.b1 || base);
 
     if (u.partners.length) {
       var ph = el("h4", null, "같이 쓰는 유닛"); ph.appendChild(el("small", null, "같이 있을 때 등수 변화")); card.appendChild(ph);
@@ -382,7 +385,7 @@
 
   function buildFind(data) {
     DB = data;
-    buildBuilder(); buildAugList(); buildTraitList(); buildRank();
+    buildBuilder(); buildAugList(); buildTraitList(); buildRank(); buildUnits();
     if (metaReady) metaList();
     document.querySelectorAll(".ag img").forEach(function (im) {
       var a = DB.info.a[im.parentNode.textContent.trim()]; if (a) im.dataset.r = a.r;
@@ -792,6 +795,7 @@
   var COST_C = { 1: "var(--c1)", 2: "var(--c2)", 3: "var(--c3)", 4: "var(--c4)", 5: "var(--c5)" };
   function dkPortrait(b, tier) {  // 육각형 초상 + 티어 + 템
     var w = el("div", "dk-mc"); if (!b) return w;
+    if (b.u) w.dataset.unit = b.u;
     var u = IDX.units[b.u], hx = el("div", "dk-hex");
     if (u) { hx.style.setProperty("--cc", COST_C[u.cost] || COST_C[1]); hx.appendChild(img(u.icon, b.u)); }
     w.appendChild(hx);

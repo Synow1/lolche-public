@@ -14,7 +14,9 @@ import json
 import sys
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timezone
+from itertools import combinations
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -23,6 +25,7 @@ import tft_detail as D  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "raw" / "tt"
+MT_CACHE = ROOT / "raw" / "mt_units"
 OUT = ROOT / "site" / "db.json"
 TT_STATE = ROOT / "data" / "tt_patch.json"
 
@@ -31,6 +34,8 @@ def tt_patch():
     """tactics.tools 패치 번호(롤 클라이언트 버전 16.22 -> 16220). 2026-11-16까지 16210(18.5)에 묶여 있어서 18.6 통계가 아니었다.
     지난번 번호부터 10씩 올려 보며, 지금 세트 유닛(DA_<세트>_)이 있고 판이 충분히(20만 판) 쌓인 가장 높은 번호를 쓴다."""
     import setinfo
+    if setinfo.PBE:
+        return None
     last = 16210
     try: last = json.loads(TT_STATE.read_text())["patch"]
     except Exception: pass
@@ -44,8 +49,8 @@ def tt_patch():
         units = g.get("units") or {}
         if g.get("totalEntries", 0) >= 200000 and any(k.startswith(f"DA_{setinfo.NUM}_") for k in units):
             best = p
-    if best is None:  # 새 세트 첫날: 지금 세트 판이 아직 없으면 지난 세트 통계를 섞지 않고 비워 둔다
-        print("tactics.tools에 지금 세트 판이 아직 없음 -> 유닛별 템 통계 건너뜀"); return None
+    if best is None:  # 새 세트 첫날: 지금 세트 판이 아직 없으면 지난 세트 통계를 섞지 않고 MetaTFT unit_detail로 채운다
+        print("tactics.tools에 지금 세트 판이 아직 없음 -> MetaTFT unit_detail로 채움"); return None
     if best != last: print("tactics.tools 패치", last, "->", best)
     TT_STATE.write_text(json.dumps({"patch": best, "set": setinfo.NUM}))
     return best
@@ -70,6 +75,46 @@ def fetch(asset):
     path.write_text(json.dumps(data))
     time.sleep(0.5)
     return data
+
+
+def fetch_mt_unit(asset):
+    """MetaTFT unit_detail (성급별·단일템·삼신기 3템 조합 실통계, PBE·본섭 공통). raw/mt_units/에 6시간 캐시."""
+    MT_CACHE.mkdir(parents=True, exist_ok=True)
+    path = MT_CACHE / f"{asset}.json"
+    if "--offline" in sys.argv or (path.exists() and time.time() - path.stat().st_mtime < 6 * 3600):
+        return json.loads(path.read_text()) if path.exists() else None
+    url = f"{T.API}/tft-stat-api/unit_detail?unit={asset}&{T.Q}"
+    req = urllib.request.Request(url, headers=T.HEADERS)
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=25) as r:
+                data = json.loads(r.read())
+            path.write_text(json.dumps(data))
+            return data
+        except Exception as e:
+            if attempt == 0:
+                time.sleep(1.5)
+            else:
+                print("MetaTFT unit_detail 실패", asset, e)
+    return None
+
+
+def pl_row(places, denom=0, base_avg=None):
+    pl = (places or [])[:8]
+    n = sum(pl)
+    if not n:
+        return None
+    avg = round(sum((i + 1) * x for i, x in enumerate(pl)) / n, 2)
+    out = {
+        "n": n,
+        "pick": round(100 * n / denom, 1) if denom else 0,
+        "avg": avg,
+        "top4": round(100 * sum(pl[:4]) / n),
+        "win": round(100 * pl[0] / n, 1),
+    }
+    if base_avg is not None:
+        out["d"] = round(avg - base_avg, 2)
+    return out
 
 
 def row(r, total):
@@ -143,10 +188,13 @@ def build():
     nm = T.Names(lk)
     p = T.load("patch")
     patch = f"{setinfo.NUM}.1 PBE" if setinfo.PBE else f"{p['patch']}{p.get('b_patch_version') or ''}"
-    meta_avg, unit_raw = {}, {}
+    meta_avg, unit_raw, total_games = {}, {}, 0
     for key, name in (("base", "units"), ("gm", "units_gm")):
         try:
-            for r in T.load(name)["results"]:
+            udoc = T.load(name)
+            if key == "base":
+                total_games = sum(g.get("count") or 0 for g in udoc.get("games") or [])
+            for r in udoc["results"]:
                 avg_v, cnt_v = T.avg_place(r["places"])
                 meta_avg.setdefault(nm.u(r["unit"]), {})[key] = round(avg_v, 2)
                 if key == "base":
@@ -156,6 +204,7 @@ def build():
                         "n": n_tot, "avg": round(avg_v, 2),
                         "top4": round(100 * sum(pl[:4]) / n_tot),
                         "win": round(100 * pl[0] / n_tot, 1),
+                        "freq": round(n_tot / total_games * 8, 2) if total_games else 0,
                     }
         except FileNotFoundError:
             pass
@@ -172,10 +221,27 @@ def build():
     if setinfo.PBE and s19_p.exists():
         for su in json.loads(s19_p.read_text(encoding="utf-8")).get("units") or []:
             s19_u[su["k"]] = su
-    comps = {i["apiName"] for i in lk["items"] if i["apiName"].startswith("DA_Component_")}
+    comps = {i["apiName"] for i in lk["items"] if i["apiName"].startswith("DA_Component_") or i["apiName"].startswith("TFT_Item_") and not i.get("composition")}
+    # 기본 조합 재료 10개(대검~프라이팬)는 단일템·삼신기 통계에서 제외
+    comps |= {i["apiName"] for i in lk["items"] if i.get("apiName", "").startswith("DA_Component_")}
     units, item_holders = {}, {}
     shop = [u for u in lk["units"] if setinfo.unit_ok(u)]
     shop_apis = {u["apiName"] for u in shop}
+    # tactics.tools가 없는 경우(PBE·새 세트 초) MetaTFT unit_detail을 병렬 8스레드로 한꺼번에 받아 실통계(삼신기·템·성급)를 채운다
+    mt_details = {}
+    if not TT:
+        todo_apis = []
+        _seen_api = set()
+        for u in sorted(shop, key=lambda x: (x["cost"], x["name"])):
+            if u["name"] in _seen_api:
+                continue
+            _seen_api.add(u["name"])
+            todo_apis.append(u["apiName"])
+        with ThreadPoolExecutor(max_workers=3) as ex:
+            for a, res in zip(todo_apis, ex.map(fetch_mt_unit, todo_apis)):
+                if res:
+                    mt_details[a] = res
+        print(f"MetaTFT unit_detail: {len(mt_details)}/{len(todo_apis)} 유닛 수집")
     seen = set()
     for u in sorted(shop, key=lambda x: (x["cost"], x["name"])):
         if u["name"] in seen:  # 나르처럼 같은 이름이 둘이면 먼저 받아진 쪽만
@@ -196,6 +262,7 @@ def build():
             if d and d.get("base"):
                 seen.add(u["name"])
                 total = d["base"]["count"]
+                ur = unit_raw.get(asset) or {}
                 def good(rs, share):
                     out = []
                     for r in rs:
@@ -203,21 +270,22 @@ def build():
                         if r["count"] >= total * share and not set(its) & comps and not any("Radiant" in i for i in its):
                             out.append(r)
                     return out
-                items = sorted(good(d["items"], 0.02), key=lambda r: r["place"])[:8]
+                items = sorted(good(d["items"], 0.02), key=lambda r: r["place"])[:10]
                 pairs = sorted(good(d["itemPairs"], 0.01), key=lambda r: r["place"])[:6]
-                trios = sorted(good(d["itemTrios"], 0.01), key=lambda r: r["place"])[:6]
+                trios = sorted(good(d["itemTrios"], 0.01), key=lambda r: r["place"])[:8]
                 partners = sorted([r for r in d["units"] if r["count"] >= total * 0.05], key=lambda r: -r["count"])[:10]
                 mu = sorted(d.get("unitMatchups") or [], key=lambda r: r["winrate"])
+                base_d = row(d["base"], total) | {"pick": None, "freq": ur.get("freq", 0)}
                 units[label] = {
-                    "cost": u["cost"], "traits": u["traits"],
+                    "api": asset, "cost": u["cost"], "traits": u["traits"],
                     "icon": u["name"], "stats": stat_str,
                     "skill": {"name": sk_name, "desc": skill},
                     "meta": meta_avg.get(u["name"], {}),
-                    "base": row(d["base"], total) | {"pick": None},
+                    "base": base_d,
                     "stars": {str(s["id"]): row(s, total) for s in d["starLevelData"] if s["id"] <= 3 and s["count"] >= 30},
-                    "items": [[nm.i(r["items"]), row(r, total)] for r in items],
-                    "pairs": [[[nm.i(i) for i in r["items"]], row(r, total)] for r in pairs],
-                    "trios": [[[nm.i(i) for i in r["items"]], row(r, total)] for r in trios],
+                    "items": [[nm.i(r["items"]), row(r, total) | {"d": round(r["place"] - base_d["avg"], 2)}] for r in items],
+                    "pairs": [[[nm.i(i) for i in r["items"]], row(r, total) | {"d": round(r["place"] - base_d["avg"], 2)}] for r in pairs],
+                    "trios": [[[nm.i(i) for i in r["items"]], row(r, total) | {"d": round(r["place"] - base_d["avg"], 2)}] for r in trios],
                     "partners": [[nm.u(r["id"]), round(r["delta"], 2), round(100 * r["count"] / total)] for r in partners],
                     "weak": [[nm.u(r["unitId"]), round(100 * r["winrate"])] for r in mu[:6]],
                     "strong": [[nm.u(r["unitId"]), round(100 * r["winrate"])] for r in mu[::-1][:6]],
@@ -226,35 +294,147 @@ def build():
                     if r["items"] in comps or r["count"] < 300:
                         continue
                     item_holders.setdefault(nm.i(r["items"]), []).append([label, r["place"], r["count"]])
-            elif setinfo.PBE:
-                # PBE: tactics.tools 다이아+가 아직 없으므로 MetaTFT PBE units + unit_items_processed로 채운다
+            else:
+                # MetaTFT unit_detail 실통계 (PBE·새 세트 초기 공통): 성급별·단일템·2템·3템 삼신기 + 델타
                 seen.add(u["name"])
                 ur = unit_raw.get(asset) or {}
                 ui = ui_pbe.get(asset) or {}
-                base_n = ur.get("n") or ui.get("count") or 0
-                base_avg = ur.get("avg") or round(ui.get("avg") or 4.5, 2)
-                base_row = {"n": base_n, "pick": None, "avg": base_avg, "top4": ur.get("top4", 50), "win": ur.get("win", 12.5)}
-                pbe_its = []
-                for idx_i, it_e in enumerate((ui.get("items") or [])[:8]):
+                md = mt_details.get(asset) or {}
+                # 성급별 집계 + 템 1개 이상 / 3개 기준 평균 (MetaTFT 델타 기준선)
+                star_pl = {"1": [0] * 8, "2": [0] * 8, "3": [0] * 8}
+                all_pl = [0] * 8
+                it1_pl = [0] * 8
+                it3_pl = [0] * 8
+                for lv in md.get("levels") or []:
+                    li = lv.get("lvl_items") or []
+                    pl = (lv.get("places") or [])[:8]
+                    if len(li) < 2 or len(pl) < 8:
+                        continue
+                    s_key, n_it = str(li[0]), int(li[1])
+                    for idx_p in range(8):
+                        all_pl[idx_p] += pl[idx_p]
+                        if s_key in star_pl:
+                            star_pl[s_key][idx_p] += pl[idx_p]
+                        if n_it >= 1:
+                            it1_pl[idx_p] += pl[idx_p]
+                        if n_it >= 3:
+                            it3_pl[idx_p] += pl[idx_p]
+                all_n = sum(all_pl)
+                base_n = ur.get("n") or all_n or ui.get("count") or 0
+                base_avg = ur.get("avg") or (round(sum((i + 1) * x for i, x in enumerate(all_pl)) / all_n, 2) if all_n else round(ui.get("avg") or 4.5, 2))
+                base1_n = sum(it1_pl)
+                base1_avg = round(sum((i + 1) * x for i, x in enumerate(it1_pl)) / base1_n, 2) if base1_n else base_avg
+                base3_n = sum(it3_pl)
+                base3_avg = round(sum((i + 1) * x for i, x in enumerate(it3_pl)) / base3_n, 2) if base3_n else base1_avg
+                base_row = {
+                    "n": base_n, "pick": None, "freq": ur.get("freq") or (round(base_n / total_games * 8, 2) if total_games else 0),
+                    "avg": base_avg, "top4": ur.get("top4", round(100 * sum(all_pl[:4]) / all_n) if all_n else 50),
+                    "win": ur.get("win", round(100 * all_pl[0] / all_n, 1) if all_n else 12.5),
+                    "b1": base1_avg, "b3": base3_avg,
+                }
+                stars = {}
+                for sk in ("1", "2", "3"):
+                    min_star_n = 5 if (sk == "3" and u["cost"] >= 5) else 20
+                    if sum(star_pl[sk]) >= min_star_n:
+                        stars[sk] = pl_row(star_pl[sk], all_n or base_n)
+
+                # 단일 아이템 실통계 (컴포넌트·찬란한 제외)
+                raw_items = []
+                for it_e in md.get("items") or []:
                     it_api = it_e.get("itemName") or ""
-                    if not it_api or it_api in comps or "Radiant" in it_api:
+                    if not it_api or it_api in comps or "Radiant" in it_api or "Component" in it_api:
+                        continue
+                    r_it = pl_row(it_e.get("places"), base1_n or base_n, base1_avg)
+                    if not r_it or r_it["n"] < max(15, int((base1_n or base_n) * 0.005)):
                         continue
                     it_nm = nm.i(it_api)
-                    it_avg = round((ui_items_pbe.get(it_api) or {}).get("avg") or base_avg, 2)
-                    pbe_its.append([it_nm, {"n": max(100, base_n // (idx_i + 2)), "pick": round(max(5, 35 - idx_i * 4), 1), "avg": it_avg, "top4": ur.get("top4", 50), "win": ur.get("win", 12.5)}])
-                    item_holders.setdefault(it_nm, []).append([label, base_avg, max(500, base_n)])
+                    raw_items.append([it_nm, r_it])
+                    if r_it["n"] >= 50:
+                        item_holders.setdefault(it_nm, []).append([label, r_it["avg"], r_it["n"]])
+                # 인기 상위 8 + 성적 상위 4 합집합 (중복 제거, 인기순 기본 + UI에서 평균순 정렬 가능)
+                by_pop = sorted(raw_items, key=lambda x: -x[1]["n"])
+                by_avg = sorted([x for x in raw_items if x[1]["n"] >= max(30, int((base1_n or base_n) * 0.01))], key=lambda x: x[1]["avg"])
+                picked_it, seen_it = [], set()
+                for x in by_pop[:8] + by_avg[:4]:
+                    if x[0] not in seen_it:
+                        seen_it.add(x[0]); picked_it.append(x)
+                picked_it.sort(key=lambda x: x[1]["avg"])
+
+                # 3템 삼신기(trios) + 2템 핵심 조합(pairs) 실통계
+                b3_list = []
+                pair_acc = {}
+                b3_total = 0
+                for b_e in md.get("builds") or []:
+                    bn = b_e.get("buildNames") or ""
+                    parts = [p for p in bn.split("|") if p]
+                    if len(parts) < 2 or any(p in comps or "Radiant" in p or "Component" in p for p in parts):
+                        continue
+                    pl = (b_e.get("places") or [])[:8]
+                    if len(pl) < 8:
+                        continue
+                    cnt_b = sum(pl)
+                    if len(parts) == 3:
+                        b3_total += cnt_b
+                        b3_list.append((parts, pl, cnt_b))
+                    # 2템·3템 빌드에서 모든 2템 조합 집계
+                    for a_it, b_it in combinations(sorted(parts), 2):
+                        acc = pair_acc.setdefault((a_it, b_it), [0] * 8)
+                        for idx_p in range(8):
+                            acc[idx_p] += pl[idx_p]
+                min_b3 = max(12, int(b3_total * 0.002))
+                cands_3 = []
+                for parts, pl, cnt_b in b3_list:
+                    if cnt_b < min_b3:
+                        continue
+                    r3 = pl_row(pl, b3_total or base3_n, base3_avg)
+                    if r3:
+                        cands_3.append([[nm.i(p) for p in parts], r3])
+                if not cands_3 and b3_list:  # 표본 적은 특수/해금 유닛은 최소 5판까지 완화
+                    for parts, pl, cnt_b in sorted(b3_list, key=lambda x: -x[2])[:6]:
+                        if cnt_b >= 5:
+                            r3 = pl_row(pl, b3_total or base3_n, base3_avg)
+                            if r3:
+                                cands_3.append([[nm.i(p) for p in parts], r3])
+                pop3 = sorted(cands_3, key=lambda x: -x[1]["n"])[:6]
+                avg3 = sorted([x for x in cands_3 if x[1]["n"] >= max(25, int(b3_total * 0.004))], key=lambda x: x[1]["avg"])[:6]
+                trios, seen_3 = [], set()
+                for x in pop3 + avg3:
+                    key3 = tuple(sorted(x[0]))
+                    if key3 not in seen_3:
+                        seen_3.add(key3); trios.append(x)
+                trios.sort(key=lambda x: -x[1]["n"])
+                trios = trios[:10]
+
+                min_p2 = max(25, int(b3_total * 0.005))
+                cands_2 = []
+                for (a_it, b_it), acc in pair_acc.items():
+                    if sum(acc) < min_p2:
+                        continue
+                    r2 = pl_row(acc, base1_n or base_n, base3_avg)
+                    if r2:
+                        cands_2.append([[nm.i(a_it), nm.i(b_it)], r2])
+                pop2 = sorted(cands_2, key=lambda x: -x[1]["n"])[:4]
+                avg2 = sorted([x for x in cands_2 if x[1]["n"] >= max(50, int(b3_total * 0.01))], key=lambda x: x[1]["avg"])[:4]
+                pairs, seen_2 = [], set()
+                for x in pop2 + avg2:
+                    key2 = tuple(sorted(x[0]))
+                    if key2 not in seen_2:
+                        seen_2.add(key2); pairs.append(x)
+                pairs.sort(key=lambda x: x[1]["avg"])
+                pairs = pairs[:6]
+
                 units[label] = {
-                    "cost": u["cost"], "traits": u["traits"],
+                    "api": asset, "cost": u["cost"], "traits": u["traits"],
                     "icon": u["name"], "stats": stat_str,
                     "skill": {"name": sk_name, "desc": skill},
                     "meta": meta_avg.get(u["name"], {"base": base_avg}),
-                    "base": base_row, "stars": {}, "items": pbe_its,
-                    "pairs": [], "trios": [], "partners": [], "weak": [], "strong": [],
+                    "base": base_row, "stars": stars, "items": picked_it,
+                    "pairs": pairs, "trios": trios, "partners": [], "weak": [], "strong": [],
                 }
                 if su and su.get("unl"):
                     units[label]["unlock"] = su["unl"]
-    # PBE: itemNames 역색인으로도 아이템별 추천 챔피언 보강 (세트 19 유닛만)
-    if setinfo.PBE:
+    # 아이템별 추천 챔피언 정리 (unit_detail 실통계가 있으면 그걸 우선, 없으면 unit_items 역색인 보강)
+    if setinfo.PBE and not item_holders:
         for it_api, x in ui_items_pbe.items():
             if it_api in comps or "Radiant" in it_api:
                 continue
@@ -273,7 +453,8 @@ def build():
             if r[0] not in dedup or r[2] > dedup[r[0]][2]:
                 dedup[r[0]] = r
         rows = list(dedup.values())
-        rows = [r for r in rows if r[2] >= max(500, 0.05 * max(x[2] for x in rows))]
+        min_hold = 100 if setinfo.PBE else 500
+        rows = [r for r in rows if r[2] >= max(min_hold, 0.05 * max(x[2] for x in rows))]
         items[name] = sorted(rows, key=lambda r: r[1])[:10]
     # 팀 플래너 코드 중복 제거 (PBE 원문에 임시로 같은 번호를 나눠 쓰는 유닛이 있음)
     import re as _re
@@ -294,8 +475,8 @@ def build():
     for t in lk["traits"]:
         names["t"][t["apiName"]] = [t["name"], 1 if t.get("type") == "unique" else 0]
     db = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "pbe": setinfo.PBE,
-          "names": names, "info": info(lk),
-          "source": "MetaTFT PBE 전체 통계" if setinfo.PBE else "평균 등수 에메+·그마+는 MetaTFT 최근 3일, 나머지는 tactics.tools 다이아+ 패치 전체",
+          "games": total_games, "names": names, "info": info(lk),
+          "source": "MetaTFT PBE 최근 3일 (unit_detail)" if setinfo.PBE else "평균 등수 에메+·그마+는 MetaTFT 최근 3일, 나머지는 tactics.tools 다이아+ 패치 전체",
           "units": units, "items": items}
     OUT.write_text(json.dumps(db, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)}개, 아이템 {len(items)}개, {OUT.stat().st_size // 1024}KB")
