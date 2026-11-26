@@ -246,7 +246,8 @@ def deck(nm, cluster, v, s, d, total, codes):
         emb[nm.i(api)] = [x["count"], round(x["avg"], 2), round(100 * x["pcnt"], 1), hold]
     finals = [[int(x["level"]), round(x["avg"], 2), round(100 * x["count"] / max(1, sum(y["count"] for y in fl)))]
               for x in sorted(fl, key=lambda x: int(x["level"])) if x["count"] >= 100]
-    return {
+    ra = T.req_aug(nm, v)
+    out = {
         "id": cluster, "name": T.comp_name(nm, v), "style": v.get("levelling", ""),
         "avg": round(avg, 2), "top4": round(sum(p[:4]) / n * 100), "win": round(p[0] / n * 100, 1),
         "pick": round(n / total * 100, 1), "n": n, "level": level, "diff": difficulty(d),
@@ -255,6 +256,9 @@ def deck(nm, cluster, v, s, d, total, codes):
         "early": early, "levels": by_level, "lvb": lvb, "emb": emb, "finals": finals, "code": codes_by_level[str(level)], "codes": codes_by_level,
         "counters": [c for c in d.get("counters", []) if str(c["against"]) != str(cluster)][:4],
     }
+    if ra:
+        out["req_aug"] = ra
+    return out
 
 
 # 덱 탭 '기준' 고르기: 티어 묶음마다 MetaTFT comps_stats를 따로 받아 평균·순방·승률·판수, 그 기준에서의 티어(S/A/B/C)
@@ -353,11 +357,16 @@ def _sync_pbe_guides(decks):
             board.append(ent)
         if len(board) < 5:
             continue
+        g_augs = set(g.get("a") or [])
         md = meta_by_id.get(str(g.get("sid") or ""))
+        if md and md.get("req_aug") and md["req_aug"]["n"] not in g_augs:
+            md = None
         if not md:
             mine = {x["u"] for x in board}
             best_sc, best_d = 0, None
             for d0 in decks:
+                if d0.get("req_aug") and d0["req_aug"]["n"] not in g_augs:
+                    continue
                 theirs = {x["u"] for x in d0.get("board") or []} | {u for lv in (d0.get("levels") or {}).values() for u in lv}
                 sc = len(mine & theirs) - 0.01 * len(theirs - mine)
                 if sc > best_sc:

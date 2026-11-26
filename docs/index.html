@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611261207">
+<meta name="lolche-web" content="202611261220">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -466,6 +466,24 @@ html { overflow-x: hidden; }
 .emb-req { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 5px; padding: 1px 6px 1px 2px; margin-right: 6px; vertical-align: 2px; white-space: nowrap; }
 .emb-req img { width: 16px; height: 16px; border-radius: 3px; }
 .emb-reqline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: var(--fs-s); color: var(--muted); }
+.aug-req { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-weight: 800; color: #b87c09; background: rgba(230, 184, 81, .18); border: 1px solid rgba(230, 184, 81, .45); border-radius: 6px; padding: 1px 6px 1px 3px; margin-right: 6px; vertical-align: 1px; white-space: nowrap; line-height: 1.35; }
+.aug-req[data-r="실버"] { color: #5b6978; background: rgba(159, 176, 194, .18); border-color: rgba(159, 176, 194, .5); }
+.aug-req[data-r="프리즘"] { color: #8c4ce0; background: rgba(169, 139, 255, .18); border-color: rgba(169, 139, 255, .5); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aug-req { color: #f6cd6b; }
+  :root:not([data-theme="light"]) .aug-req[data-r="실버"] { color: #cfd9e4; }
+  :root:not([data-theme="light"]) .aug-req[data-r="프리즘"] { color: #d6b6ff; }
+}
+:root[data-theme="dark"] .aug-req { color: #f6cd6b; }
+:root[data-theme="dark"] .aug-req[data-r="실버"] { color: #cfd9e4; }
+:root[data-theme="dark"] .aug-req[data-r="프리즘"] { color: #d6b6ff; }
+.aug-req img { width: 16px; height: 16px; border-radius: 3px; flex: none; display: block; }
+.aug-sub { color: #b87c09; font-weight: 700; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aug-sub { color: #f6cd6b; } }
+:root[data-theme="dark"] .aug-sub { color: #f6cd6b; }
+.aug-reqline { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; font-size: var(--fs-s); color: var(--muted); }
+.aug-reqline .aug-req { margin-right: 0; font-size: var(--fs-s); padding: 2px 8px 2px 4px; }
+.aug-reqline .aug-req img { width: 18px; height: 18px; }
 .mt-name .hot { font-size: var(--fs-2xs); font-weight: 800; color: #fff; background: #e5484d; border-radius: 4px; padding: 0 4px; letter-spacing: .3px; }
 .gd-badge { display: inline-flex; align-items: center; font-size: var(--fs-2xs); font-weight: 700; color: var(--accent2); background: var(--accent2-soft); border: 1px solid color-mix(in srgb, var(--accent2) 32%, transparent); border-radius: 5px; padding: 1px 6px; white-space: nowrap; line-height: 1.35; }
 .dk-hero h3 .gd-badge { margin-left: 6px; vertical-align: 3px; }
@@ -2467,6 +2485,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .pcdk-chip.ch-d4 { --chc: #ff5a5f; }
   body:not(.overlay) .pcdk-chip.gd-badge { --chc: var(--accent2); border: 0; }
   body:not(.overlay) .pcdk-chip.ch-var { --chc: var(--accent); }
+  body:not(.overlay) .pcdk-chip.ch-hero { --chc: #e6b851; }
   body:not(.overlay) .pcdk-sub { margin-top: 4px; }
   body:not(.overlay) .pcdk-u[data-unit] { cursor: pointer; }
   body:not(.overlay) .pcdk-u[data-unit]:hover .pcdk-pic { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,.35); }
@@ -2691,6 +2710,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
           <button type="button" data-f="reroll">리롤</button>
           <button type="button" data-f="8">8렙</button>
           <button type="button" data-f="9">9렙+</button>
+          <button type="button" data-f="hero">영웅 증강</button>
         </div>
         <select id="mt-sort" aria-label="정렬"><option value="avg">평균 등수순</option><option value="win">승률순</option><option value="top4">순방순</option><option value="pick">선택률순</option></select>
       </div>
@@ -4115,6 +4135,17 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     b.title = "이 덱 판의 " + Math.round(req[1]) + "%가 " + req[0] + " 사용";
     return b;
   }
+  function augReq(d) { return d && d.req_aug && d.req_aug.n ? d.req_aug : null; }
+  function augReqBadge(req, detail) {
+    var b = el("span", "aug-req" + (req.hero ? " hero" : ""));
+    b.dataset.r = req.r || "골드";
+    b.dataset.aug = req.n;
+    var ic = IDX && IDX.augments && IDX.augments[req.n];
+    if (ic) { var im = img(ic, ""); im.dataset.r = req.r || "골드"; b.appendChild(im); }
+    b.appendChild(document.createTextNode(detail ? ((req.hero ? "영웅 증강 · " : "필수 증강 · ") + req.n) : (req.hero ? "영웅 증강" : req.n)));
+    b.title = (req.hero ? "영웅 증강 필수: " : "필수 증강: ") + req.n;
+    return b;
+  }
   function deckName(v) {
     var n = v.name.replace(/^\[[^\]]+\]\s*/, "");
     if (!n || /^팀 ?구성$/.test(n)) n = carriesFirst(v.board).slice(0, 2).map(function (b) { return b.u; }).join(" ");
@@ -4283,7 +4314,9 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var sub = el("span", "dk-sub"); sub.appendChild(el("span", "pt-fit", "재료 궁합 " + Math.round(x.fit * 100) + "%"));
       if (d.style) { sub.appendChild(document.createTextNode(" · ")); sub.appendChild(styleTag(d.style)); } meta.appendChild(sub);
       mid.appendChild(meta);
-      var nm = el("div", "mt-name", deckName(d)), req = embReq(d); if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+      var nm = el("div", "mt-name", deckName(d)), req = embReq(d), areq = augReq(d);
+      if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+      if (areq) nm.insertBefore(augReqBadge(areq, false), nm.firstChild);
       mid.appendChild(nm);
       if (x.items.length) {
         var iw = el("div", "pt-its"); iw.appendChild(el("span", null, "바로"));
@@ -4656,13 +4689,18 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     if (md && sec && (!scope || scope.contains(md))) { md.hidden = true; sec.appendChild(md); }
   }
   function pcMetaRow(v, basis) {
-    var d = v.st, bs = basisSt(d, basis), mc = mainOf(v), pl = perLobby(d, basis);
+    var d = v.st, bs = basisSt(d, basis), mc = mainOf(v), pl = perLobby(d, basis), areq = augReq(d);
     var nm = el("div", "mt-name", deckName(v));
     var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+    if (areq) {
+      var ab = augReqBadge(areq, false);
+      ab.addEventListener("click", function (e) { if (openSheet("a", areq.n)) { e.stopPropagation(); e.preventDefault(); } });
+      nm.insertBefore(ab, nm.firstChild);
+    }
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
-    var chips = (d ? [d.style ? [styleKo(d.style), styleCls(d.style)] : null,
+    var chips = (areq ? [[areq.n, "ch-hero"]] : []).concat(d ? [d.style ? [styleKo(d.style), styleCls(d.style)] : null,
       d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null] : [])
       .concat([v.guide ? ["가이드", "gd-badge"] : null, v.subs && v.subs.length > 1 ? ["비슷한 덱 " + v.subs.length, "ch-var"] : null]).filter(Boolean);
     var units = starOrder(v.board, mc && mc.u).map(function (b) {
@@ -4682,7 +4720,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
     r.dataset.id = v.id;
     if (v.subs && v.subs.length) r.dataset.subs = v.subs.map(function (m) { return m.id; }).join(",");
-    var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
+    var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v), areq = augReq(d);
     r.classList.add("dk", "t-" + bt);
     r.appendChild(dkPortrait(mc, null));
     var mid = el("div", "mt-mid");
@@ -4690,6 +4728,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
     var mtxt = el("span", "dk-sub");
     if (d && d.style) mtxt.appendChild(styleTag(d.style));
+    if (areq) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "aug-sub", areq.n)); }
     if (d && d.diff) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dd" + d.diff, DIFF[d.diff])); }
     var pl = perLobby(d, basis);
     if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
@@ -4699,6 +4738,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+    if (areq) nm.insertBefore(augReqBadge(areq, false), nm.firstChild);
     if (v.guide) nm.appendChild(el("span", "gd-badge", "가이드"));
     if (v.subs && v.subs.length > 1) nm.appendChild(el("span", "tfa-more", "비슷한 덱 " + v.subs.length));
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
@@ -4737,13 +4777,16 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var matchQ = function (v) {
       if (!q) return true;
       var hit = function (b) { return matches(b.u, q); };
+      var ar = augReq(v.st);
       return v.board.some(hit) || (v.gboard && v.gboard.some(hit)) || matches(v.name, q)
+        || (ar && (matches(ar.n, q) || (ar.hero && matches("영웅 증강", q))))
         || (v.subs && v.subs.some(function (m) { return matches(m.name, q); }));
     };
     var list = allViews().filter(function (v) {
       if (!v) return false;
       var d = v.st;
       if (mtFilter === "mine" && !(d && d.mine)) return false;
+      if (mtFilter === "hero" && !augReq(d)) return false;
       if (mtFilter === "reroll" && !isReroll(d)) return false;
       if ((mtFilter === "8" || mtFilter === "9") && (!d || isReroll(d) || (mtFilter === "8" ? d.level !== 8 : d.level < 9))) return false;
       return matchQ(v);
@@ -4896,6 +4939,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     if (v.guide) th.appendChild(el("span", "gd-badge", "가이드"));
     t.appendChild(th);
     if (d) t.appendChild(el("p", null, [styleKo(d.style), d.level + "렙 완성", d.diff ? DIFF[d.diff] : "", d.mine].filter(Boolean).join(" · ")));
+    var areq = augReq(d); if (areq) { var arq = el("p", "aug-reqline"); arq.appendChild(augReqBadge(areq, true)); arq.appendChild(document.createTextNode("이 증강이 나왔을 때만 갈 수 있는 덱이에요")); t.appendChild(arq); }
     var dreq = embReq(d); if (dreq) { var rq = el("p", "emb-reqline"); rq.appendChild(embBadge(dreq)); rq.appendChild(document.createTextNode("이 덱 판의 " + Math.round(dreq[1]) + "%가 사용해요")); t.appendChild(rq); }
     head.appendChild(t); box.appendChild(head);
     if (d) {
@@ -5909,9 +5953,10 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         var dh = el("div", "ust-sh"); dh.appendChild(el("h4", null, "쓰이는 메타 덱")); dsec.appendChild(dh);
         var dlist = el("div", "ust-dks");
         dks.forEach(function (v) {
-          var bs = basisSt(v.st, "emer"), bt = basisTier(v.st, "emer");
+          var bs = basisSt(v.st, "emer"), bt = basisTier(v.st, "emer"), areq = augReq(v.st);
           var btn = el("button", "ust-dk"); btn.type = "button";
           btn.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
+          if (areq) btn.appendChild(augReqBadge(areq, false));
           btn.appendChild(el("span", "ust-dkn", deckName(v)));
           if (bs) btn.appendChild(dkGrad(el("b", null, bs[0].toFixed(2)), dkAvgT(bs[0])));
           btn.addEventListener("click", function () {
@@ -10098,7 +10143,7 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     if (dbox && META && IDX) {
       var msub = document.getElementById("hm-meta-sub");
       if (msub) msub.textContent = (META.pbe ? "MetaTFT " + pbeLabel(metaShownDays()) : "에메+") + " · " + (META.patch || "");
-      var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer"); })
+      var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer") && !augReq(v.st); })
         .sort(function (a, b) { return basisSt(a.st, "emer")[0] - basisSt(b.st, "emer")[0]; })
         .slice(0, 4);
       dbox.innerHTML = "";
@@ -10281,13 +10326,15 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     // 1) 19시즌 메타 덱
     if (wantDecks && META && IDX) {
       var dks = allViews().filter(function (v) {
-        return v && (matches(deckName(v), q) || v.board.some(function (b) { return matches(b.u, q); }));
+        var ar = v && augReq(v.st);
+        return v && (matches(deckName(v), q) || (ar && (matches(ar.n, q) || (ar.hero && matches("영웅 증강", q)))) || v.board.some(function (b) { return matches(b.u, q); }));
       }).slice(0, 6).map(function (v) {
-        var bs = basisSt(v.st, "emer"), mc = mainOf(v), ic = mc && IDX.units[mc.u] && IDX.units[mc.u].icon;
+        var bs = basisSt(v.st, "emer"), mc = mainOf(v), ic = mc && IDX.units[mc.u] && IDX.units[mc.u].icon, ar = augReq(v.st);
+        var sub = (ar ? (ar.hero ? "영웅 증강: " : "필수 증강: ") + ar.n + " · " : "") + (bs ? ((META.pbe ? "PBE 평균 " : "에메+ 평균 ") + bs[0].toFixed(2) + " · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱");
         return {
           icon: ic, title: deckName(v),
-          sub: bs ? ((META.pbe ? "PBE 평균 " : "에메+ 평균 ") + bs[0].toFixed(2) + " · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱",
-          tag: basisTier(v.st, "emer") + " 티어", tagCls: "gold",
+          sub: sub,
+          tag: ar ? "영웅 증강" : basisTier(v.st, "emer") + " 티어", tagCls: "gold",
           go: function () { openDeck(v.id); }
         };
       });

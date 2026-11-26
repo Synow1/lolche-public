@@ -183,6 +183,7 @@ class Names:
                 self.cost[a] = u["cost"]
         self.trait = {t["apiName"]: t["name"] for t in lk["traits"]}
         self.item = {i["apiName"]: i["name"] for i in lk["items"] + lk.get("armory_items", [])}
+        self.aug = {a["apiName"]: a for a in lk.get("augments") or [] if a.get("apiName")}
 
         # PBE 판에는 지난 세트 이름표(DA_18_Lillia, DA_Taric18 ...)가 섞여 온다 (2026-11-21 사용자 스크린샷: 배치판에 'Lillia'·'Yunara'가 그림 없이 영어로).
         # 세트 번호를 뗀 이름으로 지금 세트 유닛을 찾고, 없으면 known()이 False라 보드에서 뺀다
@@ -312,6 +313,24 @@ def build_augments(lk, patch):
 
 def comp_name(nm, v):
     return " ".join(nm.t(x["name"]) if x["type"] == "trait" else nm.u(x["name"]) for x in lit(v["name"]))
+
+
+def req_aug(nm, v):
+    """MetaTFT 덱 묶음의 name_string/name에 영웅 증강·필수 증강 apiName이 있으면 {n, r, hero} 반환."""
+    toks = [t.strip() for t in (v.get("name_string") or "").split(",") if t.strip()]
+    for x in lit(v.get("name") or []):
+        if isinstance(x, dict) and x.get("type") == "augment" and x.get("name"):
+            toks.insert(0, x["name"])
+    for api in toks:
+        a = nm.aug.get(api)
+        if a:
+            tags = a.get("tags") or []
+            return {
+                "n": a["name"],
+                "r": RARITY.get(a.get("rarity"), a.get("rarity") or ""),
+                "hero": ("Augment.Category.Hero" in tags) or ("HeroAugment" in api),
+            }
+    return None
 
 
 def comp_table(nm, details, stats_file, min_count):

@@ -515,9 +515,10 @@
         var dh = el("div", "ust-sh"); dh.appendChild(el("h4", null, "쓰이는 메타 덱")); dsec.appendChild(dh);
         var dlist = el("div", "ust-dks");
         dks.forEach(function (v) {
-          var bs = basisSt(v.st, "emer"), bt = basisTier(v.st, "emer");
+          var bs = basisSt(v.st, "emer"), bt = basisTier(v.st, "emer"), areq = augReq(v.st);
           var btn = el("button", "ust-dk"); btn.type = "button";
           btn.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
+          if (areq) btn.appendChild(augReqBadge(areq, false));
           btn.appendChild(el("span", "ust-dkn", deckName(v)));
           if (bs) btn.appendChild(dkGrad(el("b", null, bs[0].toFixed(2)), dkAvgT(bs[0])));
           btn.addEventListener("click", function () {

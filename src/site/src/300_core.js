@@ -781,6 +781,17 @@
     b.title = "이 덱 판의 " + Math.round(req[1]) + "%가 " + req[0] + " 사용";
     return b;
   }
+  function augReq(d) { return d && d.req_aug && d.req_aug.n ? d.req_aug : null; }
+  function augReqBadge(req, detail) {
+    var b = el("span", "aug-req" + (req.hero ? " hero" : ""));
+    b.dataset.r = req.r || "골드";
+    b.dataset.aug = req.n;
+    var ic = IDX && IDX.augments && IDX.augments[req.n];
+    if (ic) { var im = img(ic, ""); im.dataset.r = req.r || "골드"; b.appendChild(im); }
+    b.appendChild(document.createTextNode(detail ? ((req.hero ? "영웅 증강 · " : "필수 증강 · ") + req.n) : (req.hero ? "영웅 증강" : req.n)));
+    b.title = (req.hero ? "영웅 증강 필수: " : "필수 증강: ") + req.n;
+    return b;
+  }
   function deckName(v) {
     var n = v.name.replace(/^\[[^\]]+\]\s*/, "");
     if (!n || /^팀 ?구성$/.test(n)) n = carriesFirst(v.board).slice(0, 2).map(function (b) { return b.u; }).join(" ");

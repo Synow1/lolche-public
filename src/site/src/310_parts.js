@@ -98,7 +98,9 @@
       var sub = el("span", "dk-sub"); sub.appendChild(el("span", "pt-fit", "재료 궁합 " + Math.round(x.fit * 100) + "%"));
       if (d.style) { sub.appendChild(document.createTextNode(" · ")); sub.appendChild(styleTag(d.style)); } meta.appendChild(sub);
       mid.appendChild(meta);
-      var nm = el("div", "mt-name", deckName(d)), req = embReq(d); if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+      var nm = el("div", "mt-name", deckName(d)), req = embReq(d), areq = augReq(d);
+      if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+      if (areq) nm.insertBefore(augReqBadge(areq, false), nm.firstChild);
       mid.appendChild(nm);
       if (x.items.length) {
         var iw = el("div", "pt-its"); iw.appendChild(el("span", null, "바로"));

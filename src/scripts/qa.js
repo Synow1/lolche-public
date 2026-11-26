@@ -1384,6 +1384,35 @@ function fresh(file, key, hours) {
     if (!fsRes || fsRes.kpi !== 4 || fsRes.trios < 3 || fsRes.items < 5) fail('도감 챔피언 상세(스미치): 통계·삼신기 누락 ' + JSON.stringify(fsRes));
     if (fsRes && (!fsRes.shOpen || !fsRes.above)) fail('도감 챔피언 상세: 삼신기 아이템 클릭 시 아이템 시트가 위에 안 열림 ' + JSON.stringify(fsRes));
 
+    // ⑥ 영웅 증강 덱 구분 검사 (2026-11-26): 비치 팝 레넥톤 등 req_aug 덱은 .aug-req 배지 + 상세 안내 + 영웅 증강 필터, 홈 TOP 4에서 제외
+    await pg.evaluate(() => { document.querySelector('#sheet .sh-btn[aria-label="닫기"]')?.click(); document.querySelector('.fs-view .dc-back')?.click(); }); await pg.waitForTimeout(250);
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#home'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(400);
+    const reqAugIds = new Set((M.decks || []).filter(d => d.req_aug).map(d => String(d.id)));
+    if (reqAugIds.size) {
+      const hmBad = await pg.evaluate((names) => {
+        const set = new Set(names);
+        return [...document.querySelectorAll('#hm-decks .mt-row .mt-name')].map(e => e.textContent.trim()).filter(t => set.has(t));
+      }, (M.decks || []).filter(d => d.req_aug).map(d => d.name));
+      if (hmBad.length) fail('회귀 검사 ⑥: 홈 상위 덱 TOP 4에 영웅 증강 덱이 일반 덱처럼 노출됨 ' + hmBad.join(', '));
+      await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#meta'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(400);
+      const heroCheck = await pg.evaluate((ids) => {
+        const set = new Set(ids);
+        const rows = [...document.querySelectorAll('#mt-rows .mt-row.dk')].filter(r => set.has(r.dataset.id));
+        const missBadge = rows.filter(r => !r.querySelector('.aug-req')).map(r => r.dataset.id);
+        const first = rows[0];
+        if (first) first.click();
+        const detLine = !!document.querySelector('#mt-detail .aug-reqline .aug-req');
+        document.querySelector('#mt-detail .back')?.click();
+        document.querySelector('#mt-filter [data-f=hero]')?.click();
+        const heroOnly = document.querySelectorAll('#mt-rows .mt-row.dk').length;
+        document.querySelector('#mt-filter [data-f=all]')?.click();
+        return { matched: rows.length, missBadge, detLine, heroOnly };
+      }, [...reqAugIds]);
+      if (!heroCheck.matched || heroCheck.missBadge.length || !heroCheck.detLine || heroCheck.heroOnly !== reqAugIds.size) {
+        fail('회귀 검사 ⑥: 영웅 증강 덱 표시/필터 이상 ' + JSON.stringify(heroCheck));
+      }
+    }
+
     if (errs.length) fail('회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
     await pg.close();
   });

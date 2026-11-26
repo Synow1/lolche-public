@@ -231,6 +231,24 @@
 .emb-req { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 5px; padding: 1px 6px 1px 2px; margin-right: 6px; vertical-align: 2px; white-space: nowrap; }
 .emb-req img { width: 16px; height: 16px; border-radius: 3px; }
 .emb-reqline { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: var(--fs-s); color: var(--muted); }
+.aug-req { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-weight: 800; color: #b87c09; background: rgba(230, 184, 81, .18); border: 1px solid rgba(230, 184, 81, .45); border-radius: 6px; padding: 1px 6px 1px 3px; margin-right: 6px; vertical-align: 1px; white-space: nowrap; line-height: 1.35; }
+.aug-req[data-r="실버"] { color: #5b6978; background: rgba(159, 176, 194, .18); border-color: rgba(159, 176, 194, .5); }
+.aug-req[data-r="프리즘"] { color: #8c4ce0; background: rgba(169, 139, 255, .18); border-color: rgba(169, 139, 255, .5); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aug-req { color: #f6cd6b; }
+  :root:not([data-theme="light"]) .aug-req[data-r="실버"] { color: #cfd9e4; }
+  :root:not([data-theme="light"]) .aug-req[data-r="프리즘"] { color: #d6b6ff; }
+}
+:root[data-theme="dark"] .aug-req { color: #f6cd6b; }
+:root[data-theme="dark"] .aug-req[data-r="실버"] { color: #cfd9e4; }
+:root[data-theme="dark"] .aug-req[data-r="프리즘"] { color: #d6b6ff; }
+.aug-req img { width: 16px; height: 16px; border-radius: 3px; flex: none; display: block; }
+.aug-sub { color: #b87c09; font-weight: 700; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aug-sub { color: #f6cd6b; } }
+:root[data-theme="dark"] .aug-sub { color: #f6cd6b; }
+.aug-reqline { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; font-size: var(--fs-s); color: var(--muted); }
+.aug-reqline .aug-req { margin-right: 0; font-size: var(--fs-s); padding: 2px 8px 2px 4px; }
+.aug-reqline .aug-req img { width: 18px; height: 18px; }
 .mt-name .hot { font-size: var(--fs-2xs); font-weight: 800; color: #fff; background: #e5484d; border-radius: 4px; padding: 0 4px; letter-spacing: .3px; }
 .gd-badge { display: inline-flex; align-items: center; font-size: var(--fs-2xs); font-weight: 700; color: var(--accent2); background: var(--accent2-soft); border: 1px solid color-mix(in srgb, var(--accent2) 32%, transparent); border-radius: 5px; padding: 1px 6px; white-space: nowrap; line-height: 1.35; }
 .dk-hero h3 .gd-badge { margin-left: 6px; vertical-align: 3px; }

@@ -495,6 +495,7 @@
   body:not(.overlay) .pcdk-chip.ch-d4 { --chc: #ff5a5f; }
   body:not(.overlay) .pcdk-chip.gd-badge { --chc: var(--accent2); border: 0; }
   body:not(.overlay) .pcdk-chip.ch-var { --chc: var(--accent); }
+  body:not(.overlay) .pcdk-chip.ch-hero { --chc: #e6b851; }
   body:not(.overlay) .pcdk-sub { margin-top: 4px; }
   body:not(.overlay) .pcdk-u[data-unit] { cursor: pointer; }
   body:not(.overlay) .pcdk-u[data-unit]:hover .pcdk-pic { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,.35); }

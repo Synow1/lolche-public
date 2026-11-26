@@ -69,7 +69,7 @@
     if (dbox && META && IDX) {
       var msub = document.getElementById("hm-meta-sub");
       if (msub) msub.textContent = (META.pbe ? "MetaTFT " + pbeLabel(metaShownDays()) : "에메+") + " · " + (META.patch || "");
-      var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer"); })
+      var list = allViews().filter(function (v) { return v && basisSt(v.st, "emer") && !augReq(v.st); })
         .sort(function (a, b) { return basisSt(a.st, "emer")[0] - basisSt(b.st, "emer")[0]; })
         .slice(0, 4);
       dbox.innerHTML = "";
@@ -252,13 +252,15 @@
     // 1) 19시즌 메타 덱
     if (wantDecks && META && IDX) {
       var dks = allViews().filter(function (v) {
-        return v && (matches(deckName(v), q) || v.board.some(function (b) { return matches(b.u, q); }));
+        var ar = v && augReq(v.st);
+        return v && (matches(deckName(v), q) || (ar && (matches(ar.n, q) || (ar.hero && matches("영웅 증강", q)))) || v.board.some(function (b) { return matches(b.u, q); }));
       }).slice(0, 6).map(function (v) {
-        var bs = basisSt(v.st, "emer"), mc = mainOf(v), ic = mc && IDX.units[mc.u] && IDX.units[mc.u].icon;
+        var bs = basisSt(v.st, "emer"), mc = mainOf(v), ic = mc && IDX.units[mc.u] && IDX.units[mc.u].icon, ar = augReq(v.st);
+        var sub = (ar ? (ar.hero ? "영웅 증강: " : "필수 증강: ") + ar.n + " · " : "") + (bs ? ((META.pbe ? "PBE 평균 " : "에메+ 평균 ") + bs[0].toFixed(2) + " · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱");
         return {
           icon: ic, title: deckName(v),
-          sub: bs ? ((META.pbe ? "PBE 평균 " : "에메+ 평균 ") + bs[0].toFixed(2) + " · 승률 " + bs[2].toFixed(1) + "%") : "추천 덱",
-          tag: basisTier(v.st, "emer") + " 티어", tagCls: "gold",
+          sub: sub,
+          tag: ar ? "영웅 증강" : basisTier(v.st, "emer") + " 티어", tagCls: "gold",
           go: function () { openDeck(v.id); }
         };
       });

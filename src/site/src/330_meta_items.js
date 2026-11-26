@@ -92,13 +92,18 @@
     if (md && sec && (!scope || scope.contains(md))) { md.hidden = true; sec.appendChild(md); }
   }
   function pcMetaRow(v, basis) {
-    var d = v.st, bs = basisSt(d, basis), mc = mainOf(v), pl = perLobby(d, basis);
+    var d = v.st, bs = basisSt(d, basis), mc = mainOf(v), pl = perLobby(d, basis), areq = augReq(d);
     var nm = el("div", "mt-name", deckName(v));
     var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+    if (areq) {
+      var ab = augReqBadge(areq, false);
+      ab.addEventListener("click", function (e) { if (openSheet("a", areq.n)) { e.stopPropagation(); e.preventDefault(); } });
+      nm.insertBefore(ab, nm.firstChild);
+    }
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
-    var chips = (d ? [d.style ? [styleKo(d.style), styleCls(d.style)] : null,
+    var chips = (areq ? [[areq.n, "ch-hero"]] : []).concat(d ? [d.style ? [styleKo(d.style), styleCls(d.style)] : null,
       d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null] : [])
       .concat([v.guide ? ["가이드", "gd-badge"] : null, v.subs && v.subs.length > 1 ? ["비슷한 덱 " + v.subs.length, "ch-var"] : null]).filter(Boolean);
     var units = starOrder(v.board, mc && mc.u).map(function (b) {
@@ -118,7 +123,7 @@
     var d = v.st, r = el("button", "mt-row" + (d && d.mine ? " mine" : "")); r.type = "button";
     r.dataset.id = v.id;
     if (v.subs && v.subs.length) r.dataset.subs = v.subs.map(function (m) { return m.id; }).join(",");
-    var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v);
+    var bt = basisTier(d, basis), bs = basisSt(d, basis), mc = mainOf(v), areq = augReq(d);
     r.classList.add("dk", "t-" + bt);
     r.appendChild(dkPortrait(mc, null));
     var mid = el("div", "mt-mid");
@@ -126,6 +131,7 @@
     meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
     var mtxt = el("span", "dk-sub");
     if (d && d.style) mtxt.appendChild(styleTag(d.style));
+    if (areq) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "aug-sub", areq.n)); }
     if (d && d.diff) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(el("span", "dd" + d.diff, DIFF[d.diff])); }
     var pl = perLobby(d, basis);
     if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
@@ -135,6 +141,7 @@
     var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
+    if (areq) nm.insertBefore(augReqBadge(areq, false), nm.firstChild);
     if (v.guide) nm.appendChild(el("span", "gd-badge", "가이드"));
     if (v.subs && v.subs.length > 1) nm.appendChild(el("span", "tfa-more", "비슷한 덱 " + v.subs.length));
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
@@ -173,13 +180,16 @@
     var matchQ = function (v) {
       if (!q) return true;
       var hit = function (b) { return matches(b.u, q); };
+      var ar = augReq(v.st);
       return v.board.some(hit) || (v.gboard && v.gboard.some(hit)) || matches(v.name, q)
+        || (ar && (matches(ar.n, q) || (ar.hero && matches("영웅 증강", q))))
         || (v.subs && v.subs.some(function (m) { return matches(m.name, q); }));
     };
     var list = allViews().filter(function (v) {
       if (!v) return false;
       var d = v.st;
       if (mtFilter === "mine" && !(d && d.mine)) return false;
+      if (mtFilter === "hero" && !augReq(d)) return false;
       if (mtFilter === "reroll" && !isReroll(d)) return false;
       if ((mtFilter === "8" || mtFilter === "9") && (!d || isReroll(d) || (mtFilter === "8" ? d.level !== 8 : d.level < 9))) return false;
       return matchQ(v);
@@ -332,6 +342,7 @@
     if (v.guide) th.appendChild(el("span", "gd-badge", "가이드"));
     t.appendChild(th);
     if (d) t.appendChild(el("p", null, [styleKo(d.style), d.level + "렙 완성", d.diff ? DIFF[d.diff] : "", d.mine].filter(Boolean).join(" · ")));
+    var areq = augReq(d); if (areq) { var arq = el("p", "aug-reqline"); arq.appendChild(augReqBadge(areq, true)); arq.appendChild(document.createTextNode("이 증강이 나왔을 때만 갈 수 있는 덱이에요")); t.appendChild(arq); }
     var dreq = embReq(d); if (dreq) { var rq = el("p", "emb-reqline"); rq.appendChild(embBadge(dreq)); rq.appendChild(document.createTextNode("이 덱 판의 " + Math.round(dreq[1]) + "%가 사용해요")); t.appendChild(rq); }
     head.appendChild(t); box.appendChild(head);
     if (d) {
