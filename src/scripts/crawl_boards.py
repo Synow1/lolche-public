@@ -87,39 +87,49 @@ def load():
 
 
 def main():
-    goal = int(sys.argv[1]) if len(sys.argv) > 1 else 4000
-    cap = int(sys.argv[2]) if len(sys.argv) > 2 else 600
+    args = [a for a in sys.argv[1:] if a != "--pbe"]
+    pbe = "--pbe" in sys.argv[1:]
+    goal = int(args[0]) if len(args) > 0 else (1500 if pbe else 4000)
+    cap = int(args[1]) if len(args) > 1 else (160 if pbe else 600)
+    global OUT, SEASON
+    if pbe:
+        import setinfo
+        OUT = ROOT / "data" / "power" / f"boards_s{setinfo.NUM}.jsonl.gz"
+        SEASON = f"set{setinfo.NUM}"
+    shard = "pbe1" if pbe else "kr"
     OUT.parent.mkdir(parents=True, exist_ok=True)
     have = load()
-    print("있던 판", len(have))
+    print(f"[{'PBE ' + SEASON if pbe else SEASON}] 있던 판", len(have))
     goal += len(have)
     cnt = [0] * 8
     for m in have.values():
         cnt[lb(m["lt"])] += 1
     queue = {b: [] for b in range(8)}
     seen = set()
-    for s in SEEDS:
-        queue[2].append(s)
+    seeds = ["Mortdog#PBE", "Synow#KR1"] if pbe else SEEDS
+    for s in seeds:
+        queue[4 if pbe else 2].append(s)
         seen.add(s)
     # 모아 둔 최근 판(3일)에 나온 사람들도 후보로 (매일 같은 사람만 다시 찾으면 새 판이 거의 안 나옴). 티어 묶음별로 섞어서
     import random
     newest = max((m["t"] for m in have.values()), default=0)
-    pool = [(b[5], b[2]) for m in have.values() if m["t"] >= newest - 3 * 86400000 for b in m["b"] if len(b) > 5 and b[5] and b[2] is not None]
+    pool = [(b[5], b[2]) for m in have.values() if m["t"] >= newest - 3 * 86400000 for b in m["b"] if len(b) > 5 and b[5] and (pbe or b[2] is not None)]
     random.shuffle(pool)
     for rid, t in pool:
         if rid not in seen:
             seen.add(rid)
-            queue[0 if t <= 1 else min(7, t - 1)].append(rid)
-    # 랭커 몇 명도 씨앗으로 (마스터+)
-    lbd = get(f"leaderboards/summoners/kr?page=1&queueId=1100&season={SEASON}") or {}
-    sm = {x["puuid"]: x for x in lbd.get("summoners", [])}
-    for r in (lbd.get("summonerRankings") or [])[:40]:
-        s = sm.get(r.get("puuid"))
-        if s and s.get("gameName") and s.get("tagLine"):
-            rid = s["gameName"] + "#" + s["tagLine"]
-            if rid not in seen:
-                queue[7].append(rid)
-                seen.add(rid)
+            queue[4 if pbe else (0 if t <= 1 else min(7, t - 1))].append(rid)
+    if not pbe:
+        # 랭커 몇 명도 씨앗으로 (마스터+)
+        lbd = get(f"leaderboards/summoners/kr?page=1&queueId=1100&season={SEASON}") or {}
+        sm = {x["puuid"]: x for x in lbd.get("summoners", [])}
+        for r in (lbd.get("summonerRankings") or [])[:40]:
+            s = sm.get(r.get("puuid"))
+            if s and s.get("gameName") and s.get("tagLine"):
+                rid = s["gameName"] + "#" + s["tagLine"]
+                if rid not in seen:
+                    queue[7].append(rid)
+                    seen.add(rid)
     reqs, new, named = 0, 0, 0
     f = gzip.open(OUT, "at", encoding="utf-8")
     try:
@@ -130,20 +140,28 @@ def main():
                 break
             rid = queue[b].pop(0)
             name, tag = rid.split("#")
-            d = get(f"summoners/kr/{urllib.parse.quote(name + '-' + tag)}/matches?season={SEASON}&page=1&queueId=1100")
+            q_param = "" if pbe else "&queueId=1100"
+            d = get(f"summoners/{shard}/{urllib.parse.quote(name + '-' + tag)}/matches?season={SEASON}&page=1{q_param}")
             reqs += 1
-            time.sleep(0.4)
+            time.sleep(0.25 if pbe else 0.4)
             if not d:
                 continue
             sms = {x["puuid"]: x for x in d.get("summoners", [])}
             lgs = {x["puuid"]: x for x in d.get("summonerLeagues", []) if x.get("queueId") == 1100}
             # 받은 판 사람들을 다음 후보로 (이미 있는 판이어도 — 사람은 새로 나옴). 티어 묶음별로
             for x in sms.values():
-                l = lgs.get(x["puuid"])
-                if not l or l.get("tier") not in BUCKET or not x.get("gameName") or not x.get("tagLine"):
+                if not x.get("gameName") or not x.get("tagLine"):
                     continue
                 r2 = x["gameName"] + "#" + x["tagLine"]
-                if r2 not in seen:
+                if r2 in seen:
+                    continue
+                if pbe:
+                    seen.add(r2)
+                    queue[4].append(r2)
+                else:
+                    l = lgs.get(x["puuid"])
+                    if not l or l.get("tier") not in BUCKET:
+                        continue
                     seen.add(r2)
                     queue[BUCKET[l["tier"]]].append(r2)
             for m in d.get("matches", []):
@@ -154,16 +172,21 @@ def main():
                         if len(b) < 6:
                             b.append(byp.get((b[0], b[1]), ""))
                     named += 1
-                if m.get("queueId") != 1100 or m["matchId"] in have or len(m.get("participants", [])) != 8:
+                ok_q = (m.get("queueId") in (1090, 1100)) if pbe else (m.get("queueId") == 1100)
+                if not ok_q or m["matchId"] in have or len(m.get("participants", [])) != 8:
                     continue
-                tiers = [TNUM.get((lgs.get(p["puuid"]) or {}).get("tier", ""), None) for p in m["participants"]]
-                known = [t for t in tiers if t is not None]
-                if not known:
-                    continue
-                lt = round(sum(known) / len(known), 2)
+                if pbe:
+                    tiers = [None] * 8
+                    lt = 5.0
+                else:
+                    tiers = [TNUM.get((lgs.get(p["puuid"]) or {}).get("tier", ""), None) for p in m["participants"]]
+                    known = [t for t in tiers if t is not None]
+                    if not known:
+                        continue
+                    lt = round(sum(known) / len(known), 2)
                 if m["gameCreatedAt"] < (time.time() - KEEP_DAYS * 86400) * 1000:
                     continue
-                rec = {"id": m["matchId"], "s": SEASON, "p": m.get("patchVersion"), "t": m["gameCreatedAt"], "lt": lt,
+                rec = {"id": m["matchId"], "s": SEASON, "p": m.get("patchVersion") or (SEASON.replace("set", "") + ".1"), "t": m["gameCreatedAt"], "lt": lt,
                        "b": [[p["placement"], p["level"], tiers[i],
                               [[u["character_id"], u["tier"], u.get("rarity", 0), u.get("items") or []] for u in p.get("units", [])],
                               [[t["name"], t.get("tier_current", 0), t.get("num_units", 0)] for t in p.get("traits", [])],

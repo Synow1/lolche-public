@@ -53,7 +53,7 @@ const DATA_TAGS = {
   'meta.json': ['meta', 'home', 'parts', 'emb', 'overlay', 'units'], 'guides.json': ['meta', 'home', 'parts', 'emb'], 'tfa.json': ['tfa', 'augments'],
   'items.json': ['items'], 'db.json': ['find', 'builder', 'items', 'traits', 'meta', 'rank', 'augments', 'units', 's19'], 'esports.json': ['esports', 'home'],
   'friends.json': ['friends'], 'rank.json': ['rank'], 'rank_hist.json': ['rank'], 'dist.json': ['rank'], 'cutoffs.json': ['rank'],
-  'power.json': ['power', 'rank', 'friends'], 'power_top.json': ['power'], 's19.json': ['s19', 'home', 'units'], 'oldsets.json': ['rank'],
+  'power.json': ['power', 'rank', 'friends'], 'power_top.json': ['power'], 'power_s19.json': ['power', 'rank'], 'power_top_s19.json': ['power'], 's19.json': ['s19', 'home', 'units'], 'oldsets.json': ['rank'],
   'changes.json': ['whatsnew'], 'version.json': ['whatsnew', 'more'],
 };
 const SCOPE = (() => {
@@ -376,10 +376,50 @@ function fresh(file, key, hours) {
       if (pwChk && pwChk.badCh.length) fail(`덱파워: 프리즘이 아닌 시너지에 프리즘 색(.s-chromatic)이 붙음 (${JSON.stringify(pwChk.badCh.slice(0, 4))})`);
       if (pwChk && pwChk.emptyHx) fail(`덱파워: 18시즌 시너지 그림 빈칸 ${pwChk.emptyHx}개`);
     }
+    // 19시즌 PBE 덱파워 탭 점검
+    await q(() => { const b = document.querySelector('#pw-src [data-s=s19]'); if (b) b.click(); });
+    await pg.waitForTimeout(800);
+    const pw19 = await q(() => ({
+      n: document.querySelectorAll('#pw-list .pwc').length,
+      scores: [...document.querySelectorAll('#pw-list .pwc-big')].map(e => +e.textContent.trim()),
+      emptyHx: [...document.querySelectorAll('#pw-list .trx .hx2')].filter(h => !h.querySelector('img')).length,
+      sw: document.documentElement.scrollWidth,
+    }));
+    if (!pw19 || pw19.n < 5) fail('덱파워 19시즌 PBE: 카드 5개 미만');
+    else {
+      if (pw19.scores.some(x => isNaN(x) || x <= 0)) fail('덱파워 19시즌 PBE: 점수가 비정상');
+      if (pw19.emptyHx) fail(`덱파워 19시즌 PBE: 시너지 그림 빈칸 ${pw19.emptyHx}개`);
+      if (pw19.sw > W) fail(`덱파워 19시즌 PBE: 화면보다 넓음 ${pw19.sw}px (가로 밀림)`);
+      const wr19 = await pg.evaluate(new Function('return ' + WRAP_FN)());
+      if (wr19 && wr19.length) fail(`[${W}] 덱파워 19시즌 PBE: 짧은 글이 두 줄로 꺾임 ${[...new Set(wr19)].slice(0, 4).join(', ')}`);
+    }
+    await q(() => { const b = document.querySelector('#pw-src [data-s=top]'); if (b) b.click(); });
     }
     if (!FAST && ['friends'].some(need)) {
     await go('friends'); await pg.waitForTimeout(6000);
     if (await q(() => document.querySelectorAll('#fr-cards .fr-card').length) < 2) soft('친구: 카드 2개 미만');
+    else {
+      // 티어순 기본 정렬 + 1, 2, 3... 등수 배지 확인
+      const frChk = await q(() => {
+        const cards = [...document.querySelectorAll('#fr-cards .fr-card')];
+        const rks = cards.map(c => (c.querySelector('.fr-rk') || {}).textContent || '');
+        const vals = cards.map(c => {
+          const t = (c.querySelector('.tierpill b') || {}).textContent || '';
+          const m = /^(챌린저|그랜드마스터|마스터|다이아몬드|에메랄드|플래티넘|골드|실버|브론즈|아이언)\s*(\d)?\s*(\d+)LP/.exec(t);
+          if (!m) return -1;
+          const B = { '아이언': 0, '브론즈': 400, '실버': 800, '골드': 1200, '플래티넘': 1600, '에메랄드': 2000, '다이아몬드': 2400, '마스터': 2800, '그랜드마스터': 2800, '챌린저': 2800 };
+          const d = m[2] ? (4 - (+m[2])) * 100 : 0;
+          return B[m[1]] + d + (+m[3]);
+        });
+        return { rks, vals, sw: document.documentElement.scrollWidth };
+      });
+      if (frChk) {
+        const exp = frChk.rks.map((_, i) => String(i + 1));
+        if (JSON.stringify(frChk.rks) !== JSON.stringify(exp)) fail(`친구: 등수 배지 불일치 (${frChk.rks.join(', ')})`);
+        for (let i = 1; i < frChk.vals.length; i++) if (frChk.vals[i] > frChk.vals[i - 1]) fail(`친구: 티어 내림차순 정렬 깨짐 (${frChk.vals.join(' -> ')})`);
+        if (frChk.sw > W) fail(`친구: 화면보다 넓음 ${frChk.sw}px (가로 밀림)`);
+      }
+    }
     }
     if (!FAST && need('rank')) {
     // 전적 검색 (좁은 폭에서 판 카드가 화면을 밀던 문제, 덱 이름·LP 그래프·많이 한 덱)
@@ -428,6 +468,30 @@ function fresh(file, key, hours) {
     // 기본 범위 50판, 등수 줄은 최근 20판까지 (2026-11-11 사용자)
     if (await q(() => ((document.querySelector('.rk-range .mt-chips button.on') || {}).textContent || '')) !== '50판') soft('전적 검색: 기본 범위가 50판이 아님');
     if (await q(() => document.querySelectorAll('.rk-sum .plstr span').length) > 20) fail('전적 검색: 등수 줄이 20판 넘게 보임');
+
+    // PBE 19시즌 전적 검색 + 19시즌 덱파워 점검
+    const pbeSample = (() => { try { const t = JSON.parse(fs.readFileSync(path.join(SITE, 'power_top_s19.json'), 'utf8')); return (t.top && t.top.all && t.top.all[0] && t.top.all[0].who) || 'TimTorte#8338'; } catch (e) { return 'TimTorte#8338'; } })();
+    await q((who) => {
+      const b = document.querySelector('#rk-regchips [data-reg=pbe1]'); if (b) b.click();
+      const i = document.getElementById('rk-q'); i.value = who; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    }, pbeSample);
+    await pg.waitForSelector('#rk-prof .rk-gm', { timeout: 60000 }).catch(() => soft('PBE 전적 검색: 판 카드가 안 나옴'));
+    await pg.waitForTimeout(2500);
+    const pbeChk = await q(() => ({
+      sb: (document.querySelector('#rk-prof .rk-sb') || {}).textContent || '',
+      gms: document.querySelectorAll('#rk-prof .rk-gm').length,
+      pws: [...document.querySelectorAll('#rk-prof .rk-gm .pw-p')].map(p => [p.querySelector('b').textContent, p.querySelector('small').textContent]),
+      hasLpErr: /LP 기록이/.test((document.getElementById('rk-prof') || {}).innerText || ''),
+      sw: document.documentElement.scrollWidth,
+    }));
+    if (!pbeChk || !/PBE/.test(pbeChk.sb)) fail(`PBE 전적 검색: PBE 배지 없음 (${pbeChk && pbeChk.sb})`);
+    if (!pbeChk || pbeChk.gms < 3) soft('PBE 전적 검색: 19시즌 판 카드 3개 미만');
+    if (!pbeChk || !pbeChk.pws.length) fail('PBE 전적 검색: 19시즌 판 카드에 19시즌 덱파워가 없음');
+    else if (pbeChk.pws.some(x => +x[0] < 0 || isNaN(+x[0]))) fail('PBE 전적 검색: 19시즌 덱파워 점수가 비정상');
+    if (pbeChk && pbeChk.hasLpErr) fail('PBE 전적 검색: 일반 서버인데 랭크 LP 그래프 안내 문구가 보임');
+    if (pbeChk && pbeChk.sw > W) fail(`PBE 전적 검색: 화면보다 넓음 ${pbeChk.sw}px (가로 밀림)`);
+    { const wrp = await pg.evaluate(new Function('return ' + WRAP_FN)()); if (wrp && wrp.length) fail(`[${W}] PBE 전적 검색: 짧은 글이 두 줄로 꺾임 ${[...new Set(wrp)].slice(0, 4).join(', ')}`); }
+    await q(() => { const b = document.querySelector('#rk-regchips [data-reg=kr]'); if (b) b.click(); });
     }
     await pg.close();
   });

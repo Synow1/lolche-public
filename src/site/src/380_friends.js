@@ -84,12 +84,13 @@
   }
   function frCards() {
     var box = document.getElementById("fr-cards"); box.innerHTML = "";
-    frData.slice().sort(function (a, b) { return (b.d.ranked.rating_numeric || 0) - (a.d.ranked.rating_numeric || 0); }).forEach(function (f) {
+    frData.slice().sort(function (a, b) { return (b.d.ranked.rating_numeric != null ? b.d.ranked.rating_numeric : -1) - (a.d.ranked.rating_numeric != null ? a.d.ranked.rating_numeric : -1) || a.id.localeCompare(b.id, "ko"); }).forEach(function (f, idx) {
       var k = frData.indexOf(f), c = el("div", "fr-card");
       c.style.setProperty("--fc", FR_COLORS[k % FR_COLORS.length]);
       var top = el("div", "fr-top");
+      top.appendChild(el("span", "fr-rk" + (idx < 3 ? " r" + (idx + 1) : ""), String(idx + 1)));
       var nm = el("button", "fr-name", f.id.split("#")[0]); nm.type = "button";
-      nm.addEventListener("click", function () { openProfile(f.id); });
+      nm.addEventListener("click", function () { openProfile(f.id, "kr"); });
       top.appendChild(nm);
       top.appendChild(tierBadge(f.d.ranked.rating_text));
       if (LIVE && (WEB || f.id !== "Synow#KR1")) {
@@ -154,7 +155,8 @@
       return { list: j.players.map(function (d) { return { id: d.riot_id, d: d }; }), note: updAt(j.updated) + " · 출처 롤체지지" };
     });
     p.then(function (r) {
-      frData = r.list.map(function (x) { x.d.ranked = x.d.ranked || {}; x.s = frSeries(x.d); return x; });
+      frData = r.list.map(function (x) { x.d.ranked = x.d.ranked || {}; x.s = frSeries(x.d); return x; })
+        .sort(function (a, b) { return (b.d.ranked.rating_numeric != null ? b.d.ranked.rating_numeric : -1) - (a.d.ranked.rating_numeric != null ? a.d.ranked.rating_numeric : -1) || a.id.localeCompare(b.id, "ko"); });
       note.textContent = LIVE ? (frSyncing ? "갱신 중" : updAt(new Date())) + " · 출처 롤체지지" : r.note;
       frDraw();
     }).catch(function (e) { note.textContent = "불러오지 못했어요. 잠시 후 다시 시도해 주세요"; });
@@ -239,11 +241,14 @@
   function buildRank() {
     document.querySelectorAll("#rk-seg button").forEach(function (b) { b.addEventListener("click", function () { rkView(b.dataset.v); }); });
     document.getElementById("rk-more").addEventListener("click", function () { rkLoad(true); });
+    var regBtn = document.getElementById("rk-reg");
+    if (regBtn) regBtn.addEventListener("click", function () { rkSetReg(rkReg === "pbe1" ? "kr" : "pbe1", true); });
+    document.querySelectorAll("#rk-regchips button").forEach(function (b) { b.addEventListener("click", function () { rkSetReg(b.dataset.reg, true); }); });
     document.getElementById("rk-q").addEventListener("input", rkSuggest);
-    document.getElementById("rk-q").addEventListener("keydown", function (e) { if (e.key === "Enter" && this.value.indexOf("#") > 0) { this.blur(); rkProfile(this.value.trim()); } });
-    document.getElementById("rk-q").addEventListener("focus", function () { var q = this; setTimeout(function () { q.select(); }, 0); whoList(document.getElementById("rk-sug"), rkCur && q.value === rkCur ? "" : q.value, { me: true }); });
+    document.getElementById("rk-q").addEventListener("keydown", function (e) { if (e.key === "Enter" && this.value.indexOf("#") > 0) { this.blur(); rkProfile(this.value.trim(), null, rkReg); } });
+    document.getElementById("rk-q").addEventListener("focus", function () { var q = this; setTimeout(function () { q.select(); }, 0); whoList(document.getElementById("rk-sug"), rkCur && q.value === rkCur ? "" : q.value, { me: !WEB, reg: rkReg }); });
     document.getElementById("rk-q").addEventListener("blur", function () { setTimeout(function () { if (rkCur) document.getElementById("rk-sug").innerHTML = ""; }, 200); });
-    document.getElementById("rk-go").addEventListener("click", function () { var v = document.getElementById("rk-q").value.trim(); if (v.indexOf("#") > 0) rkProfile(v); else rkSuggest(); });
+    document.getElementById("rk-go").addEventListener("click", function () { var v = document.getElementById("rk-q").value.trim(); if (v.indexOf("#") > 0) rkProfile(v, null, rkReg); else rkSuggest(); });
     rkFavs(); rkLoad(false);
     buildFriends();
   }

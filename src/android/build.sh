@@ -47,7 +47,7 @@ cp -r "$ROOT/site/icons" "$ROOT/site/img" "$ROOT/site/fonts" \
   "$ROOT/site/db.json" "$ROOT/site/meta.json" "$ROOT/site/rank.json" "$ROOT/site/esports.json" \
   "$ROOT/site/guides.json" "$ROOT/site/items.json" "$ROOT/site/friends.json" "$ROOT/site/version.json" \
   "$ROOT/site/dist.json" "$ROOT/site/cutoffs.json" "$ROOT/site/rank_hist.json" "$ROOT/site/power.json" \
-  "$ROOT/site/power_top.json" "$ROOT/site/oldsets.json" "$ROOT/site/tfa.json" "$ROOT/site/changes.json" "$ROOT/site/s19.json" \
+  "$ROOT/site/power_top.json" "$ROOT/site/power_s19.json" "$ROOT/site/power_top_s19.json" "$ROOT/site/oldsets.json" "$ROOT/site/tfa.json" "$ROOT/site/changes.json" "$ROOT/site/s19.json" \
   "$WORK/assets/www/"
 
 # 정적 자산(fonts, icons, img, oldsets.json) 내용 해시 계산 (OTA 분할 업데이트용)

@@ -456,11 +456,13 @@
   rkUpdSetup();
   var oldReady = LIVE_SET_ID !== SET_ID ? loadOld() : Promise.resolve(null);  // 본섭 18시즌 전적·랭킹·덱파워 사전 선로딩
 
-  // 덱파워 모델은 다른 데이터를 기다리지 않고 바로 받는다. 실패하면 3초 뒤 한 번 더
+  // 덱파워 모델은 다른 데이터를 기다리지 않고 바로 받는다. 실패하면 3초 뒤 한 번 더 (18시즌 본섭 + 19시즌 PBE)
   (function loadPower(n) {
     fetch("power.json").then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(powerReady)
       .catch(function () { if (n < 1) setTimeout(function () { loadPower(n + 1); }, 3000); });
   })(0);
+  fetch("power_s19.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { if (d) powerReadyS19(d); }).catch(function () {});
+  fetch("power_top_s19.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { if (d) { PW_TOP_S19 = d; if (current === "power") pwRender(); } }).catch(function () {});
   fetch("icons/index.json").then(function (r) { return r.json(); }).then(function (d) {
     IDX = d; decorate(); buildGrid(); buildCompList(); buildEmblems(); mark();
     fetch("esports.json").then(function (r) { return r.json(); }).then(buildEsports).catch(function () {

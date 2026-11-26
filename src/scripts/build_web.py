@@ -31,6 +31,8 @@ WEB_JSONS = [
     "rank_hist.json",
     "power.json",
     "power_top.json",
+    "power_s19.json",
+    "power_top_s19.json",
     "oldsets.json",
     "tfa.json",
     "changes.json",

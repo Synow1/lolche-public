@@ -58,7 +58,7 @@
     var code = isCur ? codeOfNames(board.map(function (u) { return u.u; })) : null;
     if (code) h.appendChild(codeButton(code, "팀 코드", null, codeMiss(board.map(function (u) { return u.u; }))));
     g.appendChild(h);
-    var pt = pwOtherSet(m.patch) ? null : powerTag(s.units, s.traits, s.level, false, mSet); if (pt) { if (pwOld(m.patch)) pt.appendChild(el("span", "pw-old", m.patch + " 판 · 지금 패치 기준")); g.appendChild(pt); }
+    var pt = pwOtherSet(m.patch, mSet) ? null : powerTag(s.units, s.traits, s.level, false, mSet); if (pt) { if (pwOld(m.patch, mSet)) pt.appendChild(el("span", "pw-old", m.patch + " 판 · 지금 패치 기준")); g.appendChild(pt); }
     g.appendChild(synRow(synOfMatch(s.traits, board, mSet), false, 8));
     var mini = el("div", "mini cmp");
     board.sort(function (a, b) { return (b.cost - a.cost) || (b.star - a.star); }).forEach(function (u) { mini.appendChild(miniUnit({ name: u.u, cost: u.cost, star: u.star, icon: u.icon, old: u.old, set: u.set, items: u._ii || u.i.map(function (n) { return { name: n }; }) }, true)); });
@@ -89,9 +89,14 @@
     var b = TIER_BANDS[Math.floor(v / 400)] || TIER_BANDS[0];
     return b[1] + " " + ROMAN[4 - Math.floor((v % 400) / 100)] + " " + (v % 100) + " LP";
   }
-  function dakKey(riotId) { var p = riotId.split("#"); return "summoners/kr/" + encodeURIComponent(p[0] + "-" + (p[1] || "KR1")); }
+  function dakKey(riotId, reg) {
+    var sh = reg === "pbe1" ? "pbe1" : "kr";
+    var p = riotId.split("#"), defTag = sh === "pbe1" ? "PBE" : "KR1";
+    return "summoners/" + sh + "/" + encodeURIComponent(p[0] + "-" + (p[1] || defTag));
+  }
   function dakGet(path) { return viaApp(DAK + path); }
-  function dakMatches(resp, puuid) {
+  function dakMatches(resp, puuid, reg) {
+    var sh = reg === "pbe1" ? "pbe1" : "kr", pfx = sh === "pbe1" ? "PBE1_" : "KR_";
     var sm = {}, lg = {};
     (resp.summoners || []).forEach(function (s) { sm[s.puuid] = s; });
     (resp.summonerLeagues || []).forEach(function (x) { if (x.queueId === 1100) lg[x.puuid] = x; });
@@ -104,7 +109,7 @@
         return { placement: p.placement, level: p.level, puuid: p.puuid, units: conv(p.units), traits: p.traits, riot_id: s ? s.gameName + "#" + s.tagLine : "?", rating: l && l.tier && l.tier !== "UNRANKED" ? l.tier + " " + (l.rank || "I") + " 0 LP" : "" };
       });
       var mSet = parseSetNum(m.season) || parseSetNum(m.patchVersion) || parseSetNum(m.gameVersion);
-      return { riot_match_id: "KR_" + m.matchId, season: m.season || "", patch: m.patchVersion || "", gameVersion: m.gameVersion || "", set: mSet, queue_id: m.queueId, placement: me.placement, match_timestamp: m.gameCreatedAt, game_duration: m.gameLength,
+      return { riot_match_id: pfx + m.matchId, _reg: sh, season: m.season || "", patch: m.patchVersion || "", gameVersion: m.gameVersion || "", set: mSet, queue_id: m.queueId, placement: me.placement, match_timestamp: m.gameCreatedAt, game_duration: m.gameLength,
         lobby_label: lobbyLabel(lob.map(function (p) { return lg[p.puuid]; }).filter(Boolean)), summary: { level: me.level, units: conv(me.units), traits: me.traits, time_eliminated: me.timeEliminated }, _lobby: lob };
     }).filter(Boolean);
   }
@@ -127,20 +132,30 @@
     });
     return h;
   }
-  // opt: { queue: "1100" 이면 랭크 판만, pages: 받을 판 목록 페이지 수, history: MetaTFT 지난 시즌도 }
+  // opt: { queue: "1100" 이면 랭크 판만, pages: 받을 판 목록 페이지 수, history: MetaTFT 지난 시즌도, reg: "kr" | "pbe1" }
   function dakProfile(riotId, opt) {
     opt = opt || {};
-    var base = dakKey(riotId), season = opt.season || dakSeason(), q = opt.queue ? "&queueId=" + opt.queue : "";
+    var reg = opt.reg === "pbe1" ? "pbe1" : "kr", isPbe = reg === "pbe1";
+    var base = dakKey(riotId, reg), season = opt.season || (isPbe ? "set" + guideSetNum() : dakSeason()), q = opt.queue ? "&queueId=" + opt.queue : "";
     function logsFrom(page, acc) {
+      if (isPbe) return Promise.resolve([]);
       return dakGet(base + "/league-logs?queueId=1100&season=" + season + "&page=" + page + "&size=200&sort=desc").then(function (r) {
         acc = acc.concat(r.summonerLeagueLogs || []);
         if (page === 1 && !opt.season) applyCutNow(r.summonerTierCutoffs);
         return r.meta && r.meta.totalCount > acc.length && page < 5 && (r.summonerLeagueLogs || []).length ? logsFrom(page + 1, acc) : acc;
       });
     }
-    var mt = opt.history ? getMT("public/profile/lookup_by_riotid/KR/" + encodeURIComponent(riotId.split("#")[0]) + "/" + encodeURIComponent(riotId.split("#")[1] || "KR1") + "?source=full_profile&tft_set=" + LIVE_SET_ID).catch(function () { return null; }) : Promise.resolve(null);
-    return Promise.all([dakGet(base + "/profile?season=" + season), logsFrom(1, []).catch(function () { return []; }), dakGet(base + "/matches?season=" + season + "&page=1" + q).catch(function () { return null; }), mt])
-      .then(function (r) {
+    var mt = !isPbe && opt.history ? getMT("public/profile/lookup_by_riotid/KR/" + encodeURIComponent(riotId.split("#")[0]) + "/" + encodeURIComponent(riotId.split("#")[1] || "KR1") + "?source=full_profile&tft_set=" + LIVE_SET_ID).catch(function () { return null; }) : Promise.resolve(null);
+    function fetchAll() {
+      return Promise.all([dakGet(base + "/profile?season=" + season), logsFrom(1, []).catch(function () { return []; }), dakGet(base + "/matches?season=" + season + "&page=1" + q).catch(function () { return null; }), mt]);
+    }
+    var req = isPbe
+      ? fetchAll().catch(function () { return dakSync(riotId, reg).then(fetchAll); })
+      : fetchAll();
+    return req.then(function (r) {
+      if ((!r[0] || !r[0].summoner) && isPbe) return dakSync(riotId, reg).then(fetchAll);
+      return r;
+    }).then(function (r) {
         var pf = r[0], logs = r[1], m1 = r[2], mtp = r[3];
         if (!pf || !pf.summoner) throw new Error("소환사를 찾을 수 없어요");
         var puuid = pf.summoner.puuid, L = (pf.summonerLeagues || []).filter(function (x) { return x.queueId === 1100; })[0];
@@ -155,14 +170,14 @@
           ranked_season_stats: pl ? { "1100": { total: pl.values.reduce(function (a, b) { return a + b; }, 0), placements: pl.values } } : {},
           rating_history: mtp && mtp.rating_history ? mtp.rating_history : dakHist(pf.summonerSeasons),
           ranked_rating_changes: lg.map(function (x) { return { queue_id: 1100, rating_numeric: x[1], num_games: x[2], created_timestamp: new Date(x[0]).toISOString().slice(0, 23) }; }),
-          matches: m1 ? dakMatches(m1, puuid) : [], _logs: lg, _total: m1 && m1.meta ? m1.meta.totalCount : 0
+          matches: m1 ? dakMatches(m1, puuid, reg) : [], _logs: lg, _total: m1 && m1.meta ? m1.meta.totalCount : 0, _reg: reg
         };
         var got = 1;
         function needPages(want) { return Math.min(Math.ceil(Math.min(want, d._total) / 20), 25); }  // 20판씩, 최대 500판
         d._canMore = function (want) { return got < needPages(want); };
         d._more = function (want) {  // 판 목록 더 받기
           var need = needPages(want), ps = [];
-          for (var p = got + 1; p <= need; p++) ps.push(dakGet(base + "/matches?season=" + season + "&page=" + p + q).then(function (x) { return dakMatches(x, puuid); }).catch(function () { return []; }));
+          for (var p = got + 1; p <= need; p++) ps.push(dakGet(base + "/matches?season=" + season + "&page=" + p + q).then(function (x) { return dakMatches(x, puuid, reg); }).catch(function () { return []; }));
           got = Math.max(got, need);
           return Promise.all(ps).then(function (rs) { rs.forEach(function (a) { d.matches = d.matches.concat(a); }); return d; });
         };
@@ -196,8 +211,10 @@
     return step().catch(function () { return null; });
   }
   // 롤체지지 갱신: 처음엔 {retry_after: ms}만 오고, 그만큼 기다렸다 다시 부르면 {done: true}. done까지 기다려야 새 LP·판이 보인다 (최대 ~15초)
-  function dakSync(riotId) {
-    var path = "rpc/summoner-sync/by-name/kr/" + dakKey(riotId).replace("summoners/kr/", "") + "?web=1", tries = 0;
+  function dakSync(riotId, reg) {
+    var sh = reg === "pbe1" ? "pbe1" : "kr";
+    var slug = dakKey(riotId, sh).replace("summoners/" + sh + "/", "");
+    var path = "rpc/summoner-sync/by-name/" + sh + "/" + slug + "?web=1", tries = 0;
     function step() {
       return dakGet(path).then(function (r) {
         if (r && r.retry_after && ++tries < 12) return new Promise(function (res) { setTimeout(res, Math.min(3000, Math.max(500, r.retry_after))); }).then(step);
@@ -208,48 +225,53 @@
   }
 
   // 다른 탭에서 전적 열기: 기록 하나로 (뒤로가기 한 번이면 보던 탭·위치로)
-  function openProfile(id) {
-    if (current === "rank") { rkProfile(id); window.scrollTo(0, 0); return; }
-    var prev = current, y = window.scrollY, wasBoard = !document.getElementById("rk-board").hidden, prevId = rkCur, prevSea = RK_SEASON;
+  function openProfile(id, reg) {
+    var targetReg = reg || "kr";
+    if (current === "rank") { rkProfile(id, null, targetReg); window.scrollTo(0, 0); return; }
+    var prev = current, y = window.scrollY, wasBoard = !document.getElementById("rk-board").hidden, prevId = rkCur, prevSea = RK_SEASON, prevReg = rkCurReg || rkReg;
     navPush("tab", function () {
       applyTab(prev, false, y);
-      if (wasBoard) rkView("board"); else if (prevId) rkProfile(prevId, prevSea);
+      if (wasBoard) rkView("board"); else if (prevId) rkProfile(prevId, prevSea, prevReg); else rkSetReg(prevReg, false);
     });
     showTab("rank", false);
-    navQuiet = true; try { rkProfile(id); } finally { navQuiet = false; }
+    navQuiet = true; try { rkProfile(id, null, targetReg); } finally { navQuiet = false; }
     window.scrollTo(0, 0);
   }
-  var rkCur = null, RK_RETRY = {};
-  function rkProfile(riotId, season) {
-    var sea = season && season !== dakSeason() ? season : null;  // 지난 시즌 기록 보기 (롤체지지 season=set15 등)
-    if (riotId !== rkCur || sea !== RK_SEASON) {  // 뒤로가기: 앞에 보던 전적(로비에서 넘어온 경우·이번 시즌) 또는 검색 첫 화면으로
-      var prev = rkCur, prevSea = RK_SEASON, wasBoard = !document.getElementById("rk-board").hidden, py = window.scrollY;
+  var rkCur = null, rkCurReg = "kr", RK_RETRY = {};
+  function rkProfile(riotId, season, reg) {
+    var targetReg = reg || rkReg || "kr", isPbe = targetReg === "pbe1";
+    var sea = !isPbe && season && season !== dakSeason() ? season : null;  // 지난 시즌 기록 보기 (롤체지지 season=set15 등)
+    if (riotId !== rkCur || sea !== RK_SEASON || targetReg !== rkCurReg) {  // 뒤로가기: 앞에 보던 전적(로비에서 넘어온 경우·이번 시즌) 또는 검색 첫 화면으로
+      var prev = rkCur, prevSea = RK_SEASON, prevReg = rkCurReg, wasBoard = !document.getElementById("rk-board").hidden, py = window.scrollY;
       navPush("prof", function () {
         if (wasBoard) { rkView("board"); window.scrollTo(0, py); return; }  // 한국 랭킹에서 눌렀으면 랭킹 목록 그 위치로
-        if (prev) rkProfile(prev, prevSea);
-        else { rkCur = null; RK_SEASON = null; document.getElementById("rk-prof").innerHTML = ""; document.getElementById("rk-q").value = ""; rkFavs(); }
+        if (prev) rkProfile(prev, prevSea, prevReg);
+        else { rkCur = null; RK_SEASON = null; rkSetReg(prevReg || "kr", false); document.getElementById("rk-prof").innerHTML = ""; document.getElementById("rk-q").value = ""; rkFavs(); }
         window.scrollTo(0, prev ? 0 : py);
       });
     }
-    if ((sea || LIVE_SET_ID !== SET_ID) && !OLD) { RK_SEASON = sea; rkCur = riotId; document.getElementById("rk-prof").innerHTML = ""; document.getElementById("rk-prof").appendChild(el("p", "sub", "불러오는 중")); loadOld().then(function () { if (rkCur === riotId && RK_SEASON === sea) rkProfile(riotId, sea); }); return; }
+    if (!isPbe && (sea || LIVE_SET_ID !== SET_ID) && !OLD) { RK_SEASON = sea; rkCur = riotId; rkCurReg = targetReg; rkSetReg(targetReg, false); document.getElementById("rk-prof").innerHTML = ""; document.getElementById("rk-prof").appendChild(el("p", "sub", "불러오는 중")); loadOld().then(function () { if (rkCur === riotId && RK_SEASON === sea && rkCurReg === targetReg) rkProfile(riotId, sea, targetReg); }); return; }
     RK_SEASON = sea;
     rkCur = riotId;
+    rkCurReg = targetReg;
+    rkSetReg(targetReg, false);
     rkView("search");
     var out = document.getElementById("rk-prof"); out.innerHTML = "";
     document.getElementById("rk-q").value = riotId; document.getElementById("rk-sug").innerHTML = "";
     if (!LIVE) { out.appendChild(el("p", "sub", "전적 검색은 앱이나 PC 웹에서 볼 수 있어요")); return; }
-    out.appendChild(el("p", "sub", riotId + " 불러오는 중"));
+    out.appendChild(el("p", "sub", (isPbe ? "[PBE] " : "") + riotId + " 불러오는 중"));
     var parts = riotId.split("#");
-    if (!rkCut) getMT("public/promotion_thresholds/latest").then(function (d) { rkCut = d.filter(function (c) { return c.region.toLowerCase() === "kr"; })[0] || null; }).catch(function () {});
-    dakProfile(riotId, { history: true, season: sea }).then(function (d) {
-      if (rkCur !== riotId || RK_SEASON !== sea) return;
+    if (!isPbe && !rkCut) getMT("public/promotion_thresholds/latest").then(function (d) { rkCut = d.filter(function (c) { return c.region.toLowerCase() === "kr"; })[0] || null; }).catch(function () {});
+    dakProfile(riotId, { history: !isPbe, season: sea, reg: targetReg }).then(function (d) {
+      if (rkCur !== riotId || RK_SEASON !== sea || rkCurReg !== targetReg) return;
       out.innerHTML = "";
       if (sea) {  // 지난 시즌 보는 중: 맨 위 띠
         var sb = el("div", "rk-sea"); sb.appendChild(el("b", null, "S" + sea.replace("set", "") + " 기록"));
-        var back = el("button", "tb-clear", "이번 시즌으로"); back.type = "button"; back.addEventListener("click", function () { rkProfile(riotId); window.scrollTo(0, 0); });
+        var back = el("button", "tb-clear", "이번 시즌으로"); back.type = "button"; back.addEventListener("click", function () { rkProfile(riotId, null, targetReg); window.scrollTo(0, 0); });
         sb.appendChild(back); out.appendChild(sb);
       }
-      var f = favs().filter(function (x) { return x !== riotId; }); f.unshift(riotId); setFavs(f);
+      if (isPbe) { var pf = pbeFavs().filter(function (x) { return x !== riotId; }); pf.unshift(riotId); setPbeFavs(pf); }
+      else { var f = favs().filter(function (x) { return x !== riotId; }); f.unshift(riotId); setFavs(f); }
       var me = (d.summoner || {}).puuid;
       var rk = d.ranked || {}, sr = d.server_rank;
 
@@ -264,40 +286,45 @@
       if (d.summoner && d.summoner.summoner_level) av.appendChild(el("span", null, d.summoner.summoner_level));
       top.appendChild(av);
       var who = el("div", "rk-who");
-      var h3 = el("h3", null, parts[0]); h3.appendChild(el("small", null, "#" + (parts[1] || ""))); h3.appendChild(starBtn(riotId)); who.appendChild(h3);
+      var h3 = el("h3", null, parts[0]); h3.appendChild(el("small", null, "#" + (parts[1] || ""))); if (!isPbe) h3.appendChild(starBtn(riotId)); who.appendChild(h3);
       if (d.summoner && d.summoner.last_refreshed) who.appendChild(el("p", "rk-upd", ago(d.summoner.last_refreshed * 1000) + " 업데이트"));
       top.appendChild(who);
       var rf = el("button", "rk-rf", "전적 갱신"); rf.type = "button";
       rf.addEventListener("click", function () {
         rf.disabled = true; rf.textContent = "갱신 중";
-        getMT("public/profile/refresh_by_riotid/KR/" + encodeURIComponent(parts[0]) + "/" + encodeURIComponent(parts[1]) + "?source=full_profile&tier=1").catch(function () {});  // 지난 시즌 기록용
-        dakSync(riotId).then(function () { rkProfile(riotId, RK_SEASON); });
+        if (!isPbe) getMT("public/profile/refresh_by_riotid/KR/" + encodeURIComponent(parts[0]) + "/" + encodeURIComponent(parts[1]) + "?source=full_profile&tier=1").catch(function () {});  // 지난 시즌 기록용
+        dakSync(riotId, targetReg).then(function () { rkProfile(riotId, RK_SEASON, targetReg); });
       });
       top.appendChild(rf); card.appendChild(top);
 
-      var tp = tierParts(rk.rating_text);
+      var tp = isPbe ? null : tierParts(rk.rating_text);
       var rb = el("div", "rk-rank"); if (tp) rb.style.setProperty("--tc", TIER_COLOR[tp[0]]);
       rb.appendChild(tierImg(tp && tp[0], "rk-bigemb"));
       var rt = el("div", "rk-rt");
-      var seaNo = RK_SEASON ? RK_SEASON.replace("set", "") : LIVE_SET_ID.replace("TFTSet", "").replace("_2", ".5");
-      var sl = el("div", "rk-sl"); sl.appendChild(el("span", "rk-sb" + (RK_SEASON ? " old" : ""), "S" + seaNo));
-      sl.appendChild(el("small", null, RK_SEASON ? "지난 시즌 랭크 게임" : (LIVE_SET_ID !== SET_ID ? "본섭 " + seaNo + "시즌 랭크 게임 · 12/1 19시즌 전환" : "이번 시즌 랭크 게임"))); rt.appendChild(sl);
+      var seaNo = isPbe ? String(guideSetNum()) : (RK_SEASON ? RK_SEASON.replace("set", "") : LIVE_SET_ID.replace("TFTSet", "").replace("_2", ".5"));
+      var sl = el("div", "rk-sl"); sl.appendChild(el("span", "rk-sb" + (RK_SEASON ? " old" : ""), isPbe ? "PBE · S" + seaNo : "S" + seaNo));
+      sl.appendChild(el("small", null, isPbe ? seaNo + "시즌 PBE 테스트 서버 · 일반 게임" : (RK_SEASON ? "지난 시즌 랭크 게임" : (LIVE_SET_ID !== SET_ID ? "본섭 " + seaNo + "시즌 랭크 게임 · 12/1 19시즌 전환" : "이번 시즌 랭크 게임")))); rt.appendChild(sl);
       var tn = el("div", "rk-tn");
       var apexT = tp && /MASTER|CHALLENGER/.test(tp[0]);
-      tn.appendChild(el("b", null, tp ? TIER_KO[tp[0]] + (tp[1] && !apexT ? " " + ROMAN[tp[1]] : "") : "언랭"));
+      tn.appendChild(el("b", null, isPbe ? "PBE 테스트 서버" : (tp ? TIER_KO[tp[0]] + (tp[1] && !apexT ? " " + ROMAN[tp[1]] : "") : "언랭")));
       if (tp) tn.appendChild(el("span", null, tp[2] + " LP"));
       rt.appendChild(tn);
-      if (sr && sr.rank) rt.appendChild(el("p", null, "한국 " + sr.rank.toLocaleString() + "위 · 상위 " + Math.max(0.01, sr.rank / sr.total * 100).toFixed(sr.rank / sr.total < 0.01 ? 2 : 1) + "%"));
-      if (rk.peak_rating && rk.peak_rating !== rk.rating_text) rt.appendChild(el("p", "rk-peak", "시즌 최고 " + tierText(rk.peak_rating, true)));
+      if (!isPbe && sr && sr.rank) rt.appendChild(el("p", null, "한국 " + sr.rank.toLocaleString() + "위 · 상위 " + Math.max(0.01, sr.rank / sr.total * 100).toFixed(sr.rank / sr.total < 0.01 ? 2 : 1) + "%"));
+      if (!isPbe && rk.peak_rating && rk.peak_rating !== rk.rating_text) rt.appendChild(el("p", "rk-peak", "시즌 최고 " + tierText(rk.peak_rating, true)));
       rb.appendChild(rt); card.appendChild(rb);
 
       var ss = (d.ranked_season_stats || {})["1100"];
+      if (isPbe && !(ss && ss.total) && (d.matches || []).length) {
+        var ppl = [0, 0, 0, 0, 0, 0, 0, 0], ptot = 0;
+        d.matches.forEach(function (m) { if (m.placement >= 1 && m.placement <= 8) { ppl[m.placement - 1]++; ptot++; } });
+        if (ptot) ss = { total: ptot, placements: ppl };
+      }
       if (ss && ss.total) {
         var pl = ss.placements, tot = ss.total, t4 = pl.slice(0, 4).reduce(function (a, b) { return a + b; }, 0);
         var avg = pl.reduce(function (a, n, i) { return a + n * (i + 1); }, 0) / tot;
         var gr = el("div", "rk-grid");
-        var R = d._pct || {}, pct = function (k) { var r = R[k]; return r && r.percent != null ? "상위 " + (r.percent < 1 ? r.percent.toFixed(2) : r.percent < 10 ? r.percent.toFixed(1) : Math.round(r.percent)) + "%" : ""; };
-        [["판수", tot, pct("plays")], ["평균 등수", avg.toFixed(2), ""], ["1등", pl[0], pct("wins")], ["승률", (pl[0] / tot * 100).toFixed(1) + "%", pct("winrate")], ["순방", t4, pct("tops")], ["순방률", (t4 / tot * 100).toFixed(1) + "%", pct("toprate")]].forEach(function (x) {
+        var R = isPbe ? {} : (d._pct || {}), pct = function (k) { var r = R[k]; return r && r.percent != null ? "상위 " + (r.percent < 1 ? r.percent.toFixed(2) : r.percent < 10 ? r.percent.toFixed(1) : Math.round(r.percent)) + "%" : ""; };
+        [[isPbe && d._total > tot ? "최근 판수" : "판수", tot, pct("plays")], ["평균 등수", avg.toFixed(2), ""], ["1등", pl[0], pct("wins")], ["승률", (pl[0] / tot * 100).toFixed(1) + "%", pct("winrate")], ["순방", t4, pct("tops")], ["순방률", (t4 / tot * 100).toFixed(1) + "%", pct("toprate")]].forEach(function (x) {
           var c = el("div"); c.appendChild(el("span", null, x[0])); c.appendChild(el("b", null, x[1]));
           if (x[2]) c.appendChild(el("small", "rk-pct", x[2]));
           gr.appendChild(c);
@@ -305,7 +332,7 @@
         card.appendChild(gr);
       }
       // 지난 시즌: 칸은 최종 티어, 누르면 시즌별 최종·최고 티어와 판수 표
-      var hist = d.rating_history || {}, past = Object.keys(hist).filter(function (k) { return k !== LIVE_SET_ID && hist[k]["1100"] && (hist[k]["1100"].num_games || hist[k]["1100"].nolp); })
+      var hist = isPbe ? {} : (d.rating_history || {}), past = Object.keys(hist).filter(function (k) { return k !== LIVE_SET_ID && hist[k]["1100"] && (hist[k]["1100"].num_games || hist[k]["1100"].nolp); })
         .sort(function (a, b) { return setNo(b) - setNo(a); });
       function tname(text) { var p = tierParts(text); return p ? TIER_KO[p[0]] + (p[1] && !/MASTER|CHALLENGER/.test(p[0]) ? " " + p[1] : "") : (text || "-"); }
       function tcol(text) { var p = tierParts(text); return p ? "color-mix(in srgb, " + TIER_COLOR[p[0]] + " 70%, var(--ink))" : ""; }
@@ -437,19 +464,19 @@
         card.appendChild(ps); card.appendChild(tbl);
       }
       out.appendChild(card);
-      try { var ft = JSON.parse(localStorage.getItem(RK_FAVT) || "{}") || {}; ft[riotId] = rk.rating_text || ""; localStorage.setItem(RK_FAVT, JSON.stringify(ft)); } catch (e) {}
+      if (!isPbe) try { var ft = JSON.parse(localStorage.getItem(RK_FAVT) || "{}") || {}; ft[riotId] = rk.rating_text || ""; localStorage.setItem(RK_FAVT, JSON.stringify(ft)); } catch (e) {}
 
       // 범위 고르기: 최근 10 / 20 / 50 / 시즌, 랭크 / 전체
       var all = (d.matches || []).filter(function (m) { return m.summary; }).sort(function (a, b) { return b.match_timestamp - a.match_timestamp; });
-      var lp = lpOf(d); lp._cut = cutSeries();
-      if (sea) delete lp._pending;  // 끝난 시즌엔 '방금 끝난 게임'이 없다 (시즌 끝 휴면 감소를 기록 대기로 보면 안 됨)
+      var lp = isPbe ? {} : lpOf(d); lp._cut = isPbe ? { c: [], g: [] } : cutSeries();
+      if (sea || isPbe) delete lp._pending;  // 끝난 시즌·PBE엔 '방금 끝난 랭크 게임'이 없다
       // 판 기록이 아직 안 왔으면 1분마다 롤체지지 갱신 후 다시 (최대 8번)
-      if (lp._pending && !sea) {
+      if (lp._pending && !sea && !isPbe) {
         RK_RETRY[riotId] = (RK_RETRY[riotId] || 0) + 1;
-        if (RK_RETRY[riotId] <= 8) setTimeout(function () { if (rkCur === riotId && current === "rank") dakSync(riotId).then(function () { if (rkCur === riotId) rkProfile(riotId); }); }, 60000);
+        if (RK_RETRY[riotId] <= 8) setTimeout(function () { if (rkCur === riotId && rkCurReg === "kr" && current === "rank") dakSync(riotId, "kr").then(function () { if (rkCur === riotId && rkCurReg === "kr") rkProfile(riotId, null, "kr"); }); }, 60000);
       } else delete RK_RETRY[riotId];
       var pref = {}; try { pref = JSON.parse(localStorage.getItem(RK_RANGE) || "{}") || {}; } catch (e) {}
-      var range = pref.n != null ? pref.n : 50, queue = pref.q || "1100";
+      var range = pref.n != null ? pref.n : 50, queue = isPbe ? "all" : (pref.q || "1100");
       var bar = el("div", "rk-range");
       var c1 = el("div", "mt-chips"), c2 = el("div", "mt-chips");
       [[10, "10판"], [20, "20판"], [50, "50판"], [0, "시즌 전체"]].forEach(function (x) {
@@ -457,27 +484,29 @@
         b.addEventListener("click", function () { range = x[0]; c1.querySelectorAll("button").forEach(function (y) { y.classList.toggle("on", y === b); }); draw(); });
         c1.appendChild(b);
       });
-      [["1100", "랭크"], ["all", "전체"]].forEach(function (x) {
-        var b = el("button", x[0] === queue ? "on" : null, x[1]); b.type = "button";
-        b.addEventListener("click", function () { queue = x[0]; c2.querySelectorAll("button").forEach(function (y) { y.classList.toggle("on", y === b); }); draw(); });
-        c2.appendChild(b);
-      });
-      bar.appendChild(c1); bar.appendChild(c2); out.appendChild(bar);
+      if (!isPbe) {
+        [["1100", "랭크"], ["all", "전체"]].forEach(function (x) {
+          var b = el("button", x[0] === queue ? "on" : null, x[1]); b.type = "button";
+          b.addEventListener("click", function () { queue = x[0]; c2.querySelectorAll("button").forEach(function (y) { y.classList.toggle("on", y === b); }); draw(); });
+          c2.appendChild(b);
+        });
+      }
+      bar.appendChild(c1); if (!isPbe) bar.appendChild(c2); out.appendChild(bar);
       var body = el("div", "rk-body"); out.appendChild(body);
 
       var keepShown = 10;  // 다시 그릴 때 이만큼 펼쳐 둔다 ('10판 더 받기' 뒤)
       function draw() {
-        try { localStorage.setItem(RK_RANGE, JSON.stringify({ n: range, q: queue })); } catch (e) {}
+        if (!isPbe) try { localStorage.setItem(RK_RANGE, JSON.stringify({ n: range, q: queue })); } catch (e) {}
         body.innerHTML = "";
         var want = range ? range * (queue === "1100" ? 1.3 : 1) : 1e4;  // 시즌 전체면 다
         if (d._canMore && d._canMore(want) && !d._busy) {  // 고른 범위만큼 아직 안 받았으면 더 받고 다시 그림
           d._busy = true; body.appendChild(el("p", "sub", "불러오는 중"));
-          d._more(want).then(function () { all = d.matches.filter(function (m) { return m.summary; }).sort(function (a, b) { return b.match_timestamp - a.match_timestamp; }); lp = lpOf(d); if (sea) delete lp._pending; lp._cut = cutSeries(); d._busy = false; draw(); });
+          d._more(want).then(function () { all = d.matches.filter(function (m) { return m.summary; }).sort(function (a, b) { return b.match_timestamp - a.match_timestamp; }); lp = isPbe ? {} : lpOf(d); if (sea || isPbe) delete lp._pending; lp._cut = isPbe ? { c: [], g: [] } : cutSeries(); d._busy = false; draw(); });
           return;
         }
         var list = all.filter(function (m) { return queue === "all" || String(m.queue_id) === queue; });
         if (range) list = list.slice(0, range);
-        if (!list.length) { body.appendChild(el("p", "sub", queue === "1100" ? "이번 시즌 랭크 판이 없어요" : "판이 없어요")); return; }
+        if (!list.length) { body.appendChild(el("p", "sub", isPbe ? "이번 PBE 시즌 판이 없어요. 전적 갱신을 눌러 보세요" : (queue === "1100" ? "이번 시즌 랭크 판이 없어요" : "판이 없어요"))); return; }
         var n = list.length, plc = [0, 0, 0, 0, 0, 0, 0, 0];
         list.forEach(function (m) { plc[m.placement - 1]++; });
         var avg = list.reduce(function (a, m) { return a + m.placement; }, 0) / n;
@@ -485,7 +514,7 @@
         list.forEach(function (m) { var x = lp[m.riot_match_id]; if (x && x.diff != null) { sum += x.diff; has = true; } });
 
         var c = el("div", "fcard rk-sum");
-        var h = el("h4", null, (range && all.length > n ? "최근 " : "") + n + "판" + (queue === "1100" ? " · 랭크" : ""));
+        var h = el("h4", null, (range && all.length > n ? "최근 " : "") + n + "판" + (isPbe ? " · PBE" : (queue === "1100" ? " · 랭크" : "")));
         c.appendChild(h);
         if (n > 20) {  // 등수 줄은 최근 20판만, 나머지는 펼치기 (그래프·통계는 고른 범위 전체)
           var ps30 = plStr(list.slice(0, 20)), more30 = el("button", "pl-more", "+" + (n - 20) + "판 더 보기"); more30.type = "button";
@@ -494,19 +523,21 @@
         } else c.appendChild(plStr(list));
         c.appendChild(kvBox([["평균 등수", avg.toFixed(2), avg <= 4 ? "good" : avg >= 5 ? "bad" : ""], ["순방", Math.round((plc[0] + plc[1] + plc[2] + plc[3]) / n * 100) + "%"], ["승률", Math.round(plc[0] / n * 100) + "%"],
           has ? ["LP", (sum >= 0 ? "+" : "") + sum, sum >= 0 ? "good" : "bad"] : ["판", n]]));
-        var ranked = list.filter(function (m) { return String(m.queue_id) === "1100"; }).slice().reverse();
-        var chart = lpChart(ranked, lp);
-        var s1 = sec("LP 그래프", chart ? "점을 누르면 게임별 LP" : "");
-        if (chart) s1.appendChild(chart);
-        else {
-          // 롤체지지는 누군가 전적을 갱신할 때만 LP를 남긴다. 지난 시즌은 이제 갱신할 수 없어서 남은 기록 수를 같이 알려준다
-          var nlog = (d._logs || []).length, t0 = ranked.length ? ranked[0].match_timestamp : 0;
-          var inRange = (d._logs || []).filter(function (x) { return x[0] >= t0 - 36e5; }).length;
-          s1.appendChild(el("p", "sub", nlog < 2 ? "롤체지지에 남은 " + (RK_SEASON ? "이 시즌 " : "") + "LP 기록이 " + nlog + "개뿐이라 그래프를 그릴 수 없어요. 롤체지지는 전적을 갱신할 때만 LP를 기록해요" + (RK_SEASON ? "" : ". 전적 갱신 후 다시 확인해 주세요")
-            : inRange < 2 ? "이 기간에 남은 LP 기록이 " + inRange + "개뿐이에요. 시즌 전체를 누르면 LP 기록이 있는 판까지 볼 수 있어요"
-            : "LP 기록과 판을 맞추지 못했어요. 전적 갱신 후 다시 확인해 주세요"));
+        if (!isPbe) {
+          var ranked = list.filter(function (m) { return String(m.queue_id) === "1100"; }).slice().reverse();
+          var chart = lpChart(ranked, lp);
+          var s1 = sec("LP 그래프", chart ? "점을 누르면 게임별 LP" : "");
+          if (chart) s1.appendChild(chart);
+          else {
+            // 롤체지지는 누군가 전적을 갱신할 때만 LP를 남긴다. 지난 시즌은 이제 갱신할 수 없어서 남은 기록 수를 같이 알려준다
+            var nlog = (d._logs || []).length, t0 = ranked.length ? ranked[0].match_timestamp : 0;
+            var inRange = (d._logs || []).filter(function (x) { return x[0] >= t0 - 36e5; }).length;
+            s1.appendChild(el("p", "sub", nlog < 2 ? "롤체지지에 남은 " + (RK_SEASON ? "이 시즌 " : "") + "LP 기록이 " + nlog + "개뿐이라 그래프를 그릴 수 없어요. 롤체지지는 전적을 갱신할 때만 LP를 기록해요" + (RK_SEASON ? "" : ". 전적 갱신 후 다시 확인해 주세요")
+              : inRange < 2 ? "이 기간에 남은 LP 기록이 " + inRange + "개뿐이에요. 시즌 전체를 누르면 LP 기록이 있는 판까지 볼 수 있어요"
+              : "LP 기록과 판을 맞추지 못했어요. 전적 갱신 후 다시 확인해 주세요"));
+          }
+          c.appendChild(s1);
         }
-        c.appendChild(s1);
         var s2 = sec("등수 분포"); s2.appendChild(placeBars(plc)); c.appendChild(s2);
 
         // 많이 한 덱 (현재 공략 세트면 비슷한 MetaTFT 덱으로, 지난·본섭 비공략 세트면 그 세트 시너지+캐리로만) · 캐리 (템 2개 이상)
@@ -574,7 +605,7 @@
       }
       draw();
     }).catch(function (e) {
-      out.innerHTML = ""; out.appendChild(el("p", "sub", "소환사를 찾지 못했어요. 이름#태그를 확인해 주세요. 한국 서버만 지원해요"));
+      out.innerHTML = ""; out.appendChild(el("p", "sub", isPbe ? "PBE 소환사를 찾지 못했어요. 이름#태그를 확인해 주세요" : "소환사를 찾지 못했어요. 이름#태그를 확인해 주세요. 한국·PBE 서버를 지원해요"));
     });
   }
 

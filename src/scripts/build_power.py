@@ -22,12 +22,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import re
+import sys
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "data" / "power" / "boards.jsonl.gz"
-OUT = ROOT / "site" / "power.json"
+PBE = "--pbe" in sys.argv[1:]
+if PBE:
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import setinfo as _si
+    SRC = ROOT / "data" / "power" / f"boards_s{_si.NUM}.jsonl.gz"
+    OUT = ROOT / "site" / f"power_s{_si.NUM}.json"
+    TOP = ROOT / "site" / f"power_top_s{_si.NUM}.json"
+else:
+    SRC = ROOT / "data" / "power" / "boards.jsonl.gz"
+    OUT = ROOT / "site" / "power.json"
+    TOP = ROOT / "site" / "power_top.json"
 SCALE = 40  # 덱파워 = 100 + 40 x (표준 점수). 15 -> 24 (2026-11-06) -> 40 (2026-11-14 사용자: "100이랑 120 차이가 20밖에 안 나는 느낌", 같은 로비에서 20점 차이면 95%가 위였음). 페이지는 power.json scale을 읽는다
 K = SCALE / 24  # 24 기준으로 정한 점수 간격(상한·보정·차트)을 같은 비율로
 RECENT_DAYS = 21  # 최근 3주 판으로
@@ -42,7 +52,7 @@ def nk(s):
 
 
 def cost_of(rarity):
-    return {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 6: 5}.get(rarity, min(5, rarity + 1))
+    return {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 5, 6: 5, 7: 7}.get(rarity, min(7, rarity + 1))
 
 
 def value(units, cost):
@@ -75,14 +85,15 @@ TA = trait_table()
 def unit_priors():
     """게임 원문·통계에서 유닛·아이템 사전 지식. 없으면 지난 power.json 것.
     sk: 3성 스킬 배율 log2(3성 수치 / 2성 수치) 최대 (raw/lookup_ko.json, 5코 평균 8.6배: 드레이븐 25 · 알룬 20 · 럭스 10)
-    up: 유닛·별 평균 등수 [1성, 2성, 3성] (site/db.json stars, tactics.tools 다이아+)
-    ip: 아이템 평균 등수 (raw/items.json, MetaTFT)"""
-    sk, up, ip = {}, {}, {}
+    up: 유닛·별 평균 등수 [1성, 2성, 3성] (site/db.json stars, MetaTFT/tactics.tools)
+    ip: 아이템 평균 등수 (raw/items.json, MetaTFT)
+    sc: 게임 원문 상점 코스트(7코스트 포함)"""
+    sk, up, ip, sc = {}, {}, {}, {}
     try:
         lk = json.loads((ROOT / "raw" / "lookup_ko.json").read_text())
         name2keys = defaultdict(set)
         for u in lk["units"]:
-            if not u.get("cost") or u["cost"] > 5:
+            if not u.get("cost") or u["cost"] > 7:
                 continue
             keys = {nk(a) for a in u.get("assetNames", [])} | {nk(u["apiName"])}
             name2keys[u["name"]] |= keys
@@ -90,6 +101,7 @@ def unit_priors():
             r = max([v[3] / v[2] for v in av.values() if isinstance(v, list) and len(v) >= 4 and v[2] and v[3] and v[2] > 0] or [1])
             for k in keys:
                 sk[k] = round(math.log2(max(1.0, r)), 3)
+                sc[k] = int(u["cost"])
         db = json.loads((ROOT / "site" / "db.json").read_text())
         for nm, u in db["units"].items():
             st = u.get("stars") or {}
@@ -109,10 +121,10 @@ def unit_priors():
         ip = ip or old.get("ip", {})
     except Exception:
         pass
-    return sk, up, ip
+    return sk, up, ip, sc
 
 
-SK, UP, IP = unit_priors()
+SK, UP, IP, SHOP_COST = unit_priors()
 
 COMPONENTS = {"BFSword", "RecurveBow", "NeedlesslyLargeRod", "TearOfTheGoddess", "ChainVest", "NegatronCloak", "GiantsBelt", "SparringGloves", "Spatula", "FryingPan"}
 
@@ -210,7 +222,9 @@ def load_chroma():
     except Exception:
         return
     for api, v in db["names"]["t"].items():
-        mins = [x[0] for x in st.get(v[0] if v else "", []) if x[2] == "chromatic" and x[0]]
+        steps = st.get(v[0] if v else "", [])
+        non_ch = {x[0] for x in steps if x[2] != "chromatic" and x[0]}
+        mins = [x[0] for x in steps if x[2] == "chromatic" and x[0] and x[0] not in non_ch]
         if mins:
             CHROMA[nk(api)] = min(mins)
 
@@ -381,7 +395,7 @@ def main():
     for m in ms:
         for b in m["b"]:
             for u in b[3]:
-                cost[u[0]] = cost_of(u[2])
+                cost[u[0]] = SHOP_COST.get(nk(u[0]), cost_of(u[2])) if PBE else cost_of(u[2])
     cost_out = {nk(k): v for k, v in cost.items()}
     rows = [(m["id"], m["lt"], b) for m in ms for b in m["b"]]
     # 유닛 하나짜리 고유 특성 (럭스 화신·자연의 아버지 등): 항목별 보기에서 '유닛'으로 묶는다
@@ -532,7 +546,7 @@ def main():
            "uq": sorted(UQ), "base": {g: round(float(sum(w[i] * xm[i] for i, k in enumerate(keys) if group_of(k) == g)), 4) for g in dict.fromkeys(GROUP.values())},
            "scale": SCALE, "dist": dist, "cost": cost_out, "ta": TA, "sk": SK, "up": UP, "ip": IP, "mu": round(mu, 4), "sd": round(sd, 4), "q": q, "qf": qf, "qb": qb, "vq": vq}
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"site/power.json: 특징 {len(out['w'])}개, {OUT.stat().st_size // 1024}KB, 판 {len(ms)}")
+    print(f"{OUT.relative_to(ROOT)}: 특징 {len(out['w'])}개, {OUT.stat().st_size // 1024}KB, 판 {len(ms)}")
     # 페이지는 power.json의 반올림된 값으로 계산한다 -> 덱파워 탭 목록도 같은 값으로 (경계에서 1점씩 어긋났음)
     w_r = np.array([round(float(x), 4) if abs(x) >= 0.002 else 0.0 for x in w])
     mu_r, sd_r = round(mu, 4), round(sd, 4)
@@ -540,7 +554,6 @@ def main():
     build_top(load(), setn, w_r, b0, keys, idx, mu_r, sd_r, cal, calp, base_r, f5)
 
 
-TOP = ROOT / "site" / "power_top.json"
 TIER_KO = ["아이언", "브론즈", "실버", "골드", "플래티넘", "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저"]
 BAND = [("all", "전체", 0, 9), ("top", "마스터+", 7, 9), ("dia", "다이아", 6, 6), ("mid", "플래·에메", 4, 5), ("low", "골드 이하", 0, 3)]
 
@@ -552,7 +565,7 @@ def build_top(allm, setn, w, b0, keys, idx, mu, sd, cal, calp, base_syn, f5=None
     for m in allm:
         for b in m["b"]:
             for u in b[3]:
-                cost[u[0]] = cost_of(u[2])
+                cost[u[0]] = SHOP_COST.get(nk(u[0]), cost_of(u[2])) if PBE else cost_of(u[2])
     rows = []
     for m in allm:
         if m["p"].split(".")[0] != setn or m["t"] < now - 7 * 86400000:
@@ -569,24 +582,25 @@ def build_top(allm, setn, w, b0, keys, idx, mu, sd, cal, calp, base_syn, f5=None
             sc += adj_shift(sc, dominance(b, cost))
             pw = math.floor(round(100 + SCALE * (mu - sc) / sd, 6) + 0.5)  # 페이지 Math.round와 같게 (소수 6자리에서 자르고 반올림)
             if f5 is not None:
-                has5 = any(cost.get(u[0], 1) == 5 and u[1] >= 3 for u in b[3])
+                has5 = any(cost.get(u[0], 1) >= 5 and u[1] >= 3 for u in b[3])
                 pw = max(pw, f5) if has5 else cap5(pw, f5)
             rows.append((pw, m, b, sc))
     rows.sort(key=lambda r: -r[0])
-    out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "bands": [[k, nm] for k, nm, _, _ in BAND], "top": {}}
-    for k, _nm, lo, hi in BAND:
+    bands = [("all", "전체", 0, 9)] if PBE else BAND
+    out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "set": setn, "pbe": PBE, "bands": [[k, nm] for k, nm, _, _ in bands], "top": {}}
+    for k, _nm, lo, hi in bands:
         sel = []
         for pw, m, b, sc in rows:
             t = b[2] if b[2] is not None else round(m["lt"])
             if lo <= t <= hi:
-                sel.append({"pw": pw, "pred": round(float(expected_place(sc, cal, calp, mu, sd)), 2), "pl": b[0], "lv": b[1], "who": b[5], "tier": TIER_KO[t] if t is not None else "",
+                sel.append({"pw": pw, "pred": round(float(expected_place(sc, cal, calp, mu, sd)), 2), "pl": b[0], "lv": b[1], "who": b[5], "tier": "PBE" if PBE else (TIER_KO[t] if t is not None else ""),
                             "lt": m["lt"], "t": m["t"], "p": m["p"], "val": value(b[3], cost),
                             "u": [[u[0], u[1], u[3]] for u in b[3]], "tr": [[x[0], x[1], x[2]] for x in b[4] if x[1]]})
             if len(sel) >= 20:
                 break
         out["top"][k] = sel
     TOP.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"site/power_top.json: 이름 있는 최근 7일 보드 {len(rows)}개 중 묶음별 상위 20, {TOP.stat().st_size // 1024}KB")
+    print(f"{TOP.relative_to(ROOT)}: 이름 있는 최근 7일 보드 {len(rows)}개 중 묶음별 상위 20, {TOP.stat().st_size // 1024}KB")
 
 
 if __name__ == "__main__":

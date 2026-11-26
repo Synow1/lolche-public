@@ -131,7 +131,7 @@
     var wl = wr == null ? 0 : wr >= 25 ? 3 : wr >= 18 ? 2 : wr >= 13 ? 1 : 0, tl = tr == null ? 0 : tr >= 65 ? 3 : tr >= 58 ? 2 : tr >= 52 ? 1 : 0;
     r.appendChild(el("div", "rk-num w l" + wl, wr != null ? Math.round(wr) + "%" : "-"));
     r.appendChild(el("div", "rk-num t l" + tl, tr != null ? Math.round(tr) + "%" : "-"));
-    r.addEventListener("click", function () { rkProfile(p.riot_id); window.scrollTo(0, 0); });  // rkProfile이 목록 위치를 기억하게 rkView보다 먼저
+    r.addEventListener("click", function () { rkProfile(p.riot_id, null, "kr"); window.scrollTo(0, 0); });  // rkProfile이 목록 위치를 기억하게 rkView보다 먼저
     return r;
   }
   function rkRender(note) {
@@ -190,6 +190,18 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden) rkRefresh(false); });
 
   // 전적 검색
+  var rkReg = "kr", RK_FAV_PBE = "tft-guide-fav-pbe";
+  function pbeFavs() { try { return JSON.parse(localStorage.getItem(RK_FAV_PBE) || "[]"); } catch (e) { return []; } }
+  function setPbeFavs(a) { try { localStorage.setItem(RK_FAV_PBE, JSON.stringify(a.slice(0, 12))); } catch (e) {} }
+  function rkSetReg(reg, redraw) {
+    rkReg = reg === "pbe1" ? "pbe1" : "kr";
+    var btn = document.getElementById("rk-reg");
+    if (btn) { btn.textContent = rkReg === "pbe1" ? "PBE" : "KR"; btn.classList.toggle("pbe", rkReg === "pbe1"); }
+    document.querySelectorAll("#rk-regchips button").forEach(function (b) { b.classList.toggle("on", b.dataset.reg === rkReg); });
+    var inp = document.getElementById("rk-q");
+    if (inp) inp.placeholder = rkReg === "pbe1" ? "PBE 소환사 이름#태그" : "소환사 이름#태그";
+    if (redraw) rkSuggest();
+  }
   // ---- 소환사 고르기 목록 (전적 검색·친구 추가 공용): 빈 칸이면 즐겨찾기·최근 검색, 치면 맞는 기록 + MetaTFT 검색 결과
   var RK_STAR = "tft-guide-star";
   function stars() { try { return JSON.parse(localStorage.getItem(RK_STAR) || "[]"); } catch (e) { return []; } }
@@ -203,56 +215,61 @@
     b.addEventListener("click", function (e) { e.stopPropagation(); var on = toggleStar(id); b.classList.toggle("on", on); b.setAttribute("aria-label", on ? id + " 즐겨찾기 빼기" : id + " 즐겨찾기"); if (onChange) onChange(); });
     return b;
   }
-  function rkWhoRow(id, rating, onDel, label, onPick, onChange) {  // 티어 문장 · 이름#태그 · 티어 한 줄 + 즐겨찾기
-    var r = el("div", "rk-who-row"), p = tierParts(rating);
+  function rkWhoRow(id, rating, onDel, label, onPick, onChange, reg) {  // 티어 문장 · 이름#태그 · 티어 한 줄 + 즐겨찾기
+    var r = el("div", "rk-who-row"), p = tierParts(rating), isPbe = reg === "pbe1";
     var b = el("button", "rk-who-main"); b.type = "button";
     b.appendChild(tierImg(p && p[0]));
     var t = el("div"); var nm = el("b", null, id.split("#")[0]); nm.appendChild(el("small", null, "#" + (id.split("#")[1] || ""))); t.appendChild(nm);
-    t.appendChild(el("span", null, (label ? label + " · " : "") + (rating ? tierText(rating, true) : "티어 기록 없음")));
-    if (p) t.lastChild.style.color = TIER_COLOR[p[0]];
+    t.appendChild(el("span", null, (label ? label + " · " : "") + (isPbe ? "PBE 19시즌" : rating ? tierText(rating, true) : "티어 기록 없음")));
+    if (p && !isPbe) t.lastChild.style.color = TIER_COLOR[p[0]];
     b.appendChild(t);
     b.addEventListener("pointerdown", function (e) { e.preventDefault(); });
-    b.addEventListener("click", function () { (onPick || rkProfile)(id); });
+    b.addEventListener("click", function () { if (onPick) onPick(id); else rkProfile(id, null, reg || rkReg); });
     r.appendChild(b);
-    r.appendChild(starBtn(id, onChange));
+    if (!isPbe) r.appendChild(starBtn(id, onChange));
     if (onDel) { var x = el("button", "rk-who-x", "✕"); x.type = "button"; x.setAttribute("aria-label", id + " 지우기"); x.addEventListener("pointerdown", function (e) { e.preventDefault(); }); x.addEventListener("click", function (e) { e.stopPropagation(); onDel(); }); r.appendChild(x); }
     return r;
   }
-  // box에 목록을 그린다. o: {pick(id), me: 내 계정 보이기, skip: 뺄 이름들}
+  // box에 목록을 그린다. o: {pick(id), me: 내 계정 보이기, skip: 뺄 이름들, reg: 'kr'|'pbe1'}
   var whoTimers = {};
   function whoList(box, q, o) {
     o = o || {}; q = (q || "").trim(); box.innerHTML = ""; clearTimeout(whoTimers[box.id]);
+    var reg = o.reg || (box.id === "rk-sug" ? rkReg : "kr"), isPbe = reg === "pbe1";
     var ft = {}; try { ft = JSON.parse(localStorage.getItem(RK_FAVT) || "{}") || {}; } catch (e) {}
     var skip = o.skip || [], redraw = function () { whoList(box, q, o); };
-    var st = stars().filter(function (f) { return skip.indexOf(f) < 0; }), rc = favs().filter(function (f) { return st.indexOf(f) < 0 && skip.indexOf(f) < 0 && (WEB || f !== "Synow#KR1"); });
+    var st = isPbe ? [] : stars().filter(function (f) { return skip.indexOf(f) < 0; });
+    var rc = (isPbe ? pbeFavs() : favs()).filter(function (f) { return st.indexOf(f) < 0 && skip.indexOf(f) < 0 && (WEB || f !== "Synow#KR1"); });
     var low = q.toLowerCase(), hit = function (f) { return !q || f.toLowerCase().indexOf(low) >= 0; };
     function group(title, ids, del, label) {
       ids = ids.filter(hit); if (!ids.length) return;
       var g = el("div", "rk-list"); g.appendChild(el("h4", null, title));
-      ids.forEach(function (f) { g.appendChild(rkWhoRow(f, ft[f], del ? function () { setFavs(favs().filter(function (x) { return x !== f; })); redraw(); } : null, label && label(f), o.pick, redraw)); });
+      ids.forEach(function (f) {
+        var delFn = del ? function () { if (isPbe) setPbeFavs(pbeFavs().filter(function (x) { return x !== f; })); else setFavs(favs().filter(function (x) { return x !== f; })); redraw(); } : null;
+        g.appendChild(rkWhoRow(f, isPbe ? null : ft[f], delFn, label && label(f), o.pick, redraw, reg));
+      });
       box.appendChild(g);
     }
-    if (!WEB && o.me && skip.indexOf("Synow#KR1") < 0 && !isStar("Synow#KR1")) group("내 계정", ["Synow#KR1"], false, function () { return "나"; });
+    if (!WEB && o.me && skip.indexOf("Synow#KR1") < 0 && (isPbe || !isStar("Synow#KR1"))) group(isPbe ? "내 PBE 계정" : "내 계정", ["Synow#KR1"], false, function () { return "나"; });
     group("즐겨찾기", st, false);
-    group("최근 검색", rc, true);
+    group(isPbe ? "최근 PBE 검색" : "최근 검색", rc, true);
     if (!q) return;
     if (!LIVE) return;
     var res = el("div", "rk-list"); res.appendChild(el("h4", null, "검색 결과")); var rb = el("div"); rb.appendChild(el("p", "sub", "불러오는 중")); res.appendChild(rb); box.appendChild(res);
     whoTimers[box.id] = setTimeout(function () {
       getMT("public/search/" + encodeURIComponent(q.indexOf("#") >= 0 ? q : q + "#")).then(function (d) {
         rb.innerHTML = "";
-        var list = (d.data || []).filter(function (x) { return x.region === "kr" && skip.indexOf(x.riot_id) < 0; }).slice(0, 8);
-        if (!list.length) rb.appendChild(el("p", "sub", "소환사를 찾을 수 없어요. 이름#태그를 확인해 주세요"));
-        list.forEach(function (x) { rb.appendChild(rkWhoRow(x.riot_id, x.rating, null, null, o.pick, redraw)); });
+        var list = (d.data || []).filter(function (x) { return x.region === reg && skip.indexOf(x.riot_id) < 0; }).slice(0, 8);
+        if (!list.length) rb.appendChild(el("p", "sub", isPbe ? "자동완성에 없어도 이름#태그 입력 후 바로 검색할 수 있어요" : "소환사를 찾을 수 없어요. 이름#태그를 확인해 주세요"));
+        list.forEach(function (x) { rb.appendChild(rkWhoRow(x.riot_id, x.rating, null, null, o.pick, redraw, reg)); });
       }).catch(function () { rb.innerHTML = ""; rb.appendChild(el("p", "sub", "불러오지 못했어요. 다시 시도해 주세요")); });
     }, 250);
   }
   function rkSuggest() {
     var q = document.getElementById("rk-q").value.trim(), box = document.getElementById("rk-sug");
     if (!LIVE && q) { box.innerHTML = ""; box.appendChild(el("p", "empty", "전적 검색은 앱이나 PC 웹에서 볼 수 있어요")); return; }
-    whoList(box, q, { me: !WEB });
+    whoList(box, q, { me: !WEB, reg: rkReg });
   }
-  function rkFavs() { whoList(document.getElementById("rk-sug"), "", { me: !WEB }); }
+  function rkFavs() { whoList(document.getElementById("rk-sug"), "", { me: !WEB, reg: rkReg }); }
 
   // ---- 전적: 판마다 LP를 맞춘다. 판 요약의 player_rating은 그 판 '전' 점수, ranked_rating_changes는 판 '뒤' 스냅샷.
   var RK_RANGE = "tft-guide-rkrange2";  // 기본 50판으로 바꾸며 키를 새로 (v1.51.1)

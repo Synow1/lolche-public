@@ -74,6 +74,18 @@
 .fr-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 10px; }
 .fr-card { background: var(--elev2); border: 1px solid var(--border-elev2); border-radius: var(--r-card); padding: 14px; display: grid; gap: 5px; }
 .fr-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.fr-rk { flex: none; min-width: 24px; height: 24px; padding: 0 5px; border-radius: 7px; display: inline-grid; place-items: center; font-family: var(--mono); font-size: var(--fs-s); font-weight: 800; background: var(--sunk); color: var(--muted); }
+.fr-rk.r1 { background: rgba(230, 184, 81, .22); color: #b87c09; }
+.fr-rk.r2 { background: rgba(159, 176, 194, .22); color: #5b6978; }
+.fr-rk.r3 { background: rgba(196, 138, 99, .22); color: #9a5b32; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fr-rk.r1 { color: #f6cd6b; }
+  :root:not([data-theme="light"]) .fr-rk.r2 { color: #d4dde6; }
+  :root:not([data-theme="light"]) .fr-rk.r3 { color: #e2a77f; }
+}
+:root[data-theme="dark"] .fr-rk.r1 { color: #f6cd6b; }
+:root[data-theme="dark"] .fr-rk.r2 { color: #d4dde6; }
+:root[data-theme="dark"] .fr-rk.r3 { color: #e2a77f; }
 .fr-name { all: unset; cursor: pointer; font-weight: 700; font-size: var(--fs-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fr-x { all: unset; cursor: pointer; margin-left: auto; color: var(--muted); font-size: var(--fs-m); padding: 0 4px; }
 .fr-st { font-size: var(--fs-s); color: var(--muted); }
@@ -82,12 +94,14 @@
 .fr-card .plstr span { height: 24px; font-size: var(--fs-s); }
 .fr-add { display: flex; gap: 6px; margin-top: 10px; }
 .fr-add input { flex: 1; min-width: 0; font: inherit; font-size: var(--fs-b); padding: 6px 10px; border-radius: 8px; border: 1px solid transparent; background: var(--surface); color: var(--ink); }
+.rk-regchips { margin-bottom: 6px; }
 .rk-sbox { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 5px 5px 5px 8px; }
 .rk-sbox:focus-within { border-color: var(--accent); }
-.rk-reg { font-size: var(--fs-xs); font-weight: 800; color: var(--surface); background: var(--ink); border-radius: 6px; padding: 3px 6px; flex: none; }
+.rk-reg { all: unset; cursor: pointer; font-size: var(--fs-xs); font-weight: 800; color: var(--surface); background: var(--ink); border-radius: 6px; padding: 4px 7px; flex: none; white-space: nowrap; }
+.rk-reg.pbe { background: linear-gradient(135deg, #22b8cf, #7950f2); color: #fff; }
 .rk-sbox input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 16px; padding: 8px 2px; }
-.rk-sbox button { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: #fff; flex: none; }
-.rk-sbox button svg { width: 20px; height: 20px; }
+.rk-sbox #rk-go { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: #fff; flex: none; }
+.rk-sbox #rk-go svg { width: 20px; height: 20px; }
 #rk-sug { margin-top: 10px; display: grid; gap: 12px; }
 .rk-list h4 { margin: 0 0 6px; font-size: var(--fs-m); color: var(--muted); font-weight: 600; }
 .rk-list { display: grid; gap: 6px; }
