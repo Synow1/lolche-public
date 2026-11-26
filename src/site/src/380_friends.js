@@ -187,6 +187,7 @@
     box.innerHTML = "";
     if (!frData.length) { box.appendChild(el("p", "empty", LIVE && !frList().length ? "소환사를 추가하면 최근 고점 판을 비교할 수 있어요" : "불러오는 중")); return; }
     if (!POWER) { box.appendChild(el("p", "empty", "불러오는 중")); return; }
+    if (LIVE_SET_ID !== SET_ID && !OLD) { box.appendChild(el("p", "empty", "불러오는 중")); loadOld().then(function () { if (frView === "top") frTop(); }); return; }
     var need = frData.filter(function (f) { return f.d._canMore && f.d._canMore(frTopN) && (!frTopWho || f.id === frTopWho); });
     if (need.length) {
       box.appendChild(el("p", "empty", "불러오는 중"));
@@ -199,7 +200,7 @@
       var ms = (f.d.matches || []).filter(function (m) { return String(m.queue_id) === "1100"; }).slice(0, frTopN);
       ms.forEach(function (m) {
         var s = m.summary || {}, r = boardPower(s.units, s.traits, s.level);
-        if (r && r.power != null) games.push({ pw: r.power, who: f.id, tier: m.patch && pwOld(m.patch) ? m.patch + " 판" : "", pl: m.placement, level: s.level, t: m.match_timestamp, units: s.units, traits: s.traits });
+        if (r && r.power != null) games.push({ pw: r.power, who: f.id, tier: m.patch && pwOld(m.patch) ? m.patch + " 판" : "", pl: m.placement, level: s.level, t: m.match_timestamp, set: detectMatchSet(m), patch: m.patch || "", season: m.season || "", units: s.units, traits: s.traits });
       });
     });
     games.sort(function (a, b) { return b.pw - a.pw; });

@@ -1,6 +1,7 @@
-  function dkWeight(u) { return (u.cost || (IDX.units[u.u] || {}).cost || 1) * ((u.i || []).length >= 2 ? 2 : 1); }
-  function deckOfBoard(board, traits, old) {  // old: 지난 세트 판 -> 이번 시즌 덱과 맞추지 않는다 (레오나처럼 이름이 같은 유닛이 있어도 다른 유닛)
-    if (old) return dkGuess(board, traits);
+  function dkWeight(u) { return (u.cost || (u.old ? 1 : (IDX.units[u.u] || {}).cost) || 1) * ((u.i || []).length >= 2 ? 2 : 1); }
+  function deckOfBoard(board, traits, old, setNum) {  // old 또는 비공략 세트 판 -> 현재 공략 세트(META.decks)와 절대 맞추지 않는다
+    var sn = setNum || detectMatchSet({ units: board, traits: traits });
+    if (old || !isGuideSet(sn)) return dkGuess(board, traits, sn);
     if (META && !DK_VEC) DK_VEC = META.decks.map(function (d) {
       var v = {}; d.board.forEach(function (b) { if (!b.plant) v[b.u] = Math.max(v[b.u] || 0, dkWeight(b)); });
       return { d: d, v: v, main: (mainOf(d) || {}).u };
@@ -16,16 +17,18 @@
       if (!best || sim > best.sim) best = { d: x.d, sim: sim };
     });
     if (best && best.sim >= 0.42) return { name: deckName(best.d), d: best.d, sim: best.sim };
-    var r = dkGuess(board, traits); r.sim = best ? best.sim : 0; return r;
+    var r = dkGuess(board, traits, sn); r.sim = best ? best.sim : 0; return r;
   }
-  function dkGuess(board, traits) {  // 비슷한 덱이 없을 때: 제일 높은 시너지 + 메인 캐리
-    var syn = synOfMatch(traits || [], board).filter(function (x) { return x.style !== "unique"; });
+  function dkGuess(board, traits, setNum) {  // 비슷한 덱이 없을 때: 제일 높은 시너지 + 메인 캐리
+    var sn = setNum || detectMatchSet({ units: board, traits: traits });
+    var syn = synOfMatch(traits || [], board, sn).filter(function (x) { return x.style !== "unique"; });
     var carry = board.filter(function (b) { return (b.i || []).length >= 2; }).sort(function (a, b) { return b.i.length - a.i.length || b.cost - a.cost; })[0];
     var nm = [syn[0] && syn[0].t, carry && carry.u].filter(Boolean).join(" ") || (syn.slice(0, 2).map(function (x) { return x.t; }).join(" ") || "기타");
     return { name: nm, d: null, sim: 0, carry: carry && carry.u };
   }
-  function dkLine(board, traits, cls, old) {  // 판 카드·로비 줄의 덱 이름 줄
-    var r = deckOfBoard(board, traits, old), w = el(r.d ? "button" : "div", "gm-dk" + (cls ? " " + cls : "") + (r.d ? "" : " guess"));
+  function dkLine(board, traits, cls, old, setNum) {  // 판 카드·로비 줄의 덱 이름 줄
+    var sn = setNum || detectMatchSet({ units: board, traits: traits });
+    var r = deckOfBoard(board, traits, old || !isGuideSet(sn), sn), w = el(r.d ? "button" : "div", "gm-dk" + (cls ? " " + cls : "") + (r.d ? "" : " guess"));
     w.appendChild(el("b", null, r.name));
     if (r.d) {
       w.type = "button";
@@ -36,7 +39,7 @@
     return w;
   }
   function gameCard(m, lp, me) {
-    var s = m.summary, g = el("article", "rk-gm " + plCls(m.placement));
+    var s = m.summary, mSet = detectMatchSet(m), isCur = isGuideSet(mSet), g = el("article", "rk-gm " + plCls(m.placement));
     var h = el("div", "gm-head");
     h.appendChild(el("div", "gm-pl " + plCls(m.placement), "#" + m.placement));
     var t = el("div", "gm-t");
@@ -48,17 +51,17 @@
     l1.appendChild(el("span", null, ago(m.match_timestamp)));
     if (x && x.decay) { var dz = el("span", "lpd dn decay", "이후 휴면 −" + x.decay + "LP"); dz.title = "이 판 뒤 게임 없이 줄어든 LP (휴면 감소)"; l1.appendChild(dz); }
     t.appendChild(l1);
-    var board = mtBoard(s.units);
-    t.appendChild(dkLine(board, s.traits, null, pwOtherSet(m.patch)));
+    var board = mtBoard(s.units, mSet);
+    t.appendChild(dkLine(board, s.traits, null, !isCur, mSet));
     t.appendChild(el("div", "gm-l2", [s.level + "렙", mmss(m.game_duration || s.time_eliminated), m.lobby_label || (m.avg_rating ? "로비 " + tierText(m.avg_rating, true) : "")].filter(Boolean).join(" · ")));
     h.appendChild(t);
-    var code = codeOfNames(board.map(function (u) { return u.u; }));
+    var code = isCur ? codeOfNames(board.map(function (u) { return u.u; })) : null;
     if (code) h.appendChild(codeButton(code, "팀 코드", null, codeMiss(board.map(function (u) { return u.u; }))));
     g.appendChild(h);
-    var pt = pwOtherSet(m.patch) ? null : powerTag(s.units, s.traits, s.level, false); if (pt) { if (pwOld(m.patch)) pt.appendChild(el("span", "pw-old", m.patch + " 판 · 지금 패치 기준")); g.appendChild(pt); }
-    g.appendChild(synRow(synOfMatch(s.traits, board), false, 8));
+    var pt = pwOtherSet(m.patch) ? null : powerTag(s.units, s.traits, s.level, false, mSet); if (pt) { if (pwOld(m.patch)) pt.appendChild(el("span", "pw-old", m.patch + " 판 · 지금 패치 기준")); g.appendChild(pt); }
+    g.appendChild(synRow(synOfMatch(s.traits, board, mSet), false, 8));
     var mini = el("div", "mini cmp");
-    board.sort(function (a, b) { return (b.cost - a.cost) || (b.star - a.star); }).forEach(function (u) { mini.appendChild(miniUnit({ name: u.u, cost: u.cost, star: u.star, items: u.i.map(function (n) { return { name: n }; }) }, true)); });
+    board.sort(function (a, b) { return (b.cost - a.cost) || (b.star - a.star); }).forEach(function (u) { mini.appendChild(miniUnit({ name: u.u, cost: u.cost, star: u.star, icon: u.icon, old: u.old, set: u.set, items: u._ii || u.i.map(function (n) { return { name: n }; }) }, true)); });
     g.appendChild(mini);
     if (m.match_data_url || m._lobby) {
       var lb = el("button", "gm-more", "로비 8명 보기"); lb.type = "button";
@@ -100,7 +103,8 @@
         // 롤체지지 판 기록엔 로비 사람들 티어만 있고 LP는 없다 (그래서 티어 이름만)
         return { placement: p.placement, level: p.level, puuid: p.puuid, units: conv(p.units), traits: p.traits, riot_id: s ? s.gameName + "#" + s.tagLine : "?", rating: l && l.tier && l.tier !== "UNRANKED" ? l.tier + " " + (l.rank || "I") + " 0 LP" : "" };
       });
-      return { riot_match_id: "KR_" + m.matchId, patch: m.patchVersion || "", queue_id: m.queueId, placement: me.placement, match_timestamp: m.gameCreatedAt, game_duration: m.gameLength,
+      var mSet = parseSetNum(m.season) || parseSetNum(m.patchVersion) || parseSetNum(m.gameVersion);
+      return { riot_match_id: "KR_" + m.matchId, season: m.season || "", patch: m.patchVersion || "", gameVersion: m.gameVersion || "", set: mSet, queue_id: m.queueId, placement: me.placement, match_timestamp: m.gameCreatedAt, game_duration: m.gameLength,
         lobby_label: lobbyLabel(lob.map(function (p) { return lg[p.puuid]; }).filter(Boolean)), summary: { level: me.level, units: conv(me.units), traits: me.traits, time_eliminated: me.timeEliminated }, _lobby: lob };
     }).filter(Boolean);
   }
@@ -227,7 +231,7 @@
         window.scrollTo(0, prev ? 0 : py);
       });
     }
-    if (sea && !OLD) { RK_SEASON = sea; rkCur = riotId; document.getElementById("rk-prof").innerHTML = ""; document.getElementById("rk-prof").appendChild(el("p", "sub", "불러오는 중")); loadOld().then(function () { if (rkCur === riotId && RK_SEASON === sea) rkProfile(riotId, sea); }); return; }
+    if ((sea || LIVE_SET_ID !== SET_ID) && !OLD) { RK_SEASON = sea; rkCur = riotId; document.getElementById("rk-prof").innerHTML = ""; document.getElementById("rk-prof").appendChild(el("p", "sub", "불러오는 중")); loadOld().then(function () { if (rkCur === riotId && RK_SEASON === sea) rkProfile(riotId, sea); }); return; }
     RK_SEASON = sea;
     rkCur = riotId;
     rkView("search");
@@ -505,23 +509,23 @@
         c.appendChild(s1);
         var s2 = sec("등수 분포"); s2.appendChild(placeBars(plc)); c.appendChild(s2);
 
-        // 많이 한 덱 (판 보드를 가장 비슷한 MetaTFT 덱으로) · 캐리 (템 2개 이상)
+        // 많이 한 덱 (현재 공략 세트면 비슷한 MetaTFT 덱으로, 지난·본섭 비공략 세트면 그 세트 시너지+캐리로만) · 캐리 (템 2개 이상)
         var dk = {}, ca = {};
         list.forEach(function (m) {
-          var old = !!RK_SEASON || pwOtherSet(m.patch), board = mtBoard(m.summary.units), r = deckOfBoard(board, m.summary.traits, old);
+          var mSet = detectMatchSet(m), old = !isGuideSet(mSet), board = mtBoard(m.summary.units, mSet), r = deckOfBoard(board, m.summary.traits, old, mSet);
           var carry = board.filter(function (b) { return b.i.length >= 2; }).sort(function (a, b) { return b.i.length - a.i.length || b.cost - a.cost; })[0];
-          var a = dk[r.name] = dk[r.name] || { n: 0, p: 0, t4: 0, d: r.d, u: r.d ? (mainOf(r.d) || {}).u : carry && carry.u, c: carry && carry.cost, old: old }; a.n++; a.p += m.placement; if (m.placement <= 4) a.t4++;
+          var a = dk[r.name] = dk[r.name] || { n: 0, p: 0, t4: 0, d: r.d, u: r.d ? (mainOf(r.d) || {}).u : carry && carry.u, c: carry && carry.cost, ic: carry && carry.icon, old: old, set: mSet }; a.n++; a.p += m.placement; if (m.placement <= 4) a.t4++;
           var seen = {};
-          board.forEach(function (u) { if (u.i.length < 2 || seen[u.u]) return; seen[u.u] = 1; var a = ca[u.u] = ca[u.u] || [0, 0]; a[0]++; a[1] += m.placement; });
+          board.forEach(function (u) { if (u.i.length < 2 || seen[u.u]) return; seen[u.u] = 1; var x = ca[u.u] = ca[u.u] || { n: 0, p: 0, icon: u.icon, cost: u.cost, old: old, set: mSet }; x.n++; x.p += m.placement; });
         });
         var dkk = Object.keys(dk).sort(function (a, b) { return dk[b].n - dk[a].n || dk[a].p / dk[a].n - dk[b].p / dk[b].n; }).slice(0, 6);
         if (dkk.length) {
           var s3 = sec("많이 한 덱", "비슷한 메타 덱으로 묶음"), dl = el("div", "rk-dks");
           dkk.forEach(function (k) {
             var a = dk[k], row = el(a.d ? "button" : "div", "rk-dk"); if (a.d) row.type = "button";
-            // 지난 시즌은 그 세트 아이콘 (이번 시즌에 같은 이름이 있어도 쓰지 않음)
-            var ic = a.u && (a.old ? (OLD_UI[a.u] ? { icon: OLD_UI[a.u], cost: a.c || 1 } : null) : IDX.units[a.u]);
-            if (ic) { var im = img(ic.icon, a.u); im.dataset.c = ic.cost; row.appendChild(im); }
+            // 비공략(본섭 18·지난) 시즌은 그 세트 아이콘만 (현재 공략 세트에 같은 이름이 있어도 쓰지 않음)
+            var ic = a.u && (a.old ? ((a.ic || OLD_UI[a.u]) ? { icon: a.ic || OLD_UI[a.u], cost: a.c || 1 } : null) : IDX.units[a.u]);
+            if (ic && ic.icon) { var im = img(ic.icon, a.u); im.dataset.c = ic.cost; if (a.old) im.dataset.oldset = String(a.set || liveSetNum()); row.appendChild(im); }
             row.appendChild(el("b", null, k));
             var av = a.p / a.n;
             var stx = el("span", "st"); stx.appendChild(document.createTextNode(a.n + "판 · 평균 "));
@@ -532,10 +536,10 @@
           });
           s3.appendChild(dl); c.appendChild(s3);
         }
-        var ck = Object.keys(ca).sort(function (a, b) { return ca[b][0] - ca[a][0]; }).slice(0, 6);
+        var ck = Object.keys(ca).sort(function (a, b) { return ca[b].n - ca[a].n; }).slice(0, 6);
         if (ck.length) {
           var s4 = sec("많이 쓴 캐리", "템 2개 이상 · 평균 등수"); var pc2 = el("div", "pchips");
-          ck.forEach(function (k) { var a = ca[k], ch = el("span", "c"); ch.appendChild(unitChip(k)); var av = a[1] / a[0]; ch.appendChild(el("b", av <= 4 ? "good" : av >= 5 ? "bad" : null, a[0] + "판 " + av.toFixed(1))); pc2.appendChild(ch); });
+          ck.forEach(function (k) { var a = ca[k], ch = el("span", "c"); ch.appendChild(unitChip(k, a)); var av = a.p / a.n; ch.appendChild(el("b", av <= 4 ? "good" : av >= 5 ? "bad" : null, a.n + "판 " + av.toFixed(1))); pc2.appendChild(ch); });
           s4.appendChild(pc2); c.appendChild(s4);
         }
         body.appendChild(c);

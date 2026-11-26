@@ -153,7 +153,11 @@
   var TB_KEY = "tft-guide-builder", tbUnits = [];
   try { tbUnits = JSON.parse(localStorage.getItem(TB_KEY) || "[]") || []; } catch (e) {}
   function tbSave() { try { localStorage.setItem(TB_KEY, JSON.stringify(tbUnits)); } catch (e) {} }
-  function traitBreaks(t) { var inf = DB.info.t[t]; return inf ? inf.e.map(function (e) { return e[0]; }) : []; }
+  function traitBreaks(t) {
+    var inf = DB.info.t[t]; if (!inf) return [];
+    var out = []; inf.e.forEach(function (e) { if (e[0] != null && out.indexOf(e[0]) < 0) out.push(e[0]); });
+    return out;
+  }
   function traitCounts(names) {
     var c = {};
     names.forEach(function (n) { var u = DB.units[n]; if (u) u.traits.forEach(function (t) { c[t] = (c[t] || 0) + 1; }); traitBonus(n, c); });
@@ -163,8 +167,8 @@
     }).sort(function (a, b) { return (b.lv > 0) - (a.lv > 0) || b.lv - a.lv || b.n - a.n; });
   }
   function traitChipFull(x) {
-    var max = x.br.length || 1;
-    var cls = x.lv === 0 ? "" : x.br.length === 1 ? "lv3" : x.lv === max ? (max >= 4 ? "lv4" : "lv3") : x.lv === 1 ? "lv1" : "lv2";
+    var st = x.lv > 0 && GUIDES && GUIDES.styles && GUIDES.styles[x.t] ? stepStyleOf(GUIDES.styles[x.t], x.n) : null;
+    var cls = x.lv === 0 ? "" : st ? ({ bronze: "lv1", silver: "lv2", gold: "lv3", chromatic: "lv4", unique: "lv-u" }[st] || "lv1") : (x.br.length === 1 ? "lv-u" : x.lv === 1 ? "lv1" : x.lv === x.br.length ? "lv3" : "lv2");
     var c = el("span", "trc " + cls); c.dataset.trait = x.t;
     if (IDX.traits[x.t]) c.appendChild(img(IDX.traits[x.t], ""));
     c.appendChild(el("b", null, x.n));

@@ -338,14 +338,43 @@ function fresh(file, key, hours) {
     await go('esports'); await pg.waitForTimeout(800);
     if (await q(() => /\?/.test((document.querySelector('.cr-sum') || {}).innerText || ''))) fail('이스포츠: 월즈 요약에 ?');
     }
+    const _oldS18 = JSON.parse(fs.readFileSync(path.join(SITE, 'oldsets.json'), 'utf8'));
+    const _s19Data = JSON.parse(fs.readFileSync(path.join(SITE, 's19.json'), 'utf8'));
+    const _s18U = new Set(Object.entries(_oldS18.u || {}).filter(([k]) => /18/.test(k)).map(([, v]) => v[0]));
+    const _s18T = new Set(Object.entries(_oldS18.t || {}).filter(([k]) => /18/.test(k)).map(([, v]) => v[0]));
+    const S19_ONLY_U = (_s19Data.units || []).map(u => u.n).filter(n => !_s18U.has(n));
+    const S19_ONLY_T = (_s19Data.traits || []).map(t => t.n).filter(n => !_s18T.has(n));
+    const _isPbe = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).pbe;
     if (!FAST && ['rank'].some(need)) {
     await go('rank'); await pg.waitForTimeout(3000);
     if (await q(() => document.querySelectorAll('#rk-rows .rk-row').length) < 30) soft('한국 랭킹: 줄 30개 미만');
     if (await q(() => document.getElementById('rk-upd-btn').hidden)) fail('한국 랭킹: 앱인데 새로고침 버튼이 숨어 있음');
+    if (_isPbe) {
+      const rkLeak = await q(() => ({
+        locks: document.querySelectorAll('#rk-rows .rk-row .mt-strip .lk').length,
+        s19img: [...document.querySelectorAll('#rk-rows .rk-row .mt-strip img')].filter(i => /icons\/s19\//.test(i.getAttribute('src') || '')).length,
+      }));
+      if (rkLeak && (rkLeak.locks || rkLeak.s19img)) fail(`한국 랭킹: 18시즌 본섭 캐리에 19시즌 해금 자물쇠(${rkLeak.locks})·아이콘(${rkLeak.s19img})이 섞임`);
+    }
     }
     if (['power'].some(need)) {
     await go('power'); await pg.waitForTimeout(1500);
     if (await q(() => document.querySelectorAll('#pw-list .pwc').length) < 5) soft('덱파워: 카드 5개 미만');
+    if (_isPbe) {
+      const pwChk = await q(({ u19, t19 }) => {
+        const uSet = new Set(u19), tSet = new Set(t19);
+        const badU = [...document.querySelectorAll('#pw-list .mu .nm')].map(e => e.textContent.trim()).filter(n => uSet.has(n));
+        const badT = [...document.querySelectorAll('#pw-list .trx')].map(e => e.dataset.trait || '').filter(n => tSet.has(n));
+        const badDk = [...document.querySelectorAll('#pw-list .gm-dk b')].map(e => e.textContent.trim()).filter(tx => t19.some(t => tx.includes(t)) || u19.some(u => tx.split(/\s+/).includes(u)));
+        const badCh = [...document.querySelectorAll('#pw-list .trx.s-chromatic')].map(e => [e.dataset.trait || '', (e.querySelector('b') || {}).textContent || '']).filter(x => !((x[0] === '나무정령' || x[0] === '개화') && +x[1] >= 11));
+        const emptyHx = [...document.querySelectorAll('#pw-list .trx .hx2')].filter(h => !h.querySelector('img')).length;
+        const s19img = [...document.querySelectorAll('#pw-list img')].filter(i => /icons\/s19\//.test(i.getAttribute('src') || '')).length;
+        return { bad: [...new Set([...badU, ...badT, ...badDk])], badCh, emptyHx, s19img };
+      }, { u19: S19_ONLY_U, t19: S19_ONLY_T });
+      if (pwChk && (pwChk.bad.length || pwChk.s19img)) fail(`덱파워: 18시즌 보드에 19시즌 기물·시너지(${pwChk.bad.slice(0, 4).join(', ')})·아이콘(${pwChk.s19img})이 섞임`);
+      if (pwChk && pwChk.badCh.length) fail(`덱파워: 프리즘이 아닌 시너지에 프리즘 색(.s-chromatic)이 붙음 (${JSON.stringify(pwChk.badCh.slice(0, 4))})`);
+      if (pwChk && pwChk.emptyHx) fail(`덱파워: 18시즌 시너지 그림 빈칸 ${pwChk.emptyHx}개`);
+    }
     }
     if (!FAST && ['friends'].some(need)) {
     await go('friends'); await pg.waitForTimeout(6000);
@@ -381,6 +410,20 @@ function fresh(file, key, hours) {
     // 본섭(지난 세트) 판의 시너지 그림 (2026-11-22: PBE 기간 18시즌 판 시너지가 19시즌 그림표에 없어 빈 육각형으로 나왔음)
     { const tr = await q(() => { const hx = [...document.querySelectorAll('#rk-prof .trx .hx2')]; return [hx.length, hx.filter(h => !h.querySelector('img')).length]; });
       if (tr && tr[0] && tr[1] > tr[0] * 0.05) fail(`전적 검색: 시너지 그림이 빈칸 ${tr[1]}/${tr[0]}개`); }
+    // 18시즌 본섭 전적: 19시즌 전용 이름·아이콘 금지 + 비프리즘·고유 시너지에 프리즘 색 금지
+    if (_isPbe) {
+      const rk18 = await q(({ u19, t19 }) => {
+        const uSet = new Set(u19), tSet = new Set(t19);
+        const badU = [...document.querySelectorAll('#rk-prof .mu .nm, #rk-prof .pchips .u')].map(e => e.textContent.trim()).filter(n => uSet.has(n));
+        const badT = [...document.querySelectorAll('#rk-prof .trx')].map(e => e.dataset.trait || '').filter(n => tSet.has(n));
+        const badDk = [...document.querySelectorAll('#rk-prof .gm-dk b, #rk-prof .rk-dk b')].map(e => e.textContent.trim()).filter(tx => t19.some(t => tx.includes(t)) || u19.some(u => tx.split(/\s+/).includes(u)));
+        const badCh = [...document.querySelectorAll('#rk-prof .trx.s-chromatic')].map(e => [e.dataset.trait || '', (e.querySelector('b') || {}).textContent || '']).filter(x => !((x[0] === '나무정령' || x[0] === '개화') && +x[1] >= 11));
+        const s19img = [...document.querySelectorAll('#rk-prof img')].filter(i => /icons\/s19\//.test(i.getAttribute('src') || '')).length;
+        return { bad: [...new Set([...badU, ...badT, ...badDk])], badCh, s19img };
+      }, { u19: S19_ONLY_U, t19: S19_ONLY_T });
+      if (rk18 && (rk18.bad.length || rk18.s19img)) fail(`전적 검색: 18시즌 본섭 전적에 19시즌 전용 기물·시너지(${rk18.bad.slice(0, 4).join(', ')})·아이콘(${rk18.s19img})이 섞임`);
+      if (rk18 && rk18.badCh.length) fail(`전적 검색: 비프리즘·고유 시너지에 프리즘 색(.s-chromatic)이 붙음 (${JSON.stringify(rk18.badCh.slice(0, 4))})`);
+    }
     // 기본 범위 50판, 등수 줄은 최근 20판까지 (2026-11-11 사용자)
     if (await q(() => ((document.querySelector('.rk-range .mt-chips button.on') || {}).textContent || '')) !== '50판') soft('전적 검색: 기본 범위가 50판이 아님');
     if (await q(() => document.querySelectorAll('.rk-sum .plstr span').length) > 20) fail('전적 검색: 등수 줄이 20판 넘게 보임');
@@ -389,7 +432,8 @@ function fresh(file, key, hours) {
   });
   // 롤체갤 실시간 (2026-11-13 사용자: "1초에 한 번씩 목록 리로딩"): 목록이 차는지, 1초마다 다시 받는지, 탭을 떠나면 멈추는지
   if (!FAST) task(['dc'], async () => {
-    const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
+    const ctx = await b.newContext({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
+    const pg = await ctx.newPage();
     const errs = []; pg.on('pageerror', e => errs.push(e.message));
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; localStorage.removeItem('tft-guide-dc'); });
     let dcReq = 0, dcPost = 0, dcPage = '', dcInject = false; const dcCache = {};
@@ -492,7 +536,7 @@ function fresh(file, key, hours) {
     await go('meta'); await pg.waitForTimeout(1500); const n1 = dcReq; await pg.waitForTimeout(3000);
     if (dcReq - n1 > 0) fail('롤체갤: 다른 탭으로 가도 계속 받음');
     if (errs.length) fail('롤체갤: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
-    await pg.close();
+    await ctx.close();
   });
   // 월즈 실시간 순위 (2026-11-13 사용자: "월즈 시작했는데 실시간 현황판 바로 안 넣어놓냐"): 일정을 오늘로, MetaTFT 대회 목록에
   // 지난 세트 월즈(TCROWN S17) 게임을 이번 세트 이름으로 넣어 보여주고, 순위표·단계 칩·한국 선수 줄·프로 포인트 접힘을 본다
@@ -1104,6 +1148,169 @@ function fresh(file, key, hours) {
       await ctx.close();
       srv.close();
     }
+  });
+  // 회귀 검사 (2026-11-26): ① 18시즌 본섭 전적·덱파워·랭킹에 19시즌 전용 이름·덱·아이콘 혼입 금지, ② 비프리즘·고유 시너지에 프리즘 색(.s-chromatic/.st5/.lv4) 금지
+  task(['rank', 'power', 'friends', 'meta', 's19', 'builder'], async () => {
+    const M = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
+    const G = JSON.parse(fs.readFileSync(path.join(SITE, 'guides.json'), 'utf8'));
+    const S = JSON.parse(fs.readFileSync(path.join(SITE, 's19.json'), 'utf8'));
+    // 정적 데이터 검사: 19시즌 퀘스트 프리즘(HEARTSTEEL 7·True Damage 5·펜타킬 7)과 고유 특성은 보드만으로 프리즘(chromatic/5)이 되면 안 됨
+    const badGuideCh = [];
+    for (const d of G.decks || []) {
+      for (const s of d.syn || []) if (s.style === 'chromatic' && /^(HEARTSTEEL|True Damage|펜타킬)$/.test(s.t)) badGuideCh.push(`${d.name}:${s.t}${s.n}`);
+      for (const lv of Object.values(d.levels || {})) for (const s of lv.syn || []) if (s.style === 'chromatic' && /^(HEARTSTEEL|True Damage|펜타킬)$/.test(s.t)) badGuideCh.push(`${d.name}:${s.t}${s.n}`);
+    }
+    if (badGuideCh.length) fail('guides.json: 퀘스트 프리즘 조건 없는 보드에 chromatic 지정 ' + badGuideCh.slice(0, 4).join(', '));
+    const uniqNames = new Set((S.traits || []).filter(t => t.uniq).map(t => t.n));
+    const badS19Ch = [];
+    for (const sec of ['decks', 'guides']) {
+      for (const d of S[sec] || []) {
+        for (const t of d.t || []) {
+          if (t[2] === 5 && (/^(HEARTSTEEL|True Damage|펜타킬)$/.test(t[0]) || uniqNames.has(t[0]))) badS19Ch.push(`${d.n}:${t[0]}${t[1]}`);
+        }
+      }
+    }
+    if (badS19Ch.length) fail('s19.json: 비프리즘·고유 시너지에 프리즘(5) 지정 ' + badS19Ch.slice(0, 4).join(', '));
+
+    const _old18 = JSON.parse(fs.readFileSync(path.join(SITE, 'oldsets.json'), 'utf8'));
+    const _u18Set = new Set(Object.entries(_old18.u || {}).filter(([k]) => /18/.test(k)).map(([, v]) => v[0]));
+    const _t18Set = new Set(Object.entries(_old18.t || {}).filter(([k]) => /18/.test(k)).map(([, v]) => v[0]));
+    const _u19Only = (S.units || []).map(u => u.n).filter(n => !_u18Set.has(n));
+    const _t19Only = (S.traits || []).map(t => t.n).filter(n => !_t18Set.has(n));
+
+    // 브라우저 모의 테스트 (네트워크 없이 --fast에서도 항상 실행)
+    const now = Date.now();
+    const mockUnits = [
+      { character_id: 'DA_18_Yunara', tier: 2, items: ['DA_GuinsoosRageblade', 'DA_InfinityEdge'] },
+      { character_id: 'DA_18_Ahri', tier: 2, items: ['DA_JeweledGauntlet', 'DA_SpearOfShojin'] },
+      { character_id: 'DA_18_Akali_AP', tier: 2, items: ['DA_HextechGunblade'] },
+      { character_id: 'DA_18_Lux', tier: 2, items: [] },
+      { character_id: 'DA_18_Ashe', tier: 2, items: [] },
+      { character_id: 'DA_18_Riven', tier: 2, items: [] },
+      { character_id: 'DA_18_Kindred', tier: 2, items: [] },
+      { character_id: 'DA_18_Maokai', tier: 2, items: [] },
+    ];
+    const mockMatches = {
+      summoners: [{ puuid: 'p1', gameName: 'TestS18', tagLine: 'KR1' }],
+      summonerLeagues: [{ puuid: 'p1', queueId: 1100, tier: 'DIAMOND', rank: 'I', leaguePoints: 50 }],
+      matches: [
+        {
+          season: 'set18', shard: 'kr', matchId: 900001, gameCreatedAt: now - 3600000, gameLength: 2000,
+          gameVersion: '18.7', patchVersion: '18.7', queueId: 1100,
+          participants: [{
+            puuid: 'p1', placement: 2, level: 8, timeEliminated: 2000, units: mockUnits,
+            // Riot Match-v1 / dak.gg 실제 style: 1 동 · 2 은 · 3 고유 · 4 금 · 5 프리즘 · 6 특수(일월식)
+            traits: [
+              { name: 'DA_18_Brawler', num_units: 6, tier_current: 3, tier_total: 3, style: 4 },
+              { name: 'DA_18_Elderwood', num_units: 7, tier_current: 3, tier_total: 5, style: 4 },
+              { name: 'DA_18_Spellweaver', num_units: 4, tier_current: 2, tier_total: 3, style: 2 },
+              { name: 'DA_18_LuxUniqueTrait', num_units: 1, tier_current: 1, tier_total: 1, style: 3 },
+              { name: 'DA_18_Maokai_UniqueTrait', num_units: 1, tier_current: 1, tier_total: 1, style: 3 },
+              { name: 'DA_18_Eclipse', num_units: 0, tier_current: 1, tier_total: 1, style: 6 },
+            ],
+          }],
+        },
+        {
+          season: 'set18', shard: 'kr', matchId: 900002, gameCreatedAt: now - 7200000, gameLength: 2100,
+          gameVersion: '18.7', patchVersion: '18.7', queueId: 1100,
+          participants: [{
+            puuid: 'p1', placement: 1, level: 9, timeEliminated: 2100, units: mockUnits,
+            traits: [
+              { name: 'DA_18_Elderwood', num_units: 11, tier_current: 5, tier_total: 5, style: 5 },
+              { name: 'DA_18_Greenfather', num_units: 1, tier_current: 1, tier_total: 1, style: 3 },
+            ],
+          }],
+        },
+      ],
+      meta: { totalCount: 2 },
+    };
+    const mockProfile = {
+      summoner: { puuid: 'p1', gameName: 'TestS18', tagLine: 'KR1', summonerLevel: 100, syncedAt: new Date().toISOString() },
+      summonerLeagues: [{ queueId: 1100, tier: 'DIAMOND', rank: 'I', leaguePoints: 50 }],
+      summonerSeasonPlacements: [{ queueId: 1100, values: [1, 1, 0, 0, 0, 0, 0, 0] }],
+      summonerSeasons: [],
+    };
+    const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+    await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
+    await pg.route('https://lolche.local/**', async (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
+      if (u.pathname === '/proxy') {
+        const tu = u.searchParams.get('u') || '';
+        if (/\/profile\?/.test(tu)) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockProfile) });
+        if (/\/matches\?/.test(tu)) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockMatches) });
+        if (/\/league-logs\?/.test(tu)) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ summonerLeagueLogs: [], meta: { totalCount: 0 } }) });
+        return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      }
+      const f = path.join(SITE, decodeURIComponent(u.pathname));
+      return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+    });
+    const errs = []; pg.on('pageerror', e => errs.push(String(e)));
+    await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(1600);
+
+    // ① 18시즌 모의 전적 검색: 19시즌 이름 금지 + style=4(금)·style=3(고유)·style=6(일월식)에 s-chromatic 금지 + style=5(나무정령 11)는 s-chromatic 허용
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#rank'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(400);
+    await pg.evaluate(() => { document.querySelector('#rk-seg [data-v=search]').click(); const i = document.getElementById('rk-q'); i.value = 'TestS18#KR1'; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); });
+    await pg.waitForSelector('.rk-gm', { timeout: 10000 }).catch(() => fail('회귀 검사: 모의 18시즌 전적 카드가 안 그려짐'));
+    await pg.waitForTimeout(500);
+    const s18res = await pg.evaluate(({ u19, t19 }) => {
+      const uSet = new Set(u19), tSet = new Set(t19);
+      const prof = document.getElementById('rk-prof');
+      const badU = [...prof.querySelectorAll('.mu .nm, .pchips .u')].map(e => e.textContent.trim()).filter(n => uSet.has(n));
+      const badT = [...prof.querySelectorAll('.trx')].map(e => e.dataset.trait || '').filter(n => tSet.has(n));
+      const badDk = [...prof.querySelectorAll('.gm-dk b, .rk-dk b')].map(e => e.textContent.trim()).filter(tx => t19.some(t => tx.includes(t)) || u19.some(u => tx.split(/\s+/).includes(u)));
+      const cards = [...document.querySelectorAll('#rk-prof .rk-gm')];
+      const c0 = cards[0] ? [...cards[0].querySelectorAll('.trx')].map(e => ({ t: e.dataset.trait, n: (e.querySelector('b') || {}).textContent, cls: e.className })) : [];
+      const c1 = cards[1] ? [...cards[1].querySelectorAll('.trx')].map(e => ({ t: e.dataset.trait, n: (e.querySelector('b') || {}).textContent, cls: e.className })) : [];
+      const s19imgs = [...prof.querySelectorAll('img')].filter(i => /icons\/s19\//.test(i.getAttribute('src') || '')).length;
+      return { bad: [...new Set([...badU, ...badT, ...badDk])], c0, c1, s19imgs };
+    }, { u19: _u19Only, t19: _t19Only });
+    if (s18res.bad.length) fail('회귀 검사 ①: 18시즌 모의 전적에 19시즌 전용 이름이 섞임 ' + s18res.bad.slice(0, 4).join(', '));
+    if (s18res.s19imgs) fail(`회귀 검사 ①: 18시즌 모의 전적에 19시즌 아이콘(${s18res.s19imgs}개)이 섞임`);
+    if (s18res.c0.some(x => /s-chromatic/.test(x.cls))) fail('회귀 검사 ②: 18시즌 비프리즘(style=4 금·style=3 고유·style=6 일월식)에 s-chromatic이 붙음 ' + JSON.stringify(s18res.c0));
+    if (!s18res.c0.some(x => x.t === '싸움꾼' && /s-gold/.test(x.cls)) || !s18res.c0.some(x => x.t === '나무정령' && x.n === '7' && /s-gold/.test(x.cls))) fail('회귀 검사 ②: 18시즌 style=4 시너지가 s-gold로 표시되지 않음 ' + JSON.stringify(s18res.c0));
+    if (s18res.c0.some(x => x.t === '화신' || x.t === '고목')) fail('회귀 검사 ②: 18시즌 style=3 고유 특성이 unique로 분류되지 않음 ' + JSON.stringify(s18res.c0));
+    if (!s18res.c1.some(x => x.t === '나무정령' && x.n === '11' && /s-chromatic/.test(x.cls))) fail('회귀 검사 ②: 18시즌 진짜 프리즘(style=5 나무정령 11)에 s-chromatic이 안 붙음 ' + JSON.stringify(s18res.c1));
+
+    // ② 덱 탭(#meta): HEARTSTEEL 7·True Damage 5·펜타킬 7 및 고유 특성에 s-chromatic 금지
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#meta'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(500);
+    const metaCh = await pg.evaluate(() => {
+      const bad = [];
+      const rows = [...document.querySelectorAll('#mt-rows .mt-row.dk')].filter(r => /HEARTSTEEL|True Damage|펜타킬/.test(r.innerText || '')).slice(0, 4);
+      rows.forEach(r => {
+        r.click();
+        document.querySelectorAll('#mt-detail .trx.s-chromatic').forEach(e => {
+          const t = e.dataset.trait || '', n = (e.querySelector('b') || {}).textContent || '';
+          if (/^(HEARTSTEEL|True Damage|펜타킬)$/.test(t)) bad.push(t + n);
+        });
+      });
+      return bad;
+    });
+    if (metaCh.length) fail('회귀 검사 ②: 덱 상세에서 퀘스트 프리즘(HEARTSTEEL 7·True Damage 5·펜타킬 7)에 s-chromatic이 붙음 ' + metaCh.join(', '));
+
+    // ③ 19시즌 도감 스쿼드 빌더(#s19 builder): 고유 특성은 st6(비프리즘), 7 HEARTSTEEL/5 True Damage/7 펜타킬은 st4(골드, st5 금지)
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#s19'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(500);
+    await pg.evaluate(() => { document.querySelector('#s19-view [data-v=builder]').click(); }); await pg.waitForTimeout(350);
+    await pg.evaluate(() => { document.querySelector('#s19-out .s19-bclr')?.click(); }); await pg.waitForTimeout(200);
+    const bldCh = await pg.evaluate((S19data) => {
+      const uniq = new Set((S19data.traits || []).filter(t => t.uniq).map(t => t.n));
+      // HEARTSTEEL 챔피언 7명(또는 최대) + 고유 특성 챔피언 담기
+      const picks = (S19data.units || []).filter(u => (u.t || []).includes('HEARTSTEEL')).slice(0, 7);
+      const uniqU = (S19data.units || []).find(u => (u.t || []).some(t => uniq.has(t)));
+      if (uniqU && !picks.some(x => x.k === uniqU.k)) picks.push(uniqU);
+      const btns = [...document.querySelectorAll('#s19-out .s19-bpick')];
+      picks.forEach(u => { const b = btns.find(x => (x.textContent || '').trim() === u.n); if (b) b.click(); });
+      const pills = [...document.querySelectorAll('#s19-out .s19-bspill')].map(p => ({ n: (p.querySelector('span:not(.s19-ti)') || {}).textContent || '', cls: p.className }));
+      const badSt5 = pills.filter(p => /\bst5\b/.test(p.cls) && (p.n === 'HEARTSTEEL' || uniq.has(p.n)));
+      const badUniq = pills.filter(p => uniq.has(p.n) && !/\bst6\b/.test(p.cls));
+      document.querySelector('#s19-out .s19-bclr')?.click();
+      return { pills, badSt5, badUniq };
+    }, S);
+    if (bldCh.badSt5.length) fail('회귀 검사 ②: 도감 빌더에서 비프리즘·고유 시너지에 st5(프리즘)가 붙음 ' + JSON.stringify(bldCh.badSt5));
+    if (bldCh.badUniq.length) fail('회귀 검사 ②: 도감 빌더에서 고유 시너지가 st6이 아님 ' + JSON.stringify(bldCh.badUniq));
+
+    if (errs.length) fail('회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
+    await pg.close();
   });
   // 동시에 4개씩 (대부분 I/O·대기 시간이라 겹쳐 돌리면 빨라진다)
   { let next = 0; await Promise.all([0, 1, 2, 3].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }

@@ -8,7 +8,8 @@
         var p = m.participants[0]; if (!p) return null;
         var l = lg[p.puuid] || {}, w = sm[p.puuid];
         var raw = (p.units || []).map(function (u) { return { character_id: u.character_id, tier: u.tier, itemNames: u.items || [] }; });
-        return { t: m.gameCreatedAt, tier: l.tier || "", rank: l.rank || "", who: w ? w.gameName + "#" + w.tagLine : "", level: p.level, traits: p.traits, raw: raw, board: mtBoard(raw) };
+        var mSet = detectMatchSet({ season: m.season, patch: m.patchVersion, gameVersion: m.gameVersion, units: raw, traits: p.traits });
+        return { t: m.gameCreatedAt, tier: l.tier || "", rank: l.rank || "", who: w ? w.gameName + "#" + w.tagLine : "", level: p.level, traits: p.traits, raw: raw, set: mSet, patch: m.patchVersion || "", season: m.season || "", gameVersion: m.gameVersion || "", board: mtBoard(raw, mSet) };
       }).filter(Boolean).sort(function (a, b) { return b.t - a.t; });
       WIN_AT = Date.now();
       return WIN;

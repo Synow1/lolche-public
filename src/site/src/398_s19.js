@@ -639,14 +639,17 @@
     });
     var synList = Object.keys(counts).map(function (tn) {
       var t = s19Trait(tn), cnt = counts[tn], active = 0, nextM = null, style = 0;
-      if (t && t.steps && t.steps.length) {
+      if (t && t.uniq) {
+        active = 1; style = 6;
+      } else if (t && t.steps && t.steps.length) {
         t.steps.forEach(function (s) {
-          if (s.m != null && cnt >= s.m) { active = s.m; style = s.s || 1; }
-          else if (s.m != null && nextM == null) nextM = s.m;
+          if (s.m != null && cnt >= s.m) { if (s.m > active) active = s.m; }
+          else if (s.m != null && s.m > active && (nextM == null || s.m < nextM)) nextM = s.m;
         });
+        if (active) style = stepStyleOf(t.steps, cnt) || 1;
       }
-      return { n: tn, t: t, cnt: cnt, active: active, next: nextM, style: t && t.uniq ? 4 : style };
-    }).sort(function (a, b) { return (b.active > 0) - (a.active > 0) || b.style - a.style || b.cnt - a.cnt; });
+      return { n: tn, t: t, cnt: cnt, active: active, next: nextM, style: style };
+    }).sort(function (a, b) { return (b.active > 0) - (a.active > 0) || (a.style === 6) - (b.style === 6) || b.style - a.style || b.cnt - a.cnt; });
     var synBox = el("div", "s19-bsyn");
     if (!synList.length) {
       synBox.appendChild(el("span", "sub", "아래에서 챔피언을 눌러 시너지를 조합해 보세요"));

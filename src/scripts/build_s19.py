@@ -236,11 +236,21 @@ def pbe_decks(mk, units, traits):
             for tn in u_tr.get(c["k"], []): tc[tn] += 1
         trs = []
         for tn, cnt in tc.items():
-            st_lv = 4 if t_uniq.get(tn) else 0
+            if t_uniq.get(tn):
+                trs.append([tn, cnt, 6])
+                continue
+            best_m, st_lv = -1, 0
             for stp in t_steps.get(tn, []):
-                if stp.get("m") and cnt >= stp["m"]: st_lv = stp.get("s") or 1
-            if st_lv > 0: trs.append([tn, cnt, st_lv])
-        trs.sort(key=lambda x: (-x[2], -x[1]))
+                m, s_val = stp.get("m"), stp.get("s") or 1
+                if not m or cnt < m:
+                    continue
+                if m > best_m:
+                    best_m, st_lv = m, s_val
+                elif m == best_m and st_lv == 5 and s_val != 5:
+                    st_lv = s_val
+            if st_lv > 0:
+                trs.append([tn, cnt, st_lv])
+        trs.sort(key=lambda x: (x[2] == 6, -x[2], -x[1]))
         p, n = s["places"][:8], s["count"]
         out.append({"id": s["cluster"], "n": name or uname.get(mc, ""), "mc": mc, "avg": round(sum((i + 1) * x for i, x in enumerate(p)) / n, 2),
                     "win": round(p[0] / n * 100, 1), "top4": round(sum(p[:4]) / n * 100, 1), "pick": round(n / total * 8, 2), "plays": n,
@@ -457,11 +467,21 @@ def main():
                 for tn in u_traits.get(c["k"], []): tc[tn] += 1
             trs = []
             for tn, cnt in tc.items():
-                st_lv = 4 if t_uniq.get(tn) else 0
+                if t_uniq.get(tn):
+                    trs.append([tn, cnt, 6])
+                    continue
+                best_m, st_lv = -1, 0
                 for stp in t_steps.get(tn, []):
-                    if stp.get("m") and cnt >= stp["m"]: st_lv = stp.get("s") or 1
-                if st_lv > 0: trs.append([tn, cnt, st_lv])
-            trs.sort(key=lambda x: (-x[2], -x[1]))
+                    m, s_val = stp.get("m"), stp.get("s") or 1
+                    if not m or cnt < m:
+                        continue
+                    if m > best_m:
+                        best_m, st_lv = m, s_val
+                    elif m == best_m and st_lv == 5 and s_val != 5:
+                        st_lv = s_val
+                if st_lv > 0:
+                    trs.append([tn, cnt, st_lv])
+            trs.sort(key=lambda x: (x[2] == 6, -x[2], -x[1]))
             augs_g = [dk_au[a] for a in (g.get("data") or {}).get("augments") or [] if a in dk_au]
             # PBE 통계 덱과 자동 교차 매칭 (유닛 겹침 >= 4명 이상)
             gset = {c["k"] for c in champs}

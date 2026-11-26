@@ -262,7 +262,7 @@
   // 무엇을 눌렀는지 알아낸다. 버튼·링크 안(덱 줄, 유닛 고르기 등)은 원래 동작을 둔다.
   function inspectTarget(t) {
     var hit = t.closest("[data-unit], [data-item], [data-trait], [data-aug], .u, .it, .ag, img.tr[data-t], .tchips span");
-    if (!hit || t.closest("button, a, summary, input, select, label")) return null;
+    if (!hit || hit.closest("[data-oldset]") || t.closest("button, a, summary, input, select, label")) return null;
     if (hit.dataset.unit) return ["u", hit.dataset.unit];
     if (hit.dataset.item) return ["i", hit.dataset.item];
     if (hit.dataset.trait) return ["t", hit.dataset.trait];
@@ -466,7 +466,7 @@
   v2PrismInit();
   setupMetaRefresh();
   rkUpdSetup();
-  if (LIVE_SET_ID !== SET_ID) loadOld();  // 본섭 18시즌 전적·랭킹·덱파워 아이콘 선로딩
+  var oldReady = LIVE_SET_ID !== SET_ID ? loadOld() : Promise.resolve(null);  // 본섭 18시즌 전적·랭킹·덱파워 사전 선로딩
 
   // 덱파워 모델은 다른 데이터를 기다리지 않고 바로 받는다. 실패하면 3초 뒤 한 번 더
   (function loadPower(n) {
@@ -485,7 +485,7 @@
     });
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.addEventListener("click", function () { tfaView = b.dataset.v; tfaSave(); tfaRender(); }); });
     fetch("dist.json").then(function (r) { return r.json(); }).then(function (d) { DISTH = d; }).catch(function () {});
-    fetch("power_top.json").then(function (r) { return r.json(); }).then(function (d) { PW_TOP = d; if (current === "power") pwRender(); }).catch(function () {});
+    Promise.all([fetch("power_top.json").then(function (r) { return r.json(); }), oldReady]).then(function (x) { PW_TOP = x[0]; if (current === "power") pwRender(); }).catch(function () {});
     document.querySelectorAll("#pw-src button").forEach(function (b) { b.addEventListener("click", function () { pwSrc = b.dataset.s; pwRender(); }); });
     fetch("rank_hist.json").then(function (r) { return r.json(); }).then(function (d) { RK_HIST = d; if (rkRows && rkRows.length) rkRender(document.getElementById("rk-note").textContent); }).catch(function () {});
     fetch("cutoffs.json").then(function (r) { return r.json(); }).then(function (d) {
@@ -506,7 +506,7 @@
     fetch("meta.json").then(function (r) { return r.json(); }).then(function (m) { buildMeta(m); homeRender(); }).catch(function () {
       document.getElementById("mt-rows").textContent = reloadErr();
     });
-    var dbReady = fetch("db.json").then(function (r) { return r.json(); }).then(buildFind).catch(function () {
+    var dbReady = Promise.all([fetch("db.json").then(function (r) { return r.json(); }), oldReady]).then(function (x) { buildFind(x[0]); }).catch(function () {
       document.getElementById("find-sub").textContent = reloadErr();
     });
     Promise.all([fetch("items.json").then(function (r) { return r.json(); }), dbReady]).then(function (x) { buildItems(x[0]); }).catch(function () {

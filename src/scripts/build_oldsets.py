@@ -41,7 +41,30 @@ def set_no(api):
     return int(m.group(1)) if m else 0
 
 
+# CommunityDragon effects[].style (세트 7~18 공통 실측): 1 동 · 3 은 · 4 고유 · 5 금 · 6 프리즘
+CD_STYLE = {1: "bronze", 2: "bronze", 3: "silver", 4: "unique", 5: "gold", 6: "chromatic"}
+
+
+def parse_steps(effects):
+    """CDragon trait effects -> [[minUnits, styleStr], ...]. 같은 minUnits 중복(퀘스트 프리즘 등)은 비프리즘 우선."""
+    out = []
+    for e in effects or []:
+        m = e.get("minUnits")
+        st = CD_STYLE.get(e.get("style"), "bronze")
+        if m is None:
+            # 일월식(DA_18_Eclipse)처럼 인원 없이 조합으로 켜지는 특수 시너지
+            out.append([0, "gold"])
+            continue
+        if out and out[-1][0] == int(m):
+            if out[-1][1] == "chromatic" and st != "chromatic":
+                out[-1][1] = st
+            continue
+        out.append([int(m), st])
+    return out
+
+
 def main():
+    prev = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     U, T, I = {}, {}, {}
     for ver in VERSIONS:
         url = f"https://raw.communitydragon.org/{ver}/cdragon/tft/ko_kr.json"
@@ -58,13 +81,20 @@ def main():
                 sn = set_no(a)
                 if not sn or sn >= CUR or a.lower() in U or not c.get("name") or (c.get("cost") or 0) < 1:
                     continue
-                U[a.lower()] = [c["name"], min(5, c["cost"]), icon(ver, c.get("tileIcon") or c.get("squareIcon"))]
+                k = a.lower()
+                pv = (prev.get("u") or {}).get(k)
+                ic = pv[2] if pv and len(pv) >= 3 and not str(pv[2]).startswith("http") else icon(ver, c.get("tileIcon") or c.get("squareIcon"))
+                U[k] = [c["name"], min(5, c["cost"]), ic]
             for t in s.get("traits", []):
                 a = t.get("apiName", "")
                 sn = set_no(a)
                 if not sn or sn >= CUR or a.lower() in T or not t.get("name"):
                     continue
-                T[a.lower()] = [t["name"], icon(ver, t.get("icon"))]
+                k = a.lower()
+                pv = (prev.get("t") or {}).get(k)
+                ic = pv[1] if pv and len(pv) >= 2 and not str(pv[1]).startswith("http") else icon(ver, t.get("icon"))
+                steps = parse_steps(t.get("effects"))
+                T[k] = [t["name"], ic, steps] if steps else [t["name"], ic]
         for it in d.get("items", []):
             a = it.get("apiName", "")
             if not a or a.lower() in I or not it.get("name") or not it.get("icon"):
@@ -72,8 +102,17 @@ def main():
             # 세트 18부터 롤체지지 판 기록의 템도 DA_ 이름 (DA_HextechGunblade, DA_MoonlightRitual18)
             if not (a.startswith("TFT_Item_") or re.match(r"TFT\d+_Item_", a) or a.startswith("DA_")):
                 continue
-            I[a.lower()] = [it["name"], icon(ver, it.get("icon"))]
+            k = a.lower()
+            pv = (prev.get("i") or {}).get(k)
+            ic = pv[1] if pv and len(pv) >= 2 and not str(pv[1]).startswith("http") else icon(ver, it.get("icon"))
+            I[k] = [it["name"], ic]
         print(ver, "유닛", len(U) - n0, "누적", len(U), "시너지", len(T), "아이템", len(I))
+    # 기존 oldsets.json에만 있던 로컬 항목(예: 별칭 키)도 보존
+    for sec in ("u", "t", "i"):
+        dst = {"u": U, "t": T, "i": I}[sec]
+        for k, v in (prev.get(sec) or {}).items():
+            if k not in dst:
+                dst[k] = v
     OUT.write_text(json.dumps({"u": U, "t": T, "i": I}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{OUT.relative_to(ROOT)}: 유닛 {len(U)} · 시너지 {len(T)} · 아이템 {len(I)} · {OUT.stat().st_size // 1024}KB")
 

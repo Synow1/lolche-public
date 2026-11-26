@@ -131,7 +131,7 @@
     POWER = d;
     PW_WAIT.splice(0).forEach(function (x) {
       if (!x[0].isConnected) return;
-      var t = powerTag(x[1], x[2], x[3], x[4]);
+      var t = powerTag(x[1], x[2], x[3], x[4], x[5]);
       if (!t) { x[0].remove(); return; }
       while (x[0].firstChild) t.appendChild(x[0].firstChild);  // 지난 패치 표시 등 붙어 있던 것
       x[0].replaceWith(t);
@@ -139,8 +139,9 @@
     if (current === "power") pwRender();
     if (typeof frView !== "undefined" && frView === "top" && current === "friends") frTop();
   }
-  function powerTag(units, traits, level, small) {
-    if (!POWER) { if (!units || !units.length) return null; var ph = el("span", "pw" + (small ? " sm" : "")); PW_WAIT.push([ph, units, traits, level, small]); return ph; }
+  function powerTag(units, traits, level, small, setNum) {
+    if (!POWER) { if (!units || !units.length) return null; var ph = el("span", "pw" + (small ? " sm" : "")); PW_WAIT.push([ph, units, traits, level, small, setNum]); return ph; }
+    var mSet = setNum || detectMatchSet({ units: units, traits: traits });
     var r = boardPower(units, traits, level); if (!r) return null;
     var w = el("span", "pw" + (small ? " sm" : ""));
     var v = el("span", "pw-v"); v.appendChild(el("i", "coin")); v.appendChild(document.createTextNode(r.val));
@@ -155,11 +156,10 @@
       var bg = {}; (r.big || []).forEach(function (b) { var k = b.cost + "|" + b.name; bg[k] = (bg[k] || 0) + 1; });
       Object.keys(bg).sort().reverse().forEach(function (k) { var x = k.split("|"); w.appendChild(el("span", "pw-hi c" + x[0], "★★★ " + x[0] + "코 " + x[1] + (bg[k] > 1 ? " ×" + bg[k] : ""))); });
       // 높은 시너지: 화면에 보이는 시너지(synOfMatch) 중 MetaTFT 단계별 평균 등수 3.0 이하인 단계 (협곡야수 10, 나무정령 9 등)
-      var TA = (POWER && POWER.ta) || {}, KO2API = {};
-      if (DB) Object.keys(DB.names.t).forEach(function (api) { var k = DB.names.t[api]; if (k) KO2API[k[0]] = pwKey(api); });
-      if (GUIDES) synOfMatch(traits, mtBoard(units)).forEach(function (x) {
+      var TA = (POWER && POWER.ta) || {};
+      synOfMatch(traits, mtBoard(units, mSet), mSet).forEach(function (x) {
         if (x.style === "unique") return;
-        var tier = (GUIDES.styles[x.t] || []).filter(function (y) { return y[0] != null && x.n >= y[0]; }).length, a = TA[KO2API[x.t] + ":" + tier];
+        var a = x.api && x.tc ? TA[pwKey(x.api) + ":" + x.tc] : null;
         if (a && a <= 3.0) w.appendChild(el("span", "pw-hi syn", x.t + " " + x.n));
       });
       p.title = "필드 가치 " + r.val + "골드 · 덱파워 " + r.power + " · " + pwProbTxt(r) + " · 최종 덱 중 " + pwPct(r.top) + " · 예상 " + r.pred.toFixed(1) + "등";
@@ -183,6 +183,7 @@
   function pwRawUnits(u) { return u.map(function (x) { return { character_id: x[0], tier: x[1], itemNames: x[2] || [] }; }); }
   function pwRawTraits(t) { return t.map(function (x) { return { name: x[0], tier_current: x[1], num_units: x[2] }; }); }
   function pwCard(g, i) {
+    var mSet = g.set || detectMatchSet(g);
     var c = el("article", "pwc"), hd = el("div", "pwc-hd"), r = boardPower(g.units, g.traits, g.level) || {};
     hd.appendChild(el("span", "pwc-rk", i + 1));
     var pw = r.power != null ? r.power : g.pw;
@@ -194,15 +195,15 @@
     hd.appendChild(tx);
     if (g.pl) { hd.appendChild(el("span", "gm-pl pwc-pl " + plCls(g.pl), "#" + g.pl)); c.className += " " + plCls(g.pl); }  // 등수: 전적 카드와 같은 색
     c.appendChild(hd);
-    var pt = powerTag(g.units, g.traits, g.level, false); if (pt) c.appendChild(pt);
+    var pt = powerTag(g.units, g.traits, g.level, false, mSet); if (pt) c.appendChild(pt);
     // 항목별 점수는 접어 두고, 큰 숫자나 옆 글자를 누르면 펼친다
     var ptb = pt && pt.querySelector(".pw-p");
     if (ptb) bigB.addEventListener("click", function () { ptb.click(); });
-    var board = mtBoard(g.units);
-    c.appendChild(dkLine(board, g.traits, "pw"));
-    c.appendChild(synRow(synOfMatch(g.traits, board), false, 8));
+    var board = mtBoard(g.units, mSet);
+    c.appendChild(dkLine(board, g.traits, "pw", !isGuideSet(mSet), mSet));
+    c.appendChild(synRow(synOfMatch(g.traits, board, mSet), false, 8));
     var mini = el("div", "mini sm");
-    board.sort(function (a, b) { return (b.cost - a.cost) || (b.star - a.star); }).forEach(function (u) { mini.appendChild(miniUnit({ name: u.u, cost: u.cost, star: u.star, items: u.i.map(function (n) { return { name: n }; }) }, true)); });
+    board.sort(function (a, b) { return (b.cost - a.cost) || (b.star - a.star); }).forEach(function (u) { mini.appendChild(miniUnit({ name: u.u, cost: u.cost, star: u.star, icon: u.icon, old: u.old, set: u.set, items: u._ii || u.i.map(function (n) { return { name: n }; }) }, true)); });
     c.appendChild(mini);
     return c;
   }
@@ -256,13 +257,15 @@
     document.querySelectorAll("#pw-src button").forEach(function (b) { b.classList.toggle("on", b.dataset.s === pwSrc); });
     pwChart();
     bandBox.innerHTML = ""; bandBox.hidden = pwSrc !== "top";
+    if (LIVE_SET_ID !== SET_ID && !OLD) { box.innerHTML = ""; box.appendChild(el("p", "empty", "불러오는 중")); loadOld().then(pwRender); return; }
     if (pwSrc === "top") {
       if (!PW_TOP) { box.innerHTML = ""; box.appendChild(el("p", "empty", "불러오는 중")); return; }
       PW_TOP.bands.forEach(function (b) {
         var x = el("button", b[0] === pwBand ? "on" : null, b[1]); x.type = "button";
         x.addEventListener("click", function () { pwBand = b[0]; pwRender(); }); bandBox.appendChild(x);
       });
-      var list = (PW_TOP.top[pwBand] || []).map(function (g) { return { pw: g.pw, who: g.who, tier: g.tier, pl: g.pl, level: g.lv, t: g.t, units: pwRawUnits(g.u), traits: pwRawTraits(g.tr) }; });
+      var topSet = (POWER && POWER.set) || liveSetNum();
+      var list = (PW_TOP.top[pwBand] || []).map(function (g) { return { pw: g.pw, who: g.who, tier: g.tier, pl: g.pl, level: g.lv, t: g.t, set: topSet, units: pwRawUnits(g.u), traits: pwRawTraits(g.tr) }; });
       note.textContent = "최근 7일 · " + updAt(PW_TOP.updated) + " · 출처 롤체지지";
       box.innerHTML = "";
       if (!list.length) { box.appendChild(el("p", "empty", "아직 기록이 없어요")); return; }
@@ -272,7 +275,7 @@
     box.innerHTML = ""; box.appendChild(el("p", "empty", LIVE ? "불러오는 중" : "그마·챌 최근 1등은 앱이나 PC 웹에서 볼 수 있어요"));
     if (!LIVE) return;
     winLoad(false).then(function (all) {
-      var list = all.map(function (g) { var r = boardPower(g.raw, g.traits, g.level) || {}; return { pw: r.power || 0, who: g.who, tier: (TIER_KO[g.tier] || g.tier), pl: 1, level: g.level, t: g.t, units: g.raw, traits: g.traits }; })
+      var list = all.map(function (g) { var r = boardPower(g.raw, g.traits, g.level) || {}; return { pw: r.power || 0, who: g.who, tier: (TIER_KO[g.tier] || g.tier), pl: 1, level: g.level, t: g.t, set: g.set, units: g.raw, traits: g.traits }; })
         .sort(function (a, b) { return b.pw - a.pw; });
       note.textContent = "그마·챌 최근 1등 " + list.length + "판 · 출처 롤체지지";
       box.innerHTML = "";
@@ -285,7 +288,12 @@
     box.appendChild(el("p", "sub", "불러오는 중"));
     var src = m._lobby ? Promise.resolve({ info: { participants: m._lobby }, _dak: true }) : viaApp(m.match_data_url);
     src.then(function (md) {
+      var mSet = detectMatchSet(m) || detectMatchSet(md && md.info);
+      if (!isGuideSet(mSet) && !OLD) return loadOld().then(function () { return md; });
+      return md;
+    }).then(function (md) {
       box.innerHTML = "";
+      var mSet = detectMatchSet(m) || detectMatchSet(md && md.info);
       var info = (md._metatft || {}).participant_info || [];
       var names = {}; info.forEach(function (p) { names[p.puuid] = p; });
       md.info.participants.slice().sort(function (a, b) { return a.placement - b.placement; }).forEach(function (p) {
@@ -299,13 +307,13 @@
         var rt = pi.ranked && pi.ranked.rating_text;
         var tsm = el("small", null, p.level + "렙" + (rt ? " · " + (md._dak ? tierText(rt).replace(/ · \d+LP$/, "") : tierText(rt, true)) : ""));
         top.appendChild(tsm);
-        var pt = pwOtherSet(m.patch) ? null : powerTag(p.units, p.traits, p.level, true); if (pt) top.appendChild(pt);
+        var pt = pwOtherSet(m.patch) ? null : powerTag(p.units, p.traits, p.level, true, mSet); if (pt) top.appendChild(pt);
         mid.appendChild(top);
-        var board = mtBoard(p.units);
-        mid.appendChild(dkLine(board, p.traits, "sm", pwOtherSet(m.patch)));
-        mid.appendChild(synRow(synOfMatch(p.traits, board), false, 7));
+        var board = mtBoard(p.units, mSet);
+        mid.appendChild(dkLine(board, p.traits, "sm", !isGuideSet(mSet), mSet));
+        mid.appendChild(synRow(synOfMatch(p.traits, board, mSet), false, 7));
         var mini = el("div", "mini sm");
-        board.sort(function (a, b) { return (b.cost - a.cost) || (b.star - a.star); }).forEach(function (u) { mini.appendChild(miniUnit({ name: u.u, cost: u.cost, star: u.star, items: u.i.map(function (n) { return { name: n }; }) }, true)); });
+        board.sort(function (a, b) { return (b.cost - a.cost) || (b.star - a.star); }).forEach(function (u) { mini.appendChild(miniUnit({ name: u.u, cost: u.cost, star: u.star, icon: u.icon, old: u.old, set: u.set, items: u._ii || u.i.map(function (n) { return { name: n }; }) }, true)); });
         mid.appendChild(mini);
         row.appendChild(mid); box.appendChild(row);
       });

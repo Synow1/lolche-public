@@ -350,7 +350,7 @@ body.dc-open { overflow: hidden; }
 .s19-txt { margin: 0 0 8px; font-size: var(--fs-m); line-height: 1.6; color: var(--ink); }
 .s19-tsteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
 .s19-tsteps li { font-size: var(--fs-m); line-height: 1.5; padding: 7px 10px; border-radius: 10px; background: var(--raise); }
-.s19-tsteps li.st3 { background: color-mix(in srgb, #c8d0da 16%, var(--raise)); } .s19-tsteps li.st4 { background: color-mix(in srgb, var(--accent) 18%, var(--raise)); } .s19-tsteps li.st5 { background: linear-gradient(110deg, color-mix(in srgb, var(--accent) 22%, var(--raise)), color-mix(in srgb, var(--accent2) 22%, var(--raise))); }
+.s19-tsteps li.st3 { background: color-mix(in srgb, #c8d0da 16%, var(--raise)); } .s19-tsteps li.st4 { background: color-mix(in srgb, var(--accent) 18%, var(--raise)); } .s19-tsteps li.st5 { background: linear-gradient(110deg, color-mix(in srgb, var(--accent) 22%, var(--raise)), color-mix(in srgb, var(--accent2) 22%, var(--raise))); } .s19-tsteps li.st6 { background: color-mix(in srgb, #e57a3c 18%, var(--raise)); }
 .s19-h { margin: 14px 0 8px; font-size: var(--fs-l); }
 .s19-h.c1 { color: var(--c1); } .s19-h.c2 { color: var(--c2); } .s19-h.c3 { color: var(--c3); } .s19-h.c4 { color: var(--c4); } .s19-h.c5 { color: var(--c5); } .s19-h.c7 { color: #ff4d8d; }
 .s19-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -401,6 +401,7 @@ body.dc-open { overflow: hidden; }
 .s19-bspill.st3 { color: var(--ink); background: color-mix(in srgb, #c8d0da 20%, var(--surface)); border-color: color-mix(in srgb, #c8d0da 48%, transparent); }
 .s19-bspill.st4 { color: var(--ink); background: color-mix(in srgb, var(--accent) 22%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .s19-bspill.st5 { color: var(--ink); background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 26%, var(--surface)), color-mix(in srgb, var(--accent2) 26%, var(--surface))); border-color: color-mix(in srgb, var(--accent2) 60%, transparent); }
+.s19-bspill.st6 { color: var(--ink); background: color-mix(in srgb, #e57a3c 22%, var(--surface)); border-color: color-mix(in srgb, #e57a3c 55%, transparent); }
 .s19-bunl { margin-top: 10px; padding: 9px 11px; border-radius: 12px; background: var(--accent-soft); display: grid; gap: 5px; }
 .s19-bunl-h { font-size: var(--fs-xs); font-weight: 800; color: var(--accent); }
 .s19-bunl-r { font-size: var(--fs-s); line-height: 1.45; }

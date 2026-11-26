@@ -349,6 +349,7 @@
 .trc.lv2 { background: #9aa6b244; color: var(--ink); border-color: #8a96a2; }
 .trc.lv3 { background: #e0b25a44; color: var(--ink); border-color: #c99a2e; }
 .trc.lv4 { background: #b95ed344; color: var(--ink); border-color: #b95ed3; }
+.trc.lv-u { background: #e57a3c33; color: var(--ink); border-color: #d46a2c; }
 .tb-near { display: grid; gap: 5px; margin-bottom: 10px; }
 .tb-near h4 { margin: 0; font-size: var(--fs-m); }
 .tb-pool { display: grid; gap: 6px; margin-top: 8px; }

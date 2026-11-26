@@ -179,9 +179,16 @@ def main():
                     counts[it[:-3]] += 1
         syn = []
         for t, n in counts.items():
-            st = [x for x in styles.get(t, []) if x[0] is not None and n >= x[0]]
-            if st:
-                syn.append({"t": t, "n": n, "style": st[-1][2]})
+            best_m, best_st = -1, None
+            for x in styles.get(t, []):
+                if x[0] is None or n < x[0]:
+                    continue
+                if x[0] > best_m:
+                    best_m, best_st = x[0], x[2]
+                elif x[0] == best_m and best_st == "chromatic" and x[2] != "chromatic":
+                    best_st = x[2]
+            if best_st:
+                syn.append({"t": t, "n": n, "style": best_st})
         order = {"chromatic": 0, "gold": 1, "silver": 2, "bronze": 3, "unique": 4}  # 한 명짜리 고유 시너지는 뒤로
         syn.sort(key=lambda x: (order.get(x["style"], 5), -x["n"]))
         return syn

@@ -129,9 +129,10 @@
   }
 
   function miniUnit(u, withItems) {
-    var info = IDX.units[u.name] || {};
-    if ((RK_SEASON || !info.icon) && OLD_UI[u.name]) info = { icon: OLD_UI[u.name], cost: u.cost || info.cost };  // 지난·본섭(18) 세트 아이콘
+    var isOld = !!u.old;
+    var info = isOld ? { icon: u.icon || OLD_UI[u.name] || "", cost: u.cost || 1 } : (IDX.units[u.name] || {});
     var box = el("div", "mu"); box.dataset.cost = u.cost || info.cost || 1; box.dataset.unit = u.name;
+    if (isOld) box.dataset.oldset = String(u.set || liveSetNum());
     if ((u.cost || info.cost || 1) >= 4 && (u.star || 1) >= 3) box.classList.add("hi3");  // 4·5코 3성 반짝
     var face = el("div", "face");
     if (info.icon) face.appendChild(img(info.icon, u.name));
@@ -140,8 +141,8 @@
     if (withItems) {
       var its = el("div", "its");
       (u.items || []).forEach(function (it) {
-        var ic = IDX.items[it.name]; if ((RK_SEASON || !ic) && OLD_II[it.name]) ic = { icon: OLD_II[it.name] };
-        if (ic) { var im = img(ic.icon, it.name); im.title = it.name; im.dataset.item = it.name; its.appendChild(im); }
+        var ic = isOld ? (it.icon ? { icon: it.icon } : (OLD_II[it.name] ? { icon: OLD_II[it.name] } : null)) : IDX.items[it.name];
+        if (ic && ic.icon) { var im = img(ic.icon, it.name); im.title = it.name; im.dataset.item = it.name; its.appendChild(im); }
       });
       box.appendChild(its);
     }
@@ -205,11 +206,12 @@
     var n = name.replace(/\s/g, ""), qq = q.replace(/\s/g, "");
     return n.indexOf(qq) >= 0 || cho(n).indexOf(qq) >= 0;
   }
-  function unitChip(name) {
+  function unitChip(name, opt) {
     var s = el("span", "u", name);
-    var u = IDX.units[name.replace(/ \((AD|AP)\)$/, "")];
-    if ((RK_SEASON || !u) && OLD_UI[name]) u = { icon: OLD_UI[name], cost: (u || {}).cost };  // 지난·본섭(18) 세트 아이콘
-    if (u) { if (u.cost) s.dataset.cost = u.cost; s.insertBefore(img(u.icon, ""), s.firstChild); }
+    var isOld = !!(opt && opt.old);
+    var u = isOld ? { icon: (opt.icon || OLD_UI[name] || ""), cost: opt.cost || 1 } : IDX.units[name.replace(/ \((AD|AP)\)$/, "")];
+    if (isOld) s.dataset.oldset = String(opt.set || liveSetNum());
+    if (u && u.icon) { if (u.cost) s.dataset.cost = u.cost; s.insertBefore(img(u.icon, ""), s.firstChild); }
     return s;
   }
   function fmt(x) { return x == null ? "-" : Number(x).toFixed(2); }
@@ -494,6 +496,21 @@
     names.forEach(function (n) { var i = uIcon(n); if (i) s.appendChild(i); });
     return s;
   }
+  // 세트 격리 아이콘 줄 (랭킹 본섭 캐리 등: 지난/본섭 세트면 oldsets 아이콘·코스트만, 현재 공략 세트 해금 자물쇠·그림 금지)
+  function stripUnits(units) {
+    var s = el("div", "mt-strip");
+    (units || []).forEach(function (u) {
+      if (!u) return;
+      if (u.old) {
+        if (!u.icon) return;
+        var i = img(u.icon, u.name); i.dataset.c = u.cost || 1; i.title = u.name; i.dataset.unit = u.name; i.dataset.oldset = String(u.set || liveSetNum());
+        s.appendChild(i);
+      } else {
+        var ic = uIcon(u.name); if (ic) s.appendChild(ic);
+      }
+    });
+    return s;
+  }
   // 기준(티어 묶음)별 [평균, 순방%, 승률%, 판수]와 그 기준에서의 티어. 판수가 모자란 기준은 null
   function basisSt(d, b) { if (!d) return null; if (d.st && d.st[b]) return d.st[b]; return b === "all" ? [d.avg, d.top4, d.win, d.n] : null; }
   function basisTier(d, b) { return !d ? "X" : d.tiers && d.tiers[b] ? d.tiers[b] : b === "all" && !d.tiers ? d.tier : "X"; }
@@ -506,6 +523,56 @@
   var PRE_KO = { "영브": "영원한 브론즈" };
   function isReroll(d) { return d && /^lvl [5-7]/.test(d.style); }
   function statOf(id) { return META && id ? META.decks.filter(function (x) { return x.id === id; })[0] : null; }
+
+  // ---- 판 세트 판별·격리: PBE 전환기(예: 본섭 18·공략 19, 향후 19·20)에 다른 세트 사전(DB/GUIDES/META)이 절대 섞이지 않게 ----
+  function parseSetNum(v) {
+    if (v == null || v === "") return 0;
+    if (typeof v === "number") return v > 0 ? v : 0;
+    var s = String(v).trim(), m;
+    if ((m = /^TFTSet(\d+)(?:_(\d+))?$/i.exec(s))) return +m[1] + (m[2] ? 0.5 : 0);
+    if ((m = /^set(\d+(?:\.\d+)?)$/i.exec(s))) return +m[1];
+    if ((m = /^(?:Version\s+)?(\d{1,2})\.\d+/i.exec(s))) return +m[1];
+    if ((m = /^(?:TFT|Set)(\d+)b?_/i.exec(s))) return +m[1];
+    if ((m = /^DA_(\d+)_/i.exec(s))) return +m[1];
+    if ((m = /^DA_[A-Za-z]+?(\d+)(?:_|$)/i.exec(s))) return +m[1];
+    if (/^\d+(?:\.\d+)?$/.test(s)) return +s;
+    return 0;
+  }
+  function guideSetNum() { return parseSetNum(typeof SET_ID !== "undefined" ? SET_ID : 0); }
+  function liveSetNum() { return parseSetNum(typeof LIVE_SET_ID !== "undefined" ? LIVE_SET_ID : 0) || guideSetNum(); }
+  function isGuideSet(sn) { var g = guideSetNum(); return !!(sn && g && sn === g); }
+  function detectMatchSet(obj) {
+    if (typeof obj === "number") return obj;
+    if (typeof obj === "string") return parseSetNum(obj);
+    if (obj && typeof obj === "object") {
+      var direct = parseSetNum(obj.tft_set_number) || parseSetNum(obj.set) || parseSetNum(obj.season) || parseSetNum(obj.patch) || parseSetNum(obj.patchVersion) || parseSetNum(obj.gameVersion);
+      if (direct) return direct;
+      var trs = obj.traits || (obj.summary && obj.summary.traits) || [];
+      for (var i = 0; i < trs.length; i++) { var tn = parseSetNum(trs[i] && trs[i].name); if (tn) return tn; }
+      var us = obj.units || (obj.summary && obj.summary.units) || [];
+      for (var j = 0; j < us.length; j++) {
+        var u = us[j];
+        if (u && u.set) return u.set;
+        var un = parseSetNum(u && (u.character_id || u.apiName));
+        if (un) return un;
+      }
+    }
+    return (typeof RK_SEASON !== "undefined" && RK_SEASON) ? parseSetNum(RK_SEASON) : liveSetNum();
+  }
+  // Riot Match-v1 / dak.gg trait.style 실측(세트 13~18): 0 꺼짐 · 1 동 · 2 은 · 3 고유 · 4 금 · 5 프리즘 · 6 특수(일월식 등, 금)
+  var MATCH_STYLE = { 1: "bronze", 2: "silver", 3: "unique", 4: "gold", 5: "chromatic", 6: "gold" };
+  // 인원 수만으로 단계 색을 고를 때: 같은 minUnits에 일반(gold)과 퀘스트 프리즘(chromatic)이 같이 있으면(19시즌 HEARTSTEEL 7·True Damage 5·펜타킬 7 등) 인원만으로는 비프리즘 단계
+  function stepStyleOf(steps, n) {
+    var bestM = -1, bestS = null;
+    (steps || []).forEach(function (x) {
+      var m = Array.isArray(x) ? x[0] : x.m;
+      var st = Array.isArray(x) ? x[x.length - 1] : x.s;
+      if (m == null || n < m) return;
+      if (m > bestM) { bestM = m; bestS = st; }
+      else if (m === bestM && (bestS === "chromatic" || bestS === 5) && st !== "chromatic" && st !== 5) { bestS = st; }
+    });
+    return bestS;
+  }
 
   // 고유 특성이 다른 시너지 인원을 늘리는 경우: "장로 드래곤은 2개의 팀 슬롯을 차지하며 협곡야수 특성을 +2 추가합니다" -> 장로 드래곤 한 명이 협곡야수 2
   // (판 기록 확인: 협곡야수 유닛 5 + 장로 드래곤 = 7). 시너지 설명에서 읽어서 세트가 바뀌어도 그대로
@@ -521,7 +588,7 @@
     }
     var b = TRAIT_BONUS[unit]; if (b && b[1] > 0 && (DB.units[unit] || {}).traits && DB.units[unit].traits.indexOf(b[0]) >= 0) c[b[0]] = (c[b[0]] || 0) + b[1];
   }
-  // 시너지: 보드 유닛(같은 챔피언 한 번) + 상징으로 세고, 단계 색은 Riot 데이터(guides.json styles)
+  // 시너지: 보드 유닛(같은 챔피언 한 번) + 상징으로 세고, 단계 색은 Riot 데이터(guides.json styles). 현재 공략 세트 보드 전용
   function synOf(board) {
     if (!DB || !GUIDES) return [];
     var c = {}, seen = {};
@@ -532,38 +599,55 @@
     });
     var out = [];
     Object.keys(c).forEach(function (t) {
-      var st = (GUIDES.styles[t] || []).filter(function (x) { return x[0] != null && c[t] >= x[0]; });
-      if (st.length) out.push({ t: t, n: c[t], style: st[st.length - 1][2] });
+      var st = stepStyleOf(GUIDES.styles[t], c[t]);
+      if (st) out.push({ t: t, n: c[t], style: st });
     });
     // 일월식은 인원 없이 햇빛 3 + 달빛 3이면 켜진다 (고유 특성 취급이라 숨겨지던 것)
     if ((c["햇빛"] || 0) >= 3 && (c["달빛"] || 0) >= 3) out.push({ t: "일월식", n: "", style: "gold" });
     return out.sort(function (a, b) { return (STYLE_ORDER[a.style] - STYLE_ORDER[b.style]) || (b.n - a.n); });
   }
-  // 판 기록의 시너지는 라이엇 값(num_units)을 쓴다: 럭스(화신)는 고른 특성이 2개로 세지는데 유닛 목록엔 '기본 럭스'로만 남는다
-  function synOfMatch(traits, board) {
-    if (!traits || !traits.length || !DB || !GUIDES) return synOf(board);
+  // 판 기록의 시너지: 판의 시즌 번호(setNum)를 기준으로 해당 시즌 사전만 조회한다.
+  // 공략 세트(SET_ID)가 아닌 판은 절대 DB/GUIDES/synOf(board)로 fallback하지 않는다 (PBE 전환기 18↔19, 19↔20 혼입 원천 차단).
+  function synOfMatch(traits, board, setNum) {
+    var sn = setNum || detectMatchSet({ traits: traits, units: board });
+    var isCur = isGuideSet(sn);
+    if (!isCur) {
+      if (!traits || !traits.length || !OLD) return [];
+      var outOld = [];
+      traits.forEach(function (t) {
+        var n = t.num_units != null ? t.num_units : t.numUnits;
+        var tc = t.tier_current != null ? t.tier_current : t.tierCurrent;
+        if (!(tc > 0)) return;
+        var o = OLD.t[String(t.name).toLowerCase()];
+        if (!o) return;
+        OLD_TI[o[0]] = o[1];
+        var st = null;
+        if (t.style != null && t.style > 0) st = MATCH_STYLE[t.style] || "gold";
+        else if (o[2] && o[2].length) st = stepStyleOf(o[2], n || 0);
+        if (!st) st = /unique/i.test(t.name) ? "unique" : tc === 1 ? "bronze" : tc === 2 ? "silver" : "gold";
+        outOld.push({ t: o[0], n: n || "", ic: o[1], style: st, old: true, set: sn, api: t.name, tc: tc });
+      });
+      return outOld.sort(function (a, b) { return (STYLE_ORDER[a.style] - STYLE_ORDER[b.style]) || ((b.n || 0) - (a.n || 0)); });
+    }
+    if (!traits || !traits.length || !DB || !GUIDES) return synOf(board || []);
     var out = [];
     traits.forEach(function (t) {
       var n = t.num_units != null ? t.num_units : t.numUnits, nm = DB.names.t[t.name]; nm = nm ? nm[0] : null;
       var tc = t.tier_current != null ? t.tier_current : t.tierCurrent;
-      if (!nm && OLD) {  // 지난 시즌 시너지: 색은 라이엇 기록의 style (1 동 · 2 은 · 3 금 · 4 프리즘)
-        var o = OLD.t[String(t.name).toLowerCase()];
-        if (o && tc > 0 && t.style) { OLD_TI[o[0]] = o[1]; out.push({ t: o[0], n: n || "", ic: o[1], style: ({ 1: "bronze", 2: "silver", 3: "gold", 4: "chromatic", 5: "chromatic" })[t.style] || "gold" }); }
-        return;
-      }
-      if (nm && !n && tc > 0) { out.push({ t: nm, n: "", style: "gold" }); return; }  // 일월식처럼 인원 없이 켜지는 조합 시너지
-      if (!nm || !n) return;
-      var st = (GUIDES.styles[nm] || []).filter(function (x) { return x[0] != null && n >= x[0]; });
-      if (st.length) out.push({ t: nm, n: n, style: st[st.length - 1][2] });
+      if (!nm || !(tc > 0)) return;
+      var st = (t.style != null && t.style > 0) ? (MATCH_STYLE[t.style] || "gold") : (!n ? "gold" : stepStyleOf(GUIDES.styles[nm], n));
+      if (st) out.push({ t: nm, n: n || "", style: st, set: sn, api: t.name, tc: tc });
     });
-    // 라이엇 기록에 켜진 일반 시너지가 없는데 보드가 큰 경우(소환 유닛 기록 오류 등)는 보드로 직접 센다
+    // 현재 공략 세트 판에서 라이엇 기록에 켜진 일반 시너지가 없는데 보드가 큰 경우만 보드로 직접 센다
     if (!out.some(function (x) { return x.style !== "unique"; }) && board && board.length >= 5) return synOf(board);
-    return out.sort(function (a, b) { return (STYLE_ORDER[a.style] - STYLE_ORDER[b.style]) || (b.n - a.n); });
+    return out.sort(function (a, b) { return (STYLE_ORDER[a.style] - STYLE_ORDER[b.style]) || ((b.n || 0) - (a.n || 0)); });
   }
   function synChip(s, withName) {
-    var c = el("span", "trx s-" + s.style); c.dataset.trait = s.t; c.title = s.t + " " + s.n;
-    // ic: 판 기록에서 찾은 그 세트의 시너지 그림 (PBE 기간 본섭 18시즌 판은 지금 시즌(19) 그림표에 없어 빈칸이던 것, 2026-11-22)
-    var hx = el("span", "hx2"), ti = s.ic || (RK_SEASON && OLD_TI[s.t] ? OLD_TI[s.t] : IDX.traits[s.t]); if (ti) hx.appendChild(img(ti, ""));
+    var c = el("span", "trx s-" + s.style); c.dataset.trait = s.t; c.title = s.t + (s.n ? " " + s.n : "");
+    if (s.old) c.dataset.oldset = String(s.set || liveSetNum());
+    // ic: 판 기록에서 찾은 그 세트의 시너지 그림 (지난/본섭 세트는 절대 현재 공략 세트 IDX.traits로 fallback하지 않음)
+    var hx = el("span", "hx2"), ti = s.old ? (s.ic || OLD_TI[s.t] || "") : (s.ic || IDX.traits[s.t] || "");
+    if (ti) hx.appendChild(img(ti, ""));
     c.appendChild(hx); c.appendChild(el("b", null, s.n));
     if (withName) c.appendChild(el("span", "tn", s.t));
     return c;

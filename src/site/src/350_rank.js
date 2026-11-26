@@ -19,21 +19,36 @@
     return b;
   }
   var ROMAN = ["", "I", "II", "III", "IV"];
-  // 지난 시즌 전적: 유닛·시너지·아이템 이름과 아이콘 (site/oldsets.json, scripts/build_oldsets.py). 지금 보는 시즌이 지난 시즌이면 RK_SEASON
-  var RK_SEASON = null, OLD = null, OLD_UI = {}, OLD_II = {}, OLD_TI = {};
-  function loadOld() { return OLD ? Promise.resolve(OLD) : fetch("oldsets.json").then(function (r) { return r.json(); }).then(function (d) { OLD = d; return d; }).catch(function () { OLD = { u: {}, t: {}, i: {} }; return OLD; }); }
-  function oldName(id) { return id.replace(/^(DA_|TFT\d+b?_|Set\d+_)/i, "").replace(/(\d+)?_?(Base)?$/i, ""); }
-  function apiUnit(id) {
-    var x = DB && DB.names.u[id]; if (x) return { name: x[0], cost: x[1] };
+  // 지난·본섭(비공략) 시즌 전적: 유닛·시너지·아이템 이름과 아이콘 (site/oldsets.json, scripts/build_oldsets.py)
+  var RK_SEASON = null, OLD = null, OLD_PROM = null, OLD_UI = {}, OLD_II = {}, OLD_TI = {};
+  function loadOld() {
+    if (OLD) return Promise.resolve(OLD);
+    if (!OLD_PROM) OLD_PROM = fetch("oldsets.json").then(function (r) { return r.json(); }).then(function (d) { OLD = d; return d; }).catch(function () { OLD = { u: {}, t: {}, i: {} }; return OLD; });
+    return OLD_PROM;
+  }
+  function oldName(id) { return String(id || "").replace(/^(DA_|TFT\d+b?_|Set\d+_)/i, "").replace(/(\d+)?_?(Base|AP|AD)?$/i, ""); }
+  function apiUnit(id, setNum) {
+    var sn = setNum || parseSetNum(id) || (RK_SEASON ? parseSetNum(RK_SEASON) : liveSetNum());
+    if (isGuideSet(sn)) {
+      var x = DB && DB.names.u[id];
+      if (x) return { name: x[0], cost: x[1], icon: (IDX && IDX.units[x[0]] && IDX.units[x[0]].icon) || "", set: sn, old: false };
+      return { name: oldName(id), cost: 1, icon: "", set: sn, old: false };
+    }
     var o = OLD && OLD.u[String(id).toLowerCase()];
-    if (o) { OLD_UI[o[0]] = o[2]; return { name: o[0], cost: o[1], icon: o[2] }; }
-    return { name: RK_SEASON ? oldName(id) : id.replace(/^DA_(\d+_)?/, ""), cost: 1 };
+    if (o) { OLD_UI[o[0]] = o[2]; return { name: o[0], cost: o[1], icon: o[2], set: sn, old: true }; }
+    return { name: oldName(id), cost: 1, icon: "", set: sn, old: true };
   }
-  function itemName(i) {
-    if (DB && DB.names.i[i]) return DB.names.i[i];
-    var o = OLD && OLD.i[String(i).toLowerCase()]; if (o) { OLD_II[o[0]] = o[1]; return o[0]; }
-    return i;
+  function itemInfo(i, setNum) {
+    var sn = setNum || (RK_SEASON ? parseSetNum(RK_SEASON) : liveSetNum());
+    if (isGuideSet(sn)) {
+      var nm = (DB && DB.names.i[i]) || i;
+      return { name: nm, icon: (IDX && IDX.items[nm] && IDX.items[nm].icon) || "" };
+    }
+    var o = OLD && OLD.i[String(i).toLowerCase()];
+    if (o) { OLD_II[o[0]] = o[1]; return { name: o[0], icon: o[1] }; }
+    return { name: oldName(i), icon: "" };
   }
+  function itemName(i, setNum) { return itemInfo(i, setNum).name; }
   function getMT(path) { return LIVE ? viaApp(MT + path) : Promise.reject(new Error("실시간 조회 불가")); }
   function favs() { try { return JSON.parse(localStorage.getItem(RK_FAV) || "[]"); } catch (e) { return []; } }
   function setFavs(f) { try { localStorage.setItem(RK_FAV, JSON.stringify(f.slice(0, 12))); } catch (e) {} }
@@ -101,10 +116,11 @@
     var st = p.stats || {};
     if (st.num_played) sub.appendChild(el("span", null, "평균 " + (st.place_sum / st.num_played).toFixed(2) + " · " + st.num_played + "판"));
     mid.appendChild(sub);
-    // 셋째 줄: 많이 쓴 캐리 + 1주 LP 변동
-    var carries = ((st.currentPatchResult || {}).topCarries || []).slice(0, 3).map(function (c) { return apiUnit(c.character_id).name; });
+    // 셋째 줄: 많이 쓴 캐리 + 1주 LP 변동 (본섭 랭킹은 본섭 세트 사전만 조회)
+    var rkSet = liveSetNum();
+    var carries = ((st.currentPatchResult || {}).topCarries || []).slice(0, 3).map(function (c) { return apiUnit(c.character_id, rkSet); });
     var l3 = el("div", "rk-l3");
-    if (carries.length) l3.appendChild(strip(carries));
+    if (carries.length) l3.appendChild(stripUnits(carries));
     if (dl && dl.lp != null) l3.appendChild(el("span", "rk-dlp " + (dl.lp > 0 ? "up" : dl.lp < 0 ? "dn" : ""), rkSpan() + " " + (dl.lp > 0 ? "+" : "") + dl.lp + "LP"));
     if (l3.childNodes.length) mid.appendChild(l3);
     r.appendChild(mid);
@@ -119,6 +135,7 @@
     return r;
   }
   function rkRender(note) {
+    if (LIVE_SET_ID !== SET_ID && !OLD) { loadOld().then(function () { rkRender(note); }); return; }
     var box = document.getElementById("rk-rows"); box.innerHTML = "";
     rkRows.forEach(function (p) { box.appendChild(rkRow(p)); });
     document.getElementById("rk-note").textContent = note || "";
@@ -404,10 +421,12 @@
   function setNo(k) { var m = /Set(\d+)(?:_(\d+))?/.exec(k); return m ? +m[1] + (m[2] ? 0.5 : 0) : 0; }  // TFTSet9_2 -> 9.5
   function mmss(sec) { sec = Math.round(sec || 0); return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0"); }
   function plCls(p) { return "pl" + Math.min(5, p) + (p <= 4 ? " top" : ""); }  // 1 금 · 2 은 · 3 동 · 4 청록 · 5~8 회색 (롤체지지 색)
-  function mtBoard(units) {  // MetaTFT/Riot 유닛 -> 페이지 보드 모양 {u, i, star, cost}
-    return units.map(function (u) {
-      var a = apiUnit(u.character_id);
-      return { u: a.name, cost: a.cost, star: u.tier, i: (u.itemNames || []).map(itemName) };
+  function mtBoard(units, setNum) {  // MetaTFT/Riot 유닛 -> 페이지 보드 모양 {u, i, _ii, star, cost, icon, old, set}
+    var sn = setNum || detectMatchSet({ units: units });
+    return (units || []).map(function (u) {
+      var a = apiUnit(u.character_id, sn);
+      var its = (u.itemNames || u.items || []).map(function (it) { return itemInfo(it, sn); });
+      return { u: a.name, cost: a.cost, star: u.tier, icon: a.icon || "", old: !!a.old, set: sn, i: its.map(function (x) { return x.name; }), _ii: its };
     });
   }
   function plStr(arr) {
