@@ -20,7 +20,12 @@
     var it = S19 && S19.items && S19.items.filter(function (x) { return x.n === name; })[0];
     return it && it.img ? it.img : "";
   }
+  function s19IsPbe() {
+    if (typeof META !== "undefined" && META && META.pbe != null) return !!META.pbe;
+    return typeof LIVE_SET_ID !== "undefined" && LIVE_SET_ID !== SET_ID;
+  }
   function s19DdayText() {
+    if (!s19IsPbe()) return (typeof META !== "undefined" && META && META.patch) ? META.patch : "S19";
     if (!S19 || !S19.release) return "PBE";
     var target = Date.parse(S19.release + "T00:00:00+09:00");
     var now = Date.now();
@@ -89,7 +94,9 @@
     var rel = S19.release ? (+S19.release.slice(5, 7)) + "/" + (+S19.release.slice(8, 10)) : "";
     var dd = document.getElementById("s19-dday");
     if (dd) dd.textContent = s19DdayText();
-    document.getElementById("s19-meta").textContent = (rel ? rel + " 출시 예정 · " : "") + "PBE " + updAt(S19.pbe || S19.updated) + " · 출시 전 수치는 바뀔 수 있어요";
+    document.getElementById("s19-meta").textContent = s19IsPbe()
+      ? ((rel ? rel + " 출시 예정 · " : "") + "PBE " + updAt(S19.pbe || S19.updated) + " · 출시 전 수치는 바뀔 수 있어요")
+      : ("19시즌 " + ((typeof META !== "undefined" && META && META.patch) ? META.patch + " 패치 · " : "") + updAt(S19.updated));
     tools.innerHTML = ""; out.innerHTML = "";
     views[s19St.v](out, tools);
   }
@@ -117,7 +124,7 @@
   }
 
   // 19시즌 4x7 육각 보드 배치도 (챔피언 누르면 19시즌 상세로 이동)
-  /* ---- PBE 덱 통계 새로고침 (2026-11-21 사용자: "pbe 통계도 새로고침 버튼 만들어 줘야지"): MetaTFT comps_stats?queue=PBE를 바로 받아
+  /* ---- 19시즌 덱 통계 새로고침: PBE 중엔 queue=PBE, 본섭 출시 후엔 queue=1100을 바로 받아
      덱마다 평균·승률·순방·판수·선택률·티어만 바꾼다 (배치·템은 그대로, 덱 묶음 번호가 바뀌면 다음 업데이트 때). 덱 탭 새로고침과 같은 방식 ---- */
   var S19_LIVE = "tft-guide-s19-live";
   function s19Apply(L) {
@@ -143,7 +150,10 @@
   }
   function s19Refresh(btn, note) {
     btn.disabled = true; btn.textContent = "불러오는 중";
-    viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&patch=current&days=3").then(function (r) {
+    var url = s19IsPbe()
+      ? "https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&patch=current&days=3"
+      : "https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=3&rank=EMERALD,DIAMOND,MASTER,GRANDMASTER,CHALLENGER&permit_filter_adjustment=true";
+    viaApp(url).then(function (r) {
       if (S19.decksCid && String(r.cluster_id) !== String(S19.decksCid)) { note.textContent = "덱 구성이 바뀌어 다음 업데이트 때 반영돼요"; return; }
       var L = { at: Date.now(), cid: String(r.cluster_id), s: {}, total: 1, src: r.updated || Date.now() };
       (r.results || []).forEach(function (x) { if (x.cluster) L.s[x.cluster] = x.places; else L.total = x.places[0]; });
@@ -745,7 +755,7 @@
     var nb = el("button", "s19-new" + (s19St.an ? " on" : ""), "새 증강만"); nb.type = "button";
     nb.addEventListener("click", function () { s19St.an = !s19St.an; s19Save(); s19Render(); }); tools.lastChild.appendChild(nb);
     var list = S19.augs.filter(function (a) { return (!s19St.af || a.tier === s19St.af) && (!s19St.an || a.new) && (s19Match(a.n) || s19Match(a.d)); });
-    out.appendChild(el("p", "sub s19-lead", list.length + "개" + (s19St.an ? " · 이번 시즌 새 증강" : "") + (list.some(function (a) { return a.d.indexOf("?") >= 0; }) ? " · ?는 PBE에 아직 수치가 없는 자리예요" : "")));
+    out.appendChild(el("p", "sub s19-lead", list.length + "개" + (s19St.an ? " · 이번 시즌 새 증강" : "") + (list.some(function (a) { return a.d.indexOf("?") >= 0; }) ? (s19IsPbe() ? " · ?는 PBE에 아직 수치가 없는 자리예요" : " · ?는 원문에 수치가 없는 자리예요") : "")));
     list.slice(0, 200).forEach(function (a) {
       var r = el("div", "s19-card s19-ar t" + (a.tier || 1));
       var ic = el("span", "s19-ai"); if (a.img) { var i = img(a.img, a.n); i.loading = "lazy"; ic.appendChild(i); } r.appendChild(ic);

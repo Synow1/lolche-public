@@ -220,7 +220,7 @@
     var b = el("button", "rk-who-main"); b.type = "button";
     b.appendChild(tierImg(p && p[0]));
     var t = el("div"); var nm = el("b", null, id.split("#")[0]); nm.appendChild(el("small", null, "#" + (id.split("#")[1] || ""))); t.appendChild(nm);
-    t.appendChild(el("span", null, (label ? label + " · " : "") + (isPbe ? "PBE 19시즌" : rating ? tierText(rating, true) : "티어 기록 없음")));
+    t.appendChild(el("span", null, (label ? label + " · " : "") + (isPbe ? (LIVE_SET_ID !== SET_ID ? "PBE " + guideSetNum() + "시즌" : "PBE 서버") : rating ? tierText(rating, true) : "티어 기록 없음")));
     if (p && !isPbe) t.lastChild.style.color = TIER_COLOR[p[0]];
     b.appendChild(t);
     b.addEventListener("pointerdown", function (e) { e.preventDefault(); });

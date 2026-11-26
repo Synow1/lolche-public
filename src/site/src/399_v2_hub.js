@@ -28,7 +28,7 @@
     // 1) 19시즌 히어로 KPI + 7코스트 가로 레일
     if (S19) {
       var dd = document.getElementById("hm-dday");
-      if (dd) dd.textContent = (META && META.pbe ? "19시즌 PBE · " : "19시즌 · ") + s19DdayText();
+      if (dd) dd.textContent = META && META.pbe ? ("19시즌 PBE · " + s19DdayText()) : ("19시즌 · " + ((META && META.patch) || "프리즘 투어"));
       var upd = document.getElementById("hm-s19-upd");
       if (upd) upd.textContent = updAt(S19.pbe || S19.updated);
       var kpi = document.getElementById("hm-s19-kpi");
@@ -235,7 +235,7 @@
     box.innerHTML = "";
     if (!q) {
       spotGroup(box, "빠른 이동", [
-        { badge: "덱", title: "19시즌 메타 덱", sub: "MetaTFT PBE 통계 · 추천 배치 · 평균 등수", tag: "덱", tagCls: "gold", go: function () { goTab("meta"); } },
+        { badge: "덱", title: "19시즌 메타 덱", sub: (META && META.pbe ? "MetaTFT PBE 통계" : "MetaTFT 에메+ 통계") + " · 추천 배치 · 평균 등수", tag: "덱", tagCls: "gold", go: function () { goTab("meta"); } },
         { badge: "통", title: "챔피언 통계 · 삼신기", sub: "평균 등수 · 승률 · 추천 아이템 · 삼신기", tag: "통계", tagCls: "gold", go: function () { goTab("units"); } },
         { badge: "아", title: "TFT 아카데미", sub: "19시즌 프로 티어표 · 단계별 운영", tag: "프로", tagCls: "cyan", go: function () { goTab("tfa"); } },
         { badge: "해", title: "해금 조건 체크리스트", sub: "조건별 검색 · 외운 챔피언 표시", tag: "도감", tagCls: "cyan", go: function () { s19Jump("unlock"); } },

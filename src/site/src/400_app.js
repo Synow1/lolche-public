@@ -294,6 +294,15 @@
     e.hidden = true;
     if (e.tagName === "SECTION") { var n = document.createElement("section"); n.id = e.id; e.id = e.id + "-old"; n.innerHTML = '<p class="empty">새 시즌 내용은 준비 중이에요</p>'; e.parentNode.insertBefore(n, e); }
   });
+  function syncPbeDom() {
+    var isPbe = (typeof META !== "undefined" && META && META.pbe != null) ? !!META.pbe : (LIVE_SET_ID !== SET_ID);
+    document.querySelectorAll("[data-pbe]").forEach(function (e) { e.hidden = !isPbe; });
+    document.querySelectorAll("[data-live]").forEach(function (e) { e.hidden = isPbe; });
+    var pbeChip = document.querySelector('#rk-regchips [data-reg="pbe1"]');
+    if (pbeChip) pbeChip.textContent = LIVE_SET_ID !== SET_ID ? ("PBE " + guideSetNum() + "시즌") : "PBE";
+    if (typeof pwSyncTabs === "function") pwSyncTabs();
+  }
+  syncPbeDom();
   var QUEUE = { 1090: "일반", 1100: "랭크", 1130: "초고속", 1160: "더블업" };
 
   function setupApp() {
@@ -493,7 +502,7 @@
         if (Object.keys(h).length) { CUTH = CUTH || {}; CUTH[dakSeason()] = h; }
       }).catch(function () {});
     });
-    fetch("meta.json").then(function (r) { return r.json(); }).then(function (m) { buildMeta(m); homeRender(); }).catch(function () {
+    fetch("meta.json").then(function (r) { return r.json(); }).then(function (m) { buildMeta(m); syncPbeDom(); homeRender(); }).catch(function () {
       document.getElementById("mt-rows").textContent = reloadErr();
     });
     var dbReady = Promise.all([fetch("db.json").then(function (r) { return r.json(); }), oldReady]).then(function (x) { buildFind(x[0]); }).catch(function () {

@@ -42,8 +42,13 @@ for mode in "$@"; do
       python3 scripts/build_items.py
       python3 scripts/build_tfa.py || echo "TFT 아카데미 못 받음"
       python3 scripts/fetch_icons.py ;;
-    newset)  # 새 세트 첫날 (check_patch.py): 방금 끝난 세트를 지난 시즌 이름·아이콘 표에 넣는다. 나머지는 quick/full이 새 세트로 받는다
+    newset)  # 새 세트 첫날 (check_patch.py): 방금 끝난 세트를 지난 시즌 표에 넣고 PBE 캐시를 비운 뒤 새 세트 초기 스냅샷을 채운다
+      rm -rf raw/s19_comps raw/mt_units/pbe_*.json raw/items_*.json
       python3 scripts/build_oldsets.py
+      python3 scripts/build_s19.py || echo "19시즌 도감 갱신 생략"
+      python3 scripts/snap_rank.py || echo "새 시즌 랭킹 스냅샷 생략"
+      python3 scripts/snap_dist.py || echo "새 시즌 티어 분포 생략"
+      python3 scripts/build_friends.py || echo "새 시즌 친구 스냅샷 생략"
       python3 scripts/setinfo.py ;;
     esports)
       python3 scripts/build_esports.py

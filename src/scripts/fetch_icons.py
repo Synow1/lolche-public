@@ -170,16 +170,17 @@ def main():
 
     radiant_icons(lk, index)
 
-    # build_guides.py가 넣은 롤체지지 그림(x_*: 나무정령 식물, MetaTFT에 없는 증강)은 남긴다
-    try:
-        old = json.loads((OUT / "index.json").read_text(encoding="utf-8"))
-        for kind in ("units", "augments"):
-            for k, v in old.get(kind, {}).items():
-                path = v["icon"] if isinstance(v, dict) else v
-                if "/x_" in path and k not in index[kind]:
-                    index[kind][k] = v
-    except FileNotFoundError:
-        pass
+    # 18시즌 이하에서만 롤체지지 x_* 그림(나무정령 식물 등) 보존 (19시즌 이상에서는 18시즌 잔재 차단)
+    if setinfo.NUM < 19:
+        try:
+            old = json.loads((OUT / "index.json").read_text(encoding="utf-8"))
+            for kind in ("units", "augments"):
+                for k, v in old.get(kind, {}).items():
+                    path = v["icon"] if isinstance(v, dict) else v
+                    if "/x_" in path and k not in index[kind]:
+                        index[kind][k] = v
+        except FileNotFoundError:
+            pass
     (OUT / "index.json").write_text(json.dumps(index, ensure_ascii=False, indent=1), encoding="utf-8")
     print({k: len(v) for k, v in index.items()})
 

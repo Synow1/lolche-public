@@ -11,7 +11,8 @@
     return "normal";
   }
   function pwModel(setNum) {
-    if (setNum && typeof POWER_S19 !== "undefined" && POWER_S19 && !POWER_S19.off && String(POWER_S19.set) === String(setNum)) return POWER_S19;
+    if (POWER && !POWER.off && (!setNum || String(POWER.set) === String(setNum))) return POWER;
+    if (typeof POWER_S19 !== "undefined" && POWER_S19 && !POWER_S19.off && (!setNum || String(POWER_S19.set) === String(setNum))) return POWER_S19;
     return POWER;
   }
   function boardPower(units, traits, level, setNum) {
@@ -151,13 +152,26 @@
     });
     PW_WAIT = rest;
   }
+  function pwSyncTabs() {
+    var topB = document.querySelector('#pw-src [data-s="top"]');
+    var s19B = document.querySelector('#pw-src [data-s="s19"]');
+    var isSplit = LIVE_SET_ID !== SET_ID;
+    var liveSet = liveSetNum(), gSet = guideSetNum();
+    var liveReady = !!(POWER && !POWER.off && String(POWER.set) === String(liveSet));
+    if (topB) topB.textContent = liveSet + "시즌 상위";
+    if (s19B) {
+      if (isSplit) { s19B.hidden = false; s19B.textContent = gSet + "시즌 PBE"; }
+      else if (liveReady) { s19B.hidden = true; if (pwSrc === "s19") pwSrc = "top"; }
+      else { s19B.hidden = false; s19B.textContent = gSet + "시즌 PBE"; }
+    }
+  }
   function powerReady(d) {
-    POWER = d; pwFlushWait();
+    POWER = d; pwSyncTabs(); pwFlushWait();
     if (current === "power") pwRender();
     if (typeof frView !== "undefined" && frView === "top" && current === "friends") frTop();
   }
   function powerReadyS19(d) {
-    POWER_S19 = d; pwFlushWait();
+    POWER_S19 = d; pwSyncTabs(); pwFlushWait();
     if (current === "power") pwRender();
   }
   function powerTag(units, traits, level, small, setNum) {
@@ -274,6 +288,8 @@
   }
 
   function pwRender() {
+    pwSyncTabs();
+    if (LIVE_SET_ID === SET_ID && pwSrc === "top" && POWER && POWER.off && PW_TOP_S19 && POWER_S19) pwSrc = "s19";
     var box = document.getElementById("pw-list"), note = document.getElementById("pw-note"), bandBox = document.getElementById("pw-band");
     document.querySelectorAll("#pw-src button").forEach(function (b) { b.classList.toggle("on", b.dataset.s === pwSrc); });
     pwChart(pwSrc === "s19" ? POWER_S19 : POWER);

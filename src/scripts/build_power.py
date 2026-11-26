@@ -27,10 +27,10 @@ import sys
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+import setinfo as _si  # noqa: E402
 PBE = "--pbe" in sys.argv[1:]
 if PBE:
-    sys.path.insert(0, str(ROOT / "scripts"))
-    import setinfo as _si
     SRC = ROOT / "data" / "power" / f"boards_s{_si.NUM}.jsonl.gz"
     OUT = ROOT / "site" / f"power_s{_si.NUM}.json"
     TOP = ROOT / "site" / f"power_top_s{_si.NUM}.json"
@@ -391,11 +391,12 @@ def main():
         OUT.write_text(json.dumps({"off": True, "n": len(ms), "set": setn, "updated": datetime.now(timezone.utc).isoformat(timespec="minutes")}), encoding="utf-8")
         print(f"판 {len(ms)}개뿐 -> 덱파워 끔 (필드 가치만)")
         return
+    use_shop = PBE or (str(setn) == str(_si.NUM))
     cost = {}
     for m in ms:
         for b in m["b"]:
             for u in b[3]:
-                cost[u[0]] = SHOP_COST.get(nk(u[0]), cost_of(u[2])) if PBE else cost_of(u[2])
+                cost[u[0]] = SHOP_COST.get(nk(u[0]), cost_of(u[2])) if use_shop else cost_of(u[2])
     cost_out = {nk(k): v for k, v in cost.items()}
     rows = [(m["id"], m["lt"], b) for m in ms for b in m["b"]]
     # 유닛 하나짜리 고유 특성 (럭스 화신·자연의 아버지 등): 항목별 보기에서 '유닛'으로 묶는다
@@ -561,11 +562,12 @@ BAND = [("all", "전체", 0, 9), ("top", "마스터+", 7, 9), ("dia", "다이아
 def build_top(allm, setn, w, b0, keys, idx, mu, sd, cal, calp, base_syn, f5=None):
     """덱파워 탭 '최근 센 판': 최근 7일 판 끝 보드 중 덱파워 높은 순 (이름이 있는 판만). 티어 묶음마다 20개."""
     now = max((m["t"] for m in allm), default=0)
+    use_shop = PBE or (str(setn) == str(_si.NUM))
     cost = {}
     for m in allm:
         for b in m["b"]:
             for u in b[3]:
-                cost[u[0]] = SHOP_COST.get(nk(u[0]), cost_of(u[2])) if PBE else cost_of(u[2])
+                cost[u[0]] = SHOP_COST.get(nk(u[0]), cost_of(u[2])) if use_shop else cost_of(u[2])
     rows = []
     for m in allm:
         if m["p"].split(".")[0] != setn or m["t"] < now - 7 * 86400000:

@@ -376,24 +376,26 @@ function fresh(file, key, hours) {
       if (pwChk && pwChk.badCh.length) fail(`덱파워: 프리즘이 아닌 시너지에 프리즘 색(.s-chromatic)이 붙음 (${JSON.stringify(pwChk.badCh.slice(0, 4))})`);
       if (pwChk && pwChk.emptyHx) fail(`덱파워: 18시즌 시너지 그림 빈칸 ${pwChk.emptyHx}개`);
     }
-    // 19시즌 PBE 덱파워 탭 점검
-    await q(() => { const b = document.querySelector('#pw-src [data-s=s19]'); if (b) b.click(); });
-    await pg.waitForTimeout(800);
-    const pw19 = await q(() => ({
-      n: document.querySelectorAll('#pw-list .pwc').length,
-      scores: [...document.querySelectorAll('#pw-list .pwc-big')].map(e => +e.textContent.trim()),
-      emptyHx: [...document.querySelectorAll('#pw-list .trx .hx2')].filter(h => !h.querySelector('img')).length,
-      sw: document.documentElement.scrollWidth,
-    }));
-    if (!pw19 || pw19.n < 5) fail('덱파워 19시즌 PBE: 카드 5개 미만');
-    else {
-      if (pw19.scores.some(x => isNaN(x) || x <= 0)) fail('덱파워 19시즌 PBE: 점수가 비정상');
-      if (pw19.emptyHx) fail(`덱파워 19시즌 PBE: 시너지 그림 빈칸 ${pw19.emptyHx}개`);
-      if (pw19.sw > W) fail(`덱파워 19시즌 PBE: 화면보다 넓음 ${pw19.sw}px (가로 밀림)`);
-      const wr19 = await pg.evaluate(new Function('return ' + WRAP_FN)());
-      if (wr19 && wr19.length) fail(`[${W}] 덱파워 19시즌 PBE: 짧은 글이 두 줄로 꺾임 ${[...new Set(wr19)].slice(0, 4).join(', ')}`);
+    // 19시즌 PBE 덱파워 탭 점검 (PBE 기간엔 노출, 본섭 19 전환 후 live power 활성 시 자동 숨김)
+    if (_isPbe) {
+      await q(() => { const b = document.querySelector('#pw-src [data-s=s19]'); if (b) b.click(); });
+      await pg.waitForTimeout(800);
+      const pw19 = await q(() => ({
+        n: document.querySelectorAll('#pw-list .pwc').length,
+        scores: [...document.querySelectorAll('#pw-list .pwc-big')].map(e => +e.textContent.trim()),
+        emptyHx: [...document.querySelectorAll('#pw-list .trx .hx2')].filter(h => !h.querySelector('img')).length,
+        sw: document.documentElement.scrollWidth,
+      }));
+      if (!pw19 || pw19.n < 5) fail('덱파워 19시즌 PBE: 카드 5개 미만');
+      else {
+        if (pw19.scores.some(x => isNaN(x) || x <= 0)) fail('덱파워 19시즌 PBE: 점수가 비정상');
+        if (pw19.emptyHx) fail(`덱파워 19시즌 PBE: 시너지 그림 빈칸 ${pw19.emptyHx}개`);
+        if (pw19.sw > W) fail(`덱파워 19시즌 PBE: 화면보다 넓음 ${pw19.sw}px (가로 밀림)`);
+        const wr19 = await pg.evaluate(new Function('return ' + WRAP_FN)());
+        if (wr19 && wr19.length) fail(`[${W}] 덱파워 19시즌 PBE: 짧은 글이 두 줄로 꺾임 ${[...new Set(wr19)].slice(0, 4).join(', ')}`);
+      }
+      await q(() => { const b = document.querySelector('#pw-src [data-s=top]'); if (b) b.click(); });
     }
-    await q(() => { const b = document.querySelector('#pw-src [data-s=top]'); if (b) b.click(); });
     }
     if (!FAST && ['friends'].some(need)) {
     await go('friends'); await pg.waitForTimeout(6000);
@@ -469,29 +471,31 @@ function fresh(file, key, hours) {
     if (await q(() => ((document.querySelector('.rk-range .mt-chips button.on') || {}).textContent || '')) !== '50판') soft('전적 검색: 기본 범위가 50판이 아님');
     if (await q(() => document.querySelectorAll('.rk-sum .plstr span').length) > 20) fail('전적 검색: 등수 줄이 20판 넘게 보임');
 
-    // PBE 19시즌 전적 검색 + 19시즌 덱파워 점검
-    const pbeSample = (() => { try { const t = JSON.parse(fs.readFileSync(path.join(SITE, 'power_top_s19.json'), 'utf8')); return (t.top && t.top.all && t.top.all[0] && t.top.all[0].who) || 'TimTorte#8338'; } catch (e) { return 'TimTorte#8338'; } })();
-    await q((who) => {
-      const b = document.querySelector('#rk-regchips [data-reg=pbe1]'); if (b) b.click();
-      const i = document.getElementById('rk-q'); i.value = who; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-    }, pbeSample);
-    await pg.waitForSelector('#rk-prof .rk-gm', { timeout: 60000 }).catch(() => soft('PBE 전적 검색: 판 카드가 안 나옴'));
-    await pg.waitForTimeout(2500);
-    const pbeChk = await q(() => ({
-      sb: (document.querySelector('#rk-prof .rk-sb') || {}).textContent || '',
-      gms: document.querySelectorAll('#rk-prof .rk-gm').length,
-      pws: [...document.querySelectorAll('#rk-prof .rk-gm .pw-p')].map(p => [p.querySelector('b').textContent, p.querySelector('small').textContent]),
-      hasLpErr: /LP 기록이/.test((document.getElementById('rk-prof') || {}).innerText || ''),
-      sw: document.documentElement.scrollWidth,
-    }));
-    if (!pbeChk || !/PBE/.test(pbeChk.sb)) fail(`PBE 전적 검색: PBE 배지 없음 (${pbeChk && pbeChk.sb})`);
-    if (!pbeChk || pbeChk.gms < 3) soft('PBE 전적 검색: 19시즌 판 카드 3개 미만');
-    if (!pbeChk || !pbeChk.pws.length) fail('PBE 전적 검색: 19시즌 판 카드에 19시즌 덱파워가 없음');
-    else if (pbeChk.pws.some(x => +x[0] < 0 || isNaN(+x[0]))) fail('PBE 전적 검색: 19시즌 덱파워 점수가 비정상');
-    if (pbeChk && pbeChk.hasLpErr) fail('PBE 전적 검색: 일반 서버인데 랭크 LP 그래프 안내 문구가 보임');
-    if (pbeChk && pbeChk.sw > W) fail(`PBE 전적 검색: 화면보다 넓음 ${pbeChk.sw}px (가로 밀림)`);
-    { const wrp = await pg.evaluate(new Function('return ' + WRAP_FN)()); if (wrp && wrp.length) fail(`[${W}] PBE 전적 검색: 짧은 글이 두 줄로 꺾임 ${[...new Set(wrp)].slice(0, 4).join(', ')}`); }
-    await q(() => { const b = document.querySelector('#rk-regchips [data-reg=kr]'); if (b) b.click(); });
+    // PBE 19시즌 전적 검색 + 19시즌 덱파워 점검 (PBE 기간)
+    if (_isPbe) {
+      const pbeSample = (() => { try { const t = JSON.parse(fs.readFileSync(path.join(SITE, 'power_top_s19.json'), 'utf8')); return (t.top && t.top.all && t.top.all[0] && t.top.all[0].who) || 'TimTorte#8338'; } catch (e) { return 'TimTorte#8338'; } })();
+      await q((who) => {
+        const b = document.querySelector('#rk-regchips [data-reg=pbe1]'); if (b) b.click();
+        const i = document.getElementById('rk-q'); i.value = who; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      }, pbeSample);
+      await pg.waitForSelector('#rk-prof .rk-gm', { timeout: 60000 }).catch(() => soft('PBE 전적 검색: 판 카드가 안 나옴'));
+      await pg.waitForTimeout(2500);
+      const pbeChk = await q(() => ({
+        sb: (document.querySelector('#rk-prof .rk-sb') || {}).textContent || '',
+        gms: document.querySelectorAll('#rk-prof .rk-gm').length,
+        pws: [...document.querySelectorAll('#rk-prof .rk-gm .pw-p')].map(p => [p.querySelector('b').textContent, p.querySelector('small').textContent]),
+        hasLpErr: /LP 기록이/.test((document.getElementById('rk-prof') || {}).innerText || ''),
+        sw: document.documentElement.scrollWidth,
+      }));
+      if (!pbeChk || !/PBE/.test(pbeChk.sb)) fail(`PBE 전적 검색: PBE 배지 없음 (${pbeChk && pbeChk.sb})`);
+      if (!pbeChk || pbeChk.gms < 3) soft('PBE 전적 검색: 19시즌 판 카드 3개 미만');
+      if (!pbeChk || !pbeChk.pws.length) fail('PBE 전적 검색: 19시즌 판 카드에 19시즌 덱파워가 없음');
+      else if (pbeChk.pws.some(x => +x[0] < 0 || isNaN(+x[0]))) fail('PBE 전적 검색: 19시즌 덱파워 점수가 비정상');
+      if (pbeChk && pbeChk.hasLpErr) fail('PBE 전적 검색: 일반 서버인데 랭크 LP 그래프 안내 문구가 보임');
+      if (pbeChk && pbeChk.sw > W) fail(`PBE 전적 검색: 화면보다 넓음 ${pbeChk.sw}px (가로 밀림)`);
+      { const wrp = await pg.evaluate(new Function('return ' + WRAP_FN)()); if (wrp && wrp.length) fail(`[${W}] PBE 전적 검색: 짧은 글이 두 줄로 꺾임 ${[...new Set(wrp)].slice(0, 4).join(', ')}`); }
+      await q(() => { const b = document.querySelector('#rk-regchips [data-reg=kr]'); if (b) b.click(); });
+    }
     }
     await pg.close();
   });
@@ -841,8 +845,8 @@ function fresh(file, key, hours) {
     await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
     await pg.route('https://lolche.local/**', async (r) => { const u = new URL(r.request().url());
       if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
-      // PBE 통계 새로고침: 첫 덱을 1등만 한 덱으로 바꾼 가짜 MetaTFT 응답 (s19Apply가 숫자를 바꾸는지)
-      if (u.pathname === '/proxy' && /queue=PBE/.test(u.searchParams.get('u') || '') && S.decks[0]) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cluster_id: S.decksCid, updated: Date.now(), results: [{ cluster: '', places: [8000000] }, { cluster: S.decks[0].id, places: [9000, 0, 0, 0, 0, 0, 0, 0, 9000], count: 9000 }] }) });
+      // 19시즌 통계 새로고침: 첫 덱을 1등만 한 덱으로 바꾼 가짜 MetaTFT 응답 (s19Apply가 숫자를 바꾸는지)
+      if (u.pathname === '/proxy' && /comps_stats\?queue=(PBE|1100)/.test(u.searchParams.get('u') || '') && S.decks[0]) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ cluster_id: S.decksCid, updated: Date.now(), results: [{ cluster: '', places: [8000000] }, { cluster: S.decks[0].id, places: [9000, 0, 0, 0, 0, 0, 0, 0, 9000], count: 9000 }] }) });
       if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
       const f = path.join(SITE, decodeURIComponent(u.pathname)); return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' }); });
     const errs = []; pg.on('pageerror', e => errs.push(String(e)));
@@ -1477,8 +1481,79 @@ function fresh(file, key, hours) {
       }
     }
 
+    // ⑦ 18시즌 잔재 차단 & 19시즌 본섭(12/1) 자동 전환 모의 검증
+    {
+      const idx = JSON.parse(fs.readFileSync(path.join(SITE, 'icons', 'index.json'), 'utf8'));
+      const x18 = Object.keys(idx.units || {}).filter(k => /\/x_/.test((idx.units[k] || {}).icon || ''));
+      if (x18.length) fail('회귀 검사 ⑦: icons/index.json에 18시즌 잔재 유닛이 남음 ' + x18.join(', '));
+      for (const tab of ['flow', 'scout']) {
+        await pg.evaluate((t) => { const a = document.createElement('a'); a.href = '#' + t; document.body.appendChild(a); a.click(); a.remove(); }, tab);
+        await pg.waitForTimeout(200);
+        const rem = await pg.evaluate((t) => {
+          const sec = document.getElementById(t);
+          const txt = sec ? [...sec.querySelectorAll('*')].filter(e => !e.hidden && e.offsetParent !== null && !e.children.length).map(e => e.textContent).join(' ') : '';
+          return (txt.match(/악의 여단|지옥불|돈 수호령|수금·소매치기|수호령 타이밍|덩굴정령/g) || []);
+        }, tab);
+        if (rem.length) fail(`회귀 검사 ⑦: #${tab}에 18시즌 잔재 문구가 남음 ${[...new Set(rem)].join(', ')}`);
+      }
+    }
+
     if (errs.length) fail('회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
     await pg.close();
+
+    // ⑧ 19시즌 본섭 출시(LIVE_SET_ID=TFTSet19, pbe=false) 전환 모의 검증: PBE/18시즌 잔재 없이 자동 전환되는지
+    const pgLive = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark' });
+    const errsLive = []; pgLive.on('pageerror', e => errsLive.push(String(e)));
+    await pgLive.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
+    await pgLive.route('https://lolche.local/**', async (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname === '/index.html') {
+        const html = fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8')
+          .replace(/var LIVE_SET_ID = "TFTSet\d+";/, 'var LIVE_SET_ID = "TFTSet19";');
+        return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + html });
+      }
+      if (u.pathname === '/meta.json') {
+        const m = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
+        m.pbe = false; m.patch = '19.1'; m.pbe_build = null;
+        return r.fulfill({ contentType: 'application/json', body: JSON.stringify(m) });
+      }
+      if (u.pathname === '/power.json') {
+        const p19 = JSON.parse(fs.readFileSync(path.join(SITE, 'power_s19.json'), 'utf8'));
+        p19.pbe = false;
+        return r.fulfill({ contentType: 'application/json', body: JSON.stringify(p19) });
+      }
+      if (u.pathname === '/power_top.json') {
+        const t19 = JSON.parse(fs.readFileSync(path.join(SITE, 'power_top_s19.json'), 'utf8'));
+        t19.pbe = false;
+        return r.fulfill({ contentType: 'application/json', body: JSON.stringify(t19) });
+      }
+      if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      const f = path.join(SITE, decodeURIComponent(u.pathname));
+      return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+    });
+    await pgLive.goto('https://lolche.local/index.html'); await pgLive.waitForTimeout(2200);
+    const liveChk = await pgLive.evaluate(() => {
+      const go = (t) => { const a = document.createElement('a'); a.href = '#' + t; document.body.appendChild(a); a.click(); a.remove(); };
+      const hmTag = (document.getElementById('hm-dday') || {}).textContent || '';
+      go('patch');
+      const ptVis = [...document.querySelectorAll('#patch [data-set="19"] *')].filter(e => !e.hidden && e.offsetParent !== null && !e.children.length).map(e => e.textContent).join(' ');
+      go('s19');
+      const s19Tag = (document.getElementById('s19-dday') || {}).textContent || '';
+      const s19Meta = (document.getElementById('s19-meta') || {}).textContent || '';
+      go('power');
+      const pwTopTxt = (document.querySelector('#pw-src [data-s="top"]') || {}).textContent || '';
+      const pwS19Hidden = !!(document.querySelector('#pw-src [data-s="s19"]') || {}).hidden;
+      go('rank');
+      const rkPbeTxt = (document.querySelector('#rk-regchips [data-reg="pbe1"]') || {}).textContent || '';
+      return { hmTag, ptVis, s19Tag, s19Meta, pwTopTxt, pwS19Hidden, rkPbeTxt };
+    });
+    if (/PBE/.test(liveChk.hmTag)) fail('19시즌 본섭 전환 모의: 홈 배지에 PBE가 남음 (' + liveChk.hmTag + ')');
+    if (/12\/1 출시 예정|PBE 테스트 진행 중/.test(liveChk.ptVis)) fail('19시즌 본섭 전환 모의: 패치 노트에 PBE 예정 문구가 남음');
+    if (/PBE|출시 예정/.test(liveChk.s19Meta) || liveChk.s19Tag === 'PBE') fail('19시즌 본섭 전환 모의: 도감 헤더에 PBE 문구가 남음 (' + liveChk.s19Tag + ' / ' + liveChk.s19Meta + ')');
+    if (liveChk.pwTopTxt !== '19시즌 상위' || !liveChk.pwS19Hidden) fail('19시즌 본섭 전환 모의: 덱파워 탭이 19시즌 본섭으로 안 바뀜 ' + JSON.stringify(liveChk));
+    if (liveChk.rkPbeTxt !== 'PBE') fail('19시즌 본섭 전환 모의: 전적 검색 PBE 칩에 19시즌 문구가 남음 (' + liveChk.rkPbeTxt + ')');
+    if (errsLive.length) fail('19시즌 본섭 전환 모의: 페이지 오류 ' + errsLive.slice(0, 2).join(' ; '));
+    await pgLive.close();
   });
   // 동시에 4개씩 (대부분 I/O·대기 시간이라 겹쳐 돌리면 빨라진다)
   { let next = 0; await Promise.all([0, 1, 2, 3].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }

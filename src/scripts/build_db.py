@@ -47,7 +47,7 @@ def tt_patch():
         except Exception:
             continue
         units = g.get("units") or {}
-        if g.get("totalEntries", 0) >= 200000 and any(k.startswith(f"DA_{setinfo.NUM}_") for k in units):
+        if g.get("totalEntries", 0) >= 200000 and any(k.startswith(f"DA_{setinfo.NUM}_") or k.startswith(f"TFT{setinfo.NUM}_") or (k.startswith("DA_") and k.endswith(str(setinfo.NUM))) for k in units):
             best = p
     if best is None:  # 새 세트 첫날: 지금 세트 판이 아직 없으면 지난 세트 통계를 섞지 않고 MetaTFT unit_detail로 채운다
         print("tactics.tools에 지금 세트 판이 아직 없음 -> MetaTFT unit_detail로 채움"); return None
@@ -79,8 +79,9 @@ def fetch(asset):
 
 def fetch_mt_unit(asset):
     """MetaTFT unit_detail (성급별·단일템·삼신기 3템 조합 실통계, PBE·본섭 공통). raw/mt_units/에 6시간 캐시."""
+    import setinfo
     MT_CACHE.mkdir(parents=True, exist_ok=True)
-    path = MT_CACHE / f"{asset}.json"
+    path = MT_CACHE / f"{'pbe' if setinfo.PBE else 'live'}_{asset}.json"
     if "--offline" in sys.argv or (path.exists() and time.time() - path.stat().st_mtime < 6 * 3600):
         return json.loads(path.read_text()) if path.exists() else None
     url = f"{T.API}/tft-stat-api/unit_detail?unit={asset}&{T.Q}"
@@ -218,7 +219,7 @@ def build():
         pass
     s19_u = {}
     s19_p = ROOT / "site" / "s19.json"
-    if setinfo.PBE and s19_p.exists():
+    if setinfo.NUM == 19 and s19_p.exists():
         for su in json.loads(s19_p.read_text(encoding="utf-8")).get("units") or []:
             s19_u[su["k"]] = su
     comps = {i["apiName"] for i in lk["items"] if i["apiName"].startswith("DA_Component_") or i["apiName"].startswith("TFT_Item_") and not i.get("composition")}
@@ -434,7 +435,7 @@ def build():
                 if su and su.get("unl"):
                     units[label]["unlock"] = su["unl"]
     # 아이템별 추천 챔피언 정리 (unit_detail 실통계가 있으면 그걸 우선, 없으면 unit_items 역색인 보강)
-    if setinfo.PBE and not item_holders:
+    if not item_holders:
         for it_api, x in ui_items_pbe.items():
             if it_api in comps or "Radiant" in it_api:
                 continue
@@ -453,7 +454,7 @@ def build():
             if r[0] not in dedup or r[2] > dedup[r[0]][2]:
                 dedup[r[0]] = r
         rows = list(dedup.values())
-        min_hold = 100 if setinfo.PBE else 500
+        min_hold = 100 if (setinfo.PBE or not TT) else 500
         rows = [r for r in rows if r[2] >= max(min_hold, 0.05 * max(x[2] for x in rows))]
         items[name] = sorted(rows, key=lambda r: r[1])[:10]
     # 팀 플래너 코드 중복 제거 (PBE 원문에 임시로 같은 번호를 나눠 쓰는 유닛이 있음)
@@ -476,7 +477,7 @@ def build():
         names["t"][t["apiName"]] = [t["name"], 1 if t.get("type") == "unique" else 0]
     db = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "pbe": setinfo.PBE,
           "games": total_games, "names": names, "info": info(lk),
-          "source": "MetaTFT PBE 최근 3일 (unit_detail)" if setinfo.PBE else "평균 등수 에메+·그마+는 MetaTFT 최근 3일, 나머지는 tactics.tools 다이아+ 패치 전체",
+          "source": "MetaTFT PBE 최근 3일 (unit_detail)" if setinfo.PBE else ("MetaTFT 최근 3일 (unit_detail)" if not TT else "평균 등수 에메+·그마+는 MetaTFT 최근 3일, 나머지는 tactics.tools 다이아+ 패치 전체"),
           "units": units, "items": items}
     OUT.write_text(json.dumps(db, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)}개, 아이템 {len(items)}개, {OUT.stat().st_size // 1024}KB")

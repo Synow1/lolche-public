@@ -375,18 +375,6 @@
   "조이": {
    "icon": "icons/s19/u/da_zoe19.webp",
    "cost": 1
-  },
-  "돌껍질 나무": {
-   "icon": "icons/u/x_stonebarktree.webp",
-   "cost": 0
-  },
-  "생명꽃": {
-   "icon": "icons/u/x_lifebloom.webp",
-   "cost": 0
-  },
-  "깊은숲 수호자": {
-   "icon": "icons/u/x_deepwoodprotector.webp",
-   "cost": 0
   }
  },
  "items": {

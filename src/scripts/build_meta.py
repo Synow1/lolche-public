@@ -322,12 +322,33 @@ def basis_stats(decks):
         for d in ok:
             d.setdefault("tiers", {})[k] = T.mt_tier(d["st"][k][0])
         time.sleep(1)
+    # 새 시즌 첫날(아직 에메+·플래+가 비었을 때): permit_filter_adjustment=true 원문으로 all·emer 보강
+    if not any("emer" in d.get("st", {}) for d in decks):
+        try:
+            js = T.load("comps_stats")
+            res = js["results"]
+            tot = next((x["places"][0] for x in res if not x.get("cluster")), 0)
+            by = {str(x["cluster"]): x["places"] for x in res if x.get("cluster")}
+            for d in decks:
+                p = by.get(str(d["id"]))
+                if not p or p[8] < 50:
+                    continue
+                n = p[8]
+                st_row = [round(sum(p[i] * (i + 1) for i in range(8)) / n, 2), round(sum(p[:4]) / n * 100), round(p[0] / n * 100, 1), n]
+                t_lbl = T.mt_tier(st_row[0])
+                for k in ("all", "emer"):
+                    d.setdefault("st", {}).setdefault(k, st_row)
+                    d.setdefault("tiers", {}).setdefault(k, t_lbl)
+            totals.setdefault("all", tot); totals.setdefault("emer", tot)
+            src_at = max(src_at, js.get("updated") or 0)
+        except Exception:
+            pass
     print("기준별 통계:", {k: sum(1 for d in decks if k in d.get("st", {})) for k in BASIS}, "분석된 덱:", totals)
     return totals, src_at
 
 
-def _sync_pbe_guides(decks):
-    """PBE(세트 19): s19.json의 롤체지지 추천 배치 가이드를 site/guides.json 형식으로 변환해 메타 탭 '추천 덱'에 연결한다."""
+def _sync_s19_guides(decks, patch="19.1"):
+    """세트 19: s19.json의 롤체지지 추천 배치 가이드를 site/guides.json 형식으로 변환해 메타 탭 '추천 덱'에 연결한다."""
     s19_p = ROOT / "site" / "s19.json"
     if not s19_p.exists():
         return
@@ -383,7 +404,7 @@ def _sync_pbe_guides(decks):
     if out_g:
         gout = ROOT / "site" / "guides.json"
         gout.write_text(json.dumps({"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
-                                    "patch": "19.1 PBE", "styles": styles, "decks": out_g},
+                                    "patch": patch, "styles": styles, "decks": out_g},
                                    ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         print(f"{gout.relative_to(ROOT)}: 19시즌 추천 가이드 {len(out_g)}개 (MetaTFT 짝 {sum(1 for x in out_g if x['cluster'])}개)")
 
@@ -448,8 +469,8 @@ def main():
         print(f"덱 0개 -> 지난 meta.json({old_n}개) 유지"); return
     OUT.write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"{OUT.relative_to(ROOT)}: 덱 {len(decks)}개 (최소 {min_games}판), {OUT.stat().st_size // 1024}KB")
-    if setinfo.PBE:
-        _sync_pbe_guides(decks)
+    if setinfo.PBE or setinfo.NUM == 19:
+        _sync_s19_guides(decks, patch)
 
 
 if __name__ == "__main__":

@@ -22,11 +22,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+import setinfo  # noqa: E402
 import tft_data as T  # noqa: E402  (junk_cluster)
 OUT = ROOT / "site" / "s19.json"
 ICONS = ROOT / "site" / "icons" / "s19"
 KO = ROOT / "data" / "s19_ko.json"
-MT = "https://data.metatft.com/lookups/TFTSet19_pbe_{}.json"
+MT = "https://data.metatft.com/lookups/TFTSet19_{}_{}.json"
 DAK = "https://tft.dakgg.io/api/v1/data/{}?hl=ko&season=set19"
 CDN = "https://cdn.metatft.com/cdn-cgi/image/width={0},height={0},quality=88,format=webp/https://cdn.metatft.com/file/metatft/{1}/{2}.png"
 UNIT_PX = 128  # 챔피언은 배치판에 크게 나와서 원본 크기(128)로 (2026-11-21 사용자: "화질이 약간 깨져 보여")
@@ -150,11 +151,15 @@ def cell_rc(name):
 
 
 def pbe_decks(mk, units, traits):
-    """MetaTFT PBE 덱 묶음 -> s19 덱 목록. 덱마다 최종 보드·자리·별·캐리 템·평균/순방/승률/판수, 묶음 번호 id (앱 새로고침이 이걸로 숫자만 바꾼다)."""
-    cs = get(PBE_API + "comps_stats?queue=PBE&patch=current&days=3")  # MetaTFT 화면 기본값: 최신 PBE 빌드 + 최근 3일
-    cd = get(PBE_API + "comps_data?queue=PBE")
+    """MetaTFT 19시즌 덱 묶음 -> s19 덱 목록. PBE 중엔 queue=PBE, 본섭 출시 후엔 queue=1100."""
+    if setinfo.PBE:
+        cs = get(PBE_API + "comps_stats?queue=PBE&patch=current&days=3")  # MetaTFT 화면 기본값: 최신 PBE 빌드 + 최근 3일
+        cd = get(PBE_API + "comps_data?queue=PBE")
+    else:
+        cs = get(PBE_API + f"comps_stats?queue=1100&patch=current&days=3&rank={T.RANKS}&permit_filter_adjustment=true")
+        cd = get(PBE_API + "comps_data?queue=1100")
     if cd.get("tft_set") != "TFTSet19":
-        raise RuntimeError(f"MetaTFT PBE가 19시즌이 아님 ({cd.get('tft_set')})")
+        raise RuntimeError(f"MetaTFT가 19시즌이 아님 ({cd.get('tft_set')})")
     data = cd["results"]["data"]
     cid, details = data["cluster_id"], data["cluster_details"]
     res = cs["results"]
@@ -272,7 +277,14 @@ def pbe_decks(mk, units, traits):
 
 def main():
     ko_map = json.loads(KO.read_text()) if KO.exists() else {}
-    mk, me = get(MT.format("ko_kr")), get(MT.format("en_us"))
+    kind = "pbe" if setinfo.PBE else "latest"
+    try:
+        mk, me = get(MT.format(kind, "ko_kr")), get(MT.format(kind, "en_us"))
+    except Exception:
+        if kind != "pbe":
+            mk, me = get(MT.format("pbe", "ko_kr")), get(MT.format("pbe", "en_us"))
+        else:
+            raise
     dk = {k: get(DAK.format(k))[k] for k in ("champions", "traits", "augments", "items")}
     en_unit = {u["apiName"]: u for u in me["units"]}
     en_trait = {t["apiName"]: t for t in me["traits"]}
@@ -435,7 +447,12 @@ def main():
 
     # 2) 롤체지지 19시즌 추천 가이드 덱 (육각 보드 배치 + 추천 증강)
     try:
-        gd_raw = get("https://tft.dakgg.io/api/v1/guide-decks?hl=ko&q=new-set")
+        if setinfo.PBE:
+            gd_raw = get("https://tft.dakgg.io/api/v1/guide-decks?hl=ko&q=new-set")
+        else:
+            gd_raw = get("https://tft.dakgg.io/api/v1/guide-decks?hl=ko&season=set19")
+            if not (gd_raw.get("guideDecks") or []):
+                gd_raw = get("https://tft.dakgg.io/api/v1/guide-decks?hl=ko&q=new-set")
         dk_it = {i["key"]: i["name"] for i in get(DAK.format("items")).get("items", [])}
         dk_au = {a["key"]: a["name"] for a in dk.get("augments", [])}
         dk_ch = {}
@@ -483,7 +500,7 @@ def main():
                     trs.append([tn, cnt, st_lv])
             trs.sort(key=lambda x: (x[2] == 6, -x[2], -x[1]))
             augs_g = [dk_au[a] for a in (g.get("data") or {}).get("augments") or [] if a in dk_au]
-            # PBE 통계 덱과 자동 교차 매칭 (유닛 겹침 >= 4명 이상)
+            # 통계 덱과 자동 교차 매칭 (유닛 겹침 >= 4명 이상)
             gset = {c["k"] for c in champs}
             best_d, best_sc = None, 0.0
             for d0 in decks:
@@ -496,7 +513,7 @@ def main():
             if best_d:
                 entry.update({"sid": best_d.get("id"), "style": best_d.get("style", ""), "level": best_d.get("level"), "tier": best_d["tier"], "avg": best_d["avg"], "win": best_d["win"],
                               "top4": best_d["top4"], "pick": best_d["pick"], "plays": best_d["plays"]})
-                # 반대로 PBE 통계 덱에도 배치도가 없으면 가이드 배치·증강을 연결
+                # 반대로 통계 덱에도 배치도가 없으면 가이드 배치·증강을 연결
                 if not best_d.get("pos"):
                     pos_map = {c["k"]: c["pos"] for c in champs}
                     for cu in best_d["u"]:
@@ -511,10 +528,13 @@ def main():
         print(f"19시즌 가이드 덱 생략 ({ex})", file=sys.stderr)
 
     meta = mk.get("_metadata") or {}
-    out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "pbe": meta.get("generated", ""), "release": "2026-12-01",
+    out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+           "pbe": meta.get("generated", "") if setinfo.PBE else "",
+           "live": not setinfo.PBE,
+           "release": "2026-12-01",
            "name": "프리즘 투어", "units": units, "traits": traits, "augs": augs, "items": items,
            "guides": guides, "decks": decks, "decksPlays": decks_plays, "decksUpdated": decks_upd, "decksCid": decks_cid,
-           "src": "MetaTFT PBE 원문·덱 통계 · 롤체지지 · 라이엇 패치 노트"}
+           "src": "MetaTFT PBE 원문·덱 통계 · 롤체지지 · 라이엇 패치 노트" if setinfo.PBE else "MetaTFT 원문·덱 통계 · 롤체지지 · 라이엇 패치 노트"}
     if "--missing" in sys.argv:
         print(json.dumps(sorted(set(missing)), ensure_ascii=False, indent=0)); return
     if len(units) < 60 or len(traits) < 20:

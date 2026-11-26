@@ -76,13 +76,10 @@ def main():
             tiers[key] = {"games": games, "items": rows}
         print("PBE", games, "판", len(rows), "템")
     else:
-        for key, ranks in TIERS.items():
-            d = fetch(key, ranks)
-            if not d:
-                continue
+        def _rows_of(d):
             games = sum(g["count"] for g in d.get("games") or []) or 1
             rows = {}
-            for r in d["results"]:
+            for r in d.get("results") or []:
                 name = nm.i(r["itemName"])
                 g = group.get(name)
                 n = sum(r["places"])
@@ -91,17 +88,35 @@ def main():
                 avg = sum(c * (i + 1) for i, c in enumerate(r["places"])) / n
                 letter, score = grade(g, avg, n / games)
                 rows[name] = [n, round(avg, 2), round(100 * sum(r["places"][:4]) / n), round(100 * r["places"][0] / n, 1), letter, score]
-            tiers[key] = {"games": games, "items": rows}
-            print(key, games, "판", len(rows), "템")
+            return games, rows
 
-    # 템별 유닛 성적 (라이브는 tactics.tools 다이아+, PBE는 MetaTFT PBE unit_items 기반 db.items)
+        for key, ranks in TIERS.items():
+            d = fetch(key, ranks)
+            if not d:
+                continue
+            games, rows = _rows_of(d)
+            if len(rows) >= 50:
+                tiers[key] = {"games": games, "items": rows}
+            print(key, games, "판", len(rows), "템")
+        # 새 시즌 첫날(아직 에메+·다이아+·마스터+가 비었을 때): permit_filter_adjustment=true 원문으로 all·emer 보강
+        if "all" not in tiers or "emer" not in tiers:
+            try:
+                games_fb, rows_fb = _rows_of(T.load("items"))
+                if len(rows_fb) >= 50:
+                    for key in ("all", "emer"):
+                        tiers.setdefault(key, {"games": games_fb, "items": rows_fb})
+                    print("새 시즌 초기 보강:", games_fb, "판", len(rows_fb), "템")
+            except Exception:
+                pass
+
+    # 템별 유닛 성적 (라이브는 tactics.tools 다이아+, PBE·새 시즌 첫날은 MetaTFT unit_items/unit_detail 기반 db.items)
     units = {}
     try:
         tst = json.loads((ROOT / "data" / "tt_patch.json").read_text())
         ttp = str(tst["patch"]) if tst.get("set", setinfo.NUM) == setinfo.NUM else "none"
     except Exception:
         ttp = "none" if setinfo.PBE else ""
-    if not setinfo.PBE:
+    if not setinfo.PBE and ttp != "none":
         for f in sorted((RAW / "tt").glob((ttp + "_*.json") if ttp else "*.json")):
             d = json.loads(f.read_text())
             u = nm.u(f.stem.split("_", 1)[1] if ttp else f.stem)
@@ -115,7 +130,7 @@ def main():
     for it, us in units.items():
         rows = [[u, a[0], round(a[1] / a[0], 2), round(a[2] / a[0]), round(a[3] / a[0], 1)] for u, a in us.items()]
         by_item[it] = sorted(rows, key=lambda x: -x[1])[:12]
-    if not by_item and setinfo.PBE:
+    if not by_item:
         u_info = db.get("units") or {}
         for it, rows in (db.get("items") or {}).items():
             if group.get(it) not in GROUPS:

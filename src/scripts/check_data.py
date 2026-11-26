@@ -80,17 +80,33 @@ def check_site():
                 bad.append(f"esports.json 월즈 미정 {sum(x.get('n', 0) for x in cr['pending'])}자리인데 Liquipedia 본 페이지엔 {len(names)}명 다 있음 ({Path(f).name})")
 
     # 본섭 랭크 기록 (2026-11-23: PBE 기간에 snap_rank·snap_dist·build_friends가 공략 세트(set19)로 받아 이틀 동안 빈 채로 넘어갔다)
+    # 단, 새 세트 출시 초기 14일(data/patch_state.json set_started)에는 아직 친구들이 새 시즌 랭크를 안 돌렸거나 스냅샷이 막 시작된 날이라 경고만 출력
     sys.path.insert(0, str(ROOT / "scripts"))
     import setinfo
     from datetime import date, timedelta
+    fresh_set = False
+    try:
+        _st = load("data/patch_state.json") or {}
+        if _st.get("set_started"):
+            fresh_set = (date.today() - date.fromisoformat(_st["set_started"][:10])).days < 14
+    except Exception:
+        pass
     for kind, label in (("rank", "한국 랭킹 스냅샷(snap_rank)"), ("dist", "티어 분포(snap_dist)")):
         files = sorted((ROOT / "data" / kind / setinfo.SEASON).glob("20*.json"))
         last = files[-1].stem if files else ""
         if not last or last < (date.today() - timedelta(days=2)).isoformat():
-            bad.append(f"{label} {setinfo.SEASON} 마지막 {last or '없음'} (이틀 넘게 안 쌓임)")
+            msg = f"{label} {setinfo.SEASON} 마지막 {last or '없음'} (이틀 넘게 안 쌓임)"
+            if fresh_set:
+                print("참고(새 시즌 초기):", msg)
+            else:
+                bad.append(msg)
     fr = (load("site/friends.json") or {}).get("players") or []
     if fr and not any(p.get("matches") or p.get("_logs") for p in fr):
-        bad.append(f"friends.json 친구 {len(fr)}명 전원 판·LP 기록 0 ({setinfo.SEASON})")
+        msg = f"friends.json 친구 {len(fr)}명 전원 판·LP 기록 0 ({setinfo.SEASON})"
+        if fresh_set:
+            print("참고(새 시즌 초기):", msg)
+        else:
+            bad.append(msg)
 
     # 19시즌 도감 수치 (2026-11-23): format="percent"를 못 읽어 '0.12 주문력', 곡선 점 사이를 안 이어 비전 마법사 2·4단계 '0 주문력'이던 것
     s19 = load("site/s19.json") or {}
