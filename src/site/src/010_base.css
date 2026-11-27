@@ -20,7 +20,7 @@
   --accent2: #0369A1; --accent2-soft: #E0F2FE;
   --moss: #12805A; --moss-soft: #E2F3EB; --warn: #C23A30; --warn-soft: #FDE8E6;
   --pl5-bg: #E3E6EB; --pl5-ink: #4B5563;
-  --c1: #8a9099; --c2: #1c9a6f; --c3: #2f78c4; --c4: #a24bc0; --c5: #d39a2a;
+  --c1: #8a9099; --c2: #1c9a6f; --c3: #2f78c4; --c4: #a24bc0; --c5: #d39a2a; --c7: #ff4d8d;
   --display: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
   --body: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
   --mono: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
@@ -43,7 +43,7 @@
     --accent2: #38BDF8; --accent2-soft: #0F2536;
     --moss: #3ECF8E; --moss-soft: #11271D; --warn: #FF6B5E; --warn-soft: #351614;
     --pl5-bg: var(--sunk); --pl5-ink: var(--muted);
-    --c1: #8f96a1; --c2: #22b07f; --c3: #4b93e0; --c4: #bd66dd; --c5: #e5a93a;
+    --c1: #8f96a1; --c2: #22b07f; --c3: #4b93e0; --c4: #bd66dd; --c5: #e5a93a; --c7: #ff4d8d;
     color-scheme: dark;
   }
 }
@@ -58,7 +58,7 @@
   --accent2: #38BDF8; --accent2-soft: #0F2536;
   --moss: #3ECF8E; --moss-soft: #11271D; --warn: #FF6B5E; --warn-soft: #351614;
   --pl5-bg: var(--sunk); --pl5-ink: var(--muted);
-  --c1: #8f96a1; --c2: #22b07f; --c3: #4b93e0; --c4: #bd66dd; --c5: #e5a93a;
+  --c1: #8f96a1; --c2: #22b07f; --c3: #4b93e0; --c4: #bd66dd; --c5: #e5a93a; --c7: #ff4d8d;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -104,7 +104,7 @@ ul.plain { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
 .u img, .it img, .ag img { width: 22px; height: 22px; border-radius: 4px; flex: none; background: var(--sunk); }
 .u img { border: 2px solid var(--c1); width: 26px; height: 26px; border-radius: 5px; }
 .u[data-cost="2"] img { border-color: var(--c2); } .u[data-cost="3"] img { border-color: var(--c3); }
-.u[data-cost="4"] img { border-color: var(--c4); } .u[data-cost="5"] img { border-color: var(--c5); }
+.u[data-cost="4"] img { border-color: var(--c4); } .u[data-cost="5"] img { border-color: var(--c5); } .u[data-cost="7"] img { border-color: var(--c7); }
 .ag img { border-radius: 50%; }
 .tr { width: 22px; height: 22px; vertical-align: -4px; margin-right: 4px; filter: brightness(0) saturate(100%); opacity: .75; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tr { filter: brightness(0) invert(1); } }

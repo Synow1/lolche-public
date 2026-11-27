@@ -34,6 +34,7 @@
   }
   function unLiveApply(L) {
     if (!L || !DB || !L.u) return;
+    if (L.pbe !== !!DB.pbe) return;
     if (L.at <= Date.parse(DB.updated || 0)) return;
     var tot = L.g || DB.games || 1;
     Object.keys(L.u).forEach(function (api) {
@@ -69,7 +70,7 @@
     btn.disabled = true; btn.textContent = "불러오는 중";
     var url = DB.pbe
       ? "https://api-hc.metatft.com/tft-stat-api/units?queue=PBE&patch=current&days=3"
-      : "https://api-hc.metatft.com/tft-stat-api/units?queue=1100&patch=current&days=3&rank=EMERALD,DIAMOND,MASTER,GRANDMASTER,CHALLENGER";
+      : "https://api-hc.metatft.com/tft-stat-api/units?queue=1100&patch=current&days=3&rank=EMERALD,DIAMOND,MASTER,GRANDMASTER,CHALLENGER&permit_filter_adjustment=true";
     viaApp(url).then(function (r) {
       var res = r && r.results;
       if (!res || !res.length) throw new Error("empty");
@@ -82,7 +83,7 @@
         var vals = Object.keys(uMap).map(function (k) { return uMap[k].reduce(function (a, b) { return a + b; }, 0); });
         tot = vals.length ? Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / 8) : (DB.games || 1);
       }
-      var L = { at: Date.now(), g: tot, u: uMap };
+      var L = { at: Date.now(), pbe: !!DB.pbe, g: tot, u: uMap };
       try { localStorage.setItem(UN_LIVE, JSON.stringify(L)); } catch (e) {}
       unLiveApply(L);
       unitsRender();
@@ -321,7 +322,7 @@
           rbtn.disabled = true; rbtn.textContent = "불러오는 중";
           var url = "https://api-hc.metatft.com/tft-stat-api/unit_detail?unit=" + encodeURIComponent(u.api)
             + "&queue=" + (DB.pbe ? "PBE" : "1100") + "&patch=current&days=3"
-            + (DB.pbe ? "" : "&rank=DIAMOND,MASTER,GRANDMASTER,CHALLENGER");
+            + (DB.pbe ? "" : "&rank=DIAMOND,MASTER,GRANDMASTER,CHALLENGER&permit_filter_adjustment=true");
           viaApp(url).then(function (d) {
             if (unParseDetail(u, d)) { render(); if (unReady) unitsRender(); }
             else { rbtn.disabled = false; rbtn.textContent = "새로고침"; }

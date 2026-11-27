@@ -33,8 +33,18 @@ STYLE_KO = {"4-Cost Fast 8": "4코 8렙 운영", "Fast 9": "9렙 운영", "3-Cos
             "1-Cost Reroll": "1코 리롤", "Lose Streak": "연패 운영", "5-Cost Fast 9": "9렙 운영"}
 DIFF_KO = {"EASY": "쉬움", "MEDIUM": "보통", "HARD": "어려움", "CONDITIONAL": "조건부"}
 STAGE_KO = {"Stage 2": "2스테이지", "Stage 3": "3스테이지", "Stage 4": "4스테이지", "Stage 5": "5스테이지"}
-AUG_EXTRA = {"DA_18_RiftbeastTraitAugmentStampede": "정글 동선", "DA_18_FloraFatalisAugmentPlus": "흡수하는 꽃+",
-             "DA_PandorasItemsII": "판도라의 아이템 II"}  # 한국어 원문에 아직 없는 증강
+AUG_EXTRA = {
+    "DA_18_RiftbeastTraitAugmentStampede": "정글 동선", "DA_18_FloraFatalisAugmentPlus": "흡수하는 꽃+",
+    "DA_PandorasItemsII": "판도라의 아이템 II",
+    "DA_KeepingTempo": "템포 유지", "DA_KnowledgeDownloadI": "지식 다운로드", "DA_KnowledgeDownloadII": "지식 다운로드 II",
+    "DA_GainGold": "21골드 획득", "DA_GainGoldPlus": "28골드 획득",
+    "DA_BundleOShroomsSilver": "버섯 한 다발", "DA_BundleOShroomsGold": "버섯 한 다발 II",
+    "DA_CritQuintessence": "치명타 룬", "DA_CritQuintessencePlus": "치명타 룬+",
+    "DA_FeelingLucky": "행운의 기운", "DA_FeelingLuckyPlus": "행운의 기운+",
+    "DA_BlindBox": "무작위 상자", "DA_BlindBoxPlus": "무작위 상자+", "DA_BlindBoxPlusPlus": "무작위 상자++",
+    "DA_BlindBoxII": "무작위 상자 II", "DA_BlindBoxIIPlus": "무작위 상자 II+",
+    "DA_19_ManagerCirclet": "매니저 머리띠", "DA_CountingStars": "별 헤아리기", "DA_HardCommit": "극진한 헌신",
+}  # MetaTFT lookup apiName과 TFA apiName이 다르거나 중복·누락된 증강
 ITEM_TYPE = {"craftables": "조합템", "emblems": "상징", "radiants": "찬란한", "ornns": "유물"}
 
 
@@ -54,7 +64,14 @@ def main():
         with urllib.request.urlopen(urllib.request.Request(T.SOURCES["lookup_ko"], headers=T.HEADERS), timeout=60) as r:
             lk_path.write_bytes(r.read())
     lk = json.loads(lk_path.read_text())
-    na = {a["apiName"]: a["name"] for a in lk["augments"]}
+    na = {}
+    for a in lk["augments"]:
+        na.setdefault(a["apiName"], a["name"])
+    na_ic = {}
+    for a in lk["augments"]:
+        stem = re.sub(r"^t_augmenticon_", "", (a.get("icon") or "").lower()).replace("_", "").replace("-", "")
+        if stem and stem not in na_ic:
+            na_ic[stem] = a["name"]
     for i in lk["items"] + lk.get("armory_items", []):
         ni.setdefault(i["apiName"], i["name"])
     ko = json.loads(KO.read_text(encoding="utf-8")) if KO.exists() else {}
@@ -70,7 +87,14 @@ def main():
 
     unit = lambda a: (nu.get(a) or [a])[0]
     item = lambda a: ni.get(a, a)
-    aug = lambda a: na.get(a) or na.get(a.replace("_18_", "_")) or AUG_EXTRA.get(a) or a
+    def aug(a):
+        if not a:
+            return ""
+        v = AUG_EXTRA.get(a) or na.get(a) or na.get(re.sub(r"_(18|19|20)_", "_", a))
+        if v:
+            return v
+        stem = re.sub(r"^(DA|TFT\d*)_(\d+_)?", "", a).lower().replace("_", "")
+        return na_ic.get(stem) or a
 
     def board(arr, pos=False):
         out = []
@@ -139,7 +163,7 @@ def main():
     if "--missing" in sys.argv:
         print(json.dumps(sorted(set(missing)), ensure_ascii=False, indent=0))
         return
-    if sum(1 for c in comps if not c["var"]) < 10 or (not setinfo.PBE and (not augs or not items)):  # 비어 오면 지난 파일을 그대로 둔다
+    if sum(1 for c in comps if not c["var"]) < 10:  # 덱 자체가 비어 오면 지난 파일을 그대로 둔다 (새 세트 초반 증강·아이템 표 미공개는 허용)
         sys.exit(f"TFT 아카데미 데이터 이상: 덱 {len(comps)} · 증강 {len(augs)} · 아이템 {len(items)}")
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "set": SET, "comps": comps, "augs": augs, "items": items,
            "source": "TFT Academy (Dishsoap, Frodan)"}

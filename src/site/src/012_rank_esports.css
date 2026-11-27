@@ -409,7 +409,7 @@
 .pick .face { width: 42px; height: 42px; border-radius: 7px; border: 2px solid var(--line); overflow: hidden; background: var(--sunk); display: grid; place-items: center; font-size: var(--fs-xs); }
 .pick .face img { width: 100%; height: 100%; display: block; }
 .pick [data-cost="1"] .face { border-color: var(--c1); } .pick [data-cost="2"] .face { border-color: var(--c2); } .pick [data-cost="3"] .face { border-color: var(--c3); }
-.pick [data-cost="4"] .face { border-color: var(--c4); } .pick [data-cost="5"] .face { border-color: var(--c5); }
+.pick [data-cost="4"] .face { border-color: var(--c4); } .pick [data-cost="5"] .face { border-color: var(--c5); } .pick [data-cost="7"] .face { border-color: var(--c7); }
 .pick .on .face { outline: 3px solid var(--accent); outline-offset: 1px; }
 .pick .nm { font-size: var(--fs-xs); color: var(--muted); max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pick .none { color: var(--muted); font-size: var(--fs-m); }
@@ -418,7 +418,7 @@
 .fhead .face { width: 56px; height: 56px; border-radius: 9px; border: 3px solid var(--c1); overflow: hidden; flex: none; background: var(--sunk); }
 .fhead .face img { width: 100%; height: 100%; display: block; }
 .fhead[data-cost="2"] .face { border-color: var(--c2); } .fhead[data-cost="3"] .face { border-color: var(--c3); }
-.fhead[data-cost="4"] .face { border-color: var(--c4); } .fhead[data-cost="5"] .face { border-color: var(--c5); }
+.fhead[data-cost="4"] .face { border-color: var(--c4); } .fhead[data-cost="5"] .face { border-color: var(--c5); } .fhead[data-cost="7"] .face { border-color: var(--c7); }
 .fhead h3 { margin: 0; font-size: var(--fs-3xl); line-height: 1.25; }
 .fhead p { margin: 2px 0 0; font-size: var(--fs-m); color: var(--muted); }
 .fcard h4 { margin: 16px 0 6px; font-size: var(--fs-b); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
@@ -474,7 +474,7 @@
 .mu .face { width: 40px; height: 40px; border-radius: 6px; border: 2px solid var(--c1); overflow: hidden; background: var(--line); }
 .mu .face img { width: 100%; height: 100%; display: block; }
 .mu[data-cost="2"] .face { border-color: var(--c2); } .mu[data-cost="3"] .face { border-color: var(--c3); }
-.mu[data-cost="4"] .face { border-color: var(--c4); } .mu[data-cost="5"] .face { border-color: var(--c5); }
+.mu[data-cost="4"] .face { border-color: var(--c4); } .mu[data-cost="5"] .face { border-color: var(--c5); } .mu[data-cost="7"] .face { border-color: var(--c7); }
 .mu .stars { font-size: var(--fs-2xs); line-height: 1; color: var(--accent); letter-spacing: -1px; }
 .mu .its { display: flex; gap: 1px; min-height: 14px; }
 .mu .its img { width: 14px; height: 14px; border-radius: 2px; }

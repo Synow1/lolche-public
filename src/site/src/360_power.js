@@ -173,6 +173,7 @@
   function powerReadyS19(d) {
     POWER_S19 = d; pwSyncTabs(); pwFlushWait();
     if (current === "power") pwRender();
+    if (typeof frView !== "undefined" && frView === "top" && current === "friends") frTop();
   }
   function powerTag(units, traits, level, small, setNum) {
     var mSet = setNum || detectMatchSet({ units: units, traits: traits });

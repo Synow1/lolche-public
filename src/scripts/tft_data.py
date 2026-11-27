@@ -118,10 +118,28 @@ def _enrich_pbe_lookup(raw_bytes):
 
 def fetch():
     RAW.mkdir(exist_ok=True)
+    opt_tier = tuple(f"_{_t}" for _t in TIERS)
     for name, url in SOURCES.items():
         req = urllib.request.Request(url, headers=HEADERS)
-        with urllib.request.urlopen(req, timeout=60) as r:
-            body = r.read()
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                body = r.read()
+        except Exception as e:
+            if name == "lookup_ko" and not setinfo.PBE and "_latest_ko_kr.json" in url:
+                fb = url.replace("_latest_ko_kr.json", "_pbe_ko_kr.json")
+                print(f"lookup_ko latest 실패({e}) -> pbe 폴백")
+                with urllib.request.urlopen(urllib.request.Request(fb, headers=HEADERS), timeout=60) as r:
+                    body = r.read()
+            elif not setinfo.PBE and name.endswith(opt_tier):
+                base = name.rsplit("_", 1)[0]
+                src = RAW / f"{base}.json"
+                if src.exists():
+                    (RAW / f"{name}.json").write_bytes(src.read_bytes())
+                    print(f"warn: {name} 실패({e}) -> {base} 복사")
+                    continue
+                raise
+            else:
+                raise
         if name == "lookup_ko" and setinfo.PBE:
             lk = _enrich_pbe_lookup(body)
             (RAW / f"{name}.json").write_text(json.dumps(lk, ensure_ascii=False), encoding="utf-8")

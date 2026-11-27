@@ -373,6 +373,8 @@ def main():
     pkey = lambda p: [(int(re.match(r"\d+", x).group()), x) for x in p.split(".")]  # 18.5c > 18.5b > 18.5
     # 지금 세트만 (세트가 바뀌면 처음부터)
     setn = max((m["p"].split(".")[0] for m in ms), key=int, default="0")
+    if setn == "0":
+        setn = str(_si.NUM if PBE else _si.LIVE_NUM)
     ms = [m for m in ms if m["p"].split(".")[0] == setn]
     # 최근 3주 안에서, 최신 패치부터 2000판 이상 모일 때까지 앞 패치를 더한다 (모자라면 3주 넘은 판도)
     now = max((m["t"] for m in ms), default=0)
@@ -387,9 +389,12 @@ def main():
         if n >= WANT:
             break
     ms = sorted([m for m in pool if m["p"] in use], key=lambda m: -m["t"])
-    if len(ms) < MIN_GAMES:  # 새 세트 첫날 등: 판이 너무 적으면 덱파워는 끄고 필드 가치만
-        OUT.write_text(json.dumps({"off": True, "n": len(ms), "set": setn, "updated": datetime.now(timezone.utc).isoformat(timespec="minutes")}), encoding="utf-8")
-        print(f"판 {len(ms)}개뿐 -> 덱파워 끔 (필드 가치만)")
+    if len(ms) < MIN_GAMES:  # 새 세트 첫날 등: 판이 너무 적으면 덱파워는 끄고 필드 가치만 (지난 시즌 power_top도 같이 비움)
+        now_iso = datetime.now(timezone.utc).isoformat(timespec="minutes")
+        OUT.write_text(json.dumps({"off": True, "n": len(ms), "set": setn, "pbe": PBE, "updated": now_iso}), encoding="utf-8")
+        bands = [("all", "전체", 0, 9)] if PBE else BAND
+        TOP.write_text(json.dumps({"updated": now_iso, "set": setn, "pbe": PBE, "bands": [[k, nm] for k, nm, _, _ in bands], "top": {k: [] for k, _, _, _ in bands}}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        print(f"판 {len(ms)}개뿐 -> 덱파워 끔 (필드 가치만, {TOP.name} 초기화)")
         return
     use_shop = PBE or (str(setn) == str(_si.NUM))
     cost = {}

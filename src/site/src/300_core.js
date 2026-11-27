@@ -390,11 +390,11 @@
     document.querySelectorAll(".ag img").forEach(function (im) {
       var a = DB.info.a[im.parentNode.textContent.trim()]; if (a) im.dataset.r = a.r;
     });
-        var q = document.getElementById("find-q");
-    document.querySelectorAll(".seg button").forEach(function (b) {
+    var q = document.getElementById("find-q");
+    document.querySelectorAll("#find .seg button").forEach(function (b) {
       b.addEventListener("click", function () {
         findMode = b.dataset.mode;
-        document.querySelectorAll(".seg button").forEach(function (x) {
+        document.querySelectorAll("#find .seg button").forEach(function (x) {
           x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b ? "true" : "false");
         });
         q.value = ""; document.getElementById("find-out").innerHTML = ""; findList();
@@ -403,9 +403,11 @@
     q.addEventListener("input", findList);
     var last = null;
     try { last = JSON.parse(localStorage.getItem(FIND_KEY) || "null"); } catch (e) {}
-    if (last && last[0] === "i") document.querySelector('.seg button[data-mode="i"]').click();
+    if (last && last[0] === "i") document.querySelector('#find .seg button[data-mode="i"]').click();
     findList();
-    findShow(findMode, last && (last[0] === "u" ? DB.units : DB.items)[last[1]] ? last[1] : "덩굴정령", false);
+    var defFind = last && (last[0] === "u" ? DB.units : DB.items)[last[1]] ? last[1]
+      : (findMode === "u" ? (DB.units["스미치"] ? "스미치" : Object.keys(DB.units).sort(function (a, b) { return ((DB.units[b].cost || 0) - (DB.units[a].cost || 0)) || a.localeCompare(b, "ko"); })[0]) : Object.keys(DB.items)[0]);
+    if (defFind) findShow(findMode, defFind, false);
   }
 
   /* ---- 팀 플래너 코드 복사: 게임 팀 플래너에서 붙여넣으면 그 덱이 그대로 뜬다 ---- */
@@ -803,7 +805,7 @@
     var named = held.filter(function (b) { return nm.indexOf(b.u) >= 0; }).sort(function (a, b) { return nm.indexOf(a.u) - nm.indexOf(b.u); });
     return named[0] || held.sort(function (a, b) { return b.i.length - a.i.length; })[0] || c[0] || null;
   }
-  var COST_C = { 1: "var(--c1)", 2: "var(--c2)", 3: "var(--c3)", 4: "var(--c4)", 5: "var(--c5)" };
+  var COST_C = { 1: "var(--c1)", 2: "var(--c2)", 3: "var(--c3)", 4: "var(--c4)", 5: "var(--c5)", 7: "var(--c7)" };
   function dkPortrait(b, tier) {  // 육각형 초상 + 티어 + 템
     var w = el("div", "dk-mc"); if (!b) return w;
     if (b.u) w.dataset.unit = b.u;

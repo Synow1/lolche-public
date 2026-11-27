@@ -231,10 +231,11 @@
   }
 
   function augSheet(name) {
-    var inf = DB && DB.info.a[name];
+    var base = name.replace(/\+*$/, "");
+    var inf = DB && (DB.info.a[name] || DB.info.a[base]);
     if (!inf) return null;
     var box = el("div");
-    var ah = shHead(IDX.augments[name], null, name, [inf.r, inf.t ? inf.t + "티어" : ""].filter(Boolean).join(" · "));
+    var ah = shHead(IDX.augments[name] || IDX.augments[base], null, name, [inf.r, inf.t ? inf.t + "티어" : ""].filter(Boolean).join(" · "));
     var aim = ah.querySelector(".sh-face img"); if (aim) aim.dataset.r = inf.r;
     box.appendChild(ah);
     var s = shSec(); s.appendChild(el("p", "sh-text", inf.d)); box.appendChild(s);
@@ -242,7 +243,7 @@
   }
 
   function setFindMode(mode) {
-    var b = document.querySelector('.seg button[data-mode="' + mode + '"]');
+    var b = document.querySelector('#find .seg button[data-mode="' + mode + '"]');
     if (b && !b.classList.contains("on")) b.click();
   }
 

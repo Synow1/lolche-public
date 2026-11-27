@@ -1481,11 +1481,17 @@ function fresh(file, key, hours) {
       }
     }
 
-    // ⑦ 18시즌 잔재 차단 & 19시즌 본섭(12/1) 자동 전환 모의 검증
+    // ⑦ 18시즌 잔재 차단 & 7코·#find·아카데미 무결성 & 19시즌 본섭(12/2) 자동 전환 모의 검증
     {
       const idx = JSON.parse(fs.readFileSync(path.join(SITE, 'icons', 'index.json'), 'utf8'));
       const x18 = Object.keys(idx.units || {}).filter(k => /\/x_/.test((idx.units[k] || {}).icon || ''));
       if (x18.length) fail('회귀 검사 ⑦: icons/index.json에 18시즌 잔재 유닛이 남음 ' + x18.join(', '));
+      // 아카데미(tfa.json) 미매핑 영문 증강 코드(DA_/TFT*) 잔존 금지
+      const tfa = JSON.parse(fs.readFileSync(path.join(SITE, 'tfa.json'), 'utf8'));
+      const rawTfaAugs = [];
+      for (const c of (tfa.comps || [])) for (const a of (c.augs || []).concat(c.mainAug ? [c.mainAug] : [])) if (/^(DA_|TFT)/.test(a)) rawTfaAugs.push(a);
+      for (const st of Object.values(tfa.augs || {})) for (const td of Object.values(st || {})) for (const arr of Object.values(td || {})) for (const a of (arr || [])) if (/^(DA_|TFT)/.test(a)) rawTfaAugs.push(a);
+      if (rawTfaAugs.length) fail('회귀 검사 ⑦: tfa.json에 번역/매핑 누락 영문 증강 코드 잔존 ' + [...new Set(rawTfaAugs)].slice(0, 6).join(', '));
       for (const tab of ['flow', 'scout']) {
         await pg.evaluate((t) => { const a = document.createElement('a'); a.href = '#' + t; document.body.appendChild(a); a.click(); a.remove(); }, tab);
         await pg.waitForTimeout(200);
@@ -1496,6 +1502,25 @@ function fresh(file, key, hours) {
         }, tab);
         if (rem.length) fail(`회귀 검사 ⑦: #${tab}에 18시즌 잔재 문구가 남음 ${[...new Set(rem)].join(', ')}`);
       }
+      // #items 가이드 탭에 18시즌 잔재 문구 노출 금지
+      await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#items'; document.body.appendChild(a); a.click(); a.remove(); document.querySelector('#it-seg [data-v="guide"]')?.click(); });
+      await pg.waitForTimeout(200);
+      const itRem = await pg.evaluate(() => {
+        const g = document.getElementById('it-guide');
+        const txt = g ? [...g.querySelectorAll('*')].filter(e => !e.hidden && e.offsetParent !== null && !e.children.length).map(e => e.textContent).join(' ') : '';
+        return (txt.match(/치명적인 꽃|조약돌|다이애나|덩굴정령/g) || []);
+      });
+      if (itRem.length) fail(`회귀 검사 ⑦: #items 가이드에 18시즌 잔재 문구 노출 ${[...new Set(itRem)].join(', ')}`);
+      // #builder 팀 빌더에 7코스트 기물(스미치 등 4명) 포함 확인
+      await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#builder'; document.body.appendChild(a); a.click(); a.remove(); });
+      await pg.waitForTimeout(200);
+      const tb7 = await pg.evaluate(() => [...document.querySelectorAll('#tb-pool .tb-unit[data-c="7"]')].map(b => b.dataset.name));
+      if (tb7.length < 4 || !tb7.includes('스미치')) fail('회귀 검사 ⑦: #builder 팀 빌더에 7코스트 기물 누락 ' + JSON.stringify(tb7));
+      // #find 첫 방문 시 빈 화면 금지 (18시즌 '덩굴정령' 기본값 회귀 방지)
+      await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#find'; document.body.appendChild(a); a.click(); a.remove(); });
+      await pg.waitForTimeout(200);
+      const findH3 = await pg.evaluate(() => (document.querySelector('#find-out h3') || {}).textContent || '');
+      if (!findH3) fail('회귀 검사 ⑦: #find 기본 화면이 비어 있음');
     }
 
     if (errs.length) fail('회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));

@@ -45,7 +45,7 @@
     o.units.forEach(function (u) {
       var c = el("div", "pcdk-u"); c.title = u.name + (u.s >= 3 ? " 3성" : "");
       c.appendChild(el("span", "pcdk-st", u.s >= 3 ? "★★★" : ""));
-      var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[Math.min(u.c || 1, 5)] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
+      var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[u.c || 1] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
       if (u.lock) { c.appendChild(lockBadge()); c.title += " · 해금 챔피언"; }
       if (u.unit) {
         c.dataset.unit = u.unit;
@@ -603,7 +603,7 @@
       box.appendChild(row);
     });
     if (!rows.length) box.appendChild(el("p", "empty", "맞는 템이 없어요"));
-    document.getElementById("it-note").textContent = unit ? unit + " 착용 · 다이아+ · 출처 tactics.tools" : "";
+    document.getElementById("it-note").textContent = unit ? unit + " 착용 · " + (ITEMS && ITEMS.pbe ? "19시즌 PBE · 출처 MetaTFT" : "다이아+ · 출처 tactics.tools") : "";
     itUpdLabel(rank, games);
     try { localStorage.setItem(IT_KEY, JSON.stringify({ g: itGrp, r: rank, s: sort })); } catch (e) {}
   }
@@ -623,6 +623,7 @@
   }
   function itApplyLive(L) {
     if (!L || !ITEMS || !DB) return;
+    if (L.pbe !== !!ITEMS.pbe) return;
     if (L.at <= Date.parse(ITEMS.updated)) return;  // 앱 데이터가 더 새로우면 그대로
     Object.keys(L.t).forEach(function (k) {
       var x = L.t[k], rows = {};
@@ -642,12 +643,12 @@
       ? viaApp("https://api-hc.metatft.com/tft-stat-api/items_matches?queue=PBE&patch=current&days=3").then(function (d) {
           var g = (d.games || []).reduce(function (a, x) { return a + (x.count || 0); }, 0) || 1;
           var rec = { g: g, r: (d.results || []).map(function (r) { return [r.itemName, (r.places || []).slice(0, 8)]; }) };
-          return { at: Date.now(), t: { all: rec, emer: rec } };
+          return { at: Date.now(), pbe: true, t: { all: rec, emer: rec } };
         })
       : (function () {
           var keys = Object.keys(IT_RANK_Q);
           return Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-stat-api/items_matches?queue=1100&patch=current&days=3&rank=" + IT_RANK_Q[k] + "&permit_filter_adjustment=true"); })).then(function (rs) {
-            var L = { at: Date.now(), t: {} };
+            var L = { at: Date.now(), pbe: false, t: {} };
             keys.forEach(function (k, i) {
               var d = rs[i] || {}, g = (d.games || []).reduce(function (a, x) { return a + (x.count || 0); }, 0) || 1;
               L.t[k] = { g: g, r: (d.results || []).map(function (r) { return [r.itemName, (r.places || []).slice(0, 8)]; }) };
@@ -770,7 +771,7 @@
   function metaLoadLive() {
     try {
       var L = JSON.parse(localStorage.getItem(META_LIVE) || "null");
-      if (L && L.cid === String(META.cluster_id || L.cid) && (L.days || 3) === mtDays && (L.at > metaAt() || mtDays !== 3)) metaApply(L);
+      if (L && L.pbe === !!META.pbe && L.cid === String(META.cluster_id || L.cid) && (L.days || 3) === mtDays && (L.at > metaAt() || mtDays !== 3)) metaApply(L);
     } catch (e) {}
   }
   function metaUpdLabel(msg) {
@@ -793,14 +794,17 @@
           if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel("덱 구성이 바뀌어 다음 업데이트 때 반영돼요"); return null; }
           var m = {}, tot = 1;
           (r.results || []).forEach(function (x) { if (x.cluster) m[x.cluster] = x.places; else tot = x.places[0]; });
-          return { at: Date.now(), cid: cid, days: days, s: { all: m, emer: m }, total: tot, totals: { all: tot, emer: tot }, src: r.updated || 0 };
+          return { at: Date.now(), pbe: true, cid: cid, days: days, s: { all: m, emer: m }, total: tot, totals: { all: tot, emer: tot }, src: r.updated || 0 };
         })
       : (function () {
           var keys = Object.keys(RANK_Q);
-          return Promise.all(keys.map(function (k) { return viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=" + days + "&permit_filter_adjustment=false&rank=" + RANK_Q[k]); })).then(function (rs) {
+          return Promise.all(keys.map(function (k) {
+            var pfa = (k === "all" || k === "emer") ? "true" : "false";
+            return viaApp("https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=" + days + "&permit_filter_adjustment=" + pfa + "&rank=" + RANK_Q[k]);
+          })).then(function (rs) {
             var cid = String(rs[0].cluster_id);
             if (META.cluster_id && cid !== String(META.cluster_id)) { metaUpdLabel(WEB ? "덱 구성이 바뀌어 다음 업데이트 때 반영돼요" : "덱 구성이 바뀌어서 다음 앱 업데이트 때 반영돼요"); return null; }
-            var L = { at: Date.now(), cid: cid, days: days, s: {}, total: 1, totals: {}, src: 0 };
+            var L = { at: Date.now(), pbe: false, cid: cid, days: days, s: {}, total: 1, totals: {}, src: 0 };
             keys.forEach(function (k, i) {
               L.s[k] = {}; L.src = Math.max(L.src, rs[i].updated || 0);
               (rs[i].results || []).forEach(function (r) { if (r.cluster) L.s[k][r.cluster] = r.places; else { L.totals[k] = r.places[0]; if (k === "all") L.total = r.places[0]; } });

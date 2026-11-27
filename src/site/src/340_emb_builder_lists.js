@@ -44,8 +44,8 @@
       if (ic) h.appendChild(img(ic.icon, ""));
       var t = el("div"); t.appendChild(el("h3", null, n));
       var a = embStat(n, "all"), lo = embStat(n, "low"), p = el("p");
-      p.appendChild(document.createTextNode("단 판 평균 에메+ ")); p.appendChild(el("b", null, a[1].toFixed(2)));
-      if (lo) { p.appendChild(document.createTextNode(" · 플래 미만 ")); p.appendChild(el("b", null, lo[1].toFixed(2))); }
+      p.appendChild(document.createTextNode(ITEMS && ITEMS.pbe ? "단 판 평균 " : "단 판 평균 에메+ ")); p.appendChild(el("b", null, a[1].toFixed(2)));
+      if (lo && !(ITEMS && ITEMS.pbe)) { p.appendChild(document.createTextNode(" · 플래 미만 ")); p.appendChild(el("b", null, lo[1].toFixed(2))); }
       p.appendChild(document.createTextNode(" · " + a[4] + "등급"));
       t.appendChild(p); h.appendChild(t);
       if (ic && ic.recipe && ic.recipe.length) {
@@ -63,7 +63,7 @@
           var sp = el("span"), u = IDX.units[x[0]]; if (u) sp.appendChild(img(u.icon, ""));
           sp.appendChild(document.createTextNode(x[0])); sp.appendChild(el("b", null, x[2].toFixed(2))); sp.dataset.unit = x[0]; hd.appendChild(sp);
         });
-        c.appendChild(sec("많이 넣는 챔피언", "다이아+ · 단 판 평균"));
+        c.appendChild(sec("많이 넣는 챔피언", (ITEMS && ITEMS.pbe ? "PBE" : "다이아+") + " · 단 판 평균"));
         c.appendChild(hd);
       }
       out.appendChild(c);
@@ -261,12 +261,12 @@
   function tbPool() {
     var box = document.getElementById("tb-pool"), q = document.getElementById("tb-q").value.trim();
     box.innerHTML = "";
-    for (var c = 1; c <= 5; c++) {
+    [1, 2, 3, 4, 5, 7].forEach(function (c) {
       var names = Object.keys(DB.units).filter(function (n) {
         var u = DB.units[n];
         return u.cost === c && (!q || matches(n, q) || u.traits.some(function (t) { return matches(t, q); }));
       }).sort(function (a, b) { return a.localeCompare(b, "ko"); });
-      if (!names.length) continue;
+      if (!names.length) return;
       var row = el("div", "tb-row"); row.appendChild(el("b", null, c + "코"));
       names.forEach(function (n) {
         var b = el("button", "tb-unit"); b.type = "button"; b.dataset.name = n; b.dataset.c = c;
@@ -285,7 +285,7 @@
         row.appendChild(b);
       });
       box.appendChild(row);
-    }
+    });
     tbRender();
   }
   function buildBuilder() {
@@ -293,7 +293,9 @@
     document.getElementById("tb-clear").addEventListener("click", function () { tbUnits = []; tbSave(); tbRender(); });
     document.getElementById("tb-copy").addEventListener("click", function () {
       var code = codeOfNames(tbUnits); if (!code) return;
-      copyText(code).then(function () { toast("팀 코드를 복사했어요. 게임의 팀 플래너에 붙여넣어 주세요"); })
+      var miss = codeMiss(tbUnits);
+      var tail = miss.length ? " 빠진 챔피언: " + miss.join(", ") + ". 게임 코드가 아직 없어서 팀 플래너에서 직접 넣어 주세요" : " 게임의 팀 플래너에 붙여넣어 주세요";
+      copyText(code).then(function () { toast("팀 코드를 복사했어요." + tail); })
         .catch(function () { toast("복사하지 못했어요. 아래 코드를 길게 눌러 복사해 주세요", code); });
     });
     tbPool();

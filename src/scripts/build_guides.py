@@ -134,6 +134,9 @@ def main():
     augs = {a["key"]: a for a in augref}
     guides = meta["getGuideDecks"]
     live = next((g["name"] for g in guides["guides"] if g["key"] == "live"), "")
+    m_set = re.search(r"v?(\d+)\.", live or "")
+    if m_set and int(m_set.group(1)) != T.setinfo.NUM:
+        sys.exit(f"lolchess.gg/meta가 아직 세트 {m_set.group(1)}({live})라 세트 {T.setinfo.NUM} guides.json을 덮어쓰지 않음")
 
     # 시너지 단계 색: 우리 시너지 이름 -> [[최소, 최대, 색]]. Riot 데이터(effects.style)가 기준
     # (롤체지지 styles는 나무정령·악의 여단처럼 틀린 게 있다)

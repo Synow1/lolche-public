@@ -145,17 +145,18 @@
   function s19LiveLoad() {
     try {
       var L = JSON.parse(localStorage.getItem(S19_LIVE) || "null");
-      if (L && L.cid === String(S19.decksCid) && L.src > Date.parse(S19.decksUpdated || 0)) s19Apply(L);
+      if (L && L.pbe === s19IsPbe() && L.cid === String(S19.decksCid) && L.src > Date.parse(S19.decksUpdated || 0)) s19Apply(L);
     } catch (e) {}
   }
   function s19Refresh(btn, note) {
     btn.disabled = true; btn.textContent = "불러오는 중";
-    var url = s19IsPbe()
+    var pbe = s19IsPbe();
+    var url = pbe
       ? "https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=PBE&patch=current&days=3"
       : "https://api-hc.metatft.com/tft-comps-api/comps_stats?queue=1100&patch=current&days=3&rank=EMERALD,DIAMOND,MASTER,GRANDMASTER,CHALLENGER&permit_filter_adjustment=true";
     viaApp(url).then(function (r) {
       if (S19.decksCid && String(r.cluster_id) !== String(S19.decksCid)) { note.textContent = "덱 구성이 바뀌어 다음 업데이트 때 반영돼요"; return; }
-      var L = { at: Date.now(), cid: String(r.cluster_id), s: {}, total: 1, src: r.updated || Date.now() };
+      var L = { at: Date.now(), pbe: pbe, cid: String(r.cluster_id), s: {}, total: 1, src: r.updated || Date.now() };
       (r.results || []).forEach(function (x) { if (x.cluster) L.s[x.cluster] = x.places; else L.total = x.places[0]; });
       try { localStorage.setItem(S19_LIVE, JSON.stringify(L)); } catch (e) {}
       s19Apply(L); s19Render();
@@ -172,7 +173,7 @@
         if (x) {
           var u = s19Unit(x.k);
           if (u) {
-            hx.dataset.c = u.c === 7 ? 5 : (u.c || 1);
+            hx.dataset.c = u.c || 1;
             if (u.c === 7) hx.classList.add("s19-hx7");
             if (u.img) inner.appendChild(img(u.img, u.n));
             cellw.title = u.n;
