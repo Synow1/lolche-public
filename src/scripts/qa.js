@@ -45,6 +45,7 @@ const CSS_TAGS = {
 const JS_TAGS = {
   '310_parts.js': ['parts'], '320_tfa.js': ['tfa'], '330_meta_items.js': ['meta', 'items', 'home', 'overlay'],
   '335_units.js': ['units', 's19', 'meta', 'find'],
+  '337_traits.js': ['traits', 's19', 'meta', 'units', 'home'],
   '340_emb_builder_lists.js': ['emb', 'builder', 'traits', 'find', 'flow', 'wisps', 'numbers', 'scout', 'patch', 'augments'],
   '350_rank.js': ['rank', 'friends'], '360_power.js': ['power', 'rank'], '370_profile.js': ['rank', 'friends'], '380_friends.js': ['friends'],
   '390_esports.js': ['esports', 'home'], '395_dc.js': ['dc'], '397_whatsnew.js': ['whatsnew'], '398_s19.js': ['s19', 'home', 'units'],
@@ -1521,6 +1522,56 @@ function fresh(file, key, hours) {
       await pg.waitForTimeout(200);
       const findH3 = await pg.evaluate(() => (document.querySelector('#find-out h3') || {}).textContent || '');
       if (!findH3) fail('회귀 검사 ⑦: #find 기본 화면이 비어 있음');
+
+      // ⑦-b 시너지 통계(#traits) 단계별 통계·시너지별 요약·시트 상세 검증 (2026-11-27)
+      await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#traits'; document.body.appendChild(a); a.click(); a.remove(); });
+      await pg.waitForTimeout(400);
+      const trChk = await pg.evaluate(() => {
+        const rows = [...document.querySelectorAll('#tr-rows .tr-stat-row')];
+        const names = new Set(rows.map(r => (r.querySelector('.tr-nm b') || {}).textContent || ''));
+        return {
+          total: rows.length,
+          hasJazz: names.has('재즈'),
+          hasKda: names.has('K/DA'),
+          hasBeach: names.has('비치 팝'),
+          sw: document.documentElement.scrollWidth,
+        };
+      });
+      if (trChk.total < 80 || !trChk.hasJazz || !trChk.hasKda || !trChk.hasBeach) {
+        fail('시너지 통계(#traits): 단계별 통계 목록 이상 ' + JSON.stringify(trChk));
+      }
+      if (trChk.sw > 360) fail(`시너지 통계(#traits): 화면보다 넓음 ${trChk.sw}px`);
+      // 재즈 행 클릭 -> 시트에 단계별 통계 표(.tst-gt) + 소속 챔피언 + 추천 덱 확인
+      await pg.evaluate(() => {
+        const r = [...document.querySelectorAll('#tr-rows .tr-stat-row')].find(x => (x.querySelector('.tr-nm b') || {}).textContent === '재즈');
+        if (r) r.click();
+      });
+      await pg.waitForTimeout(350);
+      const trSh = await pg.evaluate(() => {
+        const sh = document.getElementById('sheet');
+        if (!sh || sh.hidden) return null;
+        return {
+          rows: sh.querySelectorAll('.tst-gt.ust-row').length,
+          champs: sh.querySelectorAll('.sh-holder, .sh-items .u').length,
+          sw: sh.scrollWidth, cw: sh.clientWidth,
+        };
+      });
+      if (!trSh || trSh.rows < 2 || trSh.champs < 2) fail('시너지 시트(재즈): 단계별 통계·챔피언 누락 ' + JSON.stringify(trSh));
+      if (trSh && trSh.sw > trSh.cw + 2) fail(`시너지 시트(재즈): 가로 밀림 ${trSh.sw}>${trSh.cw}`);
+      await pg.evaluate(() => { document.querySelector('#sheet .sh-btn[aria-label="닫기"]')?.click(); });
+      await pg.waitForTimeout(200);
+      // 시너지별 요약 보기에서 계열 14개 포함 전 분류 노출 확인
+      await pg.evaluate(() => { document.querySelector('#tr-view [data-v="group"]')?.click(); });
+      await pg.waitForTimeout(250);
+      const trGrp = await pg.evaluate(() => ({
+        heads: [...document.querySelectorAll('#tr-list .tr-group > h3')].map(h => h.textContent.trim()),
+        cards: document.querySelectorAll('#tr-list .tr-gcard').length,
+        pills: document.querySelectorAll('#tr-list .tr-pill').length,
+      }));
+      if (trGrp.heads.length < 3 || trGrp.cards < 40 || trGrp.pills < 60) {
+        fail('시너지별 요약(#traits): 계열·직업·고유 요약 누락 ' + JSON.stringify(trGrp));
+      }
+      await pg.evaluate(() => { document.querySelector('#tr-view [data-v="tier"]')?.click(); });
     }
 
     if (errs.length) fail('회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));

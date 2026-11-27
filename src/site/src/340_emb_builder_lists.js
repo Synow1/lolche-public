@@ -351,28 +351,6 @@
     agList();
   }
 
-  /* ---- 시너지 목록 ---- */
-  function buildTraitList() {
-    var box = document.getElementById("tr-list"); box.innerHTML = "";
-    [["origin", "계열"], ["class", "직업"], ["unique", "고유"]].forEach(function (g) {
-      var names = Object.keys(DB.info.t).filter(function (n) { return DB.info.t[n].type === g[0] && DB.info.t[n].u.length; })
-        .sort(function (a, b) { return a.localeCompare(b, "ko"); });
-      if (!names.length) return;
-      var grp = el("div", "tr-group"); grp.appendChild(el("h3", null, g[1] + " " + names.length));
-      names.forEach(function (n) {
-        var inf = DB.info.t[n], row = el("div", "tr-row");
-        if (IDX.traits[n]) { var im = img(IDX.traits[n], n); im.dataset.trait = n; row.appendChild(im); } else row.appendChild(el("span"));
-        var t1 = el("div", "t1"); t1.dataset.trait = n;
-        t1.appendChild(el("b", null, n));
-        t1.appendChild(el("span", null, inf.e.map(function (e) { return e[0]; }).join(" / ")));
-        row.appendChild(t1);
-        row.appendChild(strip(inf.u.map(function (u) { return u[0]; })));
-        grp.appendChild(row);
-      });
-      box.appendChild(grp);
-    });
-  }
-
   /* ---- 랭킹·전적 검색: 앱에서는 MetaTFT 실시간, claude.ai에서는 rank.json 스냅샷 ---- */
   var MT = "https://api.metatft.com/";
   var TIER_KO = { IRON: "아이언", BRONZE: "브론즈", SILVER: "실버", GOLD: "골드", PLATINUM: "플래티넘", EMERALD: "에메랄드", DIAMOND: "다이아", MASTER: "마스터", GRANDMASTER: "그마", CHALLENGER: "챌린저" };

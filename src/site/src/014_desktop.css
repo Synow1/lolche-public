@@ -522,7 +522,34 @@
   body:not(.overlay) #units .un-its-pc { display: flex; align-items: center; gap: 5px; }
   body:not(.overlay) #units .un-its-pc img { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-subtle); display: block; }
   body:not(.overlay) .ust-gt,
-  body:not(.overlay) .ust-gi { grid-template-columns: minmax(0, 1fr) 68px 60px 68px; gap: 10px; }
+  body:not(.overlay) .ust-gi,
+  body:not(.overlay) .tst-gt { grid-template-columns: minmax(0, 1fr) 68px 60px 68px; gap: 10px; }
   body:not(.overlay) .ust-tics img,
   body:not(.overlay) .ust-ileft img { width: 30px; height: 30px; }
+  body:not(.overlay) .pcdk-traits .trx[data-trait] { cursor: pointer; }
+  body:not(.overlay) .pcdk-traits .trx[data-trait]:hover { opacity: .82; }
+
+  /* PC 시너지 통계 (#traits) 6열 표 레이아웃 */
+  body:not(.overlay) #traits { max-width: 1020px; margin-left: auto; margin-right: auto; }
+  body:not(.overlay) #traits .tr-bar { position: static; background: transparent; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 0; }
+  body:not(.overlay) #traits .tr-tools { min-width: 280px; }
+  body:not(.overlay) #traits .tr-head,
+  body:not(.overlay) #traits .tr-stat-row {
+    grid-template-columns: minmax(220px, 1.35fr) 74px 72px 76px 80px 168px;
+    gap: 12px;
+  }
+  body:not(.overlay) #traits .tr-head { padding: 4px 14px 6px; font-size: var(--fs-s); }
+  body:not(.overlay) #traits .tr-head span:nth-child(5),
+  body:not(.overlay) #traits .tr-head span:nth-child(6) { display: block; }
+  body:not(.overlay) #traits .tr-head span:nth-child(6) { text-align: left; }
+  body:not(.overlay) #traits .tr-stat-row { padding: 10px 14px; }
+  body:not(.overlay) #traits .tr-stat-row:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle)); background: var(--raise); }
+  body:not(.overlay) #traits .tr-fq { display: block; }
+  body:not(.overlay) #traits .tr-us-pc { display: flex; align-items: center; gap: 4px; }
+  body:not(.overlay) #traits .tr-us-pc img { width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid var(--c1); display: block; }
+  body:not(.overlay) #traits .tr-us-pc img[data-c="2"] { border-color: var(--c2); }
+  body:not(.overlay) #traits .tr-us-pc img[data-c="3"] { border-color: var(--c3); }
+  body:not(.overlay) #traits .tr-us-pc img[data-c="4"] { border-color: var(--c4); }
+  body:not(.overlay) #traits .tr-us-pc img[data-c="5"] { border-color: var(--c5); }
+  body:not(.overlay) #traits .tr-us-pc img[data-c="7"] { border-color: var(--c7); }
 }

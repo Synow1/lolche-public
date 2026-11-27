@@ -645,23 +645,97 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .ust-dk b { font-family: var(--mono); font-size: var(--fs-b); font-weight: 800; flex: none; }
 
 /* 숫자 그라데이션 색 적용 (라이트/다크 공통) */
-.un-n b.dk-grad, .ust-k b.dk-grad, .ust-n b.dk-grad, .ust-st b.dk-grad, .ust-dk b.dk-grad, .s19-uavg.dk-grad { color: var(--gl, var(--accent)); }
+.un-n b.dk-grad, .tr-n b.dk-grad, .tr-gbest.dk-grad, .tr-pill b.dk-grad, .ust-k b.dk-grad, .ust-n b.dk-grad, .ust-st b.dk-grad, .ust-dk b.dk-grad, .s19-uavg.dk-grad, .s19-tsavg b.dk-grad { color: var(--gl, var(--accent)); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .un-n b.dk-grad,
+  :root:not([data-theme="light"]) .tr-n b.dk-grad,
+  :root:not([data-theme="light"]) .tr-gbest.dk-grad,
+  :root:not([data-theme="light"]) .tr-pill b.dk-grad,
   :root:not([data-theme="light"]) .ust-k b.dk-grad,
   :root:not([data-theme="light"]) .ust-n b.dk-grad,
   :root:not([data-theme="light"]) .ust-st b.dk-grad,
   :root:not([data-theme="light"]) .ust-dk b.dk-grad,
-  :root:not([data-theme="light"]) .s19-uavg.dk-grad { color: var(--gd, var(--accent)); }
+  :root:not([data-theme="light"]) .s19-uavg.dk-grad,
+  :root:not([data-theme="light"]) .s19-tsavg b.dk-grad { color: var(--gd, var(--accent)); }
 }
 :root[data-theme="dark"] .un-n b.dk-grad,
+:root[data-theme="dark"] .tr-n b.dk-grad,
+:root[data-theme="dark"] .tr-gbest.dk-grad,
+:root[data-theme="dark"] .tr-pill b.dk-grad,
 :root[data-theme="dark"] .ust-k b.dk-grad,
 :root[data-theme="dark"] .ust-n b.dk-grad,
 :root[data-theme="dark"] .ust-st b.dk-grad,
 :root[data-theme="dark"] .ust-dk b.dk-grad,
-:root[data-theme="dark"] .s19-uavg.dk-grad { color: var(--gd, var(--accent)); }
+:root[data-theme="dark"] .s19-uavg.dk-grad,
+:root[data-theme="dark"] .s19-tsavg b.dk-grad { color: var(--gd, var(--accent)); }
 
-/* 19시즌 도감 챔피언 카드 통계 미리보기 + 통계 표 바로가기 */
+/* ---- 시너지 통계 탭 (#traits) & 시너지 통계 블록 (.tst-*) ---- */
+.tr-bar { position: sticky; top: calc(var(--abh) + env(safe-area-inset-top, 0px)); z-index: 6; background: var(--bg); padding: 4px 0 8px; display: grid; gap: 6px; }
+.tr-tools { display: flex; gap: 6px; min-width: 0; align-items: center; }
+.tr-tools input { flex: 1; min-width: 0; font: inherit; font-size: var(--fs-b); padding: 6px 10px; border-radius: 8px; border: 1px solid transparent; background: var(--surface); color: var(--ink); }
+.tr-tools .dd > button { width: auto; min-width: 98px; gap: 6px; font-weight: 700; }
+.tr-head, .tr-stat-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px 40px 44px; gap: 6px; align-items: center; }
+.tr-head { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); padding: 2px 10px 6px; }
+.tr-head span:nth-child(n+2) { text-align: right; white-space: nowrap; }
+.tr-head span:nth-child(5), .tr-head span:nth-child(6) { display: none; }
+.tr-rows { display: grid; gap: 6px; }
+.tr-stat-row { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) 44px 40px 44px; gap: 6px; align-items: center; padding: 9px 10px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border-subtle); }
+.tr-stat-row:focus-visible { outline: 2px solid var(--accent); }
+.tr-main { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.tr-ico { flex: none; padding: 0; gap: 0; }
+.tr-ico .hx2 { width: 32px; height: 35px; }
+.tr-ico .hx2 img { width: 17px; height: 17px; }
+.tr-info { min-width: 0; display: grid; gap: 2px; }
+.tr-nm { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.tr-nm b { font-size: var(--fs-b); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tr-bp { flex: none; font-family: var(--mono); font-size: var(--fs-2xs); font-weight: 800; padding: 1px 6px; border-radius: 5px; white-space: nowrap; background: var(--sunk); color: var(--ink); border: 1px solid var(--line); }
+.tr-bp.s-bronze { background: #b9805a28; border-color: #b9805a; color: #d89b72; }
+.tr-bp.s-silver { background: #9aa6b228; border-color: #8a96a2; color: #b8c4d0; }
+.tr-bp.s-gold { background: #e0b25a28; border-color: #c99a2e; color: #ebb84c; }
+.tr-bp.s-chromatic { background: linear-gradient(120deg, #8fe0ff38, #c79bff38 50%, #ff9fd638); border-color: #c79bff; color: #e7c8ff; }
+.tr-bp.s-unique { background: #e57a3c28; border-color: #d46a2c; color: #f19459; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .tr-bp.s-bronze { color: #8c532d; }
+  :root:not([data-theme="dark"]) .tr-bp.s-silver { color: #475569; }
+  :root:not([data-theme="dark"]) .tr-bp.s-gold { color: #966500; }
+  :root:not([data-theme="dark"]) .tr-bp.s-chromatic { color: #7c3aed; }
+  :root:not([data-theme="dark"]) .tr-bp.s-unique { color: #b84b14; }
+}
+:root[data-theme="light"] .tr-bp.s-bronze { color: #8c532d; }
+:root[data-theme="light"] .tr-bp.s-silver { color: #475569; }
+:root[data-theme="light"] .tr-bp.s-gold { color: #966500; }
+:root[data-theme="light"] .tr-bp.s-chromatic { color: #7c3aed; }
+:root[data-theme="light"] .tr-bp.s-unique { color: #b84b14; }
+.tr-sub { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tr-n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.tr-n b { display: block; font-size: var(--fs-m); font-weight: 700; white-space: nowrap; }
+.tr-n.tr-avg b { font-size: var(--fs-b); font-weight: 800; }
+.tr-n small { display: block; font-size: var(--fs-2xs); color: var(--muted); white-space: nowrap; }
+.tr-fq, .tr-us-pc { display: none; }
+.tr-gcard { grid-template-columns: 32px minmax(0, 1fr); align-items: start; padding: 10px 0; }
+.tr-gbody { display: grid; gap: 5px; min-width: 0; }
+.tr-gbest { font-family: var(--mono); font-size: var(--fs-xs); font-weight: 800; }
+.tr-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.tr-pill { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 7px; background: var(--sunk); border: 1px solid var(--line); font-family: var(--mono); font-size: var(--fs-xs); white-space: nowrap; }
+.tr-pill span { color: var(--muted); font-weight: 700; }
+.tr-pill b { font-weight: 800; }
+.tr-pill.s-bronze { border-color: color-mix(in srgb, #b9805a 55%, transparent); }
+.tr-pill.s-silver { border-color: color-mix(in srgb, #8a96a2 55%, transparent); }
+.tr-pill.s-gold { border-color: color-mix(in srgb, #c99a2e 65%, transparent); }
+.tr-pill.s-chromatic { border-color: #c79bff; }
+.tr-pill.s-unique { border-color: color-mix(in srgb, #d46a2c 60%, transparent); }
+.tst-gt { grid-template-columns: minmax(0, 1fr) 48px 44px 48px; gap: 6px; }
+.ust-row.focus { background: color-mix(in srgb, var(--accent) 11%, transparent); border-radius: 8px; padding-inline: 6px; }
+.tst-left { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.tst-meta { display: grid; gap: 1px; min-width: 0; }
+.tst-meta b { font-size: var(--fs-xs); font-weight: 700; white-space: nowrap; }
+.tst-meta small { font-size: var(--fs-2xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tst-live { display: grid; gap: 10px; }
+.tst-co { padding-left: 3px; }
+.s19-tsavg { display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.s19-tsavg b { font-weight: 800; }
+
+/* 19시즌 도감 챔피언·시너지 카드 통계 미리보기 + 통계 표 바로가기 */
 .s19-statgo { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 13px; margin: 6px 0 8px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border-subtle); }
 .s19-statgo b { font-size: var(--fs-m); font-weight: 800; }
 .s19-statgo span { font-size: var(--fs-xs); font-weight: 700; color: var(--accent); white-space: nowrap; }

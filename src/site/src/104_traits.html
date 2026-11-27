@@ -1,6 +1,30 @@
 <section id="traits">
-  <h2 class="sr-title">시너지</h2>
+  <h2 class="sr-title">시너지 통계</h2>
   <div class="seg codex-seg" role="tablist" aria-label="도감"><a href="#items" aria-selected="false">아이템</a><a href="#augments" aria-selected="false">증강</a><a href="#traits" class="on" aria-selected="true">시너지</a></div>
-  <div id="tr-list"></div>
+  <div class="mt-upd" id="tr-upd"><span id="tr-upd-t"></span><button type="button" id="tr-upd-btn" hidden>새로고침</button></div>
+  <div class="seg2" id="tr-view" role="group" aria-label="보기"><button type="button" data-v="tier" class="on">단계별 통계</button><button type="button" data-v="group">시너지별 요약</button></div>
+  <div class="tr-bar">
+    <div class="mt-chips" id="tr-type" role="group" aria-label="분류 거르기">
+      <button type="button" data-tp="all" class="on">전체</button>
+      <button type="button" data-tp="origin">계열</button>
+      <button type="button" data-tp="class">직업</button>
+      <button type="button" data-tp="unique">고유</button>
+    </div>
+    <div class="tr-tools">
+      <input id="tr-q" type="search" placeholder="시너지·챔피언 검색" autocomplete="off" aria-label="시너지 통계 검색">
+      <select id="tr-sort" aria-label="정렬">
+        <option value="avg">평균 등수순</option>
+        <option value="win">승률순</option>
+        <option value="top4">순방순</option>
+        <option value="freq">빈도순</option>
+      </select>
+    </div>
+  </div>
+  <div id="tr-tier">
+    <div class="tr-head" aria-hidden="true"><span>시너지</span><span>평균</span><span>순방</span><span>승률</span><span>빈도</span><span>대표 챔피언</span></div>
+    <div class="tr-rows" id="tr-rows"><p class="empty">불러오는 중</p></div>
+  </div>
+  <div id="tr-list" hidden></div>
+  <p class="fnote" id="tr-note"></p>
 </section>
 

@@ -123,26 +123,125 @@ def row(r, total):
             "avg": r["place"], "top4": round(r["top4"]), "win": round(r["won"], 1)}
 
 
-def info(lk):
-    """아이콘을 눌렀을 때 뜨는 설명: 템(조합식·능력치·효과), 시너지(단계별 효과·기물·평균 등수), 증강."""
+STYLE_NAME = {1: "bronze", 2: "bronze", 3: "silver", 4: "gold", 5: "chromatic", 6: "unique"}
+OCEAN_STEPS = [
+    (1, 3, "3", "bronze", "(3) 배치 가능한 악기 획득 · 공속 25%, 3초마다 마나 5 회복"),
+    (2, 5, "5", "silver", "(5) 악기 추가 · 공속 45%, 3초마다 마나 9 회복"),
+    (3, 7, "7", "gold", "(7) 악기 추가 · 비치 팝 효과 최대 강화"),
+]
+# Riot match tier_current(1..6) for DA_TrueDamage19 is [3A, 5A, 5A-Pris, 3B, 5B, 5B-Pris],
+# while lookup_ko effects array is ordered [3A(0), 3B(1), 5A(2), 5A-Pris(3), 5B(4), 5B-Pris(5)].
+TD_TIERS = [
+    (1, 3, "3 A면", "bronze", 0),
+    (2, 5, "5 A면", "gold", 2),
+    (3, 5, "5 A면 프리즘", "chromatic", 3),
+    (4, 3, "3 B면", "bronze", 1),
+    (5, 5, "5 B면", "gold", 4),
+    (6, 5, "5 B면 프리즘", "chromatic", 5),
+]
+
+
+def _trait_stat_row(pl, tr_games):
+    if not pl:
+        return None
+    p = (pl or [])[:8]
+    n = sum(p)
+    if n < 20:
+        return None
+    avg = round(sum((i + 1) * x for i, x in enumerate(p)) / n, 2)
+    top4 = round(100 * sum(p[:4]) / n)
+    win = round(100 * p[0] / n, 1)
+    freq = round(n / tr_games * 8, 2) if tr_games else 0
+    pick = round(n / tr_games * 100, 1) if tr_games else 0
+    return {"n": n, "avg": avg, "top4": top4, "win": win, "freq": freq, "pick": pick}
+
+
+def info(lk, total_games=0):
+    """아이콘을 눌렀을 때 뜨는 설명: 템(조합식·능력치·효과), 시너지(단계별 효과·기물·통계), 증강 + 시너지 티어표 데이터."""
     iname = {i["apiName"]: i["name"] for i in lk["items"]}
     uname = {u["apiName"]: u["name"] for u in lk["units"]}
     out = {"i": {}, "t": {}, "a": {}}
     out["i"] = D.item_texts(lk)  # 설명이 비어 오면 data/item_text.json의 마지막 설명
+    s19_p = ROOT / "site" / "s19.json"
+    s19_data = json.loads(s19_p.read_text(encoding="utf-8")) if s19_p.exists() else {}
+    s19_t_map = {t["k"]: t for t in s19_data.get("traits") or [] if t.get("k")}
     try:
-        tstat = {r["trait"]: r["places"] for r in T.load("traits")["results"]}
+        tr_raw = T.load("traits")
+        tstat = {r["trait"]: r["places"] for r in tr_raw.get("results") or []}
+        tr_games = sum(x.get("count", 0) for x in (tr_raw.get("games") or [])) or total_games or 1
+        tr_upd = tr_raw.get("updated")
     except FileNotFoundError:
-        tstat = {}
+        tstat, tr_games, tr_upd = {}, total_games or 1, None
+
+    trait_rows = []
     for t in lk["traits"]:
+        api = t["apiName"]
+        name = t["name"]
+        s19t = s19_t_map.get(api) or {}
+        ttype = t.get("type")
+        if not ttype:
+            if s19t.get("uniq") or any(x in api for x in ("UniqueTrait", "IndieTrait", "RisingStar", "Superstar")):
+                ttype = "unique"
+            elif s19t.get("type") == "CLASS":
+                ttype = "class"
+            elif s19t.get("type") == "ORIGIN":
+                ttype = "origin"
+            else:
+                ttype = "unique" if len(t.get("units") or []) <= 1 else "origin"
+
+        effs = t.get("effects") or []
+        s19_steps = s19t.get("steps") or []
+        # 각 단계: (tier_idx, minUnits, lbl, style, desc)
+        tier_specs = []
+        if api == "DA_OceanSong19" and (not effs or (len(effs) == 1 and (effs[0].get("minUnits") or 0) == 0)):
+            tier_specs = OCEAN_STEPS
+        elif api == "DA_TrueDamage19" and len(effs) >= 6:
+            for ti, m, lbl, st, eidx in TD_TIERS:
+                desc = (s19_steps[eidx].get("d") if eidx < len(s19_steps) and s19_steps[eidx].get("d") else D.fill(effs[eidx].get("desc"), t))
+                tier_specs.append((ti, m, lbl, st, desc))
+        else:
+            seen_m = {}
+            for ti, e in enumerate(effs, 1):
+                m = e.get("minUnits")
+                st = "unique" if ttype == "unique" else STYLE_NAME.get(e.get("style"), "bronze")
+                if api == "DA_KDA19" and m:
+                    lbl = f"{m}★"
+                elif st == "chromatic" and m in seen_m:
+                    lbl = f"{m} 프리즘"
+                else:
+                    lbl = str(m) if m is not None else str(ti)
+                seen_m[m] = seen_m.get(m, 0) + 1
+                desc = (s19_steps[ti - 1].get("d") if ti - 1 < len(s19_steps) and s19_steps[ti - 1].get("d") else D.fill(e.get("desc"), t))
+                tier_specs.append((ti, m, lbl, st, desc))
+
         effects = []
-        for n, e in enumerate(t["effects"], 1):
-            pl = tstat.get(f"{t['apiName']}_{n}")
-            avg = round(T.avg_place(pl)[0], 2) if pl and sum(pl) >= 2000 else None
-            effects.append([e["minUnits"], D.fill(e.get("desc"), t), avg])
-        out["t"][t["name"]] = {
-            "type": t.get("type"), "d": D.fill(t.get("desc"), t), "p": D.fill(t.get("postTierDesc"), t),
+        for ti, m, lbl, st, desc in tier_specs:
+            pl = tstat.get(f"{api}_{ti}")
+            sr = _trait_stat_row(pl, tr_games)
+            n_val = sum((pl or [])[:8]) if pl else 0
+            effects.append([
+                m, desc,
+                sr["avg"] if sr else None,
+                sr["top4"] if sr else None,
+                sr["win"] if sr else None,
+                n_val, st, lbl,
+            ])
+            if sr:
+                trait_rows.append({
+                    "k": f"{api}_{ti}", "api": api, "t": name, "type": ttype,
+                    "tier": ti, "m": m, "lbl": lbl, "st": st,
+                    "n": sr["n"], "avg": sr["avg"], "top4": sr["top4"],
+                    "win": sr["win"], "freq": sr["freq"], "pick": sr["pick"],
+                })
+        out["t"][name] = {
+            "api": api, "type": ttype,
+            "d": s19t.get("d") or D.fill(t.get("desc"), t),
+            "p": D.fill(t.get("postTierDesc"), t),
             "u": [[uname.get(m["unit"], m["unit"]), m["unit_cost"]] for m in sorted(t.get("units", []), key=lambda x: x["unit_cost"])],
-            "e": effects}
+            "e": effects,
+        }
+    trait_rows.sort(key=lambda r: (r["avg"], -r["n"]))
+    traits_meta = {"games": tr_games, "updated": tr_upd, "rows": trait_rows}
     tier_of = {}
     try:
         for tier in T.load("aug_tiers")["content"]["content"]["tierList"]:
@@ -167,11 +266,9 @@ def info(lk):
     if fresh:
         cache_f.write_text(json.dumps(cache, ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
     # PBE(세트 19)에서 s19.json의 깔끔한 한국어 증강 설명·등급도 반영
-    s19_p = ROOT / "site" / "s19.json"
-    if s19_p.exists():
-        s19 = json.loads(s19_p.read_text(encoding="utf-8"))
+    if s19_data:
         rar_map = {1: "실버", 2: "골드", 3: "프리즘"}
-        for a in s19.get("augs") or []:
+        for a in s19_data.get("augs") or []:
             nm_a = a.get("n")
             if nm_a and nm_a not in out["a"]:
                 out["a"][nm_a] = {"d": a.get("d") or "", "t": "", "r": rar_map.get(a.get("tier"), "")}
@@ -180,7 +277,7 @@ def info(lk):
     missing = [a.get("name") for a in lk["augments"] if a.get("name") and a.get("name") not in out["a"]]
     if missing:
         print(f"증강 설명 없음 {len(missing)}개 (새 증강이면 게임 원문을 찾아 data/aug_text.json에 넣을 것):", missing[:10])
-    return out
+    return out, traits_meta
 
 
 def build():
@@ -475,12 +572,13 @@ def build():
         names["i"][i["apiName"]] = i["name"]
     for t in lk["traits"]:
         names["t"][t["apiName"]] = [t["name"], 1 if t.get("type") == "unique" else 0]
+    inf, traits_meta = info(lk, total_games)
     db = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "patch": patch, "pbe": setinfo.PBE,
-          "games": total_games, "names": names, "info": info(lk),
+          "games": total_games, "names": names, "info": inf, "traits": traits_meta,
           "source": "MetaTFT PBE 최근 3일 (unit_detail)" if setinfo.PBE else ("MetaTFT 최근 3일 (unit_detail)" if not TT else "평균 등수 에메+·그마+는 MetaTFT 최근 3일, 나머지는 tactics.tools 다이아+ 패치 전체"),
           "units": units, "items": items}
     OUT.write_text(json.dumps(db, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)}개, 아이템 {len(items)}개, {OUT.stat().st_size // 1024}KB")
+    print(f"{OUT.relative_to(ROOT)}: 유닛 {len(units)}개, 아이템 {len(items)}개, 시너지 단계 {len(traits_meta['rows'])}개, {OUT.stat().st_size // 1024}KB")
 
 
 if __name__ == "__main__":

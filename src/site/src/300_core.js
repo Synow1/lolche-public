@@ -387,6 +387,7 @@
     DB = data;
     buildBuilder(); buildAugList(); buildTraitList(); buildRank(); buildUnits();
     if (metaReady) metaList();
+    if (current === "s19" && typeof s19Render === "function") s19Render();
     document.querySelectorAll(".ag img").forEach(function (im) {
       var a = DB.info.a[im.parentNode.textContent.trim()]; if (a) im.dataset.r = a.r;
     });

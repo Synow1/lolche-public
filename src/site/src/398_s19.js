@@ -506,6 +506,11 @@
   function s19Traits(out, tools) {
     s19Search(tools, "시너지·챔피언 이름 (초성 가능)");
     s19Chips(tools, [["all", "전체"], ["ORIGIN", "계열"], ["CLASS", "직업"], ["uniq", "고유"]], s19St.tf, function (v) { s19St.tf = v; });
+    var statGo = el("button", "s19-statgo"); statGo.type = "button";
+    statGo.appendChild(el("b", null, "시너지 통계 · 티어표 보기"));
+    statGo.appendChild(el("span", null, "단계별 평균 등수·순방률·승률 순위 ›"));
+    statGo.addEventListener("click", function () { goTab("traits"); });
+    out.appendChild(statGo);
     var list = S19.traits.filter(function (t) {
       if (s19St.tf === "uniq" ? !t.uniq : s19St.tf !== "all" && (t.uniq || t.type !== s19St.tf)) return false;
       return s19Match(t.n) || s19Match(t.en || "") || t.u.some(function (k) { var u = s19Unit(k); return u && s19Match(u.n); });
@@ -517,22 +522,60 @@
     var c = el("div", "s19-tc" + (open ? " open" : ""));
     var h = el("button", "s19-th"); h.type = "button";
     h.appendChild(s19Ti(t, 30));
-    var mid = el("div", "s19-tm"); mid.appendChild(el("b", null, t.n));
-    var bp = t.steps.map(function (s) { return s.m; }).filter(function (m, i, a) { return m != null && a.indexOf(m) === i; });
-    mid.appendChild(el("small", null, (t.uniq ? "고유 · " : t.type === "ORIGIN" ? "계열 · " : t.type === "CLASS" ? "직업 · " : "") + (bp.length ? bp.join(" · ") : "") + (t.back && t.back.length ? " · 세트 " + t.back.join("·") : "")));
+    var mid = el("div", "s19-tm");
+    var nmRow = el("div", "s19-ucn");
+    nmRow.appendChild(el("b", null, t.n));
+    var best = typeof trBestOf === "function" ? trBestOf(t.n) : null;
+    if (best && best.avg != null) nmRow.appendChild(dkGrad(el("span", "s19-uavg", fmt(best.avg)), trAvgT(best.avg)));
+    mid.appendChild(nmRow);
+    var bp = t.steps.map(function (s) { return s.m; }).filter(function (m, i, a) { return m != null && m > 0 && a.indexOf(m) === i; });
+    mid.appendChild(el("small", null, (t.uniq ? "고유 · " : t.type === "ORIGIN" ? "계열 · " : t.type === "CLASS" ? "직업 · " : "") + (bp.length ? bp.join(" · ") : (t.n === "비치 팝" ? "3 · 5 · 7" : "")) + (t.back && t.back.length ? " · 세트 " + t.back.join("·") : "")));
     h.appendChild(mid);
     var mem = el("div", "s19-tmem"); t.u.slice(0, 9).forEach(function (k) { var u = s19Unit(k); if (u) mem.appendChild(s19Pic(u, 24)); }); h.appendChild(mem);
     c.appendChild(h);
     var body = el("div", "s19-tb");
     if (t.d) body.appendChild(s19Text(t.d));
-    var st = t.steps.filter(function (s) { return s.d; });
-    if (st.length) { var ul = el("ul", "s19-tsteps"); st.forEach(function (s) { var li = el("li", "st" + (s.s || 1)); li.textContent = s.d; ul.appendChild(li); }); body.appendChild(ul); }
+    var st = t.steps.filter(function (s) { return s.d && !/플레이스홀더/.test(s.d); });
+    if (st.length) {
+      var ul = el("ul", "s19-tsteps");
+      st.forEach(function (s, si) {
+        var li = el("li", "st" + (s.s || 1));
+        li.appendChild(document.createTextNode(s.d));
+        var sr = typeof trStepStat === "function" ? trStepStat(t.n, s.m, si) : null;
+        if (sr && sr.avg != null) {
+          var badge = el("span", "s19-tsavg");
+          badge.appendChild(dkGrad(el("b", null, fmt(sr.avg)), trAvgT(sr.avg)));
+          badge.appendChild(document.createTextNode(" · 순방 " + sr.top4 + "%"));
+          li.appendChild(badge);
+        }
+        ul.appendChild(li);
+      });
+      body.appendChild(ul);
+    }
     var um = el("div", "s19-urow"); t.u.forEach(function (k) { var u = s19Unit(k); if (u) um.appendChild(s19UnitBtn(u)); }); body.appendChild(um);
     c.appendChild(body);
     h.addEventListener("click", function () { c.classList.toggle("open"); });
     return c;
   }
-  function s19OpenTrait(t) { fsOpen(t.n, t.en && t.en !== t.n ? t.en : "", function (b) { b.appendChild(s19TraitCard(t, true)); }, "19시즌"); }
+  function s19OpenTrait(t) {
+    fsOpen(t.n, t.en && t.en !== t.n ? t.en : "", function (b) {
+      var closeFs = function (afterFn) {
+        var fv = b.closest(".fs-view");
+        if (fv && fv._navClose) fv._navClose(afterFn);
+        else if (afterFn) afterFn();
+      };
+      if (typeof buildTraitStatsBlock === "function") {
+        var stBlock = buildTraitStatsBlock(t.n, { closeFn: closeFs });
+        if (stBlock) {
+          var scard = el("div", "s19-card s19-ust-card");
+          scard.appendChild(el("h3", null, "시너지 통계 · 추천 덱"));
+          scard.appendChild(stBlock);
+          b.appendChild(scard);
+        }
+      }
+      b.appendChild(s19TraitCard(t, true));
+    }, "19시즌");
+  }
 
   // 챔피언
   function s19Units(out, tools) {

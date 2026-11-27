@@ -287,9 +287,10 @@
     if (wantRef) {
       if (S19) {
         var t19 = S19.traits.filter(function (t) { return matches(t.n, q) || matches(t.en || "", q); }).slice(0, 5).map(function (t) {
+          var bt = typeof trBestOf === "function" ? trBestOf(t.n) : null;
           return {
             icon: t.img, dark: true, title: t.n,
-            sub: (t.uniq ? "고유" : t.type === "ORIGIN" ? "계열" : "직업") + " · " + t.u.length + "명",
+            sub: (t.uniq ? "고유" : t.type === "ORIGIN" ? "계열" : "직업") + " · " + t.u.length + "명" + (bt ? " · 최고 " + fmt(bt.avg) : ""),
             tag: "시너지", tagCls: "cyan",
             go: function () { s19OpenTrait(t); }
           };

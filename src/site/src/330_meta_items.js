@@ -35,7 +35,8 @@
     if (o.traits && o.traits.length) {
       var tr = el("div", "pcdk-traits");
       o.traits.forEach(function (t) {
-        var c = el("span", "trx s-" + t.style); c.title = t.t + " " + t.n;
+        var c = el("span", "trx s-" + t.style); c.title = t.t + " " + t.n; c.dataset.trait = t.t;
+        c.addEventListener("click", function (e) { if (openSheet("t", t.t)) { e.stopPropagation(); e.preventDefault(); } });
         var hx = el("span", "hx2"); if (t.img) hx.appendChild(img(t.img, "")); c.appendChild(hx);
         c.appendChild(el("b", null, String(t.n))); tr.appendChild(c);
       });

@@ -206,27 +206,47 @@
   function traitSheet(name) {
     var inf = DB && DB.info.t[name];
     if (!inf) return null;
+    var focusKey = typeof _trFocusKey !== "undefined" ? _trFocusKey : null;
+    if (typeof _trFocusKey !== "undefined") _trFocusKey = null;
     var box = el("div");
     var kind = { origin: "계열", class: "직업", unique: "고유" }[inf.type] || "";
-    var th = shHead(IDX.traits[name], null, name, kind);
+    var subParts = [kind, inf.u && inf.u.length ? inf.u.length + "명" : ""].filter(Boolean);
+    var th = shHead(IDX.traits[name], null, name, subParts.join(" · "));
     th.querySelector(".sh-face").classList.add("dark");  // 시너지 아이콘은 흰 그림이라 어두운 바탕
     box.appendChild(th);
-    if (inf.u.length) {
-      var s0 = shSec("기물");
-      var us = el("div", "sh-items"); inf.u.forEach(function (u) { us.appendChild(unitChip(u[0])); });
-      s0.appendChild(us); box.appendChild(s0);
+    if (typeof buildTraitStatsBlock === "function") {
+      var stBlock = buildTraitStatsBlock(name, { focusKey: focusKey });
+      if (stBlock) box.appendChild(stBlock);
     }
-    var s1 = shSec("단계별 효과 · 에메+ 평균 등수");
+    var s1 = shSec("단계별 효과");
     if (inf.d) s1.appendChild(el("p", "sh-text", inf.d));
     inf.e.forEach(function (e) {
       var row = el("div", "sh-tier");
-      row.appendChild(el("b", null, e[0]));
-      row.appendChild(el("span", null, e[1].replace(/^\(\d+\)\s*/, "") || "-"));
+      row.appendChild(el("b", null, e[7] || e[0]));
+      row.appendChild(el("span", null, (e[1] || "").replace(/^\(\d+★?\)\s*/, "") || "-"));
       row.appendChild(el("em", null, e[2] != null ? e[2].toFixed(2) : ""));
       s1.appendChild(row);
     });
     if (inf.p) s1.appendChild(el("p", "sh-text sh-post", inf.p));
     box.appendChild(s1);
+    if (inf.u.length) {
+      var s0 = shSec("소속 챔피언");
+      var us = el("div", "sh-items");
+      inf.u.forEach(function (u) {
+        var du = DB && DB.units && DB.units[u[0]];
+        if (du && du.base && du.base.avg != null) {
+          var c = el("span", "sh-holder"); c.appendChild(unitChip(u[0])); c.appendChild(el("b", null, du.base.avg.toFixed(2))); us.appendChild(c);
+        } else {
+          us.appendChild(unitChip(u[0]));
+        }
+      });
+      s0.appendChild(us); box.appendChild(s0);
+    }
+    if (current !== "traits") {
+      var acts = el("div", "sh-acts");
+      acts.appendChild(shAction("시너지 통계 전체 보기", function () { goTab("traits"); }));
+      box.appendChild(acts);
+    }
     return box;
   }
 
@@ -383,6 +403,7 @@
     if (id === "home") { setTimeout(homeRender, 0); if (window.v2PrismKick) setTimeout(window.v2PrismKick, 60); }
     if (id === "meta" && isWide() && META) setTimeout(metaEnsureWide, 0);
     if (id === "units") setTimeout(unitsRender, 0);
+    if (id === "traits") setTimeout(traitsRender, 0);
     if (id === "tfa") setTimeout(tfaRender, 0);
     if (id === "s19") setTimeout(s19Render, 0);
     var isDeck = DECK_TABS.indexOf(id) >= 0, isRank = RANK_TABS.indexOf(id) >= 0;
