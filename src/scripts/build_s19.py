@@ -531,7 +531,7 @@ def main():
     out = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
            "pbe": meta.get("generated", "") if setinfo.PBE else "",
            "live": not setinfo.PBE,
-           "release": "2026-12-01",
+           "release": "2026-12-02",
            "name": "프리즘 투어", "units": units, "traits": traits, "augs": augs, "items": items,
            "guides": guides, "decks": decks, "decksPlays": decks_plays, "decksUpdated": decks_upd, "decksCid": decks_cid,
            "src": "MetaTFT PBE 원문·덱 통계 · 롤체지지 · 라이엇 패치 노트" if setinfo.PBE else "MetaTFT 원문·덱 통계 · 롤체지지 · 라이엇 패치 노트"}

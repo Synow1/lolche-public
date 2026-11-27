@@ -303,7 +303,7 @@
       var rt = el("div", "rk-rt");
       var seaNo = isPbe ? String(guideSetNum()) : (RK_SEASON ? RK_SEASON.replace("set", "") : LIVE_SET_ID.replace("TFTSet", "").replace("_2", ".5"));
       var sl = el("div", "rk-sl"); sl.appendChild(el("span", "rk-sb" + (RK_SEASON ? " old" : ""), isPbe ? "PBE · S" + seaNo : "S" + seaNo));
-      sl.appendChild(el("small", null, isPbe ? seaNo + "시즌 PBE 테스트 서버 · 일반 게임" : (RK_SEASON ? "지난 시즌 랭크 게임" : (LIVE_SET_ID !== SET_ID ? "본섭 " + seaNo + "시즌 랭크 게임 · 12/1 19시즌 전환" : "이번 시즌 랭크 게임")))); rt.appendChild(sl);
+      sl.appendChild(el("small", null, isPbe ? seaNo + "시즌 PBE 테스트 서버 · 일반 게임" : (RK_SEASON ? "지난 시즌 랭크 게임" : (LIVE_SET_ID !== SET_ID ? "본섭 " + seaNo + "시즌 랭크 게임 · 12/2 19시즌 전환" : "이번 시즌 랭크 게임")))); rt.appendChild(sl);
       var tn = el("div", "rk-tn");
       var apexT = tp && /MASTER|CHALLENGER/.test(tp[0]);
       tn.appendChild(el("b", null, isPbe ? "PBE 테스트 서버" : (tp ? TIER_KO[tp[0]] + (tp[1] && !apexT ? " " + ROMAN[tp[1]] : "") : "언랭")));

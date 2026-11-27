@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FALLBACK = 18
-GUIDE_MIN = 19  # 2026-11-21 사용자 결정: 공략·통계·도감은 19시즌 PBE로 전면 전환 (본섭 랭크는 12/1 출시 시 자동 전환)
+GUIDE_MIN = 19  # 2026-11-21 사용자 결정: 공략·통계·도감은 19시즌 PBE로 전면 전환 (본섭 랭크는 12/2 KST 출시 시 자동 전환)
 
 
 def live_num():
@@ -43,9 +43,9 @@ def names():
 
 LIVE_NUM = live_num()
 NUM = num()
-PBE = LIVE_NUM < NUM               # 12/1 본섭 19시즌 출시 전까지 True, 출시되면 자동으로 False
+PBE = LIVE_NUM < NUM               # 12/2 KST 본섭 19시즌 출시 전까지 True, 출시되면 자동으로 False
 SET = f"TFTSet{NUM}"               # 공략·덱·아카데미·팀 코드 기준 세트 (TFTSet19)
-LIVE_SET = f"TFTSet{LIVE_NUM}"     # 본섭 랭크·전적·친구·덱파워 기준 세트 (12/1 전까지 TFTSet18)
+LIVE_SET = f"TFTSet{LIVE_NUM}"     # 본섭 랭크·전적·친구·덱파워 기준 세트 (12/2 KST 전까지 TFTSet18)
 SEASON = f"set{LIVE_NUM}"          # 롤체지지 본섭 랭크 season (crawl_boards·snap_*·friends)
 GUIDE_SEASON = f"set{NUM}"         # 롤체지지 공략·빌더 season (set19)
 PREFIX = f"TFT{NUM}_"              # 라이엇 유닛 apiName 접두어 (참고: 19시즌부터 DA_*19 사용)

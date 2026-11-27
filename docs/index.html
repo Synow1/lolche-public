@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611270102">
+<meta name="lolche-web" content="202611270739">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -3249,15 +3249,15 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
 <section id="patch">
   <div data-set="19">
-    <h2 data-pbe="1">19.1 PBE <small class="pdate">12/1 출시 예정</small></h2>
-    <h2 data-live="1" hidden>19.1 <small class="pdate">12/1 본섭 출시</small></h2>
+    <h2 data-pbe="1">19.1 PBE <small class="pdate">12/2 출시 예정</small></h2>
+    <h2 data-live="1" hidden>19.1 <small class="pdate">12/2 본섭 출시</small></h2>
     <p class="plist">세트 19 프리즘 투어 · 챔피언 94명(7코스트 포함) · 시너지 50개 · 해금 조건 · 프리즘 퀘스트</p>
     <div class="tbl"><table><tbody>
-      <tr data-pbe="1"><td><b>출시 일정</b></td><td>PBE 테스트 진행 중 · 본섭 19.1 패치 <b>12/1</b> 출시 예정 (출시 전 수치는 바뀔 수 있어요)</td></tr>
+      <tr data-pbe="1"><td><b>출시 일정</b></td><td>PBE 테스트 진행 중 · 본섭 19.1 패치 <b>12/2</b> 출시 예정 (출시 전 수치는 바뀔 수 있어요)</td></tr>
       <tr data-live="1" hidden><td><b>출시 일정</b></td><td>세트 19 프리즘 투어 19.1 패치 본섭 라이브 진행 중이에요</td></tr>
       <tr><td><b>핵심 변화</b></td><td>일부 챔피언은 시너지 별 레벨·아이템·연승 등 <b>해금 조건</b>을 채워야 상점에 등장해요</td></tr>
       <tr><td><b>프리즘 퀘스트</b></td><td>K/DA · HEARTSTEEL · 펜타킬 · 이온 충격기는 상징 외에도 프리즘 퀘스트 아이템이 있어요</td></tr>
-      <tr data-pbe="1"><td><b>통계 기준</b></td><td>덱 · 아카데미 · 아이템 · 도감은 <b>19시즌 PBE</b> 기준이며, 랭킹·전적은 12/1 본섭 출시 시 자동 전환돼요</td></tr>
+      <tr data-pbe="1"><td><b>통계 기준</b></td><td>덱 · 아카데미 · 아이템 · 도감은 <b>19시즌 PBE</b> 기준이며, 랭킹·전적은 12/2 본섭 출시 시 자동 전환돼요</td></tr>
       <tr data-live="1" hidden><td><b>통계 기준</b></td><td>덱 · 챔피언 · 아이템 · 랭킹 · 전적 · 덱파워 모두 <b>19시즌 본섭</b> 기준이에요</td></tr>
     </tbody></table></div>
   </div>
@@ -7703,7 +7703,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var rt = el("div", "rk-rt");
       var seaNo = isPbe ? String(guideSetNum()) : (RK_SEASON ? RK_SEASON.replace("set", "") : LIVE_SET_ID.replace("TFTSet", "").replace("_2", ".5"));
       var sl = el("div", "rk-sl"); sl.appendChild(el("span", "rk-sb" + (RK_SEASON ? " old" : ""), isPbe ? "PBE · S" + seaNo : "S" + seaNo));
-      sl.appendChild(el("small", null, isPbe ? seaNo + "시즌 PBE 테스트 서버 · 일반 게임" : (RK_SEASON ? "지난 시즌 랭크 게임" : (LIVE_SET_ID !== SET_ID ? "본섭 " + seaNo + "시즌 랭크 게임 · 12/1 19시즌 전환" : "이번 시즌 랭크 게임")))); rt.appendChild(sl);
+      sl.appendChild(el("small", null, isPbe ? seaNo + "시즌 PBE 테스트 서버 · 일반 게임" : (RK_SEASON ? "지난 시즌 랭크 게임" : (LIVE_SET_ID !== SET_ID ? "본섭 " + seaNo + "시즌 랭크 게임 · 12/2 19시즌 전환" : "이번 시즌 랭크 게임")))); rt.appendChild(sl);
       var tn = el("div", "rk-tn");
       var apexT = tp && /MASTER|CHALLENGER/.test(tp[0]);
       tn.appendChild(el("b", null, isPbe ? "PBE 테스트 서버" : (tp ? TIER_KO[tp[0]] + (tp[1] && !apexT ? " " + ROMAN[tp[1]] : "") : "언랭")));
@@ -10896,7 +10896,7 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     } else sessionStorage.removeItem("lolche-stale");
   } catch (e) {}
   var SET_ID = "TFTSet19";  // scripts/setinfo.py 공략·도감 기준 세트 (TFTSet19)
-  var LIVE_SET_ID = "TFTSet18";  // 본섭 랭크·전적 기준 세트 (12/1 전까지 TFTSet18, 출시 후 TFTSet19)
+  var LIVE_SET_ID = "TFTSet18";  // 본섭 랭크·전적 기준 세트 (12/2 KST 전까지 TFTSet18, 출시 후 TFTSet19)
   // 손으로 쓴 세트 전용 글(data-set="18": 수호령·패치 노트·덱별 추천템 등)은 세트가 바뀌면 숨긴다. 탭 전체면 안내 한 줄 (세트 19 대비, 2026-11-16)
   document.querySelectorAll("[data-set]").forEach(function (e) {
     if ("TFTSet" + e.dataset.set === SET_ID) return;

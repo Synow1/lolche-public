@@ -1548,7 +1548,7 @@ function fresh(file, key, hours) {
       return { hmTag, ptVis, s19Tag, s19Meta, pwTopTxt, pwS19Hidden, rkPbeTxt };
     });
     if (/PBE/.test(liveChk.hmTag)) fail('19시즌 본섭 전환 모의: 홈 배지에 PBE가 남음 (' + liveChk.hmTag + ')');
-    if (/12\/1 출시 예정|PBE 테스트 진행 중/.test(liveChk.ptVis)) fail('19시즌 본섭 전환 모의: 패치 노트에 PBE 예정 문구가 남음');
+    if (/12\/2 출시 예정|PBE 테스트 진행 중/.test(liveChk.ptVis)) fail('19시즌 본섭 전환 모의: 패치 노트에 PBE 예정 문구가 남음');
     if (/PBE|출시 예정/.test(liveChk.s19Meta) || liveChk.s19Tag === 'PBE') fail('19시즌 본섭 전환 모의: 도감 헤더에 PBE 문구가 남음 (' + liveChk.s19Tag + ' / ' + liveChk.s19Meta + ')');
     if (liveChk.pwTopTxt !== '19시즌 상위' || !liveChk.pwS19Hidden) fail('19시즌 본섭 전환 모의: 덱파워 탭이 19시즌 본섭으로 안 바뀜 ' + JSON.stringify(liveChk));
     if (liveChk.rkPbeTxt !== 'PBE') fail('19시즌 본섭 전환 모의: 전적 검색 PBE 칩에 19시즌 문구가 남음 (' + liveChk.rkPbeTxt + ')');

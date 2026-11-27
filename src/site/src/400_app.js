@@ -287,7 +287,7 @@
     } else sessionStorage.removeItem("lolche-stale");
   } catch (e) {}
   var SET_ID = "__SET_ID__";  // scripts/setinfo.py 공략·도감 기준 세트 (TFTSet19)
-  var LIVE_SET_ID = "__LIVE_SET_ID__";  // 본섭 랭크·전적 기준 세트 (12/1 전까지 TFTSet18, 출시 후 TFTSet19)
+  var LIVE_SET_ID = "__LIVE_SET_ID__";  // 본섭 랭크·전적 기준 세트 (12/2 KST 전까지 TFTSet18, 출시 후 TFTSet19)
   // 손으로 쓴 세트 전용 글(data-set="18": 수호령·패치 노트·덱별 추천템 등)은 세트가 바뀌면 숨긴다. 탭 전체면 안내 한 줄 (세트 19 대비, 2026-11-16)
   document.querySelectorAll("[data-set]").forEach(function (e) {
     if ("TFTSet" + e.dataset.set === SET_ID) return;
