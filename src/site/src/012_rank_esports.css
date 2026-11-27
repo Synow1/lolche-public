@@ -511,3 +511,51 @@ footer { padding-block: 30px 40px; color: var(--muted); font-size: var(--fs-m); 
 }
 /* 부드러운 스크롤은 뺐다 (2026-11-25 사용자: "아카데미에서 뒤로 가기 누르면 위아래 무빙이 있는데 이런 건 없애라"). 화면 이동은 바로 */
 
+/* ---- v3.8.0: 로비 1:1 5축 덱파워 정면 비교 (#rank lobby) ---- */
+.lb-cmpbtn { padding: 2px 8px; border-radius: 7px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; flex: none; margin-left: auto; }
+.lb-cmpbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.lb-cmpslot:empty { display: none; }
+.lb-cmpbox { margin: 6px 0 4px; padding: 10px; border-radius: 11px; background: var(--elev2, var(--bg)); border: 1px solid var(--border-elev2, var(--border-subtle)); display: grid; gap: 6px; min-width: 0; }
+.lb-cmphd { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; font-size: var(--fs-xs); }
+.lb-cmphd b { min-width: 0; }
+.lb-cmpd { font-family: var(--mono); font-weight: 800; white-space: nowrap; }
+.lb-cmpsub { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lb-cmprows { display: grid; gap: 4px; }
+.lb-cmpr { display: grid; grid-template-columns: 44px 30px minmax(40px, 1fr) 30px 32px; align-items: center; gap: 5px; font-size: 11px; }
+.lb-cmpk { color: var(--muted); font-weight: 700; white-space: nowrap; }
+.lb-cmpv { font-family: var(--mono); text-align: center; color: var(--muted); white-space: nowrap; }
+.lb-cmpbar { position: relative; height: 7px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.lb-cmpbar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--ink) 28%, transparent); }
+.lb-cmpbar i { position: absolute; top: 0; bottom: 0; border-radius: 99px; display: block; }
+.lb-cmpbar i.good { background: var(--moss); }
+.lb-cmpbar i.bad { background: var(--warn); }
+.lb-cmpdf { font-family: var(--mono); text-align: right; font-weight: 800; white-space: nowrap; }
+.lb-cmpmsg { margin: 2px 0 0; font-size: var(--fs-xs); color: var(--ink); font-weight: 600; }
+
+/* ---- v3.8.0: 전적 심층 리포트 & 판 필터 (#rank profile) ---- */
+.rk-rep { display: grid; gap: 10px; margin-top: 10px; }
+.rk-rep > h4 { margin: 0; font-size: var(--fs-m); font-weight: 800; }
+.rk-diag { margin: 0; font-size: var(--fs-s); line-height: 1.45; }
+.rk-rtabs { margin: 0; }
+.rk-rtabs button { white-space: nowrap; }
+.rk-rlist { display: grid; gap: 5px; }
+.rk-rrow { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto auto auto; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border-subtle); width: 100%; }
+.rk-rrow:not(:has(img)) { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+.rk-rrow img { width: 24px; height: 24px; border-radius: 5px; display: block; object-fit: cover; border: 1.5px solid transparent; }
+.rk-rrow img[data-c="1"] { border-color: var(--c1); }
+.rk-rrow img[data-c="2"] { border-color: var(--c2); }
+.rk-rrow img[data-c="3"] { border-color: var(--c3); }
+.rk-rrow img[data-c="4"] { border-color: var(--c4); }
+.rk-rrow img[data-c="5"] { border-color: var(--c5); }
+.rk-rrow img[data-c="7"] { border-color: var(--c7); }
+.rk-rnm { font-size: var(--fs-s); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.rk-rn, .rk-rt4 { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.rk-rav { font-family: var(--mono); font-size: var(--fs-s); font-weight: 800; white-space: nowrap; }
+.rk-gf { display: grid; gap: 7px; margin: 12px 0 8px; }
+.rk-gf-q { width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-m); }
+.rk-gf-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rk-gf-pl { margin: 0; }
+.rk-gf-pl button { white-space: nowrap; }
+.rk-gf-cnt { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); font-weight: 700; white-space: nowrap; flex: none; }
+
+

@@ -1,9 +1,14 @@
 <section id="parts">
   <h2 class="sr-title">재료 → 덱</h2>
   <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#units" aria-selected="false">챔피언</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#parts" class="on" aria-selected="true">재료</a><a href="#emb" aria-selected="false">상징</a></div>
-  <p class="emb-sub">초반에 얻은 재료를 누르면 그 재료를 잘 쓰는 덱과 바로 만들 수 있는 템을 보여드려요. 같은 재료는 여러 번 누르세요.</p>
+  <p class="emb-sub">보유한 재료, 기물, 상징을 고르면 가장 잘 맞는 덱과 최적 완성템 조합을 찾아드려요. 같은 재료는 여러 번 누르세요.</p>
   <div class="pt-pick" id="pt-pick"></div>
   <div class="pt-tray" id="pt-tray"></div>
+  <div class="pt-extra" id="pt-extra">
+    <input id="pt-uq" type="search" placeholder="보유 기물·상징 함께 넣기 (예: 자크, 재즈 상징)" autocomplete="off" aria-label="보유 기물 또는 상징 추가">
+    <div class="pt-usug" id="pt-usug"></div>
+    <div class="pt-uchips" id="pt-uchips"></div>
+  </div>
   <div class="mt-chips" id="pt-basis" role="group" aria-label="통계 기준"><button type="button" data-b="emer">에메+</button><button type="button" data-b="all">플래+</button><button type="button" data-b="low">플래 미만</button><button type="button" data-b="top">마스터+</button></div>
   <div id="pt-out"><p class="empty">불러오는 중</p></div>
 </section>

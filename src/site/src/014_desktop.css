@@ -552,4 +552,9 @@
   body:not(.overlay) #traits .tr-us-pc img[data-c="4"] { border-color: var(--c4); }
   body:not(.overlay) #traits .tr-us-pc img[data-c="5"] { border-color: var(--c5); }
   body:not(.overlay) #traits .tr-us-pc img[data-c="7"] { border-color: var(--c7); }
+  body:not(.overlay) .ag-cmp-grid.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body:not(.overlay) .ag-cmp-grid.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body:not(.overlay) .s19-elist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body:not(.overlay) .rk-rlist { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  body:not(.overlay) .s19-ewarn, body:not(.overlay) .ag-best-b, body:not(.overlay) .ag-cmp-t small, body:not(.overlay) .ag-cmp-dks > small, body:not(.overlay) .ag-cmp-dk, body:not(.overlay) .lb-cmpbtn, body:not(.overlay) .lb-cmpsub, body:not(.overlay) .lb-cmpr, body:not(.overlay) .rk-rn, body:not(.overlay) .rk-rt4, body:not(.overlay) .rk-gf-cnt { font-size: 12px; }
 }

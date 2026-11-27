@@ -331,6 +331,55 @@
     }).catch(function (e) { box.innerHTML = ""; box.appendChild(el("p", "empty", "불러오지 못했어요. 잠시 후 다시 시도해 주세요")); });
   }
 
+  function pwCompareCard(meP, mePw, opP, opPw, opName) {
+    var box = el("div", "lb-cmpbox");
+    var hd = el("div", "lb-cmphd");
+    var diffPw = mePw.power - opPw.power;
+    hd.appendChild(el("b", null, "나 #" + meP.placement + " (" + mePw.power + ") vs " + opName + " #" + opP.placement + " (" + opPw.power + ")"));
+    hd.appendChild(el("span", "lb-cmpd " + (diffPw >= 0 ? "good" : "bad"), (diffPw >= 0 ? "+" : "") + diffPw + "점"));
+    box.appendChild(hd);
+    var sub = el("div", "lb-cmpsub");
+    sub.appendChild(el("span", null, "필드 가치 " + mePw.val + "G vs " + opPw.val + "G (" + (mePw.val - opPw.val >= 0 ? "+" : "") + (mePw.val - opPw.val) + "G)"));
+    sub.appendChild(el("span", null, "예상 " + mePw.pred.toFixed(1) + "등 vs " + opPw.pred.toFixed(1) + "등"));
+    box.appendChild(sub);
+    var mMap = {}, oMap = {};
+    (mePw.parts || []).forEach(function (x) { mMap[x[0]] = x[1]; });
+    (opPw.parts || []).forEach(function (x) { oMap[x[0]] = x[1]; });
+    var axes = ["레벨", "유닛", "템", "캐리 템", "시너지"];
+    var maxAbs = 12;
+    axes.forEach(function (k) {
+      maxAbs = Math.max(maxAbs, Math.abs(mMap[k] || 0), Math.abs(oMap[k] || 0), Math.abs((mMap[k] || 0) - (oMap[k] || 0)));
+    });
+    var diffs = [];
+    var rows = el("div", "lb-cmprows");
+    axes.forEach(function (k) {
+      var mv = mMap[k] || 0, ov = oMap[k] || 0, df = mv - ov;
+      diffs.push([k, df]);
+      var r = el("div", "lb-cmpr");
+      r.appendChild(el("span", "lb-cmpk", k));
+      r.appendChild(el("span", "lb-cmpv", (mv >= 0 ? "+" : "") + mv));
+      var bar = el("div", "lb-cmpbar");
+      var w = Math.min(50, Math.round(Math.abs(df) / maxAbs * 50));
+      var fill = el("i", df >= 0 ? "good" : "bad");
+      fill.style.width = w + "%";
+      if (df >= 0) fill.style.left = "50%"; else fill.style.right = "50%";
+      bar.appendChild(fill);
+      r.appendChild(bar);
+      r.appendChild(el("span", "lb-cmpv", (ov >= 0 ? "+" : "") + ov));
+      r.appendChild(el("b", "lb-cmpdf " + (df > 0 ? "good" : df < 0 ? "bad" : ""), (df > 0 ? "+" : "") + df));
+      rows.appendChild(r);
+    });
+    box.appendChild(rows);
+    var weak = diffs.filter(function (x) { return x[1] <= -3; }).sort(function (a, b) { return a[1] - b[1]; }).slice(0, 2);
+    var strong = diffs.filter(function (x) { return x[1] >= 3; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 2);
+    var msg = "";
+    if (diffPw < 0 && weak.length) msg = "가장 큰 격차: " + weak.map(function (x) { return x[0] + " (" + x[1] + ")"; }).join(" · ");
+    else if (diffPw > 0 && strong.length) msg = "우위 항목: " + strong.map(function (x) { return x[0] + " (+" + x[1] + ")"; }).join(" · ");
+    else msg = "전체 보드 힘이 거의 비슷해요";
+    box.appendChild(el("p", "lb-cmpmsg", msg));
+    return box;
+  }
+
   function lobbyView(m, me) {
     var box = el("div", "lobby");
     box.appendChild(el("p", "sub", "불러오는 중"));
@@ -344,19 +393,38 @@
       var mSet = detectMatchSet(m) || detectMatchSet(md && md.info);
       var info = (md._metatft || {}).participant_info || [];
       var names = {}; info.forEach(function (p) { names[p.puuid] = p; });
-      md.info.participants.slice().sort(function (a, b) { return a.placement - b.placement; }).forEach(function (p) {
+      var parts = md.info.participants.slice().sort(function (a, b) { return a.placement - b.placement; });
+      var canPw = !pwOtherSet(m.patch, mSet);
+      var meP = parts.filter(function (p) { return p.puuid === me; })[0] || null;
+      var mePw = canPw && meP ? boardPower(meP.units, meP.traits, meP.level, mSet) : null;
+      if (mePw && (!mePw.parts || mePw.power == null)) mePw = null;
+      parts.forEach(function (p) {
         var pi = names[p.puuid] || (p.rating ? { ranked: { rating_text: p.rating } } : {}), rid = p.riotIdGameName ? p.riotIdGameName + "#" + p.riotIdTagline : (p.riot_id || pi.riot_id || "?");
+        var shortNm = rid.split("#")[0];
         var row = el("div", "lb-row" + (p.puuid === me ? " me" : ""));
         row.appendChild(el("span", "lb-pl " + plCls(p.placement), p.placement));
         var mid = el("div", "lb-mid");
-        var nm = el("button", "lb-name", rid.split("#")[0]); nm.type = "button";
+        var nm = el("button", "lb-name", shortNm); nm.type = "button";
         nm.addEventListener("click", function () { rkProfile(rid, null, m._reg || rkReg); window.scrollTo(0, 0); });
         var top = el("div", "lb-top"); top.appendChild(nm);
         var rt = pi.ranked && pi.ranked.rating_text;
         var tsm = el("small", null, p.level + "렙" + (rt ? " · " + (md._dak ? tierText(rt).replace(/ · \d+LP$/, "") : tierText(rt, true)) : ""));
         top.appendChild(tsm);
-        var pt = pwOtherSet(m.patch, mSet) ? null : powerTag(p.units, p.traits, p.level, true, mSet); if (pt) top.appendChild(pt);
+        var pt = canPw ? powerTag(p.units, p.traits, p.level, true, mSet) : null; if (pt) top.appendChild(pt);
+        var opPw = canPw && mePw && p.puuid !== me ? boardPower(p.units, p.traits, p.level, mSet) : null;
+        var cmpSlot = null;
+        if (opPw && opPw.parts && opPw.power != null) {
+          var cb = el("button", "lb-cmpbtn", "비교"); cb.type = "button";
+          cmpSlot = el("div", "lb-cmpslot");
+          cb.addEventListener("click", function () {
+            if (cmpSlot.firstChild) { cmpSlot.innerHTML = ""; cb.classList.remove("on"); cb.textContent = "비교"; return; }
+            cmpSlot.appendChild(pwCompareCard(meP, mePw, p, opPw, shortNm));
+            cb.classList.add("on"); cb.textContent = "닫기";
+          });
+          top.appendChild(cb);
+        }
         mid.appendChild(top);
+        if (cmpSlot) mid.appendChild(cmpSlot);
         var board = mtBoard(p.units, mSet);
         mid.appendChild(dkLine(board, p.traits, "sm", !isGuideSet(mSet), mSet));
         mid.appendChild(synRow(synOfMatch(p.traits, board, mSet), false, 7));
@@ -366,7 +434,7 @@
         row.appendChild(mid); box.appendChild(row);
       });
       var M = pwModel(mSet);
-      if (M && !M.off && !pwOtherSet(m.patch, mSet)) box.appendChild(el("p", "pw-note", "필드 가치는 필드 유닛의 가격 합, 덱파워는 최종 덱의 강함이에요. 100이 평균이에요" + (pwOld(m.patch, mSet) ? ". " + m.patch + " 판이라 덱파워는 지금 패치 기준이에요" : "")));
+      if (M && !M.off && canPw) box.appendChild(el("p", "pw-note", "필드 가치는 필드 유닛의 가격 합, 덱파워는 최종 덱의 강함이에요. 100이 평균이에요" + (pwOld(m.patch, mSet) ? ". " + m.patch + " 판이라 덱파워는 지금 패치 기준이에요" : "")));
     }).catch(function (e) { box.innerHTML = ""; box.appendChild(el("p", "sub", "로비 정보를 불러오지 못했어요")); });
     return box;
   }

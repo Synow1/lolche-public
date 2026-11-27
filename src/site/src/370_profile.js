@@ -540,21 +540,53 @@
         }
         var s2 = sec("등수 분포"); s2.appendChild(placeBars(plc)); c.appendChild(s2);
 
-        // 많이 한 덱 (현재 공략 세트면 비슷한 MetaTFT 덱으로, 지난·본섭 비공략 세트면 그 세트 시너지+캐리로만) · 캐리 (템 2개 이상)
-        var dk = {}, ca = {};
+        // 많이 한 덱 · 캐리 + 심층 리포트 (덱파워 대비 실제 등수 진단 + 모스트 챔피언·아이템·시너지 + 판별 검색 메타)
+        var dk = {}, ca = {}, uStat = {}, iStat = {}, tStat = {};
+        var pwN = 0, pwAct = 0, pwPred = 0, pwSum = 0;
+        var matchMeta = [];
         list.forEach(function (m) {
           var mSet = detectMatchSet(m), old = !isGuideSet(mSet), board = mtBoard(m.summary.units, mSet), r = deckOfBoard(board, m.summary.traits, old, mSet);
+          var syn = synOfMatch(m.summary.traits, board, mSet);
           var carry = board.filter(function (b) { return b.i.length >= 2; }).sort(function (a, b) { return b.i.length - a.i.length || b.cost - a.cost; })[0];
           var a = dk[r.name] = dk[r.name] || { n: 0, p: 0, t4: 0, d: r.d, u: r.d ? (mainOf(r.d) || {}).u : carry && carry.u, c: carry && carry.cost, ic: carry && carry.icon, old: old, set: mSet }; a.n++; a.p += m.placement; if (m.placement <= 4) a.t4++;
-          var seen = {};
-          board.forEach(function (u) { if (u.i.length < 2 || seen[u.u]) return; seen[u.u] = 1; var x = ca[u.u] = ca[u.u] || { n: 0, p: 0, icon: u.icon, cost: u.cost, old: old, set: mSet }; x.n++; x.p += m.placement; });
+          var seenC = {}, seenU = {}, seenI = {}, seenT = {};
+          var uNames = [], iNames = [], tNames = [];
+          board.forEach(function (u) {
+            uNames.push(u.u);
+            if (!seenU[u.u]) {
+              seenU[u.u] = 1;
+              var xu = uStat[u.u] = uStat[u.u] || { n: 0, p: 0, t4: 0, icon: u.icon, cost: u.cost, old: old, set: mSet };
+              xu.n++; xu.p += m.placement; if (m.placement <= 4) xu.t4++;
+            }
+            if (u.i.length >= 2 && !seenC[u.u]) {
+              seenC[u.u] = 1;
+              var x = ca[u.u] = ca[u.u] || { n: 0, p: 0, icon: u.icon, cost: u.cost, old: old, set: mSet };
+              x.n++; x.p += m.placement;
+            }
+            (u._ii || u.i.map(function (inm) { return { name: inm, icon: !old && IDX.items[inm] ? IDX.items[inm].icon : "" }; })).forEach(function (it) {
+              if (!it || !it.name) return;
+              iNames.push(it.name);
+              if (PARTS.indexOf(it.name) >= 0 || seenI[it.name]) return;
+              seenI[it.name] = 1;
+              var xi = iStat[it.name] = iStat[it.name] || { n: 0, p: 0, t4: 0, icon: it.icon || (!old && IDX.items[it.name] ? IDX.items[it.name].icon : ""), old: old };
+              xi.n++; xi.p += m.placement; if (m.placement <= 4) xi.t4++;
+            });
+          });
+          syn.forEach(function (tr) {
+            if (tr.style === "unique" || seenT[tr.t]) return;
+            seenT[tr.t] = 1; tNames.push(tr.t);
+            var xt = tStat[tr.t] = tStat[tr.t] || { n: 0, p: 0, t4: 0, icon: tr.ic || tr.icon || (!old && IDX.traits[tr.t] ? IDX.traits[tr.t] : ""), old: old };
+            xt.n++; xt.p += m.placement; if (m.placement <= 4) xt.t4++;
+          });
+          var bp = pwOtherSet(m.patch, mSet) ? null : boardPower(m.summary.units, m.summary.traits, m.summary.level, mSet);
+          if (bp && bp.pred != null && bp.power != null) { pwN++; pwAct += m.placement; pwPred += bp.pred; pwSum += bp.power; }
+          matchMeta.push({ m: m, dk: r.name, u: uNames, i: iNames, t: tNames });
         });
         var dkk = Object.keys(dk).sort(function (a, b) { return dk[b].n - dk[a].n || dk[a].p / dk[a].n - dk[b].p / dk[b].n; }).slice(0, 6);
         if (dkk.length) {
           var s3 = sec("많이 한 덱", "비슷한 메타 덱으로 묶음"), dl = el("div", "rk-dks");
           dkk.forEach(function (k) {
             var a = dk[k], row = el(a.d ? "button" : "div", "rk-dk"); if (a.d) row.type = "button";
-            // 비공략(본섭 18·지난) 시즌은 그 세트 아이콘만 (현재 공략 세트에 같은 이름이 있어도 쓰지 않음)
             var ic = a.u && (a.old ? ((a.ic || OLD_UI[a.u]) ? { icon: a.ic || OLD_UI[a.u], cost: a.c || 1 } : null) : IDX.units[a.u]);
             if (ic && ic.icon) { var im = img(ic.icon, a.u); im.dataset.c = ic.cost; if (a.old) im.dataset.oldset = String(a.set || liveSetNum()); row.appendChild(im); }
             row.appendChild(el("b", null, k));
@@ -575,33 +607,128 @@
         }
         body.appendChild(c);
 
-        var gl = el("div", "rk-games"); body.appendChild(gl);
-        if (lp._pending && queue !== "x") {
-          var pd = lp._pending, pc = el("div", "rk-pend");
-          pc.appendChild(el("b", null, pd.n > 1 ? "방금 " + pd.n + "게임 · 기록 대기 중" : "방금 끝난 게임 · 기록 대기 중"));
-          var lpd = el("span", "lpd " + (pd.diff >= 0 ? "up" : "dn"), (pd.diff >= 0 ? "+" : "") + pd.diff + "LP"); pc.appendChild(lpd);
-          pc.appendChild(el("small", null, lpText(pd.before) + " → " + lpText(pd.after) + " · 게임 기록은 몇 분 늦게 올라와요"));
-          gl.appendChild(pc);
+        // 심층 리포트 카드: 덱파워 대비 실제 성적 진단 + 모스트 챔피언·아이템·시너지 통계 (누르면 아래 전적 필터)
+        var gFilterQ = "", gFilterPl = "all", applyFilter = function () {};
+        if (n >= 2) {
+          var rep = el("div", "fcard rk-rep");
+          rep.appendChild(el("h4", null, "전적 심층 리포트"));
+          if (pwN >= 3) {
+            var aAct = pwAct / pwN, aPred = pwPred / pwN, aPw = pwSum / pwN, luck = aPred - aAct;
+            rep.appendChild(kvBox([
+              ["평균 덱파워", String(Math.round(aPw)), aPw >= 105 ? "good" : aPw <= 95 ? "bad" : ""],
+              ["예상 등수", aPred.toFixed(2)],
+              ["실제 등수", aAct.toFixed(2), aAct <= 4 ? "good" : aAct >= 5 ? "bad" : ""],
+              ["운영 지수", (luck >= 0 ? "+" : "") + luck.toFixed(2), luck >= 0.2 ? "good" : luck <= -0.2 ? "bad" : ""]
+            ]));
+            var diag = luck >= 0.25 ? "보드 힘보다 평균 " + luck.toFixed(2) + "등 높게 마감했어요. 배치와 체력 관리가 탄탄해요."
+              : luck <= -0.25 ? "보드 힘 대비 평균 " + Math.abs(luck).toFixed(2) + "등 낮게 마감했어요. 중반 체력 관리와 핵심 캐리 배치를 점검해 보세요."
+              : "보드 힘과 실제 성적이 비슷하게 나오고 있어요. (" + pwN + "판 기준)";
+            rep.appendChild(el("p", "sub rk-diag", diag));
+          }
+          var repTab = "u", rChips = el("div", "mt-chips rk-rtabs"), rList = el("div", "rk-rlist");
+          function drawRepList() {
+            rList.innerHTML = "";
+            [].forEach.call(rChips.children, function (b) { b.classList.toggle("on", b.dataset.rk === repTab); });
+            var map = repTab === "u" ? uStat : repTab === "i" ? iStat : tStat;
+            var minN = n >= 6 ? 2 : 1;
+            var keys = Object.keys(map).filter(function (k) { return map[k].n >= minN; });
+            if (!keys.length) keys = Object.keys(map);
+            keys.sort(function (a, b) { return map[b].n - map[a].n || (map[a].p / map[a].n) - (map[b].p / map[b].n); }).slice(0, 8).forEach(function (k) {
+              var st = map[k], av = st.p / st.n, t4r = Math.round(st.t4 / st.n * 100);
+              var row = el("button", "rk-rrow"); row.type = "button";
+              if (st.icon) { var im = img(st.icon, ""); if (repTab === "u" && st.cost) im.dataset.c = st.cost; row.appendChild(im); }
+              row.appendChild(el("b", "rk-rnm", k));
+              row.appendChild(el("span", "rk-rn", st.n + "판"));
+              row.appendChild(el("span", "rk-rav " + (av <= 4 ? "good" : av >= 5 ? "bad" : ""), av.toFixed(2)));
+              row.appendChild(el("span", "rk-rt4", "순방 " + t4r + "%"));
+              row.addEventListener("click", function () {
+                gFilterQ = (gFilterQ === k) ? "" : k;
+                var inp = document.getElementById("rk-gf-q"); if (inp) inp.value = gFilterQ;
+                applyFilter();
+                var glEl = document.querySelector("#rk-prof .rk-gf");
+                if (glEl) glEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              });
+              rList.appendChild(row);
+            });
+            if (!rList.children.length) rList.appendChild(el("p", "sub", "표시할 통계가 부족해요"));
+          }
+          [["u", "모스트 챔피언"], ["i", "모스트 아이템"], ["t", "모스트 시너지"]].forEach(function (x) {
+            var b = el("button", x[0] === repTab ? "on" : null, x[1]); b.type = "button"; b.dataset.rk = x[0];
+            b.addEventListener("click", function () { repTab = x[0]; drawRepList(); });
+            rChips.appendChild(b);
+          });
+          rep.appendChild(rChips); rep.appendChild(rList);
+          drawRepList();
+          body.appendChild(rep);
         }
-        var shown = 0;
+
+        // 전적 판 필터 바
+        var gf = el("div", "rk-gf");
+        var gfInp = el("input", "rk-gf-q"); gfInp.id = "rk-gf-q"; gfInp.type = "search";
+        gfInp.placeholder = "전적 내 덱·챔피언·아이템·시너지 검색";
+        gfInp.setAttribute("aria-label", "전적 판 검색");
+        var gfChips = el("div", "mt-chips rk-gf-pl");
+        var gfCnt = el("span", "rk-gf-cnt");
+        [["all", "전체"], ["win", "1등"], ["top4", "순방"], ["bot4", "하위"]].forEach(function (x) {
+          var b = el("button", x[0] === gFilterPl ? "on" : null, x[1]); b.type = "button"; b.dataset.pl = x[0];
+          b.addEventListener("click", function () {
+            gFilterPl = x[0];
+            [].forEach.call(gfChips.children, function (y) { y.classList.toggle("on", y.dataset.pl === gFilterPl); });
+            applyFilter();
+          });
+          gfChips.appendChild(b);
+        });
+        gfInp.addEventListener("input", function () { gFilterQ = gfInp.value.trim(); applyFilter(); });
+        gf.appendChild(gfInp);
+        var gfRow = el("div", "rk-gf-row"); gfRow.appendChild(gfChips); gfRow.appendChild(gfCnt); gf.appendChild(gfRow);
+        body.appendChild(gf);
+
+        var gl = el("div", "rk-games"); body.appendChild(gl);
+        var filtered = list, shown = 0;
         function canFetch() {  // 고른 범위를 다 봤는데 그 뒤 판이 더 있을 수 있나
+          if (gFilterQ || gFilterPl !== "all") return false;
           var pool = all.filter(function (m) { return queue === "all" || String(m.queue_id) === queue; }).length;
           return range && (pool > n || (d._canMore && d._canMore(range * 1.3 + 13)));
         }
+        function renderPend() {
+          if (lp._pending && queue !== "x" && !gFilterQ && gFilterPl === "all") {
+            var pd = lp._pending, pc = el("div", "rk-pend");
+            pc.appendChild(el("b", null, pd.n > 1 ? "방금 " + pd.n + "게임 · 기록 대기 중" : "방금 끝난 게임 · 기록 대기 중"));
+            var lpd = el("span", "lpd " + (pd.diff >= 0 ? "up" : "dn"), (pd.diff >= 0 ? "+" : "") + pd.diff + "LP"); pc.appendChild(lpd);
+            pc.appendChild(el("small", null, lpText(pd.before) + " → " + lpText(pd.after) + " · 게임 기록은 몇 분 늦게 올라와요"));
+            gl.appendChild(pc);
+          }
+        }
         function more() {
-          if (shown >= n && canFetch()) {  // 범위 넘어서 10판 더: 범위를 10 늘리고 (필요하면 받아서) 그 자리까지 펼친다
+          var fn = filtered.length;
+          if (shown >= fn && canFetch()) {  // 범위 넘어서 10판 더: 범위를 10 늘리고 (필요하면 받아서) 그 자리까지 펼친다
             keepShown = shown + 10; range += 10;
             c1.querySelectorAll("button").forEach(function (y) { y.classList.remove("on"); });
             draw(); return;
           }
-          var upto = Math.max(shown + 10, Math.min(keepShown, n));
-          list.slice(shown, upto).forEach(function (m) { gl.appendChild(gameCard(m, lp, me)); });
-          shown = Math.min(upto, n); keepShown = 10;
-          mb.hidden = shown >= n && !canFetch();
-          mb.textContent = shown >= n ? "10판 더 보기" : "10판 더 보기";
+          var upto = Math.max(shown + 10, Math.min(keepShown, fn));
+          filtered.slice(shown, upto).forEach(function (m) { gl.appendChild(gameCard(m, lp, me)); });
+          shown = Math.min(upto, fn); keepShown = 10;
+          mb.hidden = shown >= fn && !canFetch();
+          mb.textContent = "10판 더 보기";
         }
+        applyFilter = function () {
+          var q = gFilterQ;
+          filtered = matchMeta.filter(function (x) {
+            if (gFilterPl === "win" && x.m.placement !== 1) return false;
+            if (gFilterPl === "top4" && x.m.placement > 4) return false;
+            if (gFilterPl === "bot4" && x.m.placement <= 4) return false;
+            if (!q) return true;
+            return matches(x.dk, q) || x.u.some(function (s) { return matches(s, q); }) || x.i.some(function (s) { return matches(s, q); }) || x.t.some(function (s) { return matches(s, q); });
+          }).map(function (x) { return x.m; });
+          gfCnt.textContent = (q || gFilterPl !== "all") ? filtered.length + "/" + n + "판" : n + "판";
+          gl.innerHTML = ""; shown = 0;
+          renderPend();
+          if (!filtered.length) { gl.appendChild(el("p", "empty", "조건에 맞는 판이 없어요")); mb.hidden = true; }
+          else more();
+        };
         var mb = el("button", "tb-clear rk-more", "10판 더 보기"); mb.type = "button"; mb.addEventListener("click", more);
-        body.appendChild(mb); more();
+        body.appendChild(mb); applyFilter();
       }
       draw();
     }).catch(function (e) {

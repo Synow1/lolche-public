@@ -46,6 +46,7 @@ const JS_TAGS = {
   '310_parts.js': ['parts'], '320_tfa.js': ['tfa'], '330_meta_items.js': ['meta', 'items', 'home', 'overlay'],
   '335_units.js': ['units', 's19', 'meta', 'find'],
   '337_traits.js': ['traits', 's19', 'meta', 'units', 'home'],
+  '338_tools.js': ['augments', 'numbers'],
   '340_emb_builder_lists.js': ['emb', 'builder', 'traits', 'find', 'flow', 'wisps', 'numbers', 'scout', 'patch', 'augments'],
   '350_rank.js': ['rank', 'friends'], '360_power.js': ['power', 'rank'], '370_profile.js': ['rank', 'friends'], '380_friends.js': ['friends'],
   '390_esports.js': ['esports', 'home'], '395_dc.js': ['dc'], '397_whatsnew.js': ['whatsnew'], '398_s19.js': ['s19', 'home', 'units'],
@@ -445,6 +446,18 @@ function fresh(file, key, hours) {
     await q(() => [...document.querySelectorAll('.rk-gm button')].filter(b => /로비 8명/.test(b.textContent)).slice(0, 6).forEach(b => b.click()));
     await pg.waitForTimeout(5000);
     if (await q(() => document.querySelectorAll('.lb-row').length) < 8) notes.push('전적 검색: 로비 줄을 못 열어 넓이 검사 일부 건너뜀');
+    else {
+      const cmp = await q(() => {
+        const b = document.querySelector('.lb-cmpbtn');
+        if (!b) return { btn: 0 };
+        b.click();
+        return { btn: 1, rows: document.querySelectorAll('.lb-cmpbox .lb-cmpr').length, sw: document.documentElement.scrollWidth };
+      });
+      if (cmp && cmp.btn && cmp.rows !== 5) fail(`전적 검색: 로비 1:1 덱파워 비교 축이 5개가 아님 (${cmp.rows})`);
+      if (cmp && cmp.sw > W) fail(`전적 검색: 로비 1:1 비교를 열면 화면보다 넓어짐 ${cmp.sw}px`);
+    }
+    if (await q(() => document.querySelectorAll('#rk-prof .rk-rep').length) < 1) soft('전적 검색: 심층 리포트 카드가 없음');
+    if (await q(() => !document.getElementById('rk-gf-q'))) fail('전적 검색: 전적 판 필터 검색창이 없음');
     { const sw2 = await q(() => document.documentElement.scrollWidth); if (sw2 > W) fail(`전적 검색: 로비 8명을 열면 화면보다 넓어짐 ${sw2}px (가로 밀림)`); }
     // 판 카드 머리: 덱 이름·평균 등수가 팀 코드 버튼과 겹치지 않게 (2026-11-14 사용자 스크린샷)
     const ov = await q(() => [...document.querySelectorAll('.rk-gm .gm-head')].filter(h => { const dk = h.querySelector('.gm-dk'), cb = h.querySelector('.codebtn'); if (!dk || !cb) return false; const L = cb.getBoundingClientRect().left; return [...dk.children].some(c => c.getBoundingClientRect().right > L + 1) || dk.getBoundingClientRect().right > L + 1; }).length);
@@ -854,7 +867,7 @@ function fresh(file, key, hours) {
     await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(2500);
     await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#s19'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(1200);
     // v3.0.0: #s19는 '도감' 탭 (덱·개요는 #home·#meta로 옮김)
-    for (const [v, sel, min] of [['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['builder', '.s19-bpick', 60], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
+    for (const [v, sel, min] of [['traits', '.s19-tc', 20], ['units', '.s19-uc', 60], ['unlock', '.s19-ul', 5], ['guide', '.s19-gcard', 3], ['builder', '.s19-bpick', 60], ['augs', '.s19-ar', 50], ['items', '.s19-ar', 10]]) {
       await pg.evaluate((v) => document.querySelector('#s19-view [data-v=' + v + ']').click(), v); await pg.waitForTimeout(500);
       const r = await pg.evaluate((sel) => ({ n: document.querySelectorAll('#s19-out ' + sel).length, sw: document.documentElement.scrollWidth, seg: [...document.querySelectorAll('#s19-view button')].some(b => b.getBoundingClientRect().height > 44) }), sel);
       if (r.n < min) fail(`19시즌 ${v}: 항목 ${r.n}개 (최소 ${min})`);
@@ -1630,6 +1643,116 @@ function fresh(file, key, hours) {
     if (liveChk.rkPbeTxt !== 'PBE') fail('19시즌 본섭 전환 모의: 전적 검색 PBE 칩에 19시즌 문구가 남음 (' + liveChk.rkPbeTxt + ')');
     if (errsLive.length) fail('19시즌 본섭 전환 모의: 페이지 오류 ' + errsLive.slice(0, 2).join(' ; '));
     await pgLive.close();
+  });
+  // v3.8.0 실전 도구·통계·편의 기능 종합 점검 (fast에서도 항상 동작, 360px 모바일 기준 가로 밀림·텍스트 꺾임까지 검증)
+  task(['s19', 'augments', 'numbers', 'meta', 'parts', 'home'], async () => {
+    const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+    await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
+    await pg.route('https://lolche.local/**', async (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
+      if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      const f = path.join(SITE, decodeURIComponent(u.pathname));
+      return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+    });
+    const errs = []; pg.on('pageerror', e => errs.push(String(e)));
+    await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(2200);
+    const go = (t) => pg.evaluate((t) => { const a = document.createElement('a'); a.href = '#' + t; document.body.appendChild(a); a.click(); a.remove(); }, t);
+    const wrapChk = (label) => pg.evaluate(new Function('return (' + WRAP_FN + ')()')).then(w => { if (w && w.length) fail(`v3.8.0 ${label}: 짧은 글 꺾임 ${[...new Set(w)].slice(0, 4).join(', ')}`); });
+
+    // 1) 19시즌 보상·조우자·프리즘·유틸
+    await go('s19'); await pg.waitForTimeout(700);
+    await pg.evaluate(() => document.querySelector('#s19-view [data-v=guide]').click()); await pg.waitForTimeout(450);
+    const gCash = await pg.evaluate(() => ({ n: document.querySelectorAll('#s19-out .s19-gcard').length, rows: document.querySelectorAll('#s19-out .s19-crow').length, sw: document.documentElement.scrollWidth }));
+    if (gCash.n < 4 || gCash.rows < 25) fail(`v3.8.0 보상표: 카드(${gCash.n}) 또는 행(${gCash.rows}) 부족`);
+    if (gCash.sw > 360) fail(`v3.8.0 보상표: 가로 밀림 ${gCash.sw}px`);
+    await wrapChk('보상표');
+    await pg.evaluate(() => [...document.querySelectorAll('#s19-tools .s19-chips button')].find(b => /조우자/.test(b.textContent)).click()); await pg.waitForTimeout(350);
+    const gEnc = await pg.evaluate(() => ({ n: document.querySelectorAll('#s19-out .s19-erow').length, sw: document.documentElement.scrollWidth }));
+    if (gEnc.n !== 25) fail(`v3.8.0 조우자: 25종이어야 하는데 ${gEnc.n}종`);
+    if (gEnc.sw > 360) fail(`v3.8.0 조우자: 가로 밀림 ${gEnc.sw}px`);
+    await wrapChk('조우자');
+    await pg.evaluate(() => [...document.querySelectorAll('#s19-tools .s19-chips button')].find(b => /유틸/.test(b.textContent)).click()); await pg.waitForTimeout(350);
+    const gUtil = await pg.evaluate(() => ({ n: document.querySelectorAll('#s19-out .s19-gcard').length, u: document.querySelectorAll('#s19-out .s19-urow').length, sw: document.documentElement.scrollWidth }));
+    if (gUtil.n < 4 || gUtil.u < 5) fail(`v3.8.0 프리즘·유틸: 카드(${gUtil.n}) 또는 유틸(${gUtil.u}) 부족`);
+    if (gUtil.sw > 360) fail(`v3.8.0 프리즘·유틸: 가로 밀림 ${gUtil.sw}px`);
+
+    // 2) 증강 3택 비교기
+    await go('augments'); await pg.waitForTimeout(600);
+    await pg.evaluate(() => { const bs = document.querySelectorAll('#ag-list .ag-add'); if (bs[0]) bs[0].click(); if (bs[1]) bs[1].click(); }); await pg.waitForTimeout(350);
+    await pg.evaluate(() => document.querySelector('#ag-cmp-st [data-s="2-1"]').click()); await pg.waitForTimeout(250);
+    const agc = await pg.evaluate(() => ({ cards: document.querySelectorAll('#ag-cmp-out .ag-cmp-card').length, tiers: document.querySelectorAll('#ag-cmp-out .ag-cmp-t').length, sw: document.documentElement.scrollWidth }));
+    if (agc.cards !== 2 || agc.tiers !== 10) fail(`v3.8.0 증강 3택 비교: 카드(${agc.cards})·티어칸(${agc.tiers}) 비정상`);
+    if (agc.sw > 360) fail(`v3.8.0 증강 3택 비교: 가로 밀림 ${agc.sw}px`);
+    await wrapChk('증강 비교');
+    await pg.evaluate(() => document.getElementById('ag-cmp-clr').click()); await pg.waitForTimeout(200);
+
+    // 3) 리롤 확률·기대 골드 계산기
+    await go('numbers'); await pg.waitForTimeout(500);
+    await pg.evaluate(() => {
+      [...document.querySelectorAll('#rr-calc .rr-row')[0].querySelectorAll('button')].find(b => b.textContent === '9렙').click();
+      [...document.querySelectorAll('#rr-calc .rr-row')[1].querySelectorAll('button')].find(b => b.textContent === '7코').click();
+    }); await pg.waitForTimeout(250);
+    const rr = await pg.evaluate(() => ({ hd: (document.querySelector('#rr-calc .rr-head small') || {}).textContent || '', kpis: [...document.querySelectorAll('#rr-calc .rr-k b')].map(e => e.textContent), sw: document.documentElement.scrollWidth }));
+    if (!/9렙 · 7코 15%/.test(rr.hd) || rr.kpis.length < 3 || rr.kpis.some(v => !/%/.test(v))) fail('v3.8.0 리롤 계산기: 9렙 7코 계산 오류 ' + JSON.stringify(rr));
+    if (rr.sw > 360) fail(`v3.8.0 리롤 계산기: 가로 밀림 ${rr.sw}px`);
+    await wrapChk('리롤 계산기');
+
+    // 4) 메타 덱 7일 트렌드 + 즐겨찾기 ★ + 나만의 메모
+    await go('meta'); await pg.waitForTimeout(600);
+    const trCnt = await pg.evaluate(() => document.querySelectorAll('#mt-rows .dk-trd').length);
+    if (trCnt < 5) fail(`v3.8.0 7일 트렌드: 덱 목록 추세 배지 ${trCnt}개 (5개 이상이어야)`);
+    await pg.evaluate(() => document.querySelector('#mt-rows .mt-row').click()); await pg.waitForTimeout(500);
+    const dtl = await pg.evaluate(() => {
+      const svg = document.querySelector('#mt-detail .dk-trsvg');
+      const fb = document.querySelector('#mt-detail .dk-fav-btn');
+      const mi = document.querySelector('#mt-detail .dk-memo-inp');
+      if (fb && !fb.classList.contains('on')) fb.click();
+      if (mi) { mi.value = '8렙 리롤 테스트'; mi.dispatchEvent(new Event('blur')); }
+      return { hasSvg: !!svg, favOn: !!(fb && fb.classList.contains('on')), sw: document.documentElement.scrollWidth };
+    });
+    if (!dtl.hasSvg) fail('v3.8.0 7일 트렌드: 덱 상세에 추세 SVG 그래프가 없음');
+    if (!dtl.favOn) fail('v3.8.0 즐겨찾기: 덱 상세 ★ 토글이 작동하지 않음');
+    if (dtl.sw > 360) fail(`v3.8.0 덱 상세(트렌드·메모): 가로 밀림 ${dtl.sw}px`);
+    await pg.evaluate(() => document.querySelector('#mt-detail .back').click()); await pg.waitForTimeout(300);
+    await pg.evaluate(() => document.querySelector('#mt-filter [data-f=fav]').click()); await pg.waitForTimeout(300);
+    const favRows = await pg.evaluate(() => document.querySelectorAll('#mt-rows .mt-row').length);
+    if (favRows < 1) fail('v3.8.0 즐겨찾기: ★ 즐겨찾기 필터에서 저장한 덱이 안 보임');
+    await go('home'); await pg.waitForTimeout(400);
+    const hmFav = await pg.evaluate(() => ({ vis: !document.getElementById('hm-fav-wrap').hidden, n: document.querySelectorAll('#hm-fav .mt-row').length, memo: (document.querySelector('#hm-fav .hm-fav-memo') || {}).textContent || '' }));
+    if (!hmFav.vis || hmFav.n < 1 || hmFav.memo !== '8렙 리롤 테스트') fail('v3.8.0 홈 즐겨찾기: 저장한 덱 또는 메모가 홈에 안 보임 ' + JSON.stringify(hmFav));
+    // 테스트 후 즐겨찾기·메모 정리
+    await go('meta'); await pg.waitForTimeout(300);
+    await pg.evaluate(() => { document.querySelector('#mt-rows .mt-row').click(); }); await pg.waitForTimeout(300);
+    await pg.evaluate(() => {
+      const fb = document.querySelector('#mt-detail .dk-fav-btn'); if (fb && fb.classList.contains('on')) fb.click();
+      const mi = document.querySelector('#mt-detail .dk-memo-inp'); if (mi) { mi.value = ''; mi.dispatchEvent(new Event('blur')); }
+      document.querySelector('#mt-detail .back').click();
+      document.querySelector('#mt-filter [data-f=all]').click();
+    });
+
+    // 5) 재료 + 기물 + 상징 통합 추천 & 최적 완성템 분배 시뮬레이터
+    await go('parts'); await pg.waitForTimeout(500);
+    await pg.evaluate(() => { const c = document.querySelector('#pt-tray .pt-clear'); if (c) c.click(); });
+    for (const n of ['대검', '지팡이', '여눈', '장갑']) await pg.evaluate((n) => [...document.querySelectorAll('.pt-p')].find(x => x.textContent.startsWith(n)).click(), n);
+    await pg.waitForTimeout(350);
+    const sim1 = await pg.evaluate(() => ({ rows: document.querySelectorAll('#pt-out .pt-sim-row').length, chips: document.querySelectorAll('#pt-out .pt-sim-ch button').length, sw: document.documentElement.scrollWidth }));
+    if (sim1.rows < 2 || sim1.chips < 2) fail(`v3.8.0 아이템 분배 시뮬레이터: 조합(${sim1.rows}) 또는 챔피언 칩(${sim1.chips}) 부족`);
+    if (sim1.sw > 360) fail(`v3.8.0 재료·시뮬레이터: 가로 밀림 ${sim1.sw}px`);
+    await pg.evaluate(() => { const bs = document.querySelectorAll('#pt-out .pt-sim-ch button'); if (bs[1]) bs[1].click(); }); await pg.waitForTimeout(250);
+    const sim2 = await pg.evaluate(() => document.querySelectorAll('#pt-out .pt-sim-row').length);
+    if (sim2 < 2) fail('v3.8.0 아이템 분배 시뮬레이터: 챔피언 기준 전환 후 조합이 사라짐');
+    // 기물 함께 넣기 테스트
+    await pg.evaluate(() => { const i = document.getElementById('pt-uq'); i.value = '애니'; i.dispatchEvent(new Event('input', { bubbles: true })); }); await pg.waitForTimeout(200);
+    await pg.evaluate(() => { const b = document.querySelector('#pt-usug .pt-sug-b'); if (b) b.click(); }); await pg.waitForTimeout(300);
+    const uAdd = await pg.evaluate(() => ({ chips: document.querySelectorAll('#pt-uchips .pt-uchip').length, decks: document.querySelectorAll('#pt-out .mt-row').length, sw: document.documentElement.scrollWidth }));
+    if (uAdd.chips < 1 || uAdd.decks < 1) fail('v3.8.0 보유 기물 통합 추천: 기물 칩 또는 추천 덱 없음 ' + JSON.stringify(uAdd));
+    if (uAdd.sw > 360) fail(`v3.8.0 보유 기물 통합 추천: 가로 밀림 ${uAdd.sw}px`);
+    await wrapChk('재료·시뮬레이터');
+    await pg.evaluate(() => document.querySelector('#pt-tray .pt-clear').click());
+
+    if (errs.length) fail('v3.8.0 종합 점검: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
+    await pg.close();
   });
   // 동시에 4개씩 (대부분 I/O·대기 시간이라 겹쳐 돌리면 빨라진다)
   { let next = 0; await Promise.all([0, 1, 2, 3].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }

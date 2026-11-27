@@ -98,6 +98,43 @@
         dbox.appendChild(r);
       });
     }
+    // 2.5) 내 즐겨찾기 덱 (저장된 덱이 있을 때만 표시)
+    var fw = document.getElementById("hm-fav-wrap"), fb = document.getElementById("hm-fav");
+    if (fw && fb && META && IDX && typeof isDeckFav === "function") {
+      var favs = allViews().filter(function (v) { return v && isDeckFav(v); }).slice(0, 4);
+      fw.hidden = !favs.length;
+      if (favs.length) {
+        fb.innerHTML = "";
+        favs.forEach(function (v) {
+          var d = v.st, bt = basisTier(d, "emer"), bs = basisSt(d, "emer") || basisSt(d, "all"), mc = mainOf(v);
+          var r = el("button", "mt-row dk hm-dk t-" + bt); r.type = "button";
+          r.appendChild(dkPortrait(mc, null));
+          var mid = el("div", "mt-mid");
+          var meta = el("div", "dk-meta");
+          meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
+          var memo = typeof deckMemoGet === "function" ? deckMemoGet(v) : "";
+          var mtxt = el("span", "dk-sub");
+          if (d && d.style) mtxt.appendChild(styleTag(d.style));
+          if (typeof deckTrendBadge === "function") { var tb = deckTrendBadge(d); if (tb) mtxt.appendChild(tb); }
+          if (mtxt.childNodes.length) meta.appendChild(mtxt);
+          mid.appendChild(meta);
+          var nm = el("div", "mt-name", deckName(v));
+          nm.insertBefore(el("span", "dk-fav-mk", "★"), nm.firstChild);
+          mid.appendChild(nm);
+          if (memo) mid.appendChild(el("div", "hm-fav-memo", memo));
+          else mid.appendChild(strip(starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; }).slice(0, 6).map(function (b) { return b.u; })));
+          r.appendChild(mid);
+          var num = el("div", "mt-num dk-kpi2");
+          if (bs) {
+            num.appendChild(dkGrad(el("b", "dk-avg", bs[0].toFixed(2)), dkAvgT(bs[0])));
+            num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
+          }
+          r.appendChild(num);
+          r.addEventListener("click", function () { openDeck(v.id); });
+          fb.appendChild(r);
+        });
+      }
+    }
     // 3) 최근 데이터 변화 요약
     var cw = document.getElementById("hm-chg-wrap"), cb = document.getElementById("hm-chg");
     if (cw && cb && V2_CHG && V2_CHG.log && V2_CHG.log.length) {
@@ -129,6 +166,13 @@
     if (st) st.addEventListener("click", function () { spotOpen(); });
     var wn = document.getElementById("hm-wn-open");
     if (wn) wn.addEventListener("click", function () { whatsNew("again"); });
+    var fm = document.getElementById("hm-fav-more");
+    if (fm) fm.addEventListener("click", function (e) {
+      e.preventDefault();
+      var fb = document.querySelector('#mt-filter button[data-f="fav"]');
+      if (fb) fb.click();
+      goTab("meta");
+    });
     // 홈에서 필요한 19시즌·변화 데이터 선로딩
     s19Load().catch(function () {});
     fetch("changes.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {

@@ -501,7 +501,7 @@
     });
     fetch("guides.json").then(function (r) { return r.json(); }).then(function (g) { buildGuides(g); homeRender(); }).catch(function () {});
     fetch("version.json").then(function (r) { return r.json(); }).then(buildVersion).catch(function () {});
-    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); }).catch(function () {
+    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); if (typeof agCmpRender === "function") agCmpRender(); }).catch(function () {
       var b = document.getElementById("tfa-out"); if (b) b.innerHTML = '<p class="empty">' + reloadErr() + '</p>';
     });
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.addEventListener("click", function () { tfaView = b.dataset.v; tfaSave(); tfaRender(); }); });

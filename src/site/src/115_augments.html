@@ -2,6 +2,20 @@
   <h2 class="sr-title">증강</h2>
   <div class="seg codex-seg" role="tablist" aria-label="도감"><a href="#items" aria-selected="false">아이템</a><a href="#augments" class="on" aria-selected="true">증강</a><a href="#traits" aria-selected="false">시너지</a></div>
   <div class="mt-upd" id="ag-upd"><span id="ag-upd-t"></span></div>
+  <div class="ag-cmp" id="ag-cmp">
+    <div class="ag-cmp-head">
+      <h3>증강 3택 비교</h3>
+      <div class="mt-chips ag-cmp-st" id="ag-cmp-st" role="group" aria-label="증강 시점">
+        <button type="button" data-s="All" class="on">전체</button><button type="button" data-s="2-1">2-1</button><button type="button" data-s="3-2">3-2</button><button type="button" data-s="4-2">4-2</button>
+      </div>
+      <button type="button" class="pt-clear" id="ag-cmp-clr" hidden>초기화</button>
+    </div>
+    <div class="ag-cmp-bar">
+      <input id="ag-cmp-q" type="search" placeholder="비교할 증강 추가 (최대 3개, 초성 가능)" autocomplete="off" aria-label="비교할 증강 검색">
+    </div>
+    <div class="ag-cmp-sug" id="ag-cmp-sug"></div>
+    <div class="ag-cmp-out" id="ag-cmp-out"></div>
+  </div>
   <div class="ag-tools">
     <input id="ag-q" type="search" placeholder="증강 검색" autocomplete="off" aria-label="증강 찾기">
     <div class="mt-chips" id="ag-rar" role="group" aria-label="등급">

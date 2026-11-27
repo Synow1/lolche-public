@@ -331,6 +331,11 @@
           var c = el("span", "ag-card"); c.dataset.aug = n; c.dataset.r = r;
           if (IDX.augments[n]) { var im = img(IDX.augments[n], ""); im.dataset.r = r; c.appendChild(im); }
           c.appendChild(document.createTextNode(n));
+          var picked = typeof agCmpList !== "undefined" && agCmpList.indexOf(n) >= 0;
+          var add = el("button", "ag-add" + (picked ? " on" : ""), picked ? "✓" : "+");
+          add.type = "button"; add.setAttribute("aria-label", n + (picked ? " 비교 빼기" : " 비교에 담기"));
+          add.addEventListener("click", function (e) { e.stopPropagation(); if (typeof agCmpToggle === "function") agCmpToggle(n); });
+          c.appendChild(add);
           cards.appendChild(c);
         });
         sub.appendChild(cards); subs.appendChild(sub);

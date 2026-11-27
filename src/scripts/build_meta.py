@@ -247,6 +247,15 @@ def deck(nm, cluster, v, s, d, total, codes):
     finals = [[int(x["level"]), round(x["avg"], 2), round(100 * x["count"] / max(1, sum(y["count"] for y in fl)))]
               for x in sorted(fl, key=lambda x: int(x["level"])) if x["count"] >= 100]
     ra = T.req_aug(nm, v)
+    raw_tr = [t for t in (v.get("trends") or []) if t.get("day") and (t.get("count") or 0) >= 50 and t.get("avg") is not None]
+    raw_tr.sort(key=lambda t: str(t["day"]))
+    trends = [[str(t["day"])[5:10], round(float(t["avg"]), 2), round(float(t.get("pick") or 0) * 8, 2), int(t["count"])] for t in raw_tr[-7:]]
+    trd = None
+    if len(trends) >= 4:
+        rec, prv = trends[-2:], trends[-5:-2]
+        rc, pc = sum(x[3] for x in rec), sum(x[3] for x in prv)
+        if rc and pc:
+            trd = round(sum(x[1] * x[3] for x in rec) / rc - sum(x[1] * x[3] for x in prv) / pc, 2)
     out = {
         "id": cluster, "name": T.comp_name(nm, v), "style": v.get("levelling", ""),
         "avg": round(avg, 2), "top4": round(sum(p[:4]) / n * 100), "win": round(p[0] / n * 100, 1),
@@ -256,6 +265,10 @@ def deck(nm, cluster, v, s, d, total, codes):
         "early": early, "levels": by_level, "lvb": lvb, "emb": emb, "finals": finals, "code": codes_by_level[str(level)], "codes": codes_by_level,
         "counters": [c for c in d.get("counters", []) if str(c["against"]) != str(cluster)][:4],
     }
+    if len(trends) >= 2:
+        out["trends"] = trends
+    if trd is not None:
+        out["trd"] = trd
     if ra:
         out["req_aug"] = ra
     return out

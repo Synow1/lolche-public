@@ -1,12 +1,12 @@
   /* ---- 19시즌(프리즘 투어) 스튜디오 (v2.2.0: 개요·추천 덱(배치·증강)·시너지·챔피언·해금 트래커·스쿼드 빌더·증강·아이템) ---- */
-  var S19 = null, S19_KEY = "tft-guide-s19", s19St = { v: "units", tf: "all", cf: 0, af: 0, an: false, q: "", bcf: 0, ds: "avg", dm: "guide" };
+  var S19 = null, S19_KEY = "tft-guide-s19", s19St = { v: "units", tf: "all", cf: 0, af: 0, an: false, q: "", bcf: 0, ds: "avg", dm: "guide", gf: "cash" };
   var S19_SQ_KEY = "tft-guide-s19-squad", s19Sq = [];
   var S19_UL_KEY = "tft-guide-s19-uldone", s19UlDone = {};
   try { var s19s = JSON.parse(localStorage.getItem(S19_KEY) || "null"); if (s19s) for (var k19 in s19s) s19St[k19] = s19s[k19]; s19St.q = ""; } catch (e) {}
   if (s19St.v === "home" || s19St.v === "decks") s19St.v = "units";
   try { var sqs = JSON.parse(localStorage.getItem(S19_SQ_KEY) || "[]"); if (Array.isArray(sqs)) s19Sq = sqs.slice(0, 10); } catch (e) {}
   try { var uls = JSON.parse(localStorage.getItem(S19_UL_KEY) || "{}"); if (uls && typeof uls === "object") s19UlDone = uls; } catch (e) {}
-  function s19Save() { try { localStorage.setItem(S19_KEY, JSON.stringify({ v: s19St.v, tf: s19St.tf, cf: s19St.cf, af: s19St.af, an: s19St.an, bcf: s19St.bcf, ds: s19St.ds, dm: s19St.dm })); } catch (e) {} }
+  function s19Save() { try { localStorage.setItem(S19_KEY, JSON.stringify({ v: s19St.v, tf: s19St.tf, cf: s19St.cf, af: s19St.af, an: s19St.an, bcf: s19St.bcf, ds: s19St.ds, dm: s19St.dm, gf: s19St.gf })); } catch (e) {} }
   function s19SqSave() { try { localStorage.setItem(S19_SQ_KEY, JSON.stringify(s19Sq)); } catch (e) {} }
   function s19UlSave() { try { localStorage.setItem(S19_UL_KEY, JSON.stringify(s19UlDone)); } catch (e) {} }
   var S19_COST = { 1: "c1", 2: "c2", 3: "c3", 4: "c4", 5: "c5", 7: "c7" };
@@ -87,7 +87,7 @@
     var out = document.getElementById("s19-out"), tools = document.getElementById("s19-tools");
     if (keepTools === true && tools) tools = document.createElement("div");
     if (!out) return;
-    var views = { units: s19Units, unlock: s19Unlocks, traits: s19Traits, builder: s19Builder, augs: s19Augs, items: s19Items };
+    var views = { units: s19Units, unlock: s19Unlocks, traits: s19Traits, guide: s19Guide, builder: s19Builder, augs: s19Augs, items: s19Items };
     if (!views[s19St.v]) s19St.v = "units";
     document.querySelectorAll("#s19-view button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === s19St.v); });
     if (!S19) { out.innerHTML = '<p class="empty">불러오는 중</p>'; s19Load().then(s19Render).catch(function () { out.innerHTML = '<p class="empty">불러오지 못했어요. 앱을 다시 열어 주세요</p>'; }); return; }
@@ -823,6 +823,243 @@
         m.appendChild(s19Text(i.d)); r.appendChild(m); out.appendChild(r);
       });
     });
+  }
+  // 보상표 · 조우자 25종 · 프리즘 퀘스트 · 유틸 백과 (guide/kb/set19.md 19.1c/19.1d 기준)
+  var S19_CASHOUTS = [
+    {
+      title: "하이퍼팝 열광 보상표",
+      sub: "별당 3/6/12/40 + 처치 관여당 1 × 특성 배수 (2: 1x · 3: 1.5x · 4: 2.5x · 5: 3x)",
+      tip: "3에서 4 하이퍼팝으로 넘어가면 배수가 1.5배에서 2.5배로 크게 뛰어요. 세라핀과 같이 쓰면 대기석에 목표 기물만 남겨 보상 유닛을 유도할 수 있어요.",
+      rows: [
+        ["50", "2골드"], ["100", "3골드"], ["200", "하급 챔피언 복제기"], ["350", "유닛"],
+        ["450", "2골드 + 자석 제거기 2"], ["600", "하급 챔피언 복제기"], ["750", "조합 아이템 모루"],
+        ["1,300", "도적의 장갑"], ["1,600", "4코 + 5코"], ["2,050", "완성 아이템 모루"], ["2,500", "상징"]
+      ]
+    },
+    {
+      title: "True Damage 블링 (A면 · B면)",
+      sub: "4라운드마다 수령 또는 유지 선택 · A면(승리) 처치당 2/4/10 + 승리 15/20/30 · B면(패배) 20 + 연패당 4",
+      tip: "B면에서 이기면 블링 20%를 잃어요. 강제로 이길 것 같은 라운드엔 잠깐 A면으로 뒤집어 이기면 B면 연패 카운트가 끊기지 않아요.",
+      tiers: ["0", "30", "60", "100", "150", "225", "300", "400", "500", "600", "800", "1,000"]
+    },
+    {
+      title: "8비트 (미스 포츈) 고득점 보상표",
+      sub: "아군 전체 피해량 누적 · 미스 포츈이 입힌 피해는 3배로 계산",
+      rows: [
+        ["50,000", "4골드"], ["80,000", "하급 복제기 + 4골드"], ["125,000", "4코 + 5코"],
+        ["175,000", "도적의 장갑"], ["275,000", "완성템 + 재조합기 2"], ["500,000", "유물 모루"],
+        ["700,000", "찬란한 쇼진·무대·죽검 + 황금 제거기"], ["1,000,000", "챔피언 복제기 9개"]
+      ]
+    },
+    {
+      title: "특성 사다리 (프리즘 증강) 보상표",
+      sub: "상징 1개 지급 · 전투마다 비고유 특성 수 목표 달성 시 보상 후 다음 단계로 상승",
+      tip: "1명 활성 특성(HEARTSTEEL 알룬, R&B 멜)과 3특성 직스가 핵심이에요. 9렙 상징 없이 최대 13개, 상징 1개로 14개까지 열려요.",
+      rows: [
+        ["2개", "1골드 + 재조합기"], ["3개", "3골드"], ["4개", "5골드"], ["5개", "조합 아이템 1"],
+        ["6개", "7골드 또는 3코 2명"], ["7개", "재료 모루 + 2골드"], ["8개", "서로 다른 재료 2 또는 완성템 모루"],
+        ["9개", "5코 3명 + 20골드 + 행운의 상자"], ["10개", "18골드"], ["11개", "전략가의 왕관·망토·방패 중 1"],
+        ["12개", "행운의 상자 + 4코 3명"], ["13개", "30골드 + 제거기 + 찬란한 도장 + 복제기"], ["14개", "걸작 업그레이드 + 10골드"]
+      ]
+    }
+  ];
+  var S19_ENCOUNTERS = [
+    ["5.93%", "증강 크레센도", "Augment Crescendo", "증강 등급이 실버 → 골드 → 프리즘 순으로 상승", ""],
+    ["5.93%", "저렴한 레벨업", "Cheaper Levels", "레벨업 필요 경험치 -2 XP", "영웅 증강 제외"],
+    ["5.93%", "골든 갈라", "Golden Gala", "세 번의 증강 모두 골드 등급으로 등장", ""],
+    ["5.93%", "정찰대", "Scouting Party", "매 증강 선택마다 무료 새로고침 +1회", ""],
+    ["4.44%", "완성 아이템 모루 (에코)", "Completed Item Anvil", "완성 아이템 모루 1개로 시작", ""],
+    ["4.44%", "조합 아이템 모루 (징크스)", "Component Anvils", "조합 아이템 모루 2개로 시작", ""],
+    ["4.44%", "골드 구독 (일라오이)", "Gold Subscription", "매 스테이지 시작 시 무작위 골드 지급", ""],
+    ["4.44%", "골든 피날레 (렐)", "Golden Finale", "마지막 4-2 증강이 골드 등급으로 고정", ""],
+    ["4.44%", "골든 프렐류드 (아리)", "Golden Prelude", "첫 2-1 증강이 골드 등급으로 고정", ""],
+    ["4.44%", "그웬의 선물 (그웬)", "Gwen's Gifts", "그웬의 가위(특수 조합템·선물) 지급", ""],
+    ["4.44%", "아이템 대장간", "Item Forge", "3-3에 완성 아이템 2개와 재조합기 2개 지급", ""],
+    ["4.44%", "리롤 구독 (티모)", "Reroll Subscription", "매 스테이지 상점 무료 새로고침 지급", "19.1c 추가"],
+    ["4.44%", "바위게 파티 (바위게)", "Scuttle Party", "크립 라운드가 바위게로 바뀌어 골드·템 대량 드롭", "프리즘 투어 제외"],
+    ["3.70%", "2코스트 시작", "2-Cost Start", "2코스트 챔피언 1명으로 시작", ""],
+    ["3.70%", "3코스트 시작", "3-Cost Start", "3코스트 챔피언 1명으로 시작", ""],
+    ["3.70%", "업그레이드 시작 (코부코)", "Upgraded Start", "2성 챔피언 1명으로 시작", ""],
+    ["2.96%", "비트 드롭 (브라움)", "Beat Drop", "플레이어 체력 40 이하 달성 시 보상 투하", ""],
+    ["2.96%", "상징 집결 (스미치)", "Emblem Ensemble", "무작위 상징 3개로 시작", "특성 사다리·U.R.F·유연함 제외"],
+    ["2.96%", "프리즘 피날레 (누누)", "Prismatic Finale", "마지막 4-2 증강이 프리즘 등급으로 고정", ""],
+    ["2.96%", "프리즘 오프너 (아칼리)", "Prismatic Opener", "첫 2-1 증강이 프리즘 등급으로 고정", ""],
+    ["2.96%", "프리즘 파티 (라칸)", "Prismatic Party", "세 번의 증강 모두 프리즘 등급으로 등장", ""],
+    ["2.96%", "스타 어트랙션 (리 신)", "Star Attraction", "4-6에 해금 가능한 5코스트 챔피언 지급", ""],
+    ["2.96%", "슈퍼스타 (자야)", "Superstar", "2전투마다 시작 챔피언 복사본 지급", ""],
+    ["2.22%", "행운의 보물", "Lucky Treasure", "3-5에 찬란한 행운의 상자 지급", ""],
+    ["2.22%", "프리즘 투어 (소나)", "Prismatic Tour", "올 프리즘 증강 + 서로 다른 1코 프리즘 투어 멤버 3명 시작", ""]
+  ];
+  var S19_QUESTS = [
+    ["HEARTSTEEL", "7 HEARTSTEEL 활성 + 피해·방어·회복 누적 달성", "밴드 프리즘 티어 개방"],
+    ["Ionic Spark", "7 Ionic Spark 활성 + 10라운드 사인 수집 후 10 Ionic Spark 배치", "밴드 프리즘 티어 개방"],
+    ["K/DA", "서로 다른 K/DA 챔피언 별 총합 21★ 달성", "모든 K/DA 멤버가 4성으로 진화"],
+    ["펜타킬", "7 펜타킬 활성 + 빛의 인도자 처치 + 10레벨 달성", "밴드 프리즘 티어 개방"],
+    ["True Damage", "5 True Damage 활성 + 지정 순서대로 승/패 리믹스 완성", "고정 피해 99% + 골드·블링 2배"]
+  ];
+  var S19_UTILS = [
+    { kind: "상처 (치유 감소)", units: ["애니", "트위스티드 페이트"], note: "애니 원뿔 화상·상처 4초 · 트페 가장 가까운 아군 공격에 화상·상처 33%" },
+    { kind: "파쇄 (마저 깎기)", units: ["말자하"], note: "말자하 스킬 마법 저항력 30% 파쇄" },
+    { kind: "파열 (방어력 깎기)", units: [], note: "방어력 깎기 기물이 없어요. AD 덱은 최후의 속삭임·저녁갑주를 직접 챙기세요." },
+    { kind: "약화 (적 피해 감소)", units: ["릴리아", "가렌"], note: "릴리아 10% · 가렌 10% · 클래식 시너지 매료된 적 10%" },
+    { kind: "취약 (받는 피해 증가)", units: ["아칼리"], note: "K/DA 아칼리 취약 10%" },
+    { kind: "자체 관통", units: ["제리", "요네", "이블린"], note: "제리 방무 40% · 요네 방무 25%(최애) · 이블린 마저 40% 무시" }
+  ];
+  var S19_HERO_AUGS = [
+    ["안전 요원 근무 중", "골드", "레넥톤", "AD 전사 · 일광욕으로 시작 후 아군 위험 시 출동"],
+    ["도끼 크레센도", "실버", "올라프", "AD 원거리 · 시전할수록 강화되는 단일 스킬"],
+    ["물린 자국", "실버", "엘리스", "AP 암살자 · 처치 시 저체력 적에게 재시전"],
+    ["짜릿한 사나이", "실버", "케넨", "AP 암살자 · 처치마다 스킬에 영구 고정 피해 추가"],
+    ["춤추고 뛰놀기", "실버", "릴리아", "AP 전사 · 전장을 가로지르며 중첩 마법 피해"],
+    ["펀치라인", "실버", "세트", "AD 전사 · 펀치로 적 처형 후 멀리 날림"]
+  ];
+  var S19_SPEC_ITEMS = [
+    ["야수의 두루마리", "고풍 전용 · 주의", "플레이어 체력 20%만큼 XP 획득. 승리 시 XP +6(10렙 +250)으로 11렙 달성 가능하지만, 2연패 시 즉시 탈락해요."],
+    ["바드의 여행자 나팔", "바드 전용", "스킬 마나 +130 대신 정령을 소환하고 정령 판매 시 경험치를 얻어요. 바드를 대기석으로 내리면 제거돼요."],
+    ["문도 박사의 음반 계약", "문도 전용", "계약 아티스트 피해 증폭 +5%, 처치마다 문도 영구 체력 +25를 얻어요."]
+  ];
+
+  function s19Guide(out, tools) {
+    var gf = s19St.gf || "cash";
+    s19Search(tools, "보상·조우자·유틸 검색 (초성 가능)");
+    s19Chips(tools, [["cash", "보상표"], ["enc", "조우자 25종"], ["util", "프리즘·유틸"]], gf, function (v) { s19St.gf = v; });
+    var hasQ = !!s19St.q.trim();
+    if (gf === "cash") {
+      var shown = 0;
+      S19_CASHOUTS.forEach(function (c) {
+        var rows = (c.rows || []).filter(function (r) { return !hasQ || s19Match(c.title) || s19Match(r[0]) || s19Match(r[1]); });
+        var matchWhole = !hasQ || s19Match(c.title) || s19Match(c.sub) || s19Match(c.tip || "") || rows.length > 0;
+        if (!matchWhole) return;
+        shown++;
+        var card = el("div", "s19-card s19-gcard");
+        card.appendChild(el("h3", "s19-gh", c.title));
+        card.appendChild(el("p", "sub", c.sub));
+        if (c.tip) card.appendChild(el("p", "s19-gtip", c.tip));
+        if (c.tiers) {
+          var tw = el("div", "s19-tiers");
+          c.tiers.forEach(function (t) { tw.appendChild(el("span", "s19-tchip", t)); });
+          card.appendChild(tw);
+        }
+        if (rows.length) {
+          var tbl = el("div", "s19-ctbl");
+          rows.forEach(function (r) {
+            var tr = el("div", "s19-crow");
+            tr.appendChild(el("b", "s19-cval", r[0]));
+            tr.appendChild(el("span", "s19-crev", r[1]));
+            tbl.appendChild(tr);
+          });
+          card.appendChild(tbl);
+        }
+        out.appendChild(card);
+      });
+      if (!shown) out.appendChild(el("p", "empty", "맞는 보상표가 없어요"));
+    } else if (gf === "enc") {
+      var list = S19_ENCOUNTERS.filter(function (e) {
+        return !hasQ || s19Match(e[1]) || s19Match(e[2]) || s19Match(e[3]) || s19Match(e[4]);
+      });
+      out.appendChild(el("p", "sub s19-lead", "19.1c 기준 " + list.length + "종 · 높은 확률순"));
+      var wrap = el("div", "s19-elist");
+      list.forEach(function (e) {
+        var row = el("div", "s19-card s19-erow");
+        var top = el("div", "s19-etop");
+        top.appendChild(el("span", "s19-epct", e[0]));
+        var nm = el("b", "s19-ename", e[1]);
+        nm.appendChild(el("small", null, e[2]));
+        top.appendChild(nm);
+        if (e[4]) top.appendChild(el("span", "s19-ewarn" + (/제외/.test(e[4]) ? " ban" : ""), e[4]));
+        row.appendChild(top);
+        row.appendChild(el("p", "s19-edesc", e[3]));
+        wrap.appendChild(row);
+      });
+      if (!list.length) out.appendChild(el("p", "empty", "맞는 조우자가 없어요"));
+      else out.appendChild(wrap);
+    } else {
+      // 프리즘 퀘스트 5밴드
+      var qs = S19_QUESTS.filter(function (q) { return !hasQ || s19Match(q[0]) || s19Match(q[1]) || s19Match(q[2]); });
+      if (qs.length) {
+        var qc = el("div", "s19-card s19-gcard");
+        qc.appendChild(el("h3", "s19-gh", "프리즘 투어 퀘스트 (5밴드)"));
+        qc.appendChild(el("p", "sub", "전용 증강을 고른 뒤 조건을 달성하면 프리즘 티어가 열려요"));
+        qs.forEach(function (q) {
+          var r = el("div", "s19-qrow");
+          var b = el("b", "s19-qband", q[0]);
+          if (IDX && IDX.traits && IDX.traits[q[0]]) b.dataset.trait = q[0];
+          r.appendChild(b);
+          var d = el("div", "s19-qdesc");
+          d.appendChild(el("span", null, q[1]));
+          d.appendChild(el("small", null, q[2]));
+          r.appendChild(d);
+          qc.appendChild(r);
+        });
+        out.appendChild(qc);
+      }
+      // 유틸 기물 한눈표
+      var us = S19_UTILS.filter(function (u) {
+        return !hasQ || s19Match(u.kind) || s19Match(u.note) || u.units.some(s19Match);
+      });
+      if (us.length) {
+        var uc = el("div", "s19-card s19-gcard");
+        uc.appendChild(el("h3", "s19-gh", "유틸 기물 한눈표 (치감 · 방깎 · 마깎)"));
+        uc.appendChild(el("p", "sub", "챔피언을 누르면 상세 정보를 바로 볼 수 있어요"));
+        us.forEach(function (u) {
+          var r = el("div", "s19-urow");
+          r.appendChild(el("b", "s19-ukind", u.kind));
+          if (u.units.length) {
+            var chips = el("div", "s19-uchips");
+            u.units.forEach(function (un) {
+              var ch = unitChip(un);
+              ch.dataset.unit = un;
+              chips.appendChild(ch);
+            });
+            r.appendChild(chips);
+          }
+          r.appendChild(el("p", "s19-unote", u.note));
+          uc.appendChild(r);
+        });
+        out.appendChild(uc);
+      }
+      // 영웅 증강 6종
+      var ha = S19_HERO_AUGS.filter(function (h) {
+        return !hasQ || s19Match(h[0]) || s19Match(h[2]) || s19Match(h[3]);
+      });
+      if (ha.length) {
+        var hc = el("div", "s19-card s19-gcard");
+        hc.appendChild(el("h3", "s19-gh", "영웅 증강 6종"));
+        hc.appendChild(el("p", "sub", "저렴한 레벨업 조우자에서는 등장하지 않아요"));
+        ha.forEach(function (h) {
+          var r = el("div", "s19-hrow");
+          var top = el("div", "s19-htop");
+          var an = el("span", "s19-haug", h[0]);
+          if (DB && DB.info && DB.info.a && DB.info.a[h[0]]) an.dataset.aug = h[0];
+          top.appendChild(an);
+          top.appendChild(el("span", "rar", h[1])).dataset.r = h[1];
+          var uch = unitChip(h[2]); uch.dataset.unit = h[2]; top.appendChild(uch);
+          r.appendChild(top);
+          r.appendChild(el("p", "s19-unote", h[3]));
+          hc.appendChild(r);
+        });
+        out.appendChild(hc);
+      }
+      // 시즌 전용 특수 아이템 주의
+      var si = S19_SPEC_ITEMS.filter(function (s) {
+        return !hasQ || s19Match(s[0]) || s19Match(s[1]) || s19Match(s[2]);
+      });
+      if (si.length) {
+        var sc = el("div", "s19-card s19-gcard");
+        sc.appendChild(el("h3", "s19-gh", "19시즌 특수 아이템 핵심"));
+        si.forEach(function (s) {
+          var r = el("div", "s19-hrow");
+          var top = el("div", "s19-htop");
+          top.appendChild(el("b", null, s[0]));
+          top.appendChild(el("span", "s19-ewarn" + (/주의/.test(s[1]) ? " ban" : ""), s[1]));
+          r.appendChild(top);
+          r.appendChild(el("p", "s19-unote", s[2]));
+          sc.appendChild(r);
+        });
+        out.appendChild(sc);
+      }
+      if (!qs.length && !us.length && !ha.length && !si.length) out.appendChild(el("p", "empty", "맞는 항목이 없어요"));
+    }
   }
   document.querySelectorAll("#s19-view button").forEach(function (b) { b.addEventListener("click", function () { s19St.q = ""; s19Go(b.dataset.v); }); });
 

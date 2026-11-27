@@ -385,7 +385,7 @@
 
   function buildFind(data) {
     DB = data;
-    buildBuilder(); buildAugList(); buildTraitList(); buildRank(); buildUnits();
+    buildBuilder(); buildAugList(); if (typeof buildAugCmp === "function") buildAugCmp(); if (typeof buildRerollCalc === "function") buildRerollCalc(); buildTraitList(); buildRank(); buildUnits();
     if (metaReady) metaList();
     if (current === "s19" && typeof s19Render === "function") s19Render();
     document.querySelectorAll(".ag img").forEach(function (im) {
@@ -861,5 +861,12 @@
   /* ---- 재료 → 덱: 가진 재료(초반 크립·첫 초밥)로 갈 만한 덱. MetaTFT 덱 통계(meta.json)의 캐리 템 빌드 판수로 계산 ---- */
   var PARTS = ["B.F. 대검", "곡궁", "쓸데없이 큰 지팡이", "여신의 눈물", "쇠사슬 조끼", "음전자 망토", "거인의 허리띠", "연습용 장갑", "뒤집개", "프라이팬"];
   var PART_SHORT = { "B.F. 대검": "대검", "곡궁": "곡궁", "쓸데없이 큰 지팡이": "지팡이", "여신의 눈물": "여눈", "쇠사슬 조끼": "조끼", "음전자 망토": "망토", "거인의 허리띠": "벨트", "연습용 장갑": "장갑", "뒤집개": "뒤집개", "프라이팬": "프라이팬" };
-  var PT_KEY = "tft-guide-parts", ptHeld = [], ptBasis = "emer", PT_NEED = null;
-  try { var pk = JSON.parse(localStorage.getItem(PT_KEY) || "{}"); ptHeld = (pk.h || []).filter(function (x) { return PARTS.indexOf(x) >= 0; }); ptBasis = pk.b || ptBasis; } catch (e) {}
+  var PT_KEY = "tft-guide-parts", ptHeld = [], ptBasis = "emer", ptUnits = [], ptEmbs = [], ptChamp = "", PT_NEED = null;
+  try {
+    var pk = JSON.parse(localStorage.getItem(PT_KEY) || "{}");
+    ptHeld = (pk.h || []).filter(function (x) { return PARTS.indexOf(x) >= 0; });
+    ptBasis = pk.b || ptBasis;
+    if (Array.isArray(pk.u)) ptUnits = pk.u.slice(0, 6);
+    if (Array.isArray(pk.e)) ptEmbs = pk.e.slice(0, 3);
+    if (typeof pk.c === "string") ptChamp = pk.c;
+  } catch (e) {}

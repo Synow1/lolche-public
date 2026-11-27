@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611271040">
+<meta name="lolche-web" content="202611271342">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -981,6 +981,153 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .s19-uits img { width: 18px; height: 18px; border-radius: 4px; display: block; }
 .s19-ust-card > h3 { margin-bottom: 4px; }
 
+/* ---- v3.8.0: 19시즌 보상표·조우자·프리즘·유틸 (#s19 guide) ---- */
+.s19-gcard { display: grid; gap: 8px; padding: 14px; margin-bottom: 10px; }
+.s19-gh { margin: 0; font-size: var(--fs-l); font-weight: 800; letter-spacing: -.02em; }
+.s19-gcard > .sub { margin: 0; font-size: var(--fs-s); line-height: 1.45; }
+.s19-gtip { margin: 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 11%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent); font-size: var(--fs-s); line-height: 1.45; color: var(--ink); }
+.s19-tiers { display: flex; flex-wrap: wrap; gap: 5px; }
+.s19-tchip { font-family: var(--mono); font-size: var(--fs-xs); font-weight: 700; padding: 4px 8px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border-subtle); white-space: nowrap; }
+.s19-ctbl { display: grid; gap: 4px; }
+.s19-crow { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; background: var(--surface); }
+.s19-cval { font-family: var(--mono); font-size: var(--fs-s); font-weight: 800; color: var(--accent); white-space: nowrap; }
+.s19-crev { font-size: var(--fs-s); color: var(--ink); line-height: 1.35; }
+.s19-elist { display: grid; gap: 8px; }
+.s19-erow { display: grid; gap: 5px; padding: 11px 13px; }
+.s19-etop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.s19-epct { font-family: var(--mono); font-size: var(--fs-xs); font-weight: 800; padding: 2px 7px; border-radius: 7px; background: color-mix(in srgb, var(--accent2) 15%, var(--surface)); color: var(--accent2); white-space: nowrap; flex: none; }
+.s19-ename { font-size: var(--fs-m); font-weight: 800; display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 5px; min-width: 0; }
+.s19-ename small { font-size: var(--fs-xs); font-weight: 500; color: var(--muted); }
+.s19-ewarn { font-size: var(--fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 99px; background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); white-space: nowrap; }
+.s19-ewarn.ban { background: color-mix(in srgb, var(--warn) 15%, var(--surface)); color: var(--warn); }
+.s19-edesc { margin: 0; font-size: var(--fs-s); color: var(--muted); line-height: 1.4; }
+.s19-qrow { display: grid; grid-template-columns: 98px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; border-radius: 10px; background: var(--surface); }
+.s19-qband { font-size: var(--fs-s); font-weight: 800; color: var(--accent2); white-space: nowrap; cursor: pointer; }
+.s19-qdesc { display: grid; gap: 2px; min-width: 0; }
+.s19-qdesc span { font-size: var(--fs-s); line-height: 1.4; }
+.s19-qdesc small { font-size: var(--fs-xs); color: var(--moss); font-weight: 600; }
+.s19-urow, .s19-hrow { display: grid; gap: 5px; padding: 8px 10px; border-radius: 10px; background: var(--surface); }
+.s19-ukind { font-size: var(--fs-s); font-weight: 800; color: var(--ink); }
+.s19-uchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.s19-uchips .u { cursor: pointer; }
+.s19-unote { margin: 0; font-size: var(--fs-s); color: var(--muted); line-height: 1.45; }
+.s19-htop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.s19-haug { font-weight: 800; font-size: var(--fs-m); cursor: pointer; color: var(--ink); }
+
+/* ---- v3.8.0: 증강 3택 비교기 (#augments) ---- */
+.ag-cmp { background: var(--elev2, var(--surface)); border: 1px solid var(--border-elev2, var(--border-subtle)); border-radius: 16px; padding: 13px; margin: 6px 0 12px; display: grid; gap: 9px; }
+.ag-cmp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ag-cmp-head h3 { margin: 0; font-size: var(--fs-l); font-weight: 800; white-space: nowrap; }
+.ag-cmp-st { margin: 0; }
+.ag-cmp-st button { white-space: nowrap; }
+.ag-cmp-bar input { width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-m); }
+.ag-cmp-sug { display: flex; flex-wrap: wrap; gap: 6px; }
+.ag-cmp-sug:empty { display: none; }
+.ag-sug-b { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 9px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-s); cursor: pointer; max-width: 100%; }
+.ag-sug-b img { width: 18px; height: 18px; border-radius: 4px; flex: none; }
+.ag-sug-b .tierb { font-size: 11px; width: 18px; height: 18px; line-height: 18px; flex: none; }
+.ag-cmp-hint { margin: 0; font-size: var(--fs-s); line-height: 1.45; }
+.ag-cmp-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+.ag-cmp-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 11px; display: grid; gap: 8px; min-width: 0; }
+.ag-cmp-card.best { border-color: color-mix(in srgb, var(--moss) 60%, var(--border-subtle)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--moss) 28%, transparent); }
+.ag-cmp-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ag-cmp-top > img { width: 32px; height: 32px; border-radius: 7px; flex: none; }
+.ag-cmp-ttl { min-width: 0; flex: 1; display: grid; gap: 3px; }
+.ag-cmp-ttl > b { font-size: var(--fs-m); font-weight: 800; cursor: pointer; line-height: 1.25; }
+.ag-cmp-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.ag-best-b { font-size: var(--fs-xs); font-weight: 800; padding: 1px 6px; border-radius: 99px; background: color-mix(in srgb, var(--moss) 18%, transparent); color: var(--moss); white-space: nowrap; }
+.ag-cmp-rm { all: unset; cursor: pointer; width: 24px; height: 24px; border-radius: 7px; text-align: center; line-height: 24px; font-size: 16px; color: var(--muted); background: var(--raise, var(--line)); flex: none; }
+.ag-cmp-tiers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.ag-cmp-t { display: grid; justify-items: center; gap: 3px; padding: 5px 2px; border-radius: 8px; background: var(--elev2, var(--bg)); border: 1px solid transparent; }
+.ag-cmp-t.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--elev2, var(--bg))); }
+.ag-cmp-t small { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.ag-cmp-t .tierb { width: 22px; height: 22px; line-height: 22px; font-size: 12px; }
+.ag-cmp-dks { display: grid; gap: 4px; }
+.ag-cmp-dks > small { font-size: var(--fs-xs); color: var(--muted); font-weight: 700; }
+.ag-cmp-dlist { display: flex; flex-wrap: wrap; gap: 5px; }
+.ag-cmp-dk { all: unset; cursor: pointer; font-size: var(--fs-xs); font-weight: 700; padding: 4px 8px; border-radius: 8px; background: var(--elev2, var(--bg)); border: 1px solid var(--border-subtle); color: var(--ink); max-width: 100%; }
+.ag-cmp-desc { margin: 0; font-size: var(--fs-s); color: var(--muted); line-height: 1.45; }
+.ag-add { all: unset; cursor: pointer; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 5px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--muted); font-size: 12px; font-weight: 800; line-height: 1; flex: none; }
+.ag-add.on { background: var(--accent); color: #fff; }
+
+/* ---- v3.8.0: 인터랙티브 리롤 확률 계산기 (#numbers) ---- */
+.rr-card { background: var(--elev2, var(--surface)); border: 1px solid var(--border-elev2, var(--border-subtle)); border-radius: 16px; padding: 14px; margin: 6px 0 18px; display: grid; gap: 11px; }
+.rr-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
+.rr-head h3 { margin: 0; font-size: var(--fs-l); font-weight: 800; }
+.rr-head small { font-family: var(--mono); font-size: var(--fs-s); color: var(--accent); font-weight: 700; white-space: nowrap; }
+.rr-ctrls { display: grid; gap: 9px; }
+.rr-row { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 8px; }
+.rr-lab { font-size: var(--fs-s); font-weight: 700; color: var(--muted); white-space: nowrap; }
+.rr-chips { margin: 0; }
+.rr-chips button { padding: 5px 8px; font-size: var(--fs-s); white-space: nowrap; }
+.rr-steps { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.rr-st { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 11px; padding: 8px 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.rr-slab { font-size: var(--fs-s); color: var(--muted); font-weight: 600; white-space: nowrap; }
+.rr-sctl { display: flex; align-items: center; gap: 8px; flex: none; }
+.rr-sctl button { all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; background: var(--raise, var(--line)); text-align: center; line-height: 28px; font-weight: 800; font-size: 15px; }
+.rr-sctl button:disabled { opacity: .35; cursor: default; }
+.rr-sctl b { font-family: var(--mono); font-size: var(--fs-s); font-weight: 800; min-width: 40px; text-align: center; white-space: nowrap; }
+@media (min-width: 560px) {
+  .rr-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .rr-st { flex-direction: column; justify-content: center; padding: 9px 8px; gap: 5px; }
+}
+.rr-kpi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.rr-k { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 10px 6px; display: grid; justify-items: center; gap: 2px; text-align: center; min-width: 0; }
+.rr-k span { font-size: var(--fs-s); color: var(--muted); white-space: nowrap; }
+.rr-k b { font-family: var(--mono); font-size: 17px; font-weight: 800; white-space: nowrap; }
+.rr-k small { font-family: var(--mono); font-size: var(--fs-s); color: var(--muted); white-space: nowrap; }
+.rr-mile { margin: 0; padding: 7px 10px; border-radius: 9px; background: var(--surface); font-family: var(--mono); font-size: var(--fs-s); color: var(--ink); line-height: 1.45; }
+.rr-foot { margin: 0; font-size: var(--fs-s); }
+
+/* ---- v3.8.0: 덱 7일 트렌드 · 즐겨찾기(★) · 메모 (#meta, #home) ---- */
+.dk-trd { display: inline-flex; align-items: center; margin-left: 5px; padding: 1px 6px; border-radius: 99px; font-family: var(--mono); font-size: var(--fs-s); font-weight: 800; white-space: nowrap; vertical-align: middle; }
+.dk-trd.up { background: color-mix(in srgb, var(--moss) 16%, transparent); color: var(--moss); }
+.dk-trd.dn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+.dk-fav-mk { color: #f5b932; margin-right: 4px; font-size: 13px; vertical-align: middle; }
+.dk-memo-mk { display: inline-block; margin-left: 5px; padding: 1px 6px; border-radius: 6px; background: color-mix(in srgb, var(--accent2) 15%, transparent); color: var(--accent2); font-size: var(--fs-s); font-weight: 700; white-space: nowrap; vertical-align: middle; }
+.dk-fav-btn { padding: 9px 13px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-s); font-weight: 700; cursor: pointer; white-space: nowrap; }
+.dk-fav-btn.on { background: color-mix(in srgb, #f5b932 18%, var(--surface)); border-color: #f5b932; color: var(--ink); }
+.dk-memo-box { display: flex; align-items: center; gap: 8px; margin: 8px 0 6px; }
+.dk-memo-inp { flex: 1; min-width: 0; box-sizing: border-box; padding: 8px 11px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-s); }
+.dk-memo-st { font-size: var(--fs-s); color: var(--moss); font-weight: 700; white-space: nowrap; flex: none; }
+.hm-fav-memo { font-size: var(--fs-s); color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.dk-trbox { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 10px 10px 8px; }
+.dk-trsvg { width: 100%; height: auto; display: block; overflow: visible; }
+.dk-trsvg .tr-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 3; }
+.dk-trsvg .tr-ax { font-family: var(--mono); font-size: 9px; fill: var(--muted); }
+.dk-trsvg .tr-val { font-family: var(--mono); font-size: 10px; font-weight: 700; fill: var(--ink); }
+.dk-trfoot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin-top: 6px; font-family: var(--mono); font-size: var(--fs-s); color: var(--muted); }
+
+/* ---- v3.8.0: 재료·기물·상징 통합 추천 + 최적 분배 시뮬레이터 (#parts) ---- */
+.pt-extra { display: grid; gap: 7px; margin: 8px 0 10px; }
+.pt-extra input { width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-m); }
+.pt-usug, .pt-uchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pt-usug:empty, .pt-uchips:empty { display: none; }
+.pt-sug-b, .pt-uchip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 9px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-s); cursor: pointer; white-space: nowrap; }
+.pt-sug-b img, .pt-uchip img { width: 18px; height: 18px; border-radius: 4px; }
+.pt-uchip.u { border-color: color-mix(in srgb, var(--accent2) 55%, var(--border-subtle)); }
+.pt-uchip.e { border-color: color-mix(in srgb, var(--accent) 55%, var(--border-subtle)); }
+.pt-uchip i { font-style: normal; color: var(--muted); font-weight: 700; margin-left: 2px; }
+.pt-hit { font-weight: 700; white-space: nowrap; }
+.pt-hit.u { color: var(--accent2); }
+.pt-hit.e { color: var(--accent); }
+.pt-sim-ch { margin: 4px 0 8px; }
+.pt-sim-ch button { white-space: nowrap; }
+.pt-sim-list { display: grid; gap: 7px; }
+.pt-sim-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 10px; border-radius: 11px; background: var(--surface); border: 1px solid var(--border-subtle); min-width: 0; }
+.pt-sim-row.best { border-color: color-mix(in srgb, var(--moss) 55%, var(--border-subtle)); background: color-mix(in srgb, var(--moss) 6%, var(--surface)); }
+.pt-sim-l { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.pt-sim-rk { font-family: var(--mono); font-size: var(--fs-s); font-weight: 800; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: var(--elev2, var(--line)); color: var(--muted); flex: none; }
+.pt-sim-row.best .pt-sim-rk { background: var(--moss); color: #fff; }
+.pt-sim-its { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-width: 0; }
+.pt-sim-it { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 7px; background: var(--elev2, var(--bg)); border: 1px solid var(--border-subtle); font-size: var(--fs-s); font-weight: 700; cursor: pointer; white-space: nowrap; }
+.pt-sim-it img { width: 17px; height: 17px; border-radius: 3px; }
+.pt-sim-left { font-size: var(--fs-s); color: var(--muted); padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 6%, transparent); white-space: nowrap; }
+.pt-sim-r { display: grid; justify-items: end; gap: 1px; flex: none; text-align: right; }
+.pt-sim-r b { font-family: var(--mono); font-size: var(--fs-m); font-weight: 800; white-space: nowrap; }
+.pt-sim-r small { font-size: var(--fs-s); color: var(--muted); white-space: nowrap; }
+
+
 /* 랭킹 */
 .tiles.rk-cut { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tiles.rk-cut .tile b { font-size: var(--fs-xl); }
@@ -1493,6 +1640,54 @@ footer { padding-block: 30px 40px; color: var(--muted); font-size: var(--fs-m); 
   .stage .code { font-size: var(--fs-s); }
 }
 /* 부드러운 스크롤은 뺐다 (2026-11-25 사용자: "아카데미에서 뒤로 가기 누르면 위아래 무빙이 있는데 이런 건 없애라"). 화면 이동은 바로 */
+
+/* ---- v3.8.0: 로비 1:1 5축 덱파워 정면 비교 (#rank lobby) ---- */
+.lb-cmpbtn { padding: 2px 8px; border-radius: 7px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; flex: none; margin-left: auto; }
+.lb-cmpbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.lb-cmpslot:empty { display: none; }
+.lb-cmpbox { margin: 6px 0 4px; padding: 10px; border-radius: 11px; background: var(--elev2, var(--bg)); border: 1px solid var(--border-elev2, var(--border-subtle)); display: grid; gap: 6px; min-width: 0; }
+.lb-cmphd { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; font-size: var(--fs-xs); }
+.lb-cmphd b { min-width: 0; }
+.lb-cmpd { font-family: var(--mono); font-weight: 800; white-space: nowrap; }
+.lb-cmpsub { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.lb-cmprows { display: grid; gap: 4px; }
+.lb-cmpr { display: grid; grid-template-columns: 44px 30px minmax(40px, 1fr) 30px 32px; align-items: center; gap: 5px; font-size: 11px; }
+.lb-cmpk { color: var(--muted); font-weight: 700; white-space: nowrap; }
+.lb-cmpv { font-family: var(--mono); text-align: center; color: var(--muted); white-space: nowrap; }
+.lb-cmpbar { position: relative; height: 7px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.lb-cmpbar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--ink) 28%, transparent); }
+.lb-cmpbar i { position: absolute; top: 0; bottom: 0; border-radius: 99px; display: block; }
+.lb-cmpbar i.good { background: var(--moss); }
+.lb-cmpbar i.bad { background: var(--warn); }
+.lb-cmpdf { font-family: var(--mono); text-align: right; font-weight: 800; white-space: nowrap; }
+.lb-cmpmsg { margin: 2px 0 0; font-size: var(--fs-xs); color: var(--ink); font-weight: 600; }
+
+/* ---- v3.8.0: 전적 심층 리포트 & 판 필터 (#rank profile) ---- */
+.rk-rep { display: grid; gap: 10px; margin-top: 10px; }
+.rk-rep > h4 { margin: 0; font-size: var(--fs-m); font-weight: 800; }
+.rk-diag { margin: 0; font-size: var(--fs-s); line-height: 1.45; }
+.rk-rtabs { margin: 0; }
+.rk-rtabs button { white-space: nowrap; }
+.rk-rlist { display: grid; gap: 5px; }
+.rk-rrow { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto auto auto; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border-subtle); width: 100%; }
+.rk-rrow:not(:has(img)) { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+.rk-rrow img { width: 24px; height: 24px; border-radius: 5px; display: block; object-fit: cover; border: 1.5px solid transparent; }
+.rk-rrow img[data-c="1"] { border-color: var(--c1); }
+.rk-rrow img[data-c="2"] { border-color: var(--c2); }
+.rk-rrow img[data-c="3"] { border-color: var(--c3); }
+.rk-rrow img[data-c="4"] { border-color: var(--c4); }
+.rk-rrow img[data-c="5"] { border-color: var(--c5); }
+.rk-rrow img[data-c="7"] { border-color: var(--c7); }
+.rk-rnm { font-size: var(--fs-s); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.rk-rn, .rk-rt4 { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.rk-rav { font-family: var(--mono); font-size: var(--fs-s); font-weight: 800; white-space: nowrap; }
+.rk-gf { display: grid; gap: 7px; margin: 12px 0 8px; }
+.rk-gf-q { width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--surface); color: var(--ink); font-size: var(--fs-m); }
+.rk-gf-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rk-gf-pl { margin: 0; }
+.rk-gf-pl button { white-space: nowrap; }
+.rk-gf-cnt { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); font-weight: 700; white-space: nowrap; flex: none; }
+
 
 /* ===== 디자인 v3 (v1.66.0): 3단계 표면 깊이(Elevation) · 2축 컬러(Gold/Cyan) · 5탭 독 · 오버레이 컴팩트 ===== */
 body { letter-spacing: -.01em; font-variant-numeric: tabular-nums; padding-bottom: calc(var(--bnh) + env(safe-area-inset-bottom, 0px) + 34px); }
@@ -2630,6 +2825,11 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) #traits .tr-us-pc img[data-c="4"] { border-color: var(--c4); }
   body:not(.overlay) #traits .tr-us-pc img[data-c="5"] { border-color: var(--c5); }
   body:not(.overlay) #traits .tr-us-pc img[data-c="7"] { border-color: var(--c7); }
+  body:not(.overlay) .ag-cmp-grid.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body:not(.overlay) .ag-cmp-grid.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body:not(.overlay) .s19-elist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body:not(.overlay) .rk-rlist { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  body:not(.overlay) .s19-ewarn, body:not(.overlay) .ag-best-b, body:not(.overlay) .ag-cmp-t small, body:not(.overlay) .ag-cmp-dks > small, body:not(.overlay) .ag-cmp-dk, body:not(.overlay) .lb-cmpbtn, body:not(.overlay) .lb-cmpsub, body:not(.overlay) .lb-cmpr, body:not(.overlay) .rk-rn, body:not(.overlay) .rk-rt4, body:not(.overlay) .rk-gf-cnt { font-size: 12px; }
 }
 </style>
 
@@ -2716,6 +2916,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         <a href="#tfa" class="hi">아카데미</a>
         <button type="button" data-s19="builder">스쿼드 빌더</button>
         <button type="button" data-s19="unlock">해금 조건</button>
+        <button type="button" data-s19="guide">보상·조우자</button>
         <a href="#items">아이템</a>
         <a href="#augments">증강</a>
       </div>
@@ -2727,6 +2928,11 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     <span>19시즌 덱·챔피언·해금·시너지·아이템 통합 검색</span>
     <kbd>검색</kbd>
   </button>
+
+  <div class="hm-block" id="hm-fav-wrap" hidden>
+    <div class="hm-bh"><h3>내 즐겨찾기 덱</h3><a class="hm-more" href="#meta" id="hm-fav-more">즐겨찾기 ›</a></div>
+    <div class="hm-decks" id="hm-fav"></div>
+  </div>
 
   <div class="hm-block">
     <div class="hm-bh"><h3>19시즌 상위 덱 <small id="hm-meta-sub"></small></h3><a class="hm-more" href="#meta">전체 덱 ›</a></div>
@@ -2823,12 +3029,13 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       <div class="mt-frow">
         <div class="mt-chips" id="mt-filter" role="group" aria-label="덱 거르기">
           <button type="button" data-f="all" class="on">전체</button>
+          <button type="button" data-f="fav">★ 즐겨찾기</button>
           <button type="button" data-f="reroll">리롤</button>
           <button type="button" data-f="8">8렙</button>
           <button type="button" data-f="9">9렙+</button>
           <button type="button" data-f="hero">영웅 증강</button>
         </div>
-        <select id="mt-sort" aria-label="정렬"><option value="avg">평균 등수순</option><option value="win">승률순</option><option value="top4">순방순</option><option value="pick">선택률순</option></select>
+        <select id="mt-sort" aria-label="정렬"><option value="avg">평균 등수순</option><option value="trend">급상승순</option><option value="win">승률순</option><option value="top4">순방순</option><option value="pick">선택률순</option></select>
       </div>
       <div class="mt-tools">
         <button type="button" class="emb-go" id="mt-emb">상징으로</button>
@@ -3073,9 +3280,14 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 <section id="parts">
   <h2 class="sr-title">재료 → 덱</h2>
   <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#units" aria-selected="false">챔피언</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#parts" class="on" aria-selected="true">재료</a><a href="#emb" aria-selected="false">상징</a></div>
-  <p class="emb-sub">초반에 얻은 재료를 누르면 그 재료를 잘 쓰는 덱과 바로 만들 수 있는 템을 보여드려요. 같은 재료는 여러 번 누르세요.</p>
+  <p class="emb-sub">보유한 재료, 기물, 상징을 고르면 가장 잘 맞는 덱과 최적 완성템 조합을 찾아드려요. 같은 재료는 여러 번 누르세요.</p>
   <div class="pt-pick" id="pt-pick"></div>
   <div class="pt-tray" id="pt-tray"></div>
+  <div class="pt-extra" id="pt-extra">
+    <input id="pt-uq" type="search" placeholder="보유 기물·상징 함께 넣기 (예: 자크, 재즈 상징)" autocomplete="off" aria-label="보유 기물 또는 상징 추가">
+    <div class="pt-usug" id="pt-usug"></div>
+    <div class="pt-uchips" id="pt-uchips"></div>
+  </div>
   <div class="mt-chips" id="pt-basis" role="group" aria-label="통계 기준"><button type="button" data-b="emer">에메+</button><button type="button" data-b="all">플래+</button><button type="button" data-b="low">플래 미만</button><button type="button" data-b="top">마스터+</button></div>
   <div id="pt-out"><p class="empty">불러오는 중</p></div>
 </section>
@@ -3275,6 +3487,20 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   <h2 class="sr-title">증강</h2>
   <div class="seg codex-seg" role="tablist" aria-label="도감"><a href="#items" aria-selected="false">아이템</a><a href="#augments" class="on" aria-selected="true">증강</a><a href="#traits" aria-selected="false">시너지</a></div>
   <div class="mt-upd" id="ag-upd"><span id="ag-upd-t"></span></div>
+  <div class="ag-cmp" id="ag-cmp">
+    <div class="ag-cmp-head">
+      <h3>증강 3택 비교</h3>
+      <div class="mt-chips ag-cmp-st" id="ag-cmp-st" role="group" aria-label="증강 시점">
+        <button type="button" data-s="All" class="on">전체</button><button type="button" data-s="2-1">2-1</button><button type="button" data-s="3-2">3-2</button><button type="button" data-s="4-2">4-2</button>
+      </div>
+      <button type="button" class="pt-clear" id="ag-cmp-clr" hidden>초기화</button>
+    </div>
+    <div class="ag-cmp-bar">
+      <input id="ag-cmp-q" type="search" placeholder="비교할 증강 추가 (최대 3개, 초성 가능)" autocomplete="off" aria-label="비교할 증강 검색">
+    </div>
+    <div class="ag-cmp-sug" id="ag-cmp-sug"></div>
+    <div class="ag-cmp-out" id="ag-cmp-out"></div>
+  </div>
   <div class="ag-tools">
     <input id="ag-q" type="search" placeholder="증강 검색" autocomplete="off" aria-label="증강 찾기">
     <div class="mt-chips" id="ag-rar" role="group" aria-label="등급">
@@ -3294,7 +3520,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
 <section id="numbers">
   <h2 class="sr-title">외울 숫자</h2>
-  
+  <div class="rr-card" id="rr-calc"></div>
   <h3>돈 끊는 구간</h3>
   <div class="ladder"><span>0</span><span>10</span><span>20</span><span>33</span><span>41</span><span>50</span></div>
   <p>롤은 이 구간마다 한 번씩 멈추고 더 칠지 판단하세요. <b>30골이 기준선</b>이에요. 30골부터 50골은 쉽게 모이고, 10골에서 맴돌면 돈이 말라요.</p>
@@ -3464,7 +3690,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     <p class="s19-hero-m" id="s19-meta">불러오는 중</p>
   </div>
   <div class="seg s19-seg" id="s19-view" role="tablist">
-    <button type="button" data-v="units">챔피언</button><button type="button" data-v="unlock">해금</button><button type="button" data-v="traits">시너지</button><button type="button" data-v="builder">빌더</button><button type="button" data-v="augs">증강</button><button type="button" data-v="items">아이템</button>
+    <button type="button" data-v="units">챔피언</button><button type="button" data-v="unlock">해금</button><button type="button" data-v="traits">시너지</button><button type="button" data-v="guide">보상·조우자</button><button type="button" data-v="builder">빌더</button><button type="button" data-v="augs">증강</button><button type="button" data-v="items">아이템</button>
   </div>
   <div id="s19-tools"></div>
   <div id="s19-out"></div>
@@ -3891,7 +4117,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
   function buildFind(data) {
     DB = data;
-    buildBuilder(); buildAugList(); buildTraitList(); buildRank(); buildUnits();
+    buildBuilder(); buildAugList(); if (typeof buildAugCmp === "function") buildAugCmp(); if (typeof buildRerollCalc === "function") buildRerollCalc(); buildTraitList(); buildRank(); buildUnits();
     if (metaReady) metaList();
     if (current === "s19" && typeof s19Render === "function") s19Render();
     document.querySelectorAll(".ag img").forEach(function (im) {
@@ -4367,9 +4593,16 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   /* ---- 재료 → 덱: 가진 재료(초반 크립·첫 초밥)로 갈 만한 덱. MetaTFT 덱 통계(meta.json)의 캐리 템 빌드 판수로 계산 ---- */
   var PARTS = ["B.F. 대검", "곡궁", "쓸데없이 큰 지팡이", "여신의 눈물", "쇠사슬 조끼", "음전자 망토", "거인의 허리띠", "연습용 장갑", "뒤집개", "프라이팬"];
   var PART_SHORT = { "B.F. 대검": "대검", "곡궁": "곡궁", "쓸데없이 큰 지팡이": "지팡이", "여신의 눈물": "여눈", "쇠사슬 조끼": "조끼", "음전자 망토": "망토", "거인의 허리띠": "벨트", "연습용 장갑": "장갑", "뒤집개": "뒤집개", "프라이팬": "프라이팬" };
-  var PT_KEY = "tft-guide-parts", ptHeld = [], ptBasis = "emer", PT_NEED = null;
-  try { var pk = JSON.parse(localStorage.getItem(PT_KEY) || "{}"); ptHeld = (pk.h || []).filter(function (x) { return PARTS.indexOf(x) >= 0; }); ptBasis = pk.b || ptBasis; } catch (e) {}
-  function ptSave() { try { localStorage.setItem(PT_KEY, JSON.stringify({ h: ptHeld, b: ptBasis })); } catch (e) {} }
+  var PT_KEY = "tft-guide-parts", ptHeld = [], ptBasis = "emer", ptUnits = [], ptEmbs = [], ptChamp = "", PT_NEED = null;
+  try {
+    var pk = JSON.parse(localStorage.getItem(PT_KEY) || "{}");
+    ptHeld = (pk.h || []).filter(function (x) { return PARTS.indexOf(x) >= 0; });
+    ptBasis = pk.b || ptBasis;
+    if (Array.isArray(pk.u)) ptUnits = pk.u.slice(0, 6);
+    if (Array.isArray(pk.e)) ptEmbs = pk.e.slice(0, 3);
+    if (typeof pk.c === "string") ptChamp = pk.c;
+  } catch (e) {}
+  function ptSave() { try { localStorage.setItem(PT_KEY, JSON.stringify({ h: ptHeld, b: ptBasis, u: ptUnits, e: ptEmbs, c: ptChamp })); } catch (e) {} }
   function partRecipe(n) { var it = IDX && IDX.items[n]; return it && it.recipe && it.recipe.length === 2 ? it.recipe : null; }  // 조합표의 recipeOf(재료, 재료)와 이름이 겹치면 안 됨
   // 덱마다 재료 수요: 템 든 유닛별로 빌드 판수 비율만큼 템 → 재료 (메인 캐리 1, 나머지 0.8)
   function ptNeed() {
@@ -4403,10 +4636,147 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     });
     return out;
   }
+  // 보유 재료(최대 8개)의 모든 상호 배타 완성템 분배 조합 생성 (중복 제거)
+  function ptPairings(held) {
+    var arr = held.slice(0, 8), seen = {}, out = [];
+    function rec(rem, items) {
+      if (rem.length < 2) {
+        var sorted = items.slice().sort(), left = rem[0] || "";
+        var key = sorted.join("|") + "::" + left;
+        if (sorted.length && !seen[key]) { seen[key] = 1; out.push({ items: sorted, left: left }); }
+        return;
+      }
+      // 홀수 개일 때 각 원소를 남기는 분기 (rem.length === arr.length일 때 한 번만 분기)
+      if (rem.length % 2 === 1) {
+        var triedLeft = {};
+        for (var li = 0; li < rem.length; li++) {
+          if (triedLeft[rem[li]]) continue;
+          triedLeft[rem[li]] = 1;
+          var next = rem.slice(0, li).concat(rem.slice(li + 1));
+          recEven(next, items, rem[li]);
+        }
+        return;
+      }
+      recEven(rem, items, "");
+    }
+    function recEven(rem, items, left) {
+      if (!rem.length) {
+        var sorted = items.slice().sort(), key = sorted.join("|") + "::" + left;
+        if (sorted.length && !seen[key]) { seen[key] = 1; out.push({ items: sorted, left: left }); }
+        return;
+      }
+      var first = rem[0], tried = {};
+      for (var i = 1; i < rem.length; i++) {
+        var partner = rem[i];
+        if (tried[partner]) continue;
+        tried[partner] = 1;
+        var made = recipeOf(first, partner);
+        if (!made) continue;
+        var rest = rem.slice(1, i).concat(rem.slice(i + 1));
+        items.push(made);
+        recEven(rest, items, left);
+        items.pop();
+      }
+    }
+    rec(arr, []);
+    return out;
+  }
+  function ptScoreSplits(splits, champ, topDecks, N) {
+    var u = champ && DB && DB.units && DB.units[champ];
+    var itStats = (ITEMS && ITEMS.tiers && (ITEMS.tiers[ptBasis] || ITEMS.tiers.emer || ITEMS.tiers.all) && (ITEMS.tiers[ptBasis] || ITEMS.tiers.emer || ITEMS.tiers.all).items) || {};
+    var uItemMap = {}, uPairMap = {}, uTrioMap = {};
+    if (u) {
+      (u.items || []).forEach(function (x) { uItemMap[x[0]] = x[1]; });
+      (u.pairs || []).forEach(function (x) { uPairMap[x[0].slice().sort().join("|")] = x[1]; });
+      (u.trios || []).forEach(function (x) { uTrioMap[x[0].slice().sort().join("|")] = x[1]; });
+    }
+    return splits.map(function (sp) {
+      var its = sp.items;
+      if (u) {
+        var base = Number((u.base && typeof u.base === "object" ? u.base.avg : u.base)) || 4.5, tag = "", avg = null, delta = 0;
+        if (its.length === 3 && uTrioMap[its.join("|")]) {
+          var t = uTrioMap[its.join("|")]; avg = Number(t.avg); delta = t.d != null ? Number(t.d) : (avg - base); tag = "3템 실통계";
+        } else {
+          // 2템 시너지 매칭 시도
+          var bestP = null, bestPairIdx = null;
+          for (var i = 0; i < its.length; i++) {
+            for (var j = i + 1; j < its.length; j++) {
+              var pk = [its[i], its[j]].sort().join("|");
+              if (uPairMap[pk] && (!bestP || uPairMap[pk].avg < bestP.avg)) { bestP = uPairMap[pk]; bestPairIdx = [i, j]; }
+            }
+          }
+          if (bestP) {
+            avg = Number(bestP.avg); delta = bestP.d != null ? Number(bestP.d) : (avg - base);
+            its.forEach(function (it, idx) {
+              if (idx !== bestPairIdx[0] && idx !== bestPairIdx[1]) {
+                var s = uItemMap[it];
+                var d1 = s ? (s.d != null ? Number(s.d) : Number(s.avg) - base) : 0.18;
+                avg += d1 * 0.65; delta += d1 * 0.65;
+              }
+            });
+            tag = "2템 시너지 반영";
+          } else {
+            var known = 0;
+            its.forEach(function (it) {
+              var s = uItemMap[it];
+              if (s) { known++; delta += (s.d != null ? Number(s.d) : Number(s.avg) - base); }
+              else delta += 0.22;
+            });
+            avg = Math.max(1.5, Math.min(7.5, base + delta * 0.72));
+            tag = known ? "단일 템 통계" : "추천 외 조합";
+          }
+        }
+        if (!isFinite(avg)) avg = base;
+        return { items: its, left: sp.left, score: -avg, avg: avg, delta: delta, tag: tag };
+      }
+      // 전체 메타 기준: 상위 추천 덱 활용 수 + 아이템 평균 등수
+      var deckHits = 0, avgSum = 0, avgCnt = 0;
+      its.forEach(function (it) {
+        deckHits += topDecks.filter(function (x) { return (N[x.d.id].items[it] || 0) >= 0.25; }).length;
+        var s = itStats[it];
+        if (s && s[1]) { avgSum += s[1]; avgCnt++; }
+      });
+      var mAvg = avgCnt ? avgSum / avgCnt : 4.55;
+      return { items: its, left: sp.left, score: deckHits * 3.2 - (mAvg - 4.3) * 18, avg: mAvg, deckHits: deckHits, tag: deckHits ? "상위 덱 " + deckHits + "회 활용" : "범용 조합" };
+    }).sort(function (a, b) { return b.score - a.score; });
+  }
+  function ptExtraBind() {
+    var inp = document.getElementById("pt-uq"), sug = document.getElementById("pt-usug");
+    if (!inp || !sug || ptExtraBind.done) return;
+    ptExtraBind.done = true;
+    inp.addEventListener("input", function () {
+      var q = inp.value.trim();
+      sug.innerHTML = "";
+      if (!q || !IDX) return;
+      var hits = [];
+      Object.keys(IDX.units || {}).forEach(function (n) {
+        if (ptUnits.indexOf(n) < 0 && matches(n, q)) hits.push({ kind: "u", n: n, icon: IDX.units[n].icon, c: IDX.units[n].cost });
+      });
+      Object.keys(IDX.items || {}).forEach(function (n) {
+        if (/ 상징$/.test(n) && ptEmbs.indexOf(n) < 0 && matches(n, q)) hits.push({ kind: "e", n: n, icon: IDX.items[n].icon });
+      });
+      hits.slice(0, 8).forEach(function (h) {
+        var b = el("button", "pt-sug-b"); b.type = "button";
+        if (h.icon) b.appendChild(img(h.icon, ""));
+        b.appendChild(document.createTextNode(h.n));
+        b.addEventListener("click", function () {
+          if (h.kind === "u") { if (ptUnits.length < 6) ptUnits.push(h.n); else toast("기물은 최대 6명까지 넣을 수 있어요"); }
+          else { if (ptEmbs.length < 3) ptEmbs.push(h.n); else toast("상징은 최대 3개까지 넣을 수 있어요"); }
+          inp.value = ""; sug.innerHTML = ""; ptSave(); ptRender();
+        });
+        sug.appendChild(b);
+      });
+      if (!hits.length) sug.appendChild(el("span", "sub", "맞는 기물이나 상징이 없어요"));
+    });
+  }
   function ptRender() {
     var pick = document.getElementById("pt-pick"), tray = document.getElementById("pt-tray"), out = document.getElementById("pt-out");
     if (!pick) return;
     if (!IDX || !META) { out.innerHTML = '<p class="empty">불러오는 중</p>'; return; }
+    ptExtraBind();
+    ptUnits = ptUnits.filter(function (n) { return !!(IDX.units && IDX.units[n]); });
+    ptEmbs = ptEmbs.filter(function (n) { return !!(IDX.items && IDX.items[n]); });
+    if (ptChamp && !(DB && DB.units && DB.units[ptChamp])) ptChamp = "";
     var cnt = ptCount(ptHeld);
     pick.innerHTML = "";
     PARTS.forEach(function (n) {
@@ -4418,7 +4788,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       pick.appendChild(b);
     });
     tray.innerHTML = "";
-    if (ptHeld.length) {
+    var hasAny = ptHeld.length || ptUnits.length || ptEmbs.length;
+    if (hasAny) {
       ptHeld.forEach(function (n, i) {
         var b = el("button", "pt-chip"); b.type = "button"; b.setAttribute("aria-label", n + " 빼기");
         var it = IDX.items[n]; if (it) b.appendChild(img(it.icon, ""));
@@ -4427,24 +4798,62 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         tray.appendChild(b);
       });
       var clr = el("button", "pt-clear", "초기화"); clr.type = "button";
-      clr.addEventListener("click", function () { ptHeld = []; ptSave(); ptRender(); });
+      clr.addEventListener("click", function () { ptHeld = []; ptUnits = []; ptEmbs = []; ptChamp = ""; ptSave(); ptRender(); });
       tray.appendChild(clr);
+    }
+    var uch = document.getElementById("pt-uchips");
+    if (uch) {
+      uch.innerHTML = "";
+      ptUnits.forEach(function (n, i) {
+        var b = el("button", "pt-uchip u"); b.type = "button";
+        var ic = IDX.units[n]; if (ic) b.appendChild(img(ic.icon, ""));
+        b.appendChild(document.createTextNode(n)); b.appendChild(el("i", null, "×"));
+        b.addEventListener("click", function () { ptUnits.splice(i, 1); ptSave(); ptRender(); });
+        uch.appendChild(b);
+      });
+      ptEmbs.forEach(function (n, i) {
+        var b = el("button", "pt-uchip e"); b.type = "button";
+        var ic = IDX.items[n]; if (ic) b.appendChild(img(ic.icon, ""));
+        b.appendChild(document.createTextNode(n)); b.appendChild(el("i", null, "×"));
+        b.addEventListener("click", function () { ptEmbs.splice(i, 1); ptSave(); ptRender(); });
+        uch.appendChild(b);
+      });
     }
     document.querySelectorAll("#pt-basis button").forEach(function (b) { b.classList.toggle("on", b.dataset.b === ptBasis); });
     var ptb = document.getElementById("pt-basis"); if (ptb) ptb.hidden = !!(META && META.pbe);  // PBE 통계엔 티어 구분이 없음
     out.innerHTML = "";
-    if (!ptHeld.length) { out.appendChild(el("p", "empty", "위에서 보유한 재료를 선택해 주세요")); return; }
-    var N = ptNeed(), held = ptCount(ptHeld), total = ptHeld.length, made = ptBuildable(ptHeld);
+    if (!hasAny) { out.appendChild(el("p", "empty", "위에서 보유한 재료나 기물·상징을 선택해 주세요")); return; }
+    var N = ptNeed(), held = ptCount(ptHeld), made = ptBuildable(ptHeld);
     var decks = META.decks.map(function (d) {
       var st = basisSt(d, ptBasis); if (!st) return null;
-      // 재료 궁합: 가진 재료 비율과 이 덱의 재료 수요 비율이 얼마나 닮았는지 (코사인). 재료가 적어도 덱마다 갈리게
       var nd = N[d.id].need, dot = 0, hh = 0, dd = 0;
       PARTS.forEach(function (c) { var h = held[c] || 0, v = nd[c] || 0; dot += h * v; hh += h * h; dd += v * v; });
-      var fit = hh && dd ? dot / Math.sqrt(hh * dd) : 0, items = made.filter(function (n) { return (N[d.id].items[n] || 0) >= 0.25; })
+      var fit = hh && dd ? dot / Math.sqrt(hh * dd) : 0;
+      var items = made.filter(function (n) { return (N[d.id].items[n] || 0) >= 0.25; })
         .sort(function (a, b) { return N[d.id].items[b] - N[d.id].items[a]; });
-      return { d: d, st: st, fit: fit, items: items, score: fit * 100 - (st[0] - 4.2) * 40 };
-    }).filter(function (x) { return x && x.fit >= 0.35; }).sort(function (a, b) { return b.score - a.score; });
-    // 바로 만들 수 있는 템: 잘 맞는 덱 상위 15개 중 몇 개가 쓰는지
+      var mc = mainOf(d);
+      var boardSet = {}, earlySet = {};
+      d.board.forEach(function (b) { if (!b.plant) boardSet[b.u] = 1; });
+      Object.keys(d.levels || {}).forEach(function (k) { (d.levels[k] || []).forEach(function (un) { earlySet[un] = 1; }); });
+      var hitU = [], uBonus = 0;
+      ptUnits.forEach(function (un) {
+        if (mc && mc.u === un) { hitU.push(un); uBonus += 32; }
+        else if (boardSet[un]) { hitU.push(un); uBonus += 20; }
+        else if (earlySet[un]) { hitU.push(un); uBonus += 10; }
+      });
+      var hitE = [], eBonus = 0, reqE = embReq(d);
+      ptEmbs.forEach(function (em) {
+        var eStat = d.emb && d.emb[em];
+        if ((reqE && reqE[0] === em) || (eStat && (eStat[2] >= 3 || eStat[0] >= 150))) {
+          hitE.push(em); eBonus += 45 + (eStat && eStat[1] <= 4.3 ? 10 : 0);
+        }
+      });
+      var keep = (!ptUnits.length && !ptEmbs.length) ? (fit >= 0.35) : (hitU.length > 0 || hitE.length > 0 || (ptHeld.length > 0 && fit >= 0.45));
+      if (!keep) return null;
+      var score = (ptHeld.length ? fit * 100 : 0) + uBonus + eBonus - (st[0] - 4.2) * 38;
+      return { d: d, st: st, fit: fit, items: items, hitU: hitU, hitE: hitE, score: score };
+    }).filter(Boolean).sort(function (a, b) { return b.score - a.score; });
+
     var top = decks.slice(0, 15);
     if (made.length) {
       var sm = sec("바로 만들 수 있는 템", "상위 추천 덱 15개 기준 활용 수"), w = el("div", "pt-made");
@@ -4457,8 +4866,61 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         });
       sm.appendChild(w); out.appendChild(sm);
     }
-    var sd = sec("추천 덱", "재료 궁합과 " + BASIS_LABEL[ptBasis] + " 평균 등수 기준");
-    if (!decks.length) sd.appendChild(el("p", "empty", "선택한 재료 조합에 맞는 추천 덱이 없어요"));
+
+    // 최적 완성템 분배 시뮬레이터 (보유 재료 2개 이상일 때)
+    if (ptHeld.length >= 2) {
+      var splits = ptPairings(ptHeld);
+      if (splits.length) {
+        var sim = sec("최적 완성템 분배 시뮬레이터", ptHeld.length > 8 ? "앞 8개 재료 기준" : "보유 재료로 만들 수 있는 최적 조합");
+        var cands = [];
+        ptUnits.forEach(function (un) { if (cands.indexOf(un) < 0 && DB && DB.units && DB.units[un]) cands.push(un); });
+        top.slice(0, 6).forEach(function (x) {
+          var m = mainOf(x.d);
+          if (m && cands.indexOf(m.u) < 0 && DB && DB.units && DB.units[m.u]) cands.push(m.u);
+        });
+        if (ptChamp && cands.indexOf(ptChamp) < 0) cands.unshift(ptChamp);
+        var crow = el("div", "mt-chips pt-sim-ch");
+        var bAll = el("button", !ptChamp ? "on" : null, "전체 메타"); bAll.type = "button";
+        bAll.addEventListener("click", function () { ptChamp = ""; ptSave(); ptRender(); });
+        crow.appendChild(bAll);
+        cands.slice(0, 6).forEach(function (un) {
+          var b = el("button", ptChamp === un ? "on" : null, un); b.type = "button";
+          b.addEventListener("click", function () { ptChamp = un; ptSave(); ptRender(); });
+          crow.appendChild(b);
+        });
+        sim.appendChild(crow);
+        var ranked = ptScoreSplits(splits, ptChamp, top, N).slice(0, 4);
+        var slist = el("div", "pt-sim-list");
+        ranked.forEach(function (sp, idx) {
+          var row = el("div", "pt-sim-row" + (idx === 0 ? " best" : ""));
+          var left = el("div", "pt-sim-l");
+          left.appendChild(el("span", "pt-sim-rk", String(idx + 1)));
+          var itemsWrap = el("div", "pt-sim-its");
+          sp.items.forEach(function (n) {
+            var it = IDX.items[n], chip = el("span", "pt-sim-it"); chip.dataset.item = n;
+            if (it) chip.appendChild(img(it.icon, n));
+            chip.appendChild(document.createTextNode(n));
+            itemsWrap.appendChild(chip);
+          });
+          if (sp.left) {
+            var lf = el("span", "pt-sim-left", "남음 " + (PART_SHORT[sp.left] || sp.left));
+            itemsWrap.appendChild(lf);
+          }
+          left.appendChild(itemsWrap);
+          row.appendChild(left);
+          var right = el("div", "pt-sim-r");
+          right.appendChild(dkGrad(el("b", null, sp.avg.toFixed(2)), dkAvgT(sp.avg)));
+          right.appendChild(el("small", null, sp.tag));
+          row.appendChild(right);
+          slist.appendChild(row);
+        });
+        sim.appendChild(slist);
+        out.appendChild(sim);
+      }
+    }
+
+    var sd = sec("추천 덱", (ptUnits.length || ptEmbs.length ? "보유 재료·기물·상징 통합 추천 · " : "재료 궁합과 ") + (META.pbe ? "PBE 평균 등수 기준" : BASIS_LABEL[ptBasis] + " 평균 등수 기준"));
+    if (!decks.length) sd.appendChild(el("p", "empty", "선택한 조건에 맞는 추천 덱이 없어요"));
     var rows = el("div", "mt-rows");
     decks.slice(0, 12).forEach(function (x) {
       var d = x.d, bt = basisTier(d, ptBasis), mc = mainOf(d), r = el("button", "mt-row dk t-" + bt); r.type = "button";
@@ -4466,8 +4928,18 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var mid = el("div", "mt-mid");
       var meta = el("div", "dk-meta");
       meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
-      var sub = el("span", "dk-sub"); sub.appendChild(el("span", "pt-fit", "재료 궁합 " + Math.round(x.fit * 100) + "%"));
-      if (d.style) { sub.appendChild(document.createTextNode(" · ")); sub.appendChild(styleTag(d.style)); } meta.appendChild(sub);
+      var sub = el("span", "dk-sub");
+      if (ptHeld.length) sub.appendChild(el("span", "pt-fit", "재료 궁합 " + Math.round(x.fit * 100) + "%"));
+      x.hitU.slice(0, 2).forEach(function (un) {
+        if (sub.childNodes.length) sub.appendChild(document.createTextNode(" · "));
+        sub.appendChild(el("span", "pt-hit u", un));
+      });
+      x.hitE.slice(0, 1).forEach(function (em) {
+        if (sub.childNodes.length) sub.appendChild(document.createTextNode(" · "));
+        sub.appendChild(el("span", "pt-hit e", em));
+      });
+      if (d.style) { if (sub.childNodes.length) sub.appendChild(document.createTextNode(" · ")); sub.appendChild(styleTag(d.style)); }
+      meta.appendChild(sub);
       mid.appendChild(meta);
       var nm = el("div", "mt-name", deckName(d)), req = embReq(d), areq = augReq(d);
       if (req) nm.insertBefore(embBadge(req), nm.firstChild);
@@ -4491,7 +4963,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       rows.appendChild(r);
     });
     sd.appendChild(rows); out.appendChild(sd);
-    out.appendChild(el("p", "fnote", "MetaTFT 덱 통계의 캐리·탱커 템 빌드로 계산해요. 재료 궁합은 가진 재료 구성이 이 덱이 쓰는 재료 구성과 얼마나 비슷한지예요. " + (META ? updAt(META.updated) : "")));
+    out.appendChild(el("p", "fnote", "MetaTFT 덱·챔피언 아이템 통계로 계산해요. 재료·기물·상징을 함께 넣을수록 정확한 덱을 추천해요. " + (META ? updAt(META.updated) : "")));
   }
 
   /* ---- TFT 아카데미: Dishsoap·Frodan의 TFT Academy 티어표 (scripts/build_tfa.py -> site/tfa.json) ---- */
@@ -4844,6 +5316,110 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var md = document.getElementById("mt-detail"), sec = document.getElementById("meta");
     if (md && sec && (!scope || scope.contains(md))) { md.hidden = true; sec.appendChild(md); }
   }
+  /* ---- 덱 즐겨찾기(★) · 한 줄 메모 · 7일 추세 배지/그래프 (v3.8.0) ---- */
+  var MT_FAV_KEY = "tft-guide-deck-fav", MT_MEMO_KEY = "tft-guide-deck-memo";
+  var mtFavs = [], mtMemos = {};
+  try { var mf = JSON.parse(localStorage.getItem(MT_FAV_KEY) || "[]"); if (Array.isArray(mf)) mtFavs = mf.map(String); } catch (e) {}
+  try { var mm = JSON.parse(localStorage.getItem(MT_MEMO_KEY) || "{}"); if (mm && typeof mm === "object") mtMemos = mm; } catch (e) {}
+  function deckKeyOf(v) { return v ? String((v.st && v.st.id) || v.id) : ""; }
+  function isDeckFav(v) {
+    if (!v) return false;
+    var k = deckKeyOf(v), k2 = String(v.id);
+    return mtFavs.indexOf(k) >= 0 || mtFavs.indexOf(k2) >= 0;
+  }
+  function toggleDeckFav(v) {
+    var k = deckKeyOf(v), k2 = String(v.id);
+    var on = isDeckFav(v);
+    if (on) mtFavs = mtFavs.filter(function (x) { return x !== k && x !== k2; });
+    else mtFavs.unshift(k);
+    try { localStorage.setItem(MT_FAV_KEY, JSON.stringify(mtFavs.slice(0, 40))); } catch (e) {}
+    if (typeof homeRender === "function") homeRender();
+    return !on;
+  }
+  function deckMemoGet(v) {
+    if (!v) return "";
+    return mtMemos[deckKeyOf(v)] || mtMemos[String(v.id)] || "";
+  }
+  function deckMemoSet(v, text) {
+    var k = deckKeyOf(v), t = String(text || "").trim();
+    if (t) mtMemos[k] = t; else { delete mtMemos[k]; delete mtMemos[String(v.id)]; }
+    try { localStorage.setItem(MT_MEMO_KEY, JSON.stringify(mtMemos)); } catch (e) {}
+    if (typeof homeRender === "function") homeRender();
+  }
+  function deckTrendBadge(d) {
+    if (!d || d.trd == null || Math.abs(d.trd) < 0.12) return null;
+    var up = d.trd < 0;
+    var sp = el("span", "dk-trd " + (up ? "up" : "dn"), (up ? "▲ " : "▼ ") + Math.abs(d.trd).toFixed(2));
+    sp.title = "최근 2일 평균 등수 변화 (" + (d.trd > 0 ? "+" : "") + d.trd.toFixed(2) + ")";
+    return sp;
+  }
+  function deckTrendChart(d) {
+    if (!d || !d.trends || d.trends.length < 3) return null;
+    var tr = d.trends, avgs = tr.map(function (x) { return x[1]; });
+    var minA = Math.min.apply(null, avgs), maxA = Math.max.apply(null, avgs);
+    var pad = Math.max(0.18, (maxA - minA) * 0.25);
+    var lo = Math.max(1, minA - pad), hi = Math.min(8, maxA + pad);
+    if (hi - lo < 0.4) { lo = Math.max(1, lo - 0.2); hi = Math.min(8, hi + 0.2); }
+    var W = 320, H = 112, pL = 28, pR = 16, pT = 18, pB = 24, iw = W - pL - pR, ih = H - pT - pB;
+    var xOf = function (i) { return pL + (tr.length > 1 ? (i / (tr.length - 1)) * iw : iw / 2); };
+    // 낮은 평균 등수가 더 좋으므로 그래프 위쪽에 위치하도록 y축 반전
+    var yOf = function (a) { return pT + ((a - lo) / (hi - lo)) * ih; };
+    var pts = tr.map(function (x, i) { return [xOf(i), yOf(x[1]), x]; });
+    var ns = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("class", "dk-trsvg");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "최근 7일 평균 등수 추세");
+    // 기준선 (상단·하단 + 4.50선)
+    [lo, (lo + hi) / 2, hi].forEach(function (v) {
+      var y = yOf(v);
+      var ln = document.createElementNS(ns, "line");
+      ln.setAttribute("x1", pL); ln.setAttribute("x2", W - pR); ln.setAttribute("y1", y.toFixed(1)); ln.setAttribute("y2", y.toFixed(1));
+      ln.setAttribute("class", "tr-grid"); svg.appendChild(ln);
+      var tx = document.createElementNS(ns, "text");
+      tx.setAttribute("x", pL - 4); tx.setAttribute("y", (y + 3).toFixed(1)); tx.setAttribute("text-anchor", "end"); tx.setAttribute("class", "tr-ax");
+      tx.textContent = v.toFixed(1); svg.appendChild(tx);
+    });
+    var rising = d.trd != null ? d.trd <= 0 : (tr[tr.length - 1][1] <= tr[0][1]);
+    var col = rising ? "var(--moss)" : "var(--warn)";
+    var polyStr = pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
+    var area = document.createElementNS(ns, "polygon");
+    area.setAttribute("points", pL + "," + (H - pB) + " " + polyStr + " " + pts[pts.length - 1][0].toFixed(1) + "," + (H - pB));
+    area.setAttribute("fill", col); area.setAttribute("fill-opacity", "0.14");
+    svg.appendChild(area);
+    var pl = document.createElementNS(ns, "polyline");
+    pl.setAttribute("points", polyStr); pl.setAttribute("fill", "none"); pl.setAttribute("stroke", col); pl.setAttribute("stroke-width", "2.2"); pl.setAttribute("stroke-linejoin", "round"); pl.setAttribute("stroke-linecap", "round");
+    svg.appendChild(pl);
+    pts.forEach(function (p, i) {
+      var c = document.createElementNS(ns, "circle");
+      c.setAttribute("cx", p[0].toFixed(1)); c.setAttribute("cy", p[1].toFixed(1)); c.setAttribute("r", i === pts.length - 1 ? "3.8" : "2.6");
+      c.setAttribute("fill", col); svg.appendChild(c);
+      if (i === 0 || i === pts.length - 1 || i === Math.floor(pts.length / 2)) {
+        var dl = document.createElementNS(ns, "text");
+        dl.setAttribute("x", p[0].toFixed(1)); dl.setAttribute("y", H - 6); dl.setAttribute("text-anchor", i === 0 ? "start" : i === pts.length - 1 ? "end" : "middle");
+        dl.setAttribute("class", "tr-ax"); dl.textContent = p[2][0].replace("-", "/"); svg.appendChild(dl);
+      }
+      if (i === 0 || i === pts.length - 1) {
+        var vl = document.createElementNS(ns, "text");
+        vl.setAttribute("x", p[0].toFixed(1)); vl.setAttribute("y", Math.max(12, p[1] - 6).toFixed(1));
+        vl.setAttribute("text-anchor", i === 0 ? "start" : "end"); vl.setAttribute("class", "tr-val");
+        vl.textContent = p[2][1].toFixed(2); svg.appendChild(vl);
+      }
+    });
+    var diff = d.trd != null ? d.trd : Number((tr[tr.length - 1][1] - tr[0][1]).toFixed(2));
+    var hint = diff <= -0.12 ? "최근 상승세 (평균 " + diff.toFixed(2) + ")" : diff >= 0.12 ? "최근 하락세 (평균 +" + diff.toFixed(2) + ")" : "최근 보합세";
+    var box = sec("최근 7일 추세", hint);
+    var wrap = el("div", "dk-trbox");
+    wrap.appendChild(svg);
+    var foot = el("div", "dk-trfoot");
+    foot.appendChild(el("span", null, tr[0][0].replace("-", "/") + " " + tr[0][1].toFixed(2) + " → " + tr[tr.length - 1][0].replace("-", "/") + " " + tr[tr.length - 1][1].toFixed(2)));
+    foot.appendChild(el("span", null, "선택률 " + tr[0][2].toFixed(2) + " → " + tr[tr.length - 1][2].toFixed(2)));
+    wrap.appendChild(foot);
+    box.appendChild(wrap);
+    return box;
+  }
+
   function pcMetaRow(v, basis) {
     var d = v.st, bs = basisSt(d, basis), mc = mainOf(v), pl = perLobby(d, basis), areq = augReq(d);
     var nm = el("div", "mt-name", deckName(v));
@@ -4855,6 +5431,9 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       ab.addEventListener("click", function (e) { if (openSheet("a", areq.n)) { e.stopPropagation(); e.preventDefault(); } });
       nm.insertBefore(ab, nm.firstChild);
     }
+    if (isDeckFav(v)) nm.insertBefore(el("span", "dk-fav-mk", "★"), nm.firstChild);
+    var trb = deckTrendBadge(d); if (trb) nm.appendChild(trb);
+    if (deckMemoGet(v)) nm.appendChild(el("span", "dk-memo-mk", "메모"));
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
     var chips = (areq ? [[areq.n, "ch-hero"]] : []).concat(d ? [d.style ? [styleKo(d.style), styleCls(d.style)] : null,
       d.level ? [d.level + "렙 완성", "ch-lv"] : null, d.diff ? [DIFF[d.diff], "ch-d" + d.diff] : null] : [])
@@ -4889,12 +5468,15 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var pl = perLobby(d, basis);
     if (pl != null) { if (mtxt.textContent) mtxt.appendChild(document.createTextNode(" · ")); mtxt.appendChild(dkPickGrad(el("span", "dk-pl", "선택률 " + pl), +pl)); }
     if (mtxt.textContent) meta.appendChild(mtxt);
+    var trb = deckTrendBadge(d); if (trb) meta.appendChild(trb);
     mid.appendChild(meta);
     var nm = el("div", "mt-name", deckName(v));
     var pre = /^\[([^\]]+)\]/.exec(v.name), req = embReq(d);
     if (pre && !(req && /상징/.test(pre[1]))) nm.insertBefore(el("span", "pre", PRE_KO[pre[1]] || pre[1]), nm.firstChild);
     if (req) nm.insertBefore(embBadge(req), nm.firstChild);
     if (areq) nm.insertBefore(augReqBadge(areq, false), nm.firstChild);
+    if (isDeckFav(v)) nm.insertBefore(el("span", "dk-fav-mk", "★"), nm.firstChild);
+    if (deckMemoGet(v)) nm.appendChild(el("span", "dk-memo-mk", "메모"));
     if (v.guide) nm.appendChild(el("span", "gd-badge", "가이드"));
     if (v.subs && v.subs.length > 1) nm.appendChild(el("span", "tfa-more", "비슷한 덱 " + v.subs.length));
     if (v.tag === "hot") nm.appendChild(el("span", "hot", "HOT"));
@@ -4941,12 +5523,17 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var list = allViews().filter(function (v) {
       if (!v) return false;
       var d = v.st;
+      if (mtFilter === "fav" && !isDeckFav(v)) return false;
       if (mtFilter === "mine" && !(d && d.mine)) return false;
       if (mtFilter === "hero" && !augReq(d)) return false;
       if (mtFilter === "reroll" && !isReroll(d)) return false;
       if ((mtFilter === "8" || mtFilter === "9") && (!d || isReroll(d) || (mtFilter === "8" ? d.level !== 8 : d.level < 9))) return false;
       return matchQ(v);
     }).sort(function (a, b) {  // 그 기준에 판수가 모자란 덱은 맨 아래
+      if (mtSort === "trend") {
+        var tx = a.st && a.st.trd != null ? a.st.trd : 99, ty = b.st && b.st.trd != null ? b.st.trd : 99;
+        if (tx !== ty) return tx - ty;
+      }
       var x = basisSt(a.st, basis), y = basisSt(b.st, basis);
       if (!x || !y) return (x ? 0 : 1) - (y ? 0 : 1);
       return mtSort === "win" ? y[2] - x[2] : mtSort === "top4" ? y[1] - x[1] : mtSort === "pick" ? (y[3] || 0) - (x[3] || 0) : x[0] - y[0];
@@ -4960,7 +5547,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       unlinked.forEach(function (v) { box.appendChild(wideNow ? pcMetaRow(v, basis) : mobMetaRow(v, basis)); });
     }
     if (!list.length && !unlinked.length) {
-      box.appendChild(el("p", "empty", "맞는 덱이 없어요"));
+      box.appendChild(el("p", "empty", mtFilter === "fav" ? "즐겨찾기한 덱이 없어요. 덱 상세에서 ★ 버튼을 눌러 저장해 보세요" : "맞는 덱이 없어요"));
       if (isWide()) document.getElementById("mt-detail").hidden = true;
     } else if (wideNow && mtCurId) {  // PC: 펼쳐 두었던 덱은 다시 그려도 펼친 채로
       var openRow = box.querySelector('.pcdk[data-id="' + mtCurId + '"]');
@@ -5116,7 +5703,34 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));
     var tbb = el("button", "tb-clear", "빌더로"); tbb.type = "button";
     tbb.addEventListener("click", function () { tbLoad(names); });
-    acts.appendChild(tbb); box.appendChild(acts);
+    acts.appendChild(tbb);
+    var favOn = isDeckFav(v);
+    var favb = el("button", "dk-fav-btn" + (favOn ? " on" : ""), favOn ? "★ 즐겨찾기됨" : "☆ 즐겨찾기"); favb.type = "button";
+    favb.setAttribute("aria-pressed", favOn ? "true" : "false");
+    favb.addEventListener("click", function () {
+      var now = toggleDeckFav(v);
+      favb.classList.toggle("on", now);
+      favb.setAttribute("aria-pressed", now ? "true" : "false");
+      favb.textContent = now ? "★ 즐겨찾기됨" : "☆ 즐겨찾기";
+      toast(now ? "즐겨찾기에 추가했어요" : "즐겨찾기에서 뺐어요");
+      if (!isWide()) metaList();
+    });
+    acts.appendChild(favb);
+    box.appendChild(acts);
+    var mbox = el("div", "dk-memo-box");
+    var minp = el("input", "dk-memo-inp"); minp.type = "text"; minp.maxLength = 120;
+    minp.placeholder = "나만의 운영 메모 (예: 4-2 자크 2성, 8렙 리롤)";
+    minp.value = deckMemoGet(v);
+    minp.setAttribute("aria-label", "나만의 덱 운영 메모");
+    var mst = el("span", "dk-memo-st", minp.value ? "저장됨" : "");
+    var mtimer = null;
+    minp.addEventListener("input", function () {
+      mst.textContent = "저장 중";
+      clearTimeout(mtimer);
+      mtimer = setTimeout(function () { deckMemoSet(v, minp.value); mst.textContent = minp.value.trim() ? "저장됨" : ""; }, 260);
+    });
+    minp.addEventListener("blur", function () { clearTimeout(mtimer); deckMemoSet(v, minp.value); mst.textContent = minp.value.trim() ? "저장됨" : ""; });
+    mbox.appendChild(minp); mbox.appendChild(mst); box.appendChild(mbox);
 
     var cols = el("div", "mt-cols"), A = el("div"), B = el("div");
     A.appendChild(levelBoards(dv, d));
@@ -5240,6 +5854,8 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       });
       B.appendChild(ea);
       }
+      var trChart = deckTrendChart(d);
+      if (trChart) B.appendChild(trChart);
       if (d.finals.length) {
         var fi = sec("완성 레벨별 평균"); var kv = el("div", "kv");
         var bestAvg = Math.min.apply(null, d.finals.filter(function (x) { return x[2] >= 5; }).map(function (x) { return x[1]; }));
@@ -6608,6 +7224,308 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
     return wrap;
   }
+  /* ---- v3.8.0 실전 도구: 증강 3택 비교기 (#augments) + 리롤 확률·기대 골드 계산기 (#numbers) ---- */
+  var AG_CMP_KEY = "tft-guide-agcmp", agCmpList = [], agCmpStage = "All";
+  try {
+    var acs = JSON.parse(localStorage.getItem(AG_CMP_KEY) || "null");
+    if (acs && Array.isArray(acs.l)) agCmpList = acs.l.slice(0, 3);
+    if (acs && acs.s) agCmpStage = acs.s;
+  } catch (e) {}
+  function agCmpSave() { try { localStorage.setItem(AG_CMP_KEY, JSON.stringify({ l: agCmpList, s: agCmpStage })); } catch (e) {} }
+  function agCmpRarNum(r) { return r === "프리즘" ? "3" : r === "골드" ? "2" : r === "실버" ? "1" : ""; }
+  function agTfaTier(name, rarNum, stage) {
+    if (!TFA || !TFA.augs || !rarNum) return "";
+    var bySt = (TFA.augs[rarNum] || {})[stage] || {};
+    var tiers = ["S", "A", "B", "C"], clean = name.replace(/\+*$/, "");
+    for (var i = 0; i < tiers.length; i++) {
+      var arr = bySt[tiers[i]] || [];
+      if (arr.indexOf(name) >= 0 || arr.indexOf(clean) >= 0) return tiers[i];
+    }
+    return "";
+  }
+  function agCmpScore(name, stage) {
+    var inf = DB && DB.info && DB.info.a && DB.info.a[name];
+    var rn = inf ? agCmpRarNum(inf.r) : "";
+    var ord = { S: 5, A: 4, B: 3, C: 2, D: 1 };
+    var tStage = agTfaTier(name, rn, stage) || (stage !== "All" ? agTfaTier(name, rn, "All") : "");
+    var tMt = (inf && inf.t) || "";
+    return (ord[tStage] || 0) * 10 + (ord[tMt] || 0);
+  }
+  function agCmpDecks(name) {
+    var out = [], seen = {};
+    if (META && META.decks) {
+      META.decks.forEach(function (d) {
+        if (seen[d.id]) return;
+        var hit = (d.req_aug && d.req_aug.n === name);
+        if (!hit && d.augs) {
+          ["프리즘", "골드", "실버"].forEach(function (r) {
+            if ((d.augs[r] || []).indexOf(name) >= 0) hit = true;
+          });
+        }
+        if (hit) { seen[d.id] = 1; out.push({ id: d.id, name: deckName(d), avg: d.avg, src: "meta" }); }
+      });
+    }
+    // 설명에 특정 시너지가 직접 언급되면 그 시너지 상위 메타 덱 연결
+    if (out.length < 3 && DB && DB.info && DB.info.a[name] && META && META.decks) {
+      var desc = (DB.info.a[name].d || "") + " " + name;
+      var matchedTraits = Object.keys(DB.info.t || {}).filter(function (t) { return t.length >= 2 && desc.indexOf(t) >= 0; });
+      if (matchedTraits.length) {
+        META.decks.slice().sort(function (a, b) { return a.avg - b.avg; }).forEach(function (d) {
+          if (out.length >= 3 || seen[d.id]) return;
+          var syn = synOf(d.board);
+          if (syn.some(function (s) { return matchedTraits.indexOf(s.t) >= 0 && s.style !== "unique"; })) {
+            seen[d.id] = 1; out.push({ id: d.id, name: deckName(d), avg: d.avg, src: "meta" });
+          }
+        });
+      }
+    }
+    return out.sort(function (a, b) { return (a.avg || 9) - (b.avg || 9); }).slice(0, 3);
+  }
+  function agCmpToggle(name) {
+    var idx = agCmpList.indexOf(name);
+    if (idx >= 0) agCmpList.splice(idx, 1);
+    else if (agCmpList.length < 3) agCmpList.push(name);
+    else { toast("최대 3개까지 비교할 수 있어요"); return; }
+    agCmpSave();
+    agCmpRender();
+    if (typeof agList === "function") agList();
+  }
+  function agCmpSugRender() {
+    var sug = document.getElementById("ag-cmp-sug"), inp = document.getElementById("ag-cmp-q");
+    if (!sug || !inp || !DB) return;
+    var q = inp.value.trim();
+    sug.innerHTML = "";
+    if (!q) return;
+    var hits = Object.keys(DB.info.a).filter(function (n) { return matches(n, q) && agCmpList.indexOf(n) < 0; })
+      .sort(function (a, b) { return agCmpScore(b, agCmpStage) - agCmpScore(a, agCmpStage) || a.localeCompare(b, "ko"); })
+      .slice(0, 8);
+    hits.forEach(function (n) {
+      var a = DB.info.a[n], b = el("button", "ag-sug-b"); b.type = "button";
+      if (IDX && IDX.augments && IDX.augments[n]) { var im = img(IDX.augments[n], ""); im.dataset.r = a.r; b.appendChild(im); }
+      b.appendChild(document.createTextNode(n));
+      if (a.t) b.appendChild(el("span", "tierb " + a.t, a.t));
+      b.addEventListener("click", function () {
+        if (agCmpList.length >= 3) { toast("최대 3개까지 비교할 수 있어요"); return; }
+        agCmpList.push(n); agCmpSave(); inp.value = ""; sug.innerHTML = ""; agCmpRender();
+        if (typeof agList === "function") agList();
+      });
+      sug.appendChild(b);
+    });
+    if (!hits.length) sug.appendChild(el("span", "sub", "맞는 증강이 없어요"));
+  }
+  function agCmpRender() {
+    var out = document.getElementById("ag-cmp-out"), clr = document.getElementById("ag-cmp-clr");
+    if (!out || !DB) return;
+    agCmpList = agCmpList.filter(function (n) { return !!DB.info.a[n]; });
+    document.querySelectorAll("#ag-cmp-st button").forEach(function (b) { b.classList.toggle("on", b.dataset.s === agCmpStage); });
+    if (clr) clr.hidden = !agCmpList.length;
+    out.innerHTML = "";
+    if (!agCmpList.length) {
+      out.appendChild(el("p", "sub ag-cmp-hint", "실전에서 뜬 증강 3개를 검색하거나 아래 목록의 + 버튼을 눌러 시점별 등급과 어울리는 덱을 비교해 보세요"));
+      return;
+    }
+    var scores = agCmpList.map(function (n) { return agCmpScore(n, agCmpStage); });
+    var maxSc = Math.max.apply(null, scores);
+    var bestCount = scores.filter(function (s) { return s === maxSc; }).length;
+    var grid = el("div", "ag-cmp-grid n" + agCmpList.length);
+    agCmpList.forEach(function (n, idx) {
+      var a = DB.info.a[n], rn = agCmpRarNum(a.r), isBest = agCmpList.length >= 2 && maxSc > 0 && scores[idx] === maxSc && bestCount === 1;
+      var card = el("div", "ag-cmp-card" + (isBest ? " best" : ""));
+      var top = el("div", "ag-cmp-top");
+      if (IDX && IDX.augments && IDX.augments[n]) { var im = img(IDX.augments[n], ""); im.dataset.r = a.r; top.appendChild(im); }
+      var ttl = el("div", "ag-cmp-ttl");
+      var nm = el("b", null, n); nm.dataset.aug = n; ttl.appendChild(nm);
+      var sub = el("div", "ag-cmp-tags");
+      var rb = el("span", "rar", a.r); rb.dataset.r = a.r; sub.appendChild(rb);
+      if (isBest) sub.appendChild(el("span", "ag-best-b", "추천"));
+      ttl.appendChild(sub); top.appendChild(ttl);
+      var rm = el("button", "ag-cmp-rm", "×"); rm.type = "button"; rm.setAttribute("aria-label", n + " 빼기");
+      rm.addEventListener("click", function () { agCmpToggle(n); });
+      top.appendChild(rm); card.appendChild(top);
+
+      var tiers = el("div", "ag-cmp-tiers");
+      var tRows = [["MetaTFT", a.t || "-", false]];
+      [["2-1", "2-1"], ["3-2", "3-2"], ["4-2", "4-2"], ["All", "전체"]].forEach(function (st) {
+        tRows.push([st[1], agTfaTier(n, rn, st[0]) || "-", agCmpStage === st[0]]);
+      });
+      tRows.forEach(function (tr) {
+        var cell = el("div", "ag-cmp-t" + (tr[2] ? " on" : ""));
+        cell.appendChild(el("small", null, tr[0]));
+        cell.appendChild(el("span", "tierb " + (tr[1] === "-" ? "X" : tr[1]), tr[1]));
+        tiers.appendChild(cell);
+      });
+      card.appendChild(tiers);
+
+      var dks = agCmpDecks(n);
+      if (dks.length) {
+        var dw = el("div", "ag-cmp-dks");
+        dw.appendChild(el("small", null, "어울리는 덱"));
+        var dlist = el("div", "ag-cmp-dlist");
+        dks.forEach(function (d) {
+          var db = el("button", "ag-cmp-dk", d.name + " " + d.avg.toFixed(2)); db.type = "button";
+          db.addEventListener("click", function () { openDeck(d.id); });
+          dlist.appendChild(db);
+        });
+        dw.appendChild(dlist); card.appendChild(dw);
+      }
+      card.appendChild(el("p", "ag-cmp-desc", a.d || ""));
+      grid.appendChild(card);
+    });
+    out.appendChild(grid);
+  }
+  function buildAugCmp() {
+    var inp = document.getElementById("ag-cmp-q"), clr = document.getElementById("ag-cmp-clr");
+    if (!inp || buildAugCmp.done) { agCmpRender(); return; }
+    buildAugCmp.done = true;
+    inp.addEventListener("input", agCmpSugRender);
+    if (clr) clr.addEventListener("click", function () { agCmpList = []; agCmpSave(); agCmpRender(); if (typeof agList === "function") agList(); });
+    document.querySelectorAll("#ag-cmp-st button").forEach(function (b) {
+      b.addEventListener("click", function () { agCmpStage = b.dataset.s; agCmpSave(); agCmpRender(); });
+    });
+    agCmpRender();
+  }
+
+  /* ---- 인터랙티브 리롤 확률 · 기대 골드 계산기 (#numbers) ---- */
+  var RR_POOL = { 1: 30, 2: 25, 3: 18, 4: 10, 5: 9, 7: 9 };
+  var RR_CHAMPS_S19 = { 1: 14, 2: 13, 3: 14, 4: 13, 5: 8, 7: 9 }; // 19시즌 기본 상점 기물 수 (7코는 해금 시 5코 풀 공유)
+  var rrSt = { lv: 8, cost: 4, mine: 0, other: 0, gold: 40 };
+  function rrCompute(lv, cost, outMine, outOther, gold) {
+    var row = odds[Math.max(0, Math.min(odds.length - 1, lv - 3))];
+    var tierP = (row[cost === 7 ? 5 : cost] || 0) / 100;
+    var copies = RR_POOL[cost] || 10;
+    var champs = RR_CHAMPS_S19[cost] || 13;
+    var remMine = Math.max(0, copies - outMine);
+    var remOther = Math.max(0, (champs - 1) * copies - outOther);
+    if (tierP <= 0 || remMine <= 0) {
+      return { p1: 0, p3: 0, p9: 0, shop1: 0, e1: null, e3: null, e9: null, g50_1: null, g80_1: null, g50_3: null, g80_3: null, remMine: remMine, tierPct: Math.round(tierP * 100) };
+    }
+    var pSlot = function (k) {
+      var rm = remMine - k, tot = rm + remOther;
+      return rm > 0 && tot > 0 ? tierP * (rm / tot) : 0;
+    };
+    var p0 = pSlot(0), shop1 = 1 - Math.pow(1 - p0, 5);
+    var expGold = function (m) {
+      if (m > remMine) return null;
+      var slots = 0;
+      for (var k = 0; k < m; k++) { var pk = pSlot(k); if (pk <= 0) return null; slots += 1 / pk; }
+      return (slots / 5) * 2;
+    };
+    var maxRolls = Math.max(Math.floor(gold / 2), 150), targetRolls = Math.floor(gold / 2);
+    var K = Math.min(9, remMine), dp = new Array(K + 1).fill(0); dp[0] = 1;
+    var p1 = 0, p3 = 0, p9 = 0, g50_1 = null, g80_1 = null, g50_3 = null, g80_3 = null;
+    for (var r = 1; r <= maxRolls; r++) {
+      for (var s = 0; s < 5; s++) {
+        var nxt = new Array(K + 1).fill(0);
+        for (var k = 0; k < K; k++) {
+          if (!dp[k]) continue;
+          var pk = pSlot(k);
+          nxt[k] += dp[k] * (1 - pk);
+          nxt[k + 1] += dp[k] * pk;
+        }
+        nxt[K] += dp[K];
+        dp = nxt;
+      }
+      var c1 = 1 - dp[0];
+      var c3 = K >= 3 ? (1 - dp[0] - dp[1] - dp[2]) : 0;
+      var c9 = K >= 9 ? dp[9] : 0;
+      if (r === targetRolls) { p1 = c1; p3 = c3; p9 = c9; }
+      if (g50_1 == null && c1 >= 0.5) g50_1 = r * 2;
+      if (g80_1 == null && c1 >= 0.8) g80_1 = r * 2;
+      if (g50_3 == null && c3 >= 0.5) g50_3 = r * 2;
+      if (g80_3 == null && c3 >= 0.8) g80_3 = r * 2;
+    }
+    return {
+      p1: p1, p3: p3, p9: p9, shop1: shop1,
+      e1: expGold(1), e3: expGold(3), e9: expGold(9),
+      g50_1: g50_1, g80_1: g80_1, g50_3: g50_3, g80_3: g80_3,
+      remMine: remMine, tierPct: Math.round(tierP * 100)
+    };
+  }
+  function buildRerollCalc() {
+    var box = document.getElementById("rr-calc");
+    if (!box) return;
+    function render() {
+      var maxMine = (RR_POOL[rrSt.cost] || 10) - 1;
+      if (rrSt.mine > maxMine) rrSt.mine = maxMine;
+      var maxOther = Math.min(80, ((RR_CHAMPS_S19[rrSt.cost] || 13) - 1) * (RR_POOL[rrSt.cost] || 10) - 1);
+      if (rrSt.other > maxOther) rrSt.other = maxOther;
+      var res = rrCompute(rrSt.lv, rrSt.cost, rrSt.mine, rrSt.other, rrSt.gold);
+      box.innerHTML = "";
+      var head = el("div", "rr-head");
+      head.appendChild(el("h3", null, "리롤 확률 · 기대 골드 계산기"));
+      head.appendChild(el("small", null, rrSt.lv + "렙 · " + rrSt.cost + "코 " + res.tierPct + "% · 남은 " + res.remMine + "장"));
+      box.appendChild(head);
+
+      var ctrls = el("div", "rr-ctrls");
+      // 레벨 선택
+      var r1 = el("div", "rr-row");
+      r1.appendChild(el("span", "rr-lab", "레벨"));
+      var lvs = el("div", "mt-chips rr-chips");
+      [3, 4, 5, 6, 7, 8, 9, 10].forEach(function (lv) {
+        var b = el("button", lv === rrSt.lv ? "on" : null, lv + "렙"); b.type = "button";
+        b.addEventListener("click", function () { rrSt.lv = lv; render(); });
+        lvs.appendChild(b);
+      });
+      r1.appendChild(lvs); ctrls.appendChild(r1);
+
+      // 목표 코스트 선택
+      var r2 = el("div", "rr-row");
+      r2.appendChild(el("span", "rr-lab", "코스트"));
+      var cs = el("div", "mt-chips rr-chips");
+      [1, 2, 3, 4, 5, 7].forEach(function (c) {
+        var b = el("button", (c === rrSt.cost ? "on " : "") + "rr-c" + c, c + "코"); b.type = "button";
+        b.addEventListener("click", function () { rrSt.cost = c; render(); });
+        cs.appendChild(b);
+      });
+      r2.appendChild(cs); ctrls.appendChild(r2);
+
+      // 스텝퍼 3개: 보유 골드, 이미 빠진 내 기물, 같은 코스트 다른 기물 빠진 수
+      var steps = el("div", "rr-steps");
+      function mkStep(label, val, unit, min, max, delta, onChg) {
+        var w = el("div", "rr-st");
+        w.appendChild(el("span", "rr-slab", label));
+        var ctl = el("div", "rr-sctl");
+        var m = el("button", null, "−"); m.type = "button"; m.disabled = val <= min;
+        m.addEventListener("click", function () { onChg(Math.max(min, val - delta)); render(); });
+        var v = el("b", null, val + unit);
+        var p = el("button", null, "+"); p.type = "button"; p.disabled = val >= max;
+        p.addEventListener("click", function () { onChg(Math.min(max, val + delta)); render(); });
+        ctl.appendChild(m); ctl.appendChild(v); ctl.appendChild(p);
+        w.appendChild(ctl); return w;
+      }
+      steps.appendChild(mkStep("보유 골드 (" + Math.floor(rrSt.gold / 2) + "롤)", rrSt.gold, "G", 2, 120, 10, function (v) { rrSt.gold = v; }));
+      steps.appendChild(mkStep("빠진 내 기물", rrSt.mine, "장", 0, maxMine, 1, function (v) { rrSt.mine = v; }));
+      steps.appendChild(mkStep("같은 코 다른 기물", rrSt.other, "장", 0, maxOther, 5, function (v) { rrSt.other = v; }));
+      ctrls.appendChild(steps);
+      box.appendChild(ctrls);
+
+      // 결과 KPI
+      var kpi = el("div", "rr-kpi");
+      var fmtPct = function (x) { return (x * 100 >= 99.5 ? "99.5+" : (x * 100).toFixed(1)) + "%"; };
+      var fmtG = function (x) { return x == null ? "-" : Math.round(x) + "G"; };
+      var cards = [
+        ["1장 이상", fmtPct(res.p1), "기대 " + fmtG(res.e1), res.p1 >= 0.7 ? "good" : res.p1 < 0.35 ? "bad" : ""],
+        ["3장 (2성)", fmtPct(res.p3), "기대 " + fmtG(res.e3), res.p3 >= 0.6 ? "good" : res.p3 < 0.25 ? "bad" : ""]
+      ];
+      if (rrSt.cost <= 3) cards.push(["9장 (3성)", fmtPct(res.p9), "기대 " + fmtG(res.e9), res.p9 >= 0.5 ? "good" : ""]);
+      else cards.push(["1상점 적중", fmtPct(res.shop1), "5칸 기준", ""]);
+      cards.forEach(function (x) {
+        var c = el("div", "rr-k");
+        c.appendChild(el("span", null, x[0]));
+        c.appendChild(el("b", x[3] || null, x[1]));
+        c.appendChild(el("small", null, x[2]));
+        kpi.appendChild(c);
+      });
+      box.appendChild(kpi);
+
+      var note = [];
+      if (res.g50_1 != null) note.push("1장 50% " + res.g50_1 + "G · 80% " + (res.g80_1 != null ? res.g80_1 + "G" : "300G+"));
+      if (res.g50_3 != null) note.push("3장 50% " + res.g50_3 + "G · 80% " + (res.g80_3 != null ? res.g80_3 + "G" : "300G+"));
+      if (note.length) box.appendChild(el("p", "rr-mile", note.join(" / ")));
+      box.appendChild(el("p", "sub rr-foot", "19시즌 기본 상점 기물 수 기준이에요. 7코스트는 해금 후 5코스트 상점 확률을 공유해요."));
+    }
+    render();
+  }
   function embStat(n, g) { if (g === "all" && ITEMS && ITEMS.tiers.emer) g = "emer"; var t = ITEMS && ITEMS.tiers[g] && ITEMS.tiers[g].items[n]; return t || null; }
   function embBad(n) { var a = embStat(n, "all"); return a && (a[4] === "D" || a[1] >= 4.5); }
   document.getElementById("mt-emb").addEventListener("click", function () { goTab("emb"); });
@@ -6941,6 +7859,11 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
           var c = el("span", "ag-card"); c.dataset.aug = n; c.dataset.r = r;
           if (IDX.augments[n]) { var im = img(IDX.augments[n], ""); im.dataset.r = r; c.appendChild(im); }
           c.appendChild(document.createTextNode(n));
+          var picked = typeof agCmpList !== "undefined" && agCmpList.indexOf(n) >= 0;
+          var add = el("button", "ag-add" + (picked ? " on" : ""), picked ? "✓" : "+");
+          add.type = "button"; add.setAttribute("aria-label", n + (picked ? " 비교 빼기" : " 비교에 담기"));
+          add.addEventListener("click", function (e) { e.stopPropagation(); if (typeof agCmpToggle === "function") agCmpToggle(n); });
+          c.appendChild(add);
           cards.appendChild(c);
         });
         sub.appendChild(cards); subs.appendChild(sub);
@@ -7947,6 +8870,55 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     }).catch(function (e) { box.innerHTML = ""; box.appendChild(el("p", "empty", "불러오지 못했어요. 잠시 후 다시 시도해 주세요")); });
   }
 
+  function pwCompareCard(meP, mePw, opP, opPw, opName) {
+    var box = el("div", "lb-cmpbox");
+    var hd = el("div", "lb-cmphd");
+    var diffPw = mePw.power - opPw.power;
+    hd.appendChild(el("b", null, "나 #" + meP.placement + " (" + mePw.power + ") vs " + opName + " #" + opP.placement + " (" + opPw.power + ")"));
+    hd.appendChild(el("span", "lb-cmpd " + (diffPw >= 0 ? "good" : "bad"), (diffPw >= 0 ? "+" : "") + diffPw + "점"));
+    box.appendChild(hd);
+    var sub = el("div", "lb-cmpsub");
+    sub.appendChild(el("span", null, "필드 가치 " + mePw.val + "G vs " + opPw.val + "G (" + (mePw.val - opPw.val >= 0 ? "+" : "") + (mePw.val - opPw.val) + "G)"));
+    sub.appendChild(el("span", null, "예상 " + mePw.pred.toFixed(1) + "등 vs " + opPw.pred.toFixed(1) + "등"));
+    box.appendChild(sub);
+    var mMap = {}, oMap = {};
+    (mePw.parts || []).forEach(function (x) { mMap[x[0]] = x[1]; });
+    (opPw.parts || []).forEach(function (x) { oMap[x[0]] = x[1]; });
+    var axes = ["레벨", "유닛", "템", "캐리 템", "시너지"];
+    var maxAbs = 12;
+    axes.forEach(function (k) {
+      maxAbs = Math.max(maxAbs, Math.abs(mMap[k] || 0), Math.abs(oMap[k] || 0), Math.abs((mMap[k] || 0) - (oMap[k] || 0)));
+    });
+    var diffs = [];
+    var rows = el("div", "lb-cmprows");
+    axes.forEach(function (k) {
+      var mv = mMap[k] || 0, ov = oMap[k] || 0, df = mv - ov;
+      diffs.push([k, df]);
+      var r = el("div", "lb-cmpr");
+      r.appendChild(el("span", "lb-cmpk", k));
+      r.appendChild(el("span", "lb-cmpv", (mv >= 0 ? "+" : "") + mv));
+      var bar = el("div", "lb-cmpbar");
+      var w = Math.min(50, Math.round(Math.abs(df) / maxAbs * 50));
+      var fill = el("i", df >= 0 ? "good" : "bad");
+      fill.style.width = w + "%";
+      if (df >= 0) fill.style.left = "50%"; else fill.style.right = "50%";
+      bar.appendChild(fill);
+      r.appendChild(bar);
+      r.appendChild(el("span", "lb-cmpv", (ov >= 0 ? "+" : "") + ov));
+      r.appendChild(el("b", "lb-cmpdf " + (df > 0 ? "good" : df < 0 ? "bad" : ""), (df > 0 ? "+" : "") + df));
+      rows.appendChild(r);
+    });
+    box.appendChild(rows);
+    var weak = diffs.filter(function (x) { return x[1] <= -3; }).sort(function (a, b) { return a[1] - b[1]; }).slice(0, 2);
+    var strong = diffs.filter(function (x) { return x[1] >= 3; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 2);
+    var msg = "";
+    if (diffPw < 0 && weak.length) msg = "가장 큰 격차: " + weak.map(function (x) { return x[0] + " (" + x[1] + ")"; }).join(" · ");
+    else if (diffPw > 0 && strong.length) msg = "우위 항목: " + strong.map(function (x) { return x[0] + " (+" + x[1] + ")"; }).join(" · ");
+    else msg = "전체 보드 힘이 거의 비슷해요";
+    box.appendChild(el("p", "lb-cmpmsg", msg));
+    return box;
+  }
+
   function lobbyView(m, me) {
     var box = el("div", "lobby");
     box.appendChild(el("p", "sub", "불러오는 중"));
@@ -7960,19 +8932,38 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       var mSet = detectMatchSet(m) || detectMatchSet(md && md.info);
       var info = (md._metatft || {}).participant_info || [];
       var names = {}; info.forEach(function (p) { names[p.puuid] = p; });
-      md.info.participants.slice().sort(function (a, b) { return a.placement - b.placement; }).forEach(function (p) {
+      var parts = md.info.participants.slice().sort(function (a, b) { return a.placement - b.placement; });
+      var canPw = !pwOtherSet(m.patch, mSet);
+      var meP = parts.filter(function (p) { return p.puuid === me; })[0] || null;
+      var mePw = canPw && meP ? boardPower(meP.units, meP.traits, meP.level, mSet) : null;
+      if (mePw && (!mePw.parts || mePw.power == null)) mePw = null;
+      parts.forEach(function (p) {
         var pi = names[p.puuid] || (p.rating ? { ranked: { rating_text: p.rating } } : {}), rid = p.riotIdGameName ? p.riotIdGameName + "#" + p.riotIdTagline : (p.riot_id || pi.riot_id || "?");
+        var shortNm = rid.split("#")[0];
         var row = el("div", "lb-row" + (p.puuid === me ? " me" : ""));
         row.appendChild(el("span", "lb-pl " + plCls(p.placement), p.placement));
         var mid = el("div", "lb-mid");
-        var nm = el("button", "lb-name", rid.split("#")[0]); nm.type = "button";
+        var nm = el("button", "lb-name", shortNm); nm.type = "button";
         nm.addEventListener("click", function () { rkProfile(rid, null, m._reg || rkReg); window.scrollTo(0, 0); });
         var top = el("div", "lb-top"); top.appendChild(nm);
         var rt = pi.ranked && pi.ranked.rating_text;
         var tsm = el("small", null, p.level + "렙" + (rt ? " · " + (md._dak ? tierText(rt).replace(/ · \d+LP$/, "") : tierText(rt, true)) : ""));
         top.appendChild(tsm);
-        var pt = pwOtherSet(m.patch, mSet) ? null : powerTag(p.units, p.traits, p.level, true, mSet); if (pt) top.appendChild(pt);
+        var pt = canPw ? powerTag(p.units, p.traits, p.level, true, mSet) : null; if (pt) top.appendChild(pt);
+        var opPw = canPw && mePw && p.puuid !== me ? boardPower(p.units, p.traits, p.level, mSet) : null;
+        var cmpSlot = null;
+        if (opPw && opPw.parts && opPw.power != null) {
+          var cb = el("button", "lb-cmpbtn", "비교"); cb.type = "button";
+          cmpSlot = el("div", "lb-cmpslot");
+          cb.addEventListener("click", function () {
+            if (cmpSlot.firstChild) { cmpSlot.innerHTML = ""; cb.classList.remove("on"); cb.textContent = "비교"; return; }
+            cmpSlot.appendChild(pwCompareCard(meP, mePw, p, opPw, shortNm));
+            cb.classList.add("on"); cb.textContent = "닫기";
+          });
+          top.appendChild(cb);
+        }
         mid.appendChild(top);
+        if (cmpSlot) mid.appendChild(cmpSlot);
         var board = mtBoard(p.units, mSet);
         mid.appendChild(dkLine(board, p.traits, "sm", !isGuideSet(mSet), mSet));
         mid.appendChild(synRow(synOfMatch(p.traits, board, mSet), false, 7));
@@ -7982,7 +8973,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         row.appendChild(mid); box.appendChild(row);
       });
       var M = pwModel(mSet);
-      if (M && !M.off && !pwOtherSet(m.patch, mSet)) box.appendChild(el("p", "pw-note", "필드 가치는 필드 유닛의 가격 합, 덱파워는 최종 덱의 강함이에요. 100이 평균이에요" + (pwOld(m.patch, mSet) ? ". " + m.patch + " 판이라 덱파워는 지금 패치 기준이에요" : "")));
+      if (M && !M.off && canPw) box.appendChild(el("p", "pw-note", "필드 가치는 필드 유닛의 가격 합, 덱파워는 최종 덱의 강함이에요. 100이 평균이에요" + (pwOld(m.patch, mSet) ? ". " + m.patch + " 판이라 덱파워는 지금 패치 기준이에요" : "")));
     }).catch(function (e) { box.innerHTML = ""; box.appendChild(el("p", "sub", "로비 정보를 불러오지 못했어요")); });
     return box;
   }
@@ -8532,21 +9523,53 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         }
         var s2 = sec("등수 분포"); s2.appendChild(placeBars(plc)); c.appendChild(s2);
 
-        // 많이 한 덱 (현재 공략 세트면 비슷한 MetaTFT 덱으로, 지난·본섭 비공략 세트면 그 세트 시너지+캐리로만) · 캐리 (템 2개 이상)
-        var dk = {}, ca = {};
+        // 많이 한 덱 · 캐리 + 심층 리포트 (덱파워 대비 실제 등수 진단 + 모스트 챔피언·아이템·시너지 + 판별 검색 메타)
+        var dk = {}, ca = {}, uStat = {}, iStat = {}, tStat = {};
+        var pwN = 0, pwAct = 0, pwPred = 0, pwSum = 0;
+        var matchMeta = [];
         list.forEach(function (m) {
           var mSet = detectMatchSet(m), old = !isGuideSet(mSet), board = mtBoard(m.summary.units, mSet), r = deckOfBoard(board, m.summary.traits, old, mSet);
+          var syn = synOfMatch(m.summary.traits, board, mSet);
           var carry = board.filter(function (b) { return b.i.length >= 2; }).sort(function (a, b) { return b.i.length - a.i.length || b.cost - a.cost; })[0];
           var a = dk[r.name] = dk[r.name] || { n: 0, p: 0, t4: 0, d: r.d, u: r.d ? (mainOf(r.d) || {}).u : carry && carry.u, c: carry && carry.cost, ic: carry && carry.icon, old: old, set: mSet }; a.n++; a.p += m.placement; if (m.placement <= 4) a.t4++;
-          var seen = {};
-          board.forEach(function (u) { if (u.i.length < 2 || seen[u.u]) return; seen[u.u] = 1; var x = ca[u.u] = ca[u.u] || { n: 0, p: 0, icon: u.icon, cost: u.cost, old: old, set: mSet }; x.n++; x.p += m.placement; });
+          var seenC = {}, seenU = {}, seenI = {}, seenT = {};
+          var uNames = [], iNames = [], tNames = [];
+          board.forEach(function (u) {
+            uNames.push(u.u);
+            if (!seenU[u.u]) {
+              seenU[u.u] = 1;
+              var xu = uStat[u.u] = uStat[u.u] || { n: 0, p: 0, t4: 0, icon: u.icon, cost: u.cost, old: old, set: mSet };
+              xu.n++; xu.p += m.placement; if (m.placement <= 4) xu.t4++;
+            }
+            if (u.i.length >= 2 && !seenC[u.u]) {
+              seenC[u.u] = 1;
+              var x = ca[u.u] = ca[u.u] || { n: 0, p: 0, icon: u.icon, cost: u.cost, old: old, set: mSet };
+              x.n++; x.p += m.placement;
+            }
+            (u._ii || u.i.map(function (inm) { return { name: inm, icon: !old && IDX.items[inm] ? IDX.items[inm].icon : "" }; })).forEach(function (it) {
+              if (!it || !it.name) return;
+              iNames.push(it.name);
+              if (PARTS.indexOf(it.name) >= 0 || seenI[it.name]) return;
+              seenI[it.name] = 1;
+              var xi = iStat[it.name] = iStat[it.name] || { n: 0, p: 0, t4: 0, icon: it.icon || (!old && IDX.items[it.name] ? IDX.items[it.name].icon : ""), old: old };
+              xi.n++; xi.p += m.placement; if (m.placement <= 4) xi.t4++;
+            });
+          });
+          syn.forEach(function (tr) {
+            if (tr.style === "unique" || seenT[tr.t]) return;
+            seenT[tr.t] = 1; tNames.push(tr.t);
+            var xt = tStat[tr.t] = tStat[tr.t] || { n: 0, p: 0, t4: 0, icon: tr.ic || tr.icon || (!old && IDX.traits[tr.t] ? IDX.traits[tr.t] : ""), old: old };
+            xt.n++; xt.p += m.placement; if (m.placement <= 4) xt.t4++;
+          });
+          var bp = pwOtherSet(m.patch, mSet) ? null : boardPower(m.summary.units, m.summary.traits, m.summary.level, mSet);
+          if (bp && bp.pred != null && bp.power != null) { pwN++; pwAct += m.placement; pwPred += bp.pred; pwSum += bp.power; }
+          matchMeta.push({ m: m, dk: r.name, u: uNames, i: iNames, t: tNames });
         });
         var dkk = Object.keys(dk).sort(function (a, b) { return dk[b].n - dk[a].n || dk[a].p / dk[a].n - dk[b].p / dk[b].n; }).slice(0, 6);
         if (dkk.length) {
           var s3 = sec("많이 한 덱", "비슷한 메타 덱으로 묶음"), dl = el("div", "rk-dks");
           dkk.forEach(function (k) {
             var a = dk[k], row = el(a.d ? "button" : "div", "rk-dk"); if (a.d) row.type = "button";
-            // 비공략(본섭 18·지난) 시즌은 그 세트 아이콘만 (현재 공략 세트에 같은 이름이 있어도 쓰지 않음)
             var ic = a.u && (a.old ? ((a.ic || OLD_UI[a.u]) ? { icon: a.ic || OLD_UI[a.u], cost: a.c || 1 } : null) : IDX.units[a.u]);
             if (ic && ic.icon) { var im = img(ic.icon, a.u); im.dataset.c = ic.cost; if (a.old) im.dataset.oldset = String(a.set || liveSetNum()); row.appendChild(im); }
             row.appendChild(el("b", null, k));
@@ -8567,33 +9590,128 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         }
         body.appendChild(c);
 
-        var gl = el("div", "rk-games"); body.appendChild(gl);
-        if (lp._pending && queue !== "x") {
-          var pd = lp._pending, pc = el("div", "rk-pend");
-          pc.appendChild(el("b", null, pd.n > 1 ? "방금 " + pd.n + "게임 · 기록 대기 중" : "방금 끝난 게임 · 기록 대기 중"));
-          var lpd = el("span", "lpd " + (pd.diff >= 0 ? "up" : "dn"), (pd.diff >= 0 ? "+" : "") + pd.diff + "LP"); pc.appendChild(lpd);
-          pc.appendChild(el("small", null, lpText(pd.before) + " → " + lpText(pd.after) + " · 게임 기록은 몇 분 늦게 올라와요"));
-          gl.appendChild(pc);
+        // 심층 리포트 카드: 덱파워 대비 실제 성적 진단 + 모스트 챔피언·아이템·시너지 통계 (누르면 아래 전적 필터)
+        var gFilterQ = "", gFilterPl = "all", applyFilter = function () {};
+        if (n >= 2) {
+          var rep = el("div", "fcard rk-rep");
+          rep.appendChild(el("h4", null, "전적 심층 리포트"));
+          if (pwN >= 3) {
+            var aAct = pwAct / pwN, aPred = pwPred / pwN, aPw = pwSum / pwN, luck = aPred - aAct;
+            rep.appendChild(kvBox([
+              ["평균 덱파워", String(Math.round(aPw)), aPw >= 105 ? "good" : aPw <= 95 ? "bad" : ""],
+              ["예상 등수", aPred.toFixed(2)],
+              ["실제 등수", aAct.toFixed(2), aAct <= 4 ? "good" : aAct >= 5 ? "bad" : ""],
+              ["운영 지수", (luck >= 0 ? "+" : "") + luck.toFixed(2), luck >= 0.2 ? "good" : luck <= -0.2 ? "bad" : ""]
+            ]));
+            var diag = luck >= 0.25 ? "보드 힘보다 평균 " + luck.toFixed(2) + "등 높게 마감했어요. 배치와 체력 관리가 탄탄해요."
+              : luck <= -0.25 ? "보드 힘 대비 평균 " + Math.abs(luck).toFixed(2) + "등 낮게 마감했어요. 중반 체력 관리와 핵심 캐리 배치를 점검해 보세요."
+              : "보드 힘과 실제 성적이 비슷하게 나오고 있어요. (" + pwN + "판 기준)";
+            rep.appendChild(el("p", "sub rk-diag", diag));
+          }
+          var repTab = "u", rChips = el("div", "mt-chips rk-rtabs"), rList = el("div", "rk-rlist");
+          function drawRepList() {
+            rList.innerHTML = "";
+            [].forEach.call(rChips.children, function (b) { b.classList.toggle("on", b.dataset.rk === repTab); });
+            var map = repTab === "u" ? uStat : repTab === "i" ? iStat : tStat;
+            var minN = n >= 6 ? 2 : 1;
+            var keys = Object.keys(map).filter(function (k) { return map[k].n >= minN; });
+            if (!keys.length) keys = Object.keys(map);
+            keys.sort(function (a, b) { return map[b].n - map[a].n || (map[a].p / map[a].n) - (map[b].p / map[b].n); }).slice(0, 8).forEach(function (k) {
+              var st = map[k], av = st.p / st.n, t4r = Math.round(st.t4 / st.n * 100);
+              var row = el("button", "rk-rrow"); row.type = "button";
+              if (st.icon) { var im = img(st.icon, ""); if (repTab === "u" && st.cost) im.dataset.c = st.cost; row.appendChild(im); }
+              row.appendChild(el("b", "rk-rnm", k));
+              row.appendChild(el("span", "rk-rn", st.n + "판"));
+              row.appendChild(el("span", "rk-rav " + (av <= 4 ? "good" : av >= 5 ? "bad" : ""), av.toFixed(2)));
+              row.appendChild(el("span", "rk-rt4", "순방 " + t4r + "%"));
+              row.addEventListener("click", function () {
+                gFilterQ = (gFilterQ === k) ? "" : k;
+                var inp = document.getElementById("rk-gf-q"); if (inp) inp.value = gFilterQ;
+                applyFilter();
+                var glEl = document.querySelector("#rk-prof .rk-gf");
+                if (glEl) glEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              });
+              rList.appendChild(row);
+            });
+            if (!rList.children.length) rList.appendChild(el("p", "sub", "표시할 통계가 부족해요"));
+          }
+          [["u", "모스트 챔피언"], ["i", "모스트 아이템"], ["t", "모스트 시너지"]].forEach(function (x) {
+            var b = el("button", x[0] === repTab ? "on" : null, x[1]); b.type = "button"; b.dataset.rk = x[0];
+            b.addEventListener("click", function () { repTab = x[0]; drawRepList(); });
+            rChips.appendChild(b);
+          });
+          rep.appendChild(rChips); rep.appendChild(rList);
+          drawRepList();
+          body.appendChild(rep);
         }
-        var shown = 0;
+
+        // 전적 판 필터 바
+        var gf = el("div", "rk-gf");
+        var gfInp = el("input", "rk-gf-q"); gfInp.id = "rk-gf-q"; gfInp.type = "search";
+        gfInp.placeholder = "전적 내 덱·챔피언·아이템·시너지 검색";
+        gfInp.setAttribute("aria-label", "전적 판 검색");
+        var gfChips = el("div", "mt-chips rk-gf-pl");
+        var gfCnt = el("span", "rk-gf-cnt");
+        [["all", "전체"], ["win", "1등"], ["top4", "순방"], ["bot4", "하위"]].forEach(function (x) {
+          var b = el("button", x[0] === gFilterPl ? "on" : null, x[1]); b.type = "button"; b.dataset.pl = x[0];
+          b.addEventListener("click", function () {
+            gFilterPl = x[0];
+            [].forEach.call(gfChips.children, function (y) { y.classList.toggle("on", y.dataset.pl === gFilterPl); });
+            applyFilter();
+          });
+          gfChips.appendChild(b);
+        });
+        gfInp.addEventListener("input", function () { gFilterQ = gfInp.value.trim(); applyFilter(); });
+        gf.appendChild(gfInp);
+        var gfRow = el("div", "rk-gf-row"); gfRow.appendChild(gfChips); gfRow.appendChild(gfCnt); gf.appendChild(gfRow);
+        body.appendChild(gf);
+
+        var gl = el("div", "rk-games"); body.appendChild(gl);
+        var filtered = list, shown = 0;
         function canFetch() {  // 고른 범위를 다 봤는데 그 뒤 판이 더 있을 수 있나
+          if (gFilterQ || gFilterPl !== "all") return false;
           var pool = all.filter(function (m) { return queue === "all" || String(m.queue_id) === queue; }).length;
           return range && (pool > n || (d._canMore && d._canMore(range * 1.3 + 13)));
         }
+        function renderPend() {
+          if (lp._pending && queue !== "x" && !gFilterQ && gFilterPl === "all") {
+            var pd = lp._pending, pc = el("div", "rk-pend");
+            pc.appendChild(el("b", null, pd.n > 1 ? "방금 " + pd.n + "게임 · 기록 대기 중" : "방금 끝난 게임 · 기록 대기 중"));
+            var lpd = el("span", "lpd " + (pd.diff >= 0 ? "up" : "dn"), (pd.diff >= 0 ? "+" : "") + pd.diff + "LP"); pc.appendChild(lpd);
+            pc.appendChild(el("small", null, lpText(pd.before) + " → " + lpText(pd.after) + " · 게임 기록은 몇 분 늦게 올라와요"));
+            gl.appendChild(pc);
+          }
+        }
         function more() {
-          if (shown >= n && canFetch()) {  // 범위 넘어서 10판 더: 범위를 10 늘리고 (필요하면 받아서) 그 자리까지 펼친다
+          var fn = filtered.length;
+          if (shown >= fn && canFetch()) {  // 범위 넘어서 10판 더: 범위를 10 늘리고 (필요하면 받아서) 그 자리까지 펼친다
             keepShown = shown + 10; range += 10;
             c1.querySelectorAll("button").forEach(function (y) { y.classList.remove("on"); });
             draw(); return;
           }
-          var upto = Math.max(shown + 10, Math.min(keepShown, n));
-          list.slice(shown, upto).forEach(function (m) { gl.appendChild(gameCard(m, lp, me)); });
-          shown = Math.min(upto, n); keepShown = 10;
-          mb.hidden = shown >= n && !canFetch();
-          mb.textContent = shown >= n ? "10판 더 보기" : "10판 더 보기";
+          var upto = Math.max(shown + 10, Math.min(keepShown, fn));
+          filtered.slice(shown, upto).forEach(function (m) { gl.appendChild(gameCard(m, lp, me)); });
+          shown = Math.min(upto, fn); keepShown = 10;
+          mb.hidden = shown >= fn && !canFetch();
+          mb.textContent = "10판 더 보기";
         }
+        applyFilter = function () {
+          var q = gFilterQ;
+          filtered = matchMeta.filter(function (x) {
+            if (gFilterPl === "win" && x.m.placement !== 1) return false;
+            if (gFilterPl === "top4" && x.m.placement > 4) return false;
+            if (gFilterPl === "bot4" && x.m.placement <= 4) return false;
+            if (!q) return true;
+            return matches(x.dk, q) || x.u.some(function (s) { return matches(s, q); }) || x.i.some(function (s) { return matches(s, q); }) || x.t.some(function (s) { return matches(s, q); });
+          }).map(function (x) { return x.m; });
+          gfCnt.textContent = (q || gFilterPl !== "all") ? filtered.length + "/" + n + "판" : n + "판";
+          gl.innerHTML = ""; shown = 0;
+          renderPend();
+          if (!filtered.length) { gl.appendChild(el("p", "empty", "조건에 맞는 판이 없어요")); mb.hidden = true; }
+          else more();
+        };
         var mb = el("button", "tb-clear rk-more", "10판 더 보기"); mb.type = "button"; mb.addEventListener("click", more);
-        body.appendChild(mb); more();
+        body.appendChild(mb); applyFilter();
       }
       draw();
     }).catch(function (e) {
@@ -10018,14 +11136,14 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
   // 게임 위 창에선 안 띄우고, 자동 점검(브라우저 자동화)에선 ?whatsnew=1일 때만
   if (!/overlay=1/.test(location.search) && (!navigator.webdriver || /[?&]whatsnew=1/.test(location.search))) setTimeout(function () { whatsNew(/[?&]whatsnew=1/.test(location.search)); }, 1200);
   /* ---- 19시즌(프리즘 투어) 스튜디오 (v2.2.0: 개요·추천 덱(배치·증강)·시너지·챔피언·해금 트래커·스쿼드 빌더·증강·아이템) ---- */
-  var S19 = null, S19_KEY = "tft-guide-s19", s19St = { v: "units", tf: "all", cf: 0, af: 0, an: false, q: "", bcf: 0, ds: "avg", dm: "guide" };
+  var S19 = null, S19_KEY = "tft-guide-s19", s19St = { v: "units", tf: "all", cf: 0, af: 0, an: false, q: "", bcf: 0, ds: "avg", dm: "guide", gf: "cash" };
   var S19_SQ_KEY = "tft-guide-s19-squad", s19Sq = [];
   var S19_UL_KEY = "tft-guide-s19-uldone", s19UlDone = {};
   try { var s19s = JSON.parse(localStorage.getItem(S19_KEY) || "null"); if (s19s) for (var k19 in s19s) s19St[k19] = s19s[k19]; s19St.q = ""; } catch (e) {}
   if (s19St.v === "home" || s19St.v === "decks") s19St.v = "units";
   try { var sqs = JSON.parse(localStorage.getItem(S19_SQ_KEY) || "[]"); if (Array.isArray(sqs)) s19Sq = sqs.slice(0, 10); } catch (e) {}
   try { var uls = JSON.parse(localStorage.getItem(S19_UL_KEY) || "{}"); if (uls && typeof uls === "object") s19UlDone = uls; } catch (e) {}
-  function s19Save() { try { localStorage.setItem(S19_KEY, JSON.stringify({ v: s19St.v, tf: s19St.tf, cf: s19St.cf, af: s19St.af, an: s19St.an, bcf: s19St.bcf, ds: s19St.ds, dm: s19St.dm })); } catch (e) {} }
+  function s19Save() { try { localStorage.setItem(S19_KEY, JSON.stringify({ v: s19St.v, tf: s19St.tf, cf: s19St.cf, af: s19St.af, an: s19St.an, bcf: s19St.bcf, ds: s19St.ds, dm: s19St.dm, gf: s19St.gf })); } catch (e) {} }
   function s19SqSave() { try { localStorage.setItem(S19_SQ_KEY, JSON.stringify(s19Sq)); } catch (e) {} }
   function s19UlSave() { try { localStorage.setItem(S19_UL_KEY, JSON.stringify(s19UlDone)); } catch (e) {} }
   var S19_COST = { 1: "c1", 2: "c2", 3: "c3", 4: "c4", 5: "c5", 7: "c7" };
@@ -10106,7 +11224,7 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     var out = document.getElementById("s19-out"), tools = document.getElementById("s19-tools");
     if (keepTools === true && tools) tools = document.createElement("div");
     if (!out) return;
-    var views = { units: s19Units, unlock: s19Unlocks, traits: s19Traits, builder: s19Builder, augs: s19Augs, items: s19Items };
+    var views = { units: s19Units, unlock: s19Unlocks, traits: s19Traits, guide: s19Guide, builder: s19Builder, augs: s19Augs, items: s19Items };
     if (!views[s19St.v]) s19St.v = "units";
     document.querySelectorAll("#s19-view button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === s19St.v); });
     if (!S19) { out.innerHTML = '<p class="empty">불러오는 중</p>'; s19Load().then(s19Render).catch(function () { out.innerHTML = '<p class="empty">불러오지 못했어요. 앱을 다시 열어 주세요</p>'; }); return; }
@@ -10843,6 +11961,243 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
       });
     });
   }
+  // 보상표 · 조우자 25종 · 프리즘 퀘스트 · 유틸 백과 (guide/kb/set19.md 19.1c/19.1d 기준)
+  var S19_CASHOUTS = [
+    {
+      title: "하이퍼팝 열광 보상표",
+      sub: "별당 3/6/12/40 + 처치 관여당 1 × 특성 배수 (2: 1x · 3: 1.5x · 4: 2.5x · 5: 3x)",
+      tip: "3에서 4 하이퍼팝으로 넘어가면 배수가 1.5배에서 2.5배로 크게 뛰어요. 세라핀과 같이 쓰면 대기석에 목표 기물만 남겨 보상 유닛을 유도할 수 있어요.",
+      rows: [
+        ["50", "2골드"], ["100", "3골드"], ["200", "하급 챔피언 복제기"], ["350", "유닛"],
+        ["450", "2골드 + 자석 제거기 2"], ["600", "하급 챔피언 복제기"], ["750", "조합 아이템 모루"],
+        ["1,300", "도적의 장갑"], ["1,600", "4코 + 5코"], ["2,050", "완성 아이템 모루"], ["2,500", "상징"]
+      ]
+    },
+    {
+      title: "True Damage 블링 (A면 · B면)",
+      sub: "4라운드마다 수령 또는 유지 선택 · A면(승리) 처치당 2/4/10 + 승리 15/20/30 · B면(패배) 20 + 연패당 4",
+      tip: "B면에서 이기면 블링 20%를 잃어요. 강제로 이길 것 같은 라운드엔 잠깐 A면으로 뒤집어 이기면 B면 연패 카운트가 끊기지 않아요.",
+      tiers: ["0", "30", "60", "100", "150", "225", "300", "400", "500", "600", "800", "1,000"]
+    },
+    {
+      title: "8비트 (미스 포츈) 고득점 보상표",
+      sub: "아군 전체 피해량 누적 · 미스 포츈이 입힌 피해는 3배로 계산",
+      rows: [
+        ["50,000", "4골드"], ["80,000", "하급 복제기 + 4골드"], ["125,000", "4코 + 5코"],
+        ["175,000", "도적의 장갑"], ["275,000", "완성템 + 재조합기 2"], ["500,000", "유물 모루"],
+        ["700,000", "찬란한 쇼진·무대·죽검 + 황금 제거기"], ["1,000,000", "챔피언 복제기 9개"]
+      ]
+    },
+    {
+      title: "특성 사다리 (프리즘 증강) 보상표",
+      sub: "상징 1개 지급 · 전투마다 비고유 특성 수 목표 달성 시 보상 후 다음 단계로 상승",
+      tip: "1명 활성 특성(HEARTSTEEL 알룬, R&B 멜)과 3특성 직스가 핵심이에요. 9렙 상징 없이 최대 13개, 상징 1개로 14개까지 열려요.",
+      rows: [
+        ["2개", "1골드 + 재조합기"], ["3개", "3골드"], ["4개", "5골드"], ["5개", "조합 아이템 1"],
+        ["6개", "7골드 또는 3코 2명"], ["7개", "재료 모루 + 2골드"], ["8개", "서로 다른 재료 2 또는 완성템 모루"],
+        ["9개", "5코 3명 + 20골드 + 행운의 상자"], ["10개", "18골드"], ["11개", "전략가의 왕관·망토·방패 중 1"],
+        ["12개", "행운의 상자 + 4코 3명"], ["13개", "30골드 + 제거기 + 찬란한 도장 + 복제기"], ["14개", "걸작 업그레이드 + 10골드"]
+      ]
+    }
+  ];
+  var S19_ENCOUNTERS = [
+    ["5.93%", "증강 크레센도", "Augment Crescendo", "증강 등급이 실버 → 골드 → 프리즘 순으로 상승", ""],
+    ["5.93%", "저렴한 레벨업", "Cheaper Levels", "레벨업 필요 경험치 -2 XP", "영웅 증강 제외"],
+    ["5.93%", "골든 갈라", "Golden Gala", "세 번의 증강 모두 골드 등급으로 등장", ""],
+    ["5.93%", "정찰대", "Scouting Party", "매 증강 선택마다 무료 새로고침 +1회", ""],
+    ["4.44%", "완성 아이템 모루 (에코)", "Completed Item Anvil", "완성 아이템 모루 1개로 시작", ""],
+    ["4.44%", "조합 아이템 모루 (징크스)", "Component Anvils", "조합 아이템 모루 2개로 시작", ""],
+    ["4.44%", "골드 구독 (일라오이)", "Gold Subscription", "매 스테이지 시작 시 무작위 골드 지급", ""],
+    ["4.44%", "골든 피날레 (렐)", "Golden Finale", "마지막 4-2 증강이 골드 등급으로 고정", ""],
+    ["4.44%", "골든 프렐류드 (아리)", "Golden Prelude", "첫 2-1 증강이 골드 등급으로 고정", ""],
+    ["4.44%", "그웬의 선물 (그웬)", "Gwen's Gifts", "그웬의 가위(특수 조합템·선물) 지급", ""],
+    ["4.44%", "아이템 대장간", "Item Forge", "3-3에 완성 아이템 2개와 재조합기 2개 지급", ""],
+    ["4.44%", "리롤 구독 (티모)", "Reroll Subscription", "매 스테이지 상점 무료 새로고침 지급", "19.1c 추가"],
+    ["4.44%", "바위게 파티 (바위게)", "Scuttle Party", "크립 라운드가 바위게로 바뀌어 골드·템 대량 드롭", "프리즘 투어 제외"],
+    ["3.70%", "2코스트 시작", "2-Cost Start", "2코스트 챔피언 1명으로 시작", ""],
+    ["3.70%", "3코스트 시작", "3-Cost Start", "3코스트 챔피언 1명으로 시작", ""],
+    ["3.70%", "업그레이드 시작 (코부코)", "Upgraded Start", "2성 챔피언 1명으로 시작", ""],
+    ["2.96%", "비트 드롭 (브라움)", "Beat Drop", "플레이어 체력 40 이하 달성 시 보상 투하", ""],
+    ["2.96%", "상징 집결 (스미치)", "Emblem Ensemble", "무작위 상징 3개로 시작", "특성 사다리·U.R.F·유연함 제외"],
+    ["2.96%", "프리즘 피날레 (누누)", "Prismatic Finale", "마지막 4-2 증강이 프리즘 등급으로 고정", ""],
+    ["2.96%", "프리즘 오프너 (아칼리)", "Prismatic Opener", "첫 2-1 증강이 프리즘 등급으로 고정", ""],
+    ["2.96%", "프리즘 파티 (라칸)", "Prismatic Party", "세 번의 증강 모두 프리즘 등급으로 등장", ""],
+    ["2.96%", "스타 어트랙션 (리 신)", "Star Attraction", "4-6에 해금 가능한 5코스트 챔피언 지급", ""],
+    ["2.96%", "슈퍼스타 (자야)", "Superstar", "2전투마다 시작 챔피언 복사본 지급", ""],
+    ["2.22%", "행운의 보물", "Lucky Treasure", "3-5에 찬란한 행운의 상자 지급", ""],
+    ["2.22%", "프리즘 투어 (소나)", "Prismatic Tour", "올 프리즘 증강 + 서로 다른 1코 프리즘 투어 멤버 3명 시작", ""]
+  ];
+  var S19_QUESTS = [
+    ["HEARTSTEEL", "7 HEARTSTEEL 활성 + 피해·방어·회복 누적 달성", "밴드 프리즘 티어 개방"],
+    ["Ionic Spark", "7 Ionic Spark 활성 + 10라운드 사인 수집 후 10 Ionic Spark 배치", "밴드 프리즘 티어 개방"],
+    ["K/DA", "서로 다른 K/DA 챔피언 별 총합 21★ 달성", "모든 K/DA 멤버가 4성으로 진화"],
+    ["펜타킬", "7 펜타킬 활성 + 빛의 인도자 처치 + 10레벨 달성", "밴드 프리즘 티어 개방"],
+    ["True Damage", "5 True Damage 활성 + 지정 순서대로 승/패 리믹스 완성", "고정 피해 99% + 골드·블링 2배"]
+  ];
+  var S19_UTILS = [
+    { kind: "상처 (치유 감소)", units: ["애니", "트위스티드 페이트"], note: "애니 원뿔 화상·상처 4초 · 트페 가장 가까운 아군 공격에 화상·상처 33%" },
+    { kind: "파쇄 (마저 깎기)", units: ["말자하"], note: "말자하 스킬 마법 저항력 30% 파쇄" },
+    { kind: "파열 (방어력 깎기)", units: [], note: "방어력 깎기 기물이 없어요. AD 덱은 최후의 속삭임·저녁갑주를 직접 챙기세요." },
+    { kind: "약화 (적 피해 감소)", units: ["릴리아", "가렌"], note: "릴리아 10% · 가렌 10% · 클래식 시너지 매료된 적 10%" },
+    { kind: "취약 (받는 피해 증가)", units: ["아칼리"], note: "K/DA 아칼리 취약 10%" },
+    { kind: "자체 관통", units: ["제리", "요네", "이블린"], note: "제리 방무 40% · 요네 방무 25%(최애) · 이블린 마저 40% 무시" }
+  ];
+  var S19_HERO_AUGS = [
+    ["안전 요원 근무 중", "골드", "레넥톤", "AD 전사 · 일광욕으로 시작 후 아군 위험 시 출동"],
+    ["도끼 크레센도", "실버", "올라프", "AD 원거리 · 시전할수록 강화되는 단일 스킬"],
+    ["물린 자국", "실버", "엘리스", "AP 암살자 · 처치 시 저체력 적에게 재시전"],
+    ["짜릿한 사나이", "실버", "케넨", "AP 암살자 · 처치마다 스킬에 영구 고정 피해 추가"],
+    ["춤추고 뛰놀기", "실버", "릴리아", "AP 전사 · 전장을 가로지르며 중첩 마법 피해"],
+    ["펀치라인", "실버", "세트", "AD 전사 · 펀치로 적 처형 후 멀리 날림"]
+  ];
+  var S19_SPEC_ITEMS = [
+    ["야수의 두루마리", "고풍 전용 · 주의", "플레이어 체력 20%만큼 XP 획득. 승리 시 XP +6(10렙 +250)으로 11렙 달성 가능하지만, 2연패 시 즉시 탈락해요."],
+    ["바드의 여행자 나팔", "바드 전용", "스킬 마나 +130 대신 정령을 소환하고 정령 판매 시 경험치를 얻어요. 바드를 대기석으로 내리면 제거돼요."],
+    ["문도 박사의 음반 계약", "문도 전용", "계약 아티스트 피해 증폭 +5%, 처치마다 문도 영구 체력 +25를 얻어요."]
+  ];
+
+  function s19Guide(out, tools) {
+    var gf = s19St.gf || "cash";
+    s19Search(tools, "보상·조우자·유틸 검색 (초성 가능)");
+    s19Chips(tools, [["cash", "보상표"], ["enc", "조우자 25종"], ["util", "프리즘·유틸"]], gf, function (v) { s19St.gf = v; });
+    var hasQ = !!s19St.q.trim();
+    if (gf === "cash") {
+      var shown = 0;
+      S19_CASHOUTS.forEach(function (c) {
+        var rows = (c.rows || []).filter(function (r) { return !hasQ || s19Match(c.title) || s19Match(r[0]) || s19Match(r[1]); });
+        var matchWhole = !hasQ || s19Match(c.title) || s19Match(c.sub) || s19Match(c.tip || "") || rows.length > 0;
+        if (!matchWhole) return;
+        shown++;
+        var card = el("div", "s19-card s19-gcard");
+        card.appendChild(el("h3", "s19-gh", c.title));
+        card.appendChild(el("p", "sub", c.sub));
+        if (c.tip) card.appendChild(el("p", "s19-gtip", c.tip));
+        if (c.tiers) {
+          var tw = el("div", "s19-tiers");
+          c.tiers.forEach(function (t) { tw.appendChild(el("span", "s19-tchip", t)); });
+          card.appendChild(tw);
+        }
+        if (rows.length) {
+          var tbl = el("div", "s19-ctbl");
+          rows.forEach(function (r) {
+            var tr = el("div", "s19-crow");
+            tr.appendChild(el("b", "s19-cval", r[0]));
+            tr.appendChild(el("span", "s19-crev", r[1]));
+            tbl.appendChild(tr);
+          });
+          card.appendChild(tbl);
+        }
+        out.appendChild(card);
+      });
+      if (!shown) out.appendChild(el("p", "empty", "맞는 보상표가 없어요"));
+    } else if (gf === "enc") {
+      var list = S19_ENCOUNTERS.filter(function (e) {
+        return !hasQ || s19Match(e[1]) || s19Match(e[2]) || s19Match(e[3]) || s19Match(e[4]);
+      });
+      out.appendChild(el("p", "sub s19-lead", "19.1c 기준 " + list.length + "종 · 높은 확률순"));
+      var wrap = el("div", "s19-elist");
+      list.forEach(function (e) {
+        var row = el("div", "s19-card s19-erow");
+        var top = el("div", "s19-etop");
+        top.appendChild(el("span", "s19-epct", e[0]));
+        var nm = el("b", "s19-ename", e[1]);
+        nm.appendChild(el("small", null, e[2]));
+        top.appendChild(nm);
+        if (e[4]) top.appendChild(el("span", "s19-ewarn" + (/제외/.test(e[4]) ? " ban" : ""), e[4]));
+        row.appendChild(top);
+        row.appendChild(el("p", "s19-edesc", e[3]));
+        wrap.appendChild(row);
+      });
+      if (!list.length) out.appendChild(el("p", "empty", "맞는 조우자가 없어요"));
+      else out.appendChild(wrap);
+    } else {
+      // 프리즘 퀘스트 5밴드
+      var qs = S19_QUESTS.filter(function (q) { return !hasQ || s19Match(q[0]) || s19Match(q[1]) || s19Match(q[2]); });
+      if (qs.length) {
+        var qc = el("div", "s19-card s19-gcard");
+        qc.appendChild(el("h3", "s19-gh", "프리즘 투어 퀘스트 (5밴드)"));
+        qc.appendChild(el("p", "sub", "전용 증강을 고른 뒤 조건을 달성하면 프리즘 티어가 열려요"));
+        qs.forEach(function (q) {
+          var r = el("div", "s19-qrow");
+          var b = el("b", "s19-qband", q[0]);
+          if (IDX && IDX.traits && IDX.traits[q[0]]) b.dataset.trait = q[0];
+          r.appendChild(b);
+          var d = el("div", "s19-qdesc");
+          d.appendChild(el("span", null, q[1]));
+          d.appendChild(el("small", null, q[2]));
+          r.appendChild(d);
+          qc.appendChild(r);
+        });
+        out.appendChild(qc);
+      }
+      // 유틸 기물 한눈표
+      var us = S19_UTILS.filter(function (u) {
+        return !hasQ || s19Match(u.kind) || s19Match(u.note) || u.units.some(s19Match);
+      });
+      if (us.length) {
+        var uc = el("div", "s19-card s19-gcard");
+        uc.appendChild(el("h3", "s19-gh", "유틸 기물 한눈표 (치감 · 방깎 · 마깎)"));
+        uc.appendChild(el("p", "sub", "챔피언을 누르면 상세 정보를 바로 볼 수 있어요"));
+        us.forEach(function (u) {
+          var r = el("div", "s19-urow");
+          r.appendChild(el("b", "s19-ukind", u.kind));
+          if (u.units.length) {
+            var chips = el("div", "s19-uchips");
+            u.units.forEach(function (un) {
+              var ch = unitChip(un);
+              ch.dataset.unit = un;
+              chips.appendChild(ch);
+            });
+            r.appendChild(chips);
+          }
+          r.appendChild(el("p", "s19-unote", u.note));
+          uc.appendChild(r);
+        });
+        out.appendChild(uc);
+      }
+      // 영웅 증강 6종
+      var ha = S19_HERO_AUGS.filter(function (h) {
+        return !hasQ || s19Match(h[0]) || s19Match(h[2]) || s19Match(h[3]);
+      });
+      if (ha.length) {
+        var hc = el("div", "s19-card s19-gcard");
+        hc.appendChild(el("h3", "s19-gh", "영웅 증강 6종"));
+        hc.appendChild(el("p", "sub", "저렴한 레벨업 조우자에서는 등장하지 않아요"));
+        ha.forEach(function (h) {
+          var r = el("div", "s19-hrow");
+          var top = el("div", "s19-htop");
+          var an = el("span", "s19-haug", h[0]);
+          if (DB && DB.info && DB.info.a && DB.info.a[h[0]]) an.dataset.aug = h[0];
+          top.appendChild(an);
+          top.appendChild(el("span", "rar", h[1])).dataset.r = h[1];
+          var uch = unitChip(h[2]); uch.dataset.unit = h[2]; top.appendChild(uch);
+          r.appendChild(top);
+          r.appendChild(el("p", "s19-unote", h[3]));
+          hc.appendChild(r);
+        });
+        out.appendChild(hc);
+      }
+      // 시즌 전용 특수 아이템 주의
+      var si = S19_SPEC_ITEMS.filter(function (s) {
+        return !hasQ || s19Match(s[0]) || s19Match(s[1]) || s19Match(s[2]);
+      });
+      if (si.length) {
+        var sc = el("div", "s19-card s19-gcard");
+        sc.appendChild(el("h3", "s19-gh", "19시즌 특수 아이템 핵심"));
+        si.forEach(function (s) {
+          var r = el("div", "s19-hrow");
+          var top = el("div", "s19-htop");
+          top.appendChild(el("b", null, s[0]));
+          top.appendChild(el("span", "s19-ewarn" + (/주의/.test(s[1]) ? " ban" : ""), s[1]));
+          r.appendChild(top);
+          r.appendChild(el("p", "s19-unote", s[2]));
+          sc.appendChild(r);
+        });
+        out.appendChild(sc);
+      }
+      if (!qs.length && !us.length && !ha.length && !si.length) out.appendChild(el("p", "empty", "맞는 항목이 없어요"));
+    }
+  }
   document.querySelectorAll("#s19-view button").forEach(function (b) { b.addEventListener("click", function () { s19St.q = ""; s19Go(b.dataset.v); }); });
 
   /* ---- v2.0.0 허브 · 통합 스포트라이트 검색 · 테마 · 터치 제스처 · 프리즘 캔버스 ---- */
@@ -10945,6 +12300,43 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
         dbox.appendChild(r);
       });
     }
+    // 2.5) 내 즐겨찾기 덱 (저장된 덱이 있을 때만 표시)
+    var fw = document.getElementById("hm-fav-wrap"), fb = document.getElementById("hm-fav");
+    if (fw && fb && META && IDX && typeof isDeckFav === "function") {
+      var favs = allViews().filter(function (v) { return v && isDeckFav(v); }).slice(0, 4);
+      fw.hidden = !favs.length;
+      if (favs.length) {
+        fb.innerHTML = "";
+        favs.forEach(function (v) {
+          var d = v.st, bt = basisTier(d, "emer"), bs = basisSt(d, "emer") || basisSt(d, "all"), mc = mainOf(v);
+          var r = el("button", "mt-row dk hm-dk t-" + bt); r.type = "button";
+          r.appendChild(dkPortrait(mc, null));
+          var mid = el("div", "mt-mid");
+          var meta = el("div", "dk-meta");
+          meta.appendChild(el("span", "dk-tbadge t-" + bt, bt === "X" ? "-" : bt));
+          var memo = typeof deckMemoGet === "function" ? deckMemoGet(v) : "";
+          var mtxt = el("span", "dk-sub");
+          if (d && d.style) mtxt.appendChild(styleTag(d.style));
+          if (typeof deckTrendBadge === "function") { var tb = deckTrendBadge(d); if (tb) mtxt.appendChild(tb); }
+          if (mtxt.childNodes.length) meta.appendChild(mtxt);
+          mid.appendChild(meta);
+          var nm = el("div", "mt-name", deckName(v));
+          nm.insertBefore(el("span", "dk-fav-mk", "★"), nm.firstChild);
+          mid.appendChild(nm);
+          if (memo) mid.appendChild(el("div", "hm-fav-memo", memo));
+          else mid.appendChild(strip(starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; }).slice(0, 6).map(function (b) { return b.u; })));
+          r.appendChild(mid);
+          var num = el("div", "mt-num dk-kpi2");
+          if (bs) {
+            num.appendChild(dkGrad(el("b", "dk-avg", bs[0].toFixed(2)), dkAvgT(bs[0])));
+            num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + bs[2].toFixed(1) + "%"), dkWinT(bs[2])));
+          }
+          r.appendChild(num);
+          r.addEventListener("click", function () { openDeck(v.id); });
+          fb.appendChild(r);
+        });
+      }
+    }
     // 3) 최근 데이터 변화 요약
     var cw = document.getElementById("hm-chg-wrap"), cb = document.getElementById("hm-chg");
     if (cw && cb && V2_CHG && V2_CHG.log && V2_CHG.log.length) {
@@ -10976,6 +12368,13 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     if (st) st.addEventListener("click", function () { spotOpen(); });
     var wn = document.getElementById("hm-wn-open");
     if (wn) wn.addEventListener("click", function () { whatsNew("again"); });
+    var fm = document.getElementById("hm-fav-more");
+    if (fm) fm.addEventListener("click", function (e) {
+      e.preventDefault();
+      var fb = document.querySelector('#mt-filter button[data-f="fav"]');
+      if (fb) fb.click();
+      goTab("meta");
+    });
     // 홈에서 필요한 19시즌·변화 데이터 선로딩
     s19Load().catch(function () {});
     fetch("changes.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
@@ -11749,7 +13148,7 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     });
     fetch("guides.json").then(function (r) { return r.json(); }).then(function (g) { buildGuides(g); homeRender(); }).catch(function () {});
     fetch("version.json").then(function (r) { return r.json(); }).then(buildVersion).catch(function () {});
-    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); }).catch(function () {
+    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); if (typeof agCmpRender === "function") agCmpRender(); }).catch(function () {
       var b = document.getElementById("tfa-out"); if (b) b.innerHTML = '<p class="empty">' + reloadErr() + '</p>';
     });
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.addEventListener("click", function () { tfaView = b.dataset.v; tfaSave(); tfaRender(); }); });
