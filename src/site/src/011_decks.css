@@ -134,7 +134,10 @@
 .hx[data-c="1"] { background: var(--c1); } .hx[data-c="2"] { background: var(--c2); } .hx[data-c="3"] { background: var(--c3); }
 .hx[data-c="4"] { background: var(--c4); } .hx[data-c="5"] { background: var(--c5); } .hx[data-c="7"] { background: var(--c7); }
 .hxwrap { position: relative; }
-.hxwrap .st { position: absolute; top: -3px; left: 0; right: 0; text-align: center; font-size: var(--fs-2xs); line-height: 1; color: var(--accent); letter-spacing: -1px; text-shadow: 0 0 2px var(--bg), 0 0 2px var(--bg); z-index: 1; }
+.hxwrap .st { position: absolute; top: -3px; left: 0; right: 0; text-align: center; font-size: var(--fs-2xs); line-height: 1; color: #f5c542; letter-spacing: -1px; text-shadow: 0 0 2px #000, 0 0 2px #000; z-index: 1; }
+.hxwrap .st.s2 { color: #d8e2f0; opacity: .92; }
+.hxwrap .st.s3 { color: #ffd452; text-shadow: 0 0 3px #000, 0 0 6px rgba(255, 212, 82, .55); }
+.hxwrap .st.s4 { color: #f472b6; text-shadow: 0 0 3px #000, 0 0 6px rgba(244, 114, 182, .65); }
 .hxwrap .its { position: absolute; bottom: -2px; left: 0; right: 0; display: flex; justify-content: center; gap: 0; z-index: 1; }
 .hxwrap .its img { width: 34%; max-width: 16px; aspect-ratio: 1; border-radius: 2px; border: 1px solid var(--bg); }
 .hxn { position: absolute; left: -3px; right: -3px; bottom: 4%; z-index: 2; text-align: center; pointer-events: none;
@@ -892,4 +895,23 @@ img[data-r="프리즘"] { filter: saturate(1.3) brightness(1.1) hue-rotate(-25de
 .pt-sim-r b { font-family: var(--mono); font-size: var(--fs-m); font-weight: 800; white-space: nowrap; }
 .pt-sim-r small { font-size: var(--fs-s); color: var(--muted); white-space: nowrap; }
 
-
+/* ---- v3.10.2: 리롤 덱 3성·4성 목표 표시 (.dk-stars) 및 캐리 성급 배지 ---- */
+.dk-st.s4, .tfa-u3.s4 b, .tfa-star.s4 { color: #f472b6; }
+.tfa-star { font-weight: 800; white-space: nowrap; letter-spacing: 0; }
+.mt-s2 { font-size: var(--fs-xs); font-weight: 700; color: var(--muted); white-space: nowrap; }
+.dk-stars { margin: 8px 0 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, #f5c542 9%, var(--surface)); border: 1px solid color-mix(in srgb, #f5c542 36%, var(--border-subtle)); }
+.dk-stars-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.dk-stars-h b { font-size: var(--fs-m); font-weight: 800; color: var(--ink); white-space: nowrap; }
+.dk-stars-h small { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.dk-stlist { display: flex; flex-wrap: wrap; gap: 6px; }
+.dk-stchip { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px 4px 5px; border-radius: 999px; background: var(--elev2, var(--bg)); border: 1px solid color-mix(in srgb, #f5c542 36%, var(--border-subtle)); font-size: var(--fs-s); color: var(--ink); white-space: nowrap; max-width: 100%; transition: border-color .15s, transform .1s; }
+.dk-stchip:active { transform: scale(.97); }
+.dk-stchip img { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--c1); flex: none; display: block; object-fit: cover; }
+.dk-stchip img[data-c="2"] { border-color: var(--c2); } .dk-stchip img[data-c="3"] { border-color: var(--c3); } .dk-stchip img[data-c="4"] { border-color: var(--c4); } .dk-stchip img[data-c="5"] { border-color: var(--c5); } .dk-stchip img[data-c="7"] { border-color: var(--c7); }
+.dk-stnm { font-weight: 700; white-space: nowrap; }
+.dk-stlv { font-family: var(--mono); font-size: var(--fs-xs); font-weight: 800; padding: 1px 5px; border-radius: 5px; background: color-mix(in srgb, #f5c542 22%, transparent); color: #b87e00; white-space: nowrap; }
+.dk-stlv.s4 { background: color-mix(in srgb, #f472b6 22%, transparent); color: #db2777; }
+.dk-stchip small { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dk-stlv { color: #ffd452; } :root:not([data-theme="light"]) .dk-stlv.s4 { color: #f472b6; } }
+:root[data-theme="dark"] .dk-stlv { color: #ffd452; }
+:root[data-theme="dark"] .dk-stlv.s4 { color: #f472b6; }

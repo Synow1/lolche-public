@@ -88,7 +88,7 @@
         mid.appendChild(meta);
         mid.appendChild(el("div", "mt-name", deckName(v)));
         var rest = starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; }).slice(0, 6);
-        mid.appendChild(strip(rest.map(function (b) { return b.u; })));
+        mid.appendChild(rest.some(function (b) { return (b.s || 0) >= 3; }) ? tfaUnitIcons(rest) : strip(rest.map(function (b) { return b.u; })));
         r.appendChild(mid);
         var num = el("div", "mt-num dk-kpi2");
         num.appendChild(dkGrad(el("b", "dk-avg", bs[0].toFixed(2)), dkAvgT(bs[0])));
@@ -122,7 +122,10 @@
           nm.insertBefore(el("span", "dk-fav-mk", "★"), nm.firstChild);
           mid.appendChild(nm);
           if (memo) mid.appendChild(el("div", "hm-fav-memo", memo));
-          else mid.appendChild(strip(starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; }).slice(0, 6).map(function (b) { return b.u; })));
+          else {
+            var frest = starOrder(v.board, mc && mc.u).filter(function (b) { return b !== mc; }).slice(0, 6);
+            mid.appendChild(frest.some(function (b) { return (b.s || 0) >= 3; }) ? tfaUnitIcons(frest) : strip(frest.map(function (b) { return b.u; })));
+          }
           r.appendChild(mid);
           var num = el("div", "mt-num dk-kpi2");
           if (bs) {

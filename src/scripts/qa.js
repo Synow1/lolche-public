@@ -1936,6 +1936,69 @@ function fresh(file, key, hours) {
       await pg.close();
     }
   });
+  // v3.10.2 회귀 검사: 리롤 덱 3성 목표(meta.json·guides.json·#meta/#tfa 상세 3성 목표 카드·배치판 금색 별·캐리 템 성급)
+  task(['meta', 'tfa'], async () => {
+    const M = JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8'));
+    const G = JSON.parse(fs.readFileSync(path.join(SITE, 'guides.json'), 'utf8'));
+    const rrDecks = (M.decks || []).filter(d => /5|6|7|roll/i.test(d.style || ''));
+    const missRr = rrDecks.filter(d => !(d.board || []).some(b => (b.s || 0) >= 3) || !(d.stars || []).length);
+    if (missRr.length) fail('v3.10.2 meta.json: 3성 목표 빠진 리롤 덱 ' + missRr.slice(0, 4).map(d => d.name).join(', '));
+    const gStarKey = (G.decks || []).some(g => (g.board || []).some(b => b.star != null && b.s == null));
+    if (gStarKey) fail('v3.10.2 guides.json: 보드에 "s" 대신 "star" 키가 남아 있음');
+    const gHas3 = (G.decks || []).filter(g => (g.board || []).some(b => (b.s || 0) >= 3)).length;
+    if (gHas3 < 5) fail(`v3.10.2 guides.json: 3성 목표가 있는 가이드 덱이 너무 적음 (${gHas3}개)`);
+
+    const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+    const errs = []; pg.on('pageerror', e => errs.push(String(e)));
+    await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
+    await pg.route('https://lolche.local/**', async (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
+      if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      const f = path.join(SITE, decodeURIComponent(u.pathname));
+      return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+    });
+    await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(1600);
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#meta'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(500);
+    await pg.evaluate(() => document.querySelector('#mt-filter [data-f="reroll"]')?.click()); await pg.waitForTimeout(350);
+    const rrList = await pg.evaluate(() => {
+      const rows = [...document.querySelectorAll('#mt-rows .mt-row.dk')];
+      const withStar = rows.filter(r => r.querySelector('.dk-st, .tfa-u3 b')).length;
+      const gRowIdx = rows.findIndex(r => r.querySelector('.gd-badge'));
+      return { total: rows.length, withStar, gRowIdx };
+    });
+    if (rrList.total < 5 || rrList.withStar < rrList.total) fail(`v3.10.2 리롤 목록: 별 표시 누락 (${rrList.withStar}/${rrList.total})`);
+    // 가이드가 붙은 리롤 덱 상세에서도 3성 목표 카드·배치판 금색 별·캐리 성급이 모두 보여야 함
+    await pg.evaluate((i) => document.querySelectorAll('#mt-rows .mt-row.dk')[i >= 0 ? i : 0]?.click(), rrList.gRowIdx); await pg.waitForTimeout(450);
+    const rrDet = await pg.evaluate(() => ({
+      starsBox: !!document.querySelector('#mt-detail .dk-stars'),
+      chips: document.querySelectorAll('#mt-detail .dk-stchip').length,
+      hexS3: document.querySelectorAll('#mt-detail .hxwrap .st.s3').length,
+      carryStar: document.querySelectorAll('#mt-detail .mt-build .tfa-star, #mt-detail .mt-build .mt-s2').length,
+      sw: document.documentElement.scrollWidth,
+    }));
+    if (!rrDet.starsBox || rrDet.chips < 1 || rrDet.hexS3 < 1 || rrDet.carryStar < 1) fail('v3.10.2 리롤 덱 상세(가이드 포함): 3성 목표/배치판 별/캐리 성급 누락 ' + JSON.stringify(rrDet));
+    if (rrDet.sw > 360) fail(`v3.10.2 리롤 덱 상세: 가로 밀림 ${rrDet.sw}px`);
+    const wrapRr = await pg.evaluate(new Function('return (' + WRAP_FN + ')()'));
+    if (wrapRr && wrapRr.length) fail('v3.10.2 리롤 덱 상세: 짧은 글 꺾임 ' + [...new Set(wrapRr)].slice(0, 4).join(', '));
+    // 3성 목표 칩 클릭 -> 챔피언 시트 열림
+    await pg.evaluate(() => document.querySelector('#mt-detail .dk-stchip')?.click()); await pg.waitForTimeout(300);
+    if (await pg.evaluate(() => document.getElementById('sheet').hidden)) fail('v3.10.2 리롤 3성 목표 칩 클릭 시 챔피언 시트가 안 열림');
+    await pg.evaluate(() => document.querySelector('#sheet .sh-btn[aria-label="닫기"]')?.click()); await pg.waitForTimeout(200);
+    // TFA 리롤 덱 상세에도 3성 목표 카드 확인
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#tfa'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(500);
+    await pg.evaluate(() => [...document.querySelectorAll('#tfa-tools .mt-chips button')].find(b => b.textContent.trim() === '리롤')?.click()); await pg.waitForTimeout(300);
+    await pg.evaluate(() => document.querySelector('#tfa-out .mt-row')?.click()); await pg.waitForTimeout(450);
+    const tfaRr = await pg.evaluate(() => ({
+      starsBox: !!document.querySelector('#tfa-detail .dk-stars'),
+      chips: document.querySelectorAll('#tfa-detail .dk-stchip').length,
+      sw: document.documentElement.scrollWidth,
+    }));
+    if (!tfaRr.starsBox || tfaRr.chips < 1) fail('v3.10.2 아카데미 리롤 덱 상세: 3성 목표 카드 누락 ' + JSON.stringify(tfaRr));
+    if (tfaRr.sw > 360) fail(`v3.10.2 아카데미 리롤 덱 상세: 가로 밀림 ${tfaRr.sw}px`);
+    if (errs.length) fail('v3.10.2 회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
+    await pg.close();
+  });
   // 동시에 4개씩 (대부분 I/O·대기 시간이라 겹쳐 돌리면 빨라진다)
   { let next = 0; await Promise.all([0, 1, 2, 3].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }
   await b.close();

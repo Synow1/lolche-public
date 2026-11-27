@@ -814,7 +814,7 @@
     if (u) { hx.style.setProperty("--cc", COST_C[u.cost] || COST_C[1]); hx.appendChild(img(u.icon, b.u)); }
     w.appendChild(hx);
     if (tier) w.appendChild(el("span", "dk-tier", tier));
-    if (b.s >= 3) w.appendChild(el("b", "dk-st", "★★★"));
+    if (b.s >= 3) w.appendChild(el("b", "dk-st" + (b.s >= 4 ? " s4" : ""), "★".repeat(Math.min(b.s, 4))));
     if (unlockOf(b.u)) w.appendChild(lockBadge());
     if (b.i && b.i.length) { var its = el("div", "dk-its"); b.i.forEach(function (n) { var it = IDX.items[n]; if (it) its.appendChild(img(it.icon, n)); }); w.appendChild(its); }
     return w;

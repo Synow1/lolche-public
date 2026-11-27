@@ -32,10 +32,11 @@
     s.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="currentColor"/><path d="' + (up ? "M8 4 12 9H9.6v3H6.4V9H4z" : "M8 12 4 7h2.4V4h3.2v3H12z") + '" fill="#fff"/></svg>';
     return s;
   }
-  function tfaIcon(b) {  // 3성 목표 유닛은 게임처럼 위에 별 세 개
+  function tfaIcon(b) {  // 3성·4성 목표 유닛은 게임처럼 위에 별 표시
     var i = uIcon(b.u); if (!i) return null;
-    if (b.s < 3) return i;
-    var w = el("span", "tfa-u3"); w.appendChild(el("b", null, "★★★")); w.appendChild(i); w.title = b.u + " 3성"; return w;
+    if (!b.s || b.s < 3) return i;
+    var sv = Math.min(b.s, 4), w = el("span", "tfa-u3" + (sv >= 4 ? " s4" : ""));
+    w.appendChild(el("b", null, "★".repeat(sv))); w.appendChild(i); w.title = b.u + " " + sv + "성"; return w;
   }
   function tfaUnitIcons(list) {
     var s = el("div", "mt-strip tfa-strip");
@@ -217,7 +218,12 @@
   }
   function tfaUnitLine(b, main) {  // 유닛 + 템
     var row = el("div", "mt-build"), hd = el("div", "tfa-uh"); hd.appendChild(unitChip(b.u));
-    if (b.s >= 3) hd.appendChild(el("span", "tfa-star", "★★★"));
+    if (b.s >= 3) {
+      var sv = Math.min(b.s, 4);
+      hd.appendChild(el("span", "tfa-star" + (sv >= 4 ? " s4" : ""), "★".repeat(sv) + " " + sv + "성"));
+    } else if (b.s === 2) {
+      hd.appendChild(el("span", "mt-s2", "★★ 2성"));
+    }
     if (main) hd.appendChild(el("span", "tfa-tag", "메인"));
     row.appendChild(hd);
     var its = el("div", "its"); b.i.forEach(function (n) { its.appendChild(itemSpan(n)); }); row.appendChild(its);
@@ -247,7 +253,8 @@
     }
     var tl = c.tier === "X" ? c.sub || "X" : c.tier, head = el("div", "dk-hero t-" + tl);
     if (IDX.units[c.main]) { var art = img(IDX.units[c.main].icon, ""); art.className = "art"; head.appendChild(art); }
-    head.appendChild(dkPortrait({ u: c.main }, null));
+    var mainB = c.board.filter(function (x) { return x.u === c.main; })[0];
+    head.appendChild(dkPortrait({ u: c.main, s: mainB ? mainB.s : 2 }, null));
     var t = el("div");
     t.appendChild(el("span", "tk", c.tier === "X" ? "상황별 " + tl + " 티어" : tl + " 티어"));
     var th = el("h3", null, c.title), tr = tfaTrend(c); if (tr) th.appendChild(tr);
@@ -273,12 +280,14 @@
     if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));
     var tbb = el("button", "tb-clear", "빌더로"); tbb.type = "button"; tbb.addEventListener("click", function () { tbLoad(names); }); acts.appendChild(tbb);
     box.appendChild(acts);
+    var sgBox = typeof starGoalBox === "function" ? starGoalBox(c.board, mHit && mHit.d && mHit.d.stars) : null;
+    if (sgBox) box.appendChild(sgBox);
     var cols = el("div", "mt-cols"), A = el("div"), B = el("div");
     // 배치: 메인 캐리 칸을 빛나게
     var hb = hexBoard(c.board);
     hb.querySelectorAll(".hxwrap").forEach(function (w) { if (w.dataset.unit === c.main) w.classList.add("tfa-carry"); });
     A.appendChild(hb);
-    if (c.main) A.appendChild(el("p", "mt-legend", "빛나는 칸이 메인 캐리예요"));
+    if (c.main) A.appendChild(el("p", "mt-legend", "빛나는 칸이 메인 캐리 · 금색 별(★★★)이 3성 목표예요"));
     var carriers = tfaOrder(c).filter(function (b) { return b.i.length; });
     if (carriers.length) { var sb = sec("아이템"); carriers.forEach(function (b) { sb.appendChild(tfaUnitLine(b, b.u === c.main)); }); A.appendChild(sb); }
     if (c.mainAug || c.augs.length) {

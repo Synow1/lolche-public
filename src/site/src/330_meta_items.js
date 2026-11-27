@@ -44,8 +44,9 @@
     }
     var us = el("div", "pcdk-units");
     o.units.forEach(function (u) {
-      var c = el("div", "pcdk-u"); c.title = u.name + (u.s >= 3 ? " 3성" : "");
-      c.appendChild(el("span", "pcdk-st", u.s >= 3 ? "★★★" : ""));
+      var sv = Math.min(u.s || 0, 4);
+      var c = el("div", "pcdk-u"); c.title = u.name + (sv >= 3 ? " " + sv + "성" : "");
+      c.appendChild(el("span", "pcdk-st" + (sv >= 4 ? " s4" : ""), sv >= 3 ? "★".repeat(sv) : ""));
       var p = el("span", "pcdk-pic"); p.style.setProperty("--cc", COST_C[u.c || 1] || COST_C[1]); if (u.img) p.appendChild(img(u.img, u.name)); c.appendChild(p);
       if (u.lock) { c.appendChild(lockBadge()); c.title += " · 해금 챔피언"; }
       if (u.unit) {
@@ -348,9 +349,9 @@
           var ic = IDX.units[u.u], cost = u.plant ? "p" : (u.c || (ic && ic.cost) || 1);
           hx.dataset.c = cost;
           if (ic) inner.appendChild(img(ic.icon, u.u));
-          cellw.title = u.u; if (!u.plant) cellw.dataset.unit = u.u;
+          cellw.title = u.u + (u.s >= 2 ? " " + Math.min(u.s, 4) + "성" : ""); if (!u.plant) cellw.dataset.unit = u.u;
           if (!u.plant && unlockOf(u.u)) cellw.appendChild(lockBadge());
-          if (u.s >= 2) cellw.appendChild(el("div", "st", "★".repeat(u.s)));
+          if (u.s >= 2) { var sv0 = Math.min(u.s, 4); cellw.appendChild(el("div", "st s" + sv0, "★".repeat(sv0))); }
           cellw.appendChild(el("div", "hxn" + (u.i && u.i.length ? " lift" : ""), u.u.replace(/ /g, "")));
           if (u.i && u.i.length) {
             var its = el("div", "its");
@@ -420,15 +421,60 @@
     return wrap;
   }
 
+  // 리롤 덱 3성·4성 목표 요약 카드 (#meta · #tfa 상세 공용)
+  function starGoalBox(board, metaStars) {
+    var byMeta = {}, list = [], seen = {};
+    (metaStars || []).forEach(function (x) { byMeta[x[0]] = x; });
+    (board || []).forEach(function (b) {
+      if (!b || b.plant || seen[b.u]) return;
+      var ms = byMeta[b.u], sv = Math.max(b.s || b.star || 0, ms ? ms[1] : 0);
+      if (sv < 3) return;
+      seen[b.u] = 1;
+      list.push({ u: b.u, s: Math.min(sv, 4), pct: ms ? ms[2] : 0, avg: ms ? ms[3] : null, its: (b.i || []).length });
+    });
+    if (!list.length) return null;
+    list.sort(function (a, b) { return (b.s - a.s) || (b.pct - a.pct) || (b.its - a.its); });
+    var has4 = list.some(function (x) { return x.s >= 4; });
+    var wrap = el("div", "dk-stars");
+    var hd = el("div", "dk-stars-h");
+    hd.appendChild(el("b", null, has4 ? "4성 · 3성 목표" : "3성 목표"));
+    hd.appendChild(el("small", null, "리롤 핵심 · 그 외 2성"));
+    wrap.appendChild(hd);
+    var row = el("div", "dk-stlist");
+    list.forEach(function (x) {
+      var bt = el("button", "dk-stchip"); bt.type = "button"; bt.dataset.unit = x.u;
+      var ic = IDX.units[x.u];
+      if (ic) { var im = img(ic.icon, x.u); im.dataset.c = ic.cost || 1; bt.appendChild(im); }
+      bt.appendChild(el("span", "dk-stnm", x.u));
+      bt.appendChild(el("b", "dk-stlv" + (x.s >= 4 ? " s4" : ""), x.s + "성"));
+      if (x.pct > 0) {
+        bt.appendChild(el("small", null, x.pct + "%" + (x.avg != null ? " · " + x.avg.toFixed(2) : "")));
+        bt.title = x.u + " " + x.s + "성 달성률 " + x.pct + "%" + (x.avg != null ? " (달성 시 평균 " + x.avg.toFixed(2) + ")" : "");
+      }
+      bt.addEventListener("click", function () { openSheet("u", x.u); });
+      row.appendChild(bt);
+    });
+    wrap.appendChild(row);
+    return wrap;
+  }
+
   function metaShow(id, noScroll, subId) {
     var v = deckView(id, subId); if (!v) return;
     var wide = isWide();
     if (!wide && !noScroll && document.getElementById("mt-detail").hidden) { var ly = window.scrollY; navPush("deck", function () { metaBack(); window.scrollTo(0, ly); }); }
     mtCurId = v.id;
     var d = v.st, box = document.getElementById("mt-detail"), basis = document.getElementById("mt-basis").value;
-    var detailBoard = v.gboard || v.board;
+    var sMap = {};
+    (v.board || []).forEach(function (b) { if (b && b.u && !b.plant) sMap[b.u] = Math.max(sMap[b.u] || 0, b.s || 2); });
+    ((d && d.stars) || []).forEach(function (x) { sMap[x[0]] = Math.max(sMap[x[0]] || 0, x[1] || 3); });
+    (v.gboard || []).forEach(function (b) { if (b && b.u && !b.plant) sMap[b.u] = Math.max(sMap[b.u] || 0, b.s || b.star || 2); });
+    var detailBoard = (v.gboard || v.board).map(function (b) {
+      if (!b || b.plant) return b;
+      var sv = Math.max(b.s || b.star || 0, sMap[b.u] || 2);
+      return b.s === sv ? b : Object.assign({}, b, { s: sv });
+    });
     var detailSyn = (v.gsyn && v.gsyn.length) ? v.gsyn : synOf(detailBoard);
-    var dv = v.gboard ? Object.assign({}, v, { board: detailBoard, syn: detailSyn }) : v;
+    var dv = Object.assign({}, v, { board: detailBoard, syn: detailSyn });
     box.classList.toggle("is-sub", !!v.sub);
     box.innerHTML = "";
     var toprow = el("div", "dk-toprow");
@@ -459,7 +505,7 @@
     }
     var hbt = basisTier(d, basis), hmc = mainOf(v), head = el("div", "dk-hero t-" + hbt);
     if (hmc && IDX.units[hmc.u]) { var art = img(IDX.units[hmc.u].icon, ""); art.className = "art"; head.appendChild(art); }
-    head.appendChild(dkPortrait(hmc && { u: hmc.u }, null));
+    head.appendChild(dkPortrait(hmc && { u: hmc.u, s: sMap[hmc.u] || hmc.s || 2 }, null));
     var t = el("div");
     t.appendChild(el("span", "tk", hbt === "X" ? "티어 없음" : hbt + " 티어"));
     var th = el("h3", null, deckName(v)), tp = /^\[([^\]]+)\]/.exec(v.name);
@@ -530,8 +576,11 @@
     minp.addEventListener("blur", function () { clearTimeout(mtimer); deckMemoSet(v, minp.value); mst.textContent = minp.value.trim() ? "저장됨" : ""; });
     mbox.appendChild(minp); mbox.appendChild(mst); box.appendChild(mbox);
 
+    var sgBox = starGoalBox(detailBoard, d && d.stars);
+    if (sgBox) box.appendChild(sgBox);
     var cols = el("div", "mt-cols"), A = el("div"), B = el("div");
     A.appendChild(levelBoards(dv, d));
+    A.appendChild(el("p", "mt-legend", sgBox ? "금색 별(★★★)이 3성 목표 · 은색 별(★★)은 2성이에요" : "은색 별(★★) 기본 2성 구성이에요"));
     // 추천 증강: 프리즘·골드·실버 3개씩. 롤체지지 가이드 픽(★)이 먼저, 다음은 MetaTFT 프로 가이드 등급 또는 이 덱 시너지 증강
     // 롤체지지 가이드 공략 원문 (scripts/build_guides.py parse_guide)
     var GD = v.gd || null;
@@ -587,7 +636,12 @@
     if (carriers.length) {
       var sb = sec("캐리 템");
       carriers.forEach(function (b) {
-        var row = el("div", "mt-build"); row.appendChild(unitChip(b.u));
+        var row = el("div", "mt-build"), hd = el("div", "tfa-uh");
+        hd.appendChild(unitChip(b.u));
+        var sv = Math.min(b.s || 0, 4);
+        if (sv >= 3) hd.appendChild(el("span", "tfa-star" + (sv >= 4 ? " s4" : ""), "★".repeat(sv) + " " + sv + "성"));
+        else if (sv === 2) hd.appendChild(el("span", "mt-s2", "★★ 2성"));
+        row.appendChild(hd);
         var its = el("div", "its"); b.i.forEach(function (n) { its.appendChild(itemSpan(n)); }); row.appendChild(its);
         var alt = d && d.builds[b.u];
         if (alt) alt.slice(0, 2).forEach(function (x) {

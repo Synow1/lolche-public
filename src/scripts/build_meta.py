@@ -181,7 +181,14 @@ def deck(nm, cluster, v, s, d, total, codes):
                 cells[u] = rc
                 break
 
+    mt_stars3 = set(v.get("stars") or [])
+    mt_stars4 = set(v.get("stars_4") or [])
+
     def star(u):
+        if u in mt_stars4:
+            return 4
+        if u in mt_stars3:
+            return 3
         tiers = units_by.get(u, {}).get("tiers", [])
         return max(tiers, key=lambda t: t["pcnt"])["tier"] if tiers else 2
 
@@ -190,6 +197,18 @@ def deck(nm, cluster, v, s, d, total, codes):
         b = builds.get(u)
         board.append({"u": nm.u(u), "c": nm.c(u), "s": star(u), "pos": cells.get(u),
                       "i": [nm.i(i) for i in b[0][0]] if b else []})
+
+    star_goals = []
+    for u in board_units:
+        sv = star(u)
+        if sv < 3:
+            continue
+        tiers = units_by.get(u, {}).get("tiers", [])
+        te = next((x for x in tiers if x["tier"] == sv), None)
+        pct = round(te["pcnt"] * 100) if te else 0
+        tavg = round(te["avg"], 2) if te and te.get("avg") is not None else None
+        star_goals.append([nm.u(u), sv, pct, tavg])
+    star_goals.sort(key=lambda x: (-x[1], -x[2], x[3] if x[3] is not None else 9))
 
     ranks = {}
     for r in d.get("ranks", []):
@@ -219,23 +238,36 @@ def deck(nm, cluster, v, s, d, total, codes):
         o = sorted(d.get("early_options", {}).get(lv, []), key=lambda x: -x["count"])
         if o:
             codes_by_level[lv] = team_code(o[0]["unit_list"].split("&"), codes)
-    # 레벨별 필드: 그 레벨에서 가장 흔한 유닛 묶음을 MetaTFT 자리 통계로 배치 (템은 최종 보드 캐리 템을 그대로)
+    # 레벨별 필드: 그 레벨에서 가장 흔한 유닛 묶음을 MetaTFT 자리 통계로 배치 (템·목표 성급도 함께 반영)
     final_items = {b["u"]: b["i"] for b in board}
+    final_stars = {b["u"]: b["s"] for b in board}
 
-    def place(us):
+    def place(us, lv_num):
         taken, out = set(), []
         for u in sorted(us, key=lambda u: -(pos.get(u, {}).get("positions") or [{"count": 0}])[0]["count"]):
             rc = next((cell_of(c["cell"]) for c in pos.get(u, {}).get("positions", []) if cell_of(c["cell"]) not in taken), None)
             if rc is None:  # 자리 통계가 없으면 뒷줄부터 빈칸
                 rc = next(((r, c) for r in (3, 2, 1, 0) for c in range(7) if (r, c) not in taken), None)
             taken.add(rc)
-            out.append({"u": nm.u(u), "c": nm.c(u), "pos": rc, "i": final_items.get(nm.u(u), [])})
+            ko, cost = nm.u(u), nm.c(u)
+            sv = final_stars.get(ko)
+            if sv and sv >= 3:
+                # 5렙은 1코 3성, 6렙은 1~2코 3성, 7렙 이상은 전체 3성 목표 표시
+                max_c = 1 if lv_num <= 5 else 2 if lv_num == 6 else 7
+                if lv_num < 5 or (cost or 1) > max_c:
+                    sv = 2 if lv_num >= 6 else None
+            elif lv_num < 6:
+                sv = None
+            ent = {"u": ko, "c": cost, "pos": rc, "i": final_items.get(ko, [])}
+            if sv:
+                ent["s"] = sv
+            out.append(ent)
         return out
     lvb = {str(level): board}
     for lv, lst in list(early.items()) + list(by_level.items()):
         src = (sorted(d.get("early_options", {}).get(lv, []), key=lambda x: -x["count"])[0]["unit_list"] if lv in early
                else max(opts[lv], key=lambda x: x.get("score", 0))["units_list"])
-        lvb[lv] = place([u for u in src.split("&") if u and nm.known(u)])
+        lvb[lv] = place([u for u in src.split("&") if u and nm.known(u)], int(lv))
     # 상징: 이 덱에서 쓴 비율·단 판 평균·누가 들었나 (상징 탭)
     emb = {}
     for x in d.get("itemNames", []):
@@ -265,6 +297,8 @@ def deck(nm, cluster, v, s, d, total, codes):
         "early": early, "levels": by_level, "lvb": lvb, "emb": emb, "finals": finals, "code": codes_by_level[str(level)], "codes": codes_by_level,
         "counters": [c for c in d.get("counters", []) if str(c["against"]) != str(cluster)][:4],
     }
+    if star_goals:
+        out["stars"] = star_goals
     if len(trends) >= 2:
         out["trends"] = trends
     if trd is not None:
@@ -383,7 +417,7 @@ def _sync_s19_guides(decks, patch="19.1"):
             su = u_by_k.get(cu["k"])
             if not su:
                 continue
-            ent = {"u": su["n"], "c": su["c"], "i": cu.get("i") or [], "star": cu.get("s") or 2, "plant": False}
+            ent = {"u": su["n"], "c": su["c"], "i": cu.get("i") or [], "s": cu.get("s") or 2, "plant": False}
             if cu.get("pos"):
                 ent["pos"] = cu["pos"]
             if cu.get("r") and cu["r"] <= 2:
