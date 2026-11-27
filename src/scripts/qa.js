@@ -312,6 +312,63 @@ function fresh(file, key, hours) {
         await q(() => document.querySelector('#mt-detail .back')?.click()); await pg.waitForTimeout(300);
       }
     }
+    // v3.10.0: 메타 덱 ↔ TFT 아카데미 1탭 즉시 전환(상단 스위치·하단 플로팅 버튼·인접 탭) + 같은 덱 교차 비교 + 아카데미 목록 실시간 통계
+    {
+      await go('meta'); await pg.waitForTimeout(400);
+      await q(() => { if (!document.getElementById('mt-detail').hidden) document.querySelector('#mt-detail .back')?.click(); }); await pg.waitForTimeout(200);
+      const mSw = await q(() => ({
+        seg: [...document.querySelectorAll('#meta .deck-seg a')].map(a => a.textContent.trim()),
+        dswVis: !document.getElementById('ab-deck-sw').hidden,
+        dswOn: (document.querySelector('#ab-deck-sw button.on') || {}).dataset?.to || '',
+        fabVis: !document.getElementById('deck-tfa-fab').hidden,
+        fabTxt: (document.getElementById('deck-tfa-fab') || {}).textContent.trim(),
+        sw: document.documentElement.scrollWidth,
+      }));
+      if (!mSw || mSw.seg[0] !== '덱' || mSw.seg[1] !== '아카데미') fail(`[${W}] v3.10.0 서브탭 순서 이상 (${JSON.stringify(mSw && mSw.seg)})`);
+      if (!mSw || !mSw.dswVis || mSw.dswOn !== 'meta') fail(`[${W}] v3.10.0 상단 덱/아카데미 스위치 이상 (${JSON.stringify(mSw)})`);
+      if (!mSw || !mSw.fabVis || mSw.fabTxt !== '아카데미') fail(`[${W}] v3.10.0 모바일 빠른 전환 버튼(#deck-tfa-fab) 이상 (${JSON.stringify(mSw)})`);
+      if (mSw && mSw.sw > W) fail(`[${W}] v3.10.0 메타 덱 가로 밀림 ${mSw.sw}px`);
+      await q(() => document.getElementById('deck-tfa-fab').click()); await pg.waitForTimeout(500);
+      const tSw = await q(() => ({
+        tfaVis: !document.getElementById('tfa').hidden,
+        dswOn: (document.querySelector('#ab-deck-sw button.on') || {}).dataset?.to || '',
+        fabTxt: (document.getElementById('deck-tfa-fab') || {}).textContent.trim(),
+        mstats: document.querySelectorAll('#tfa-out .tfa-mstat').length,
+        sw: document.documentElement.scrollWidth,
+      }));
+      if (!tSw || !tSw.tfaVis || tSw.dswOn !== 'tfa' || tSw.fabTxt !== '메타 덱') fail(`[${W}] v3.10.0 플로팅 전환 버튼 클릭 시 아카데미 전환 실패 (${JSON.stringify(tSw)})`);
+      if (tSw.mstats < 10) soft(`[${W}] v3.10.0 아카데미 목록 실시간 MetaTFT 통계(.tfa-mstat) ${tSw.mstats}개`);
+      if (tSw.sw > W) fail(`[${W}] v3.10.0 아카데미 가로 밀림 ${tSw.sw}px`);
+      // 아카데미 상세 -> 같은 메타 덱 통계 점프 -> 다시 아카데미 공략 점프
+      await q(() => (document.querySelector('#tfa-out .mt-row:has(.tfa-mstat)') || document.querySelector('#tfa-out .mt-row'))?.click()); await pg.waitForTimeout(450);
+      const tDet = await q(() => ({
+        xsw: !!document.querySelector('#tfa-detail .dk-toprow .dk-xsw'),
+        xlink: (document.querySelector('#tfa-detail .dk-xlink') || {}).textContent || '',
+        sw: document.documentElement.scrollWidth,
+      }));
+      if (!tDet || !tDet.xsw || !/메타 덱 통계/.test(tDet.xlink)) fail(`[${W}] v3.10.0 아카데미 상세 교차 점프 카드 누락 (${JSON.stringify(tDet)})`);
+      if (tDet && tDet.sw > W) fail(`[${W}] v3.10.0 아카데미 상세 가로 밀림 ${tDet.sw}px`);
+      await q(() => document.querySelector('#tfa-detail .dk-xlink')?.click()); await pg.waitForTimeout(450);
+      const mDet = await q(() => ({
+        metaVis: !document.getElementById('meta').hidden,
+        detVis: !document.getElementById('mt-detail').hidden,
+        xsw: !!document.querySelector('#mt-detail .dk-toprow .dk-xsw'),
+        xlink: (document.querySelector('#mt-detail .dk-xlink') || {}).textContent || '',
+        sw: document.documentElement.scrollWidth,
+      }));
+      if (!mDet || !mDet.metaVis || !mDet.detVis || !mDet.xsw || !/아카데미 공략/.test(mDet.xlink)) fail(`[${W}] v3.10.0 메타 덱 교차 점프/복귀 카드 이상 (${JSON.stringify(mDet)})`);
+      if (mDet && mDet.sw > W) fail(`[${W}] v3.10.0 메타 덱 상세(교차 카드) 가로 밀림 ${mDet.sw}px`);
+      await q(() => document.querySelector('#mt-detail .dk-xlink')?.click()); await pg.waitForTimeout(400);
+      const backTfa = await q(() => ({ tfaVis: !document.getElementById('tfa').hidden, detVis: !document.getElementById('tfa-detail').hidden }));
+      if (!backTfa || !backTfa.tfaVis || !backTfa.detVis) fail(`[${W}] v3.10.0 메타 덱 → 아카데미 공략 점프 실패 (${JSON.stringify(backTfa)})`);
+      await q(() => document.querySelector('#tfa-detail .back')?.click()); await pg.waitForTimeout(250);
+      await q(() => document.querySelector('#ab-deck-sw button[data-to="meta"]')?.click()); await pg.waitForTimeout(300);
+      if (await q(() => document.getElementById('meta').hidden)) fail(`[${W}] v3.10.0 상단 스위치(덱) 클릭 전환 실패`);
+      await q(() => { if (!document.getElementById('mt-detail').hidden) document.querySelector('#mt-detail .back')?.click(); }); await pg.waitForTimeout(200);
+      await go('home'); await pg.waitForTimeout(300);
+      const homeHid = await q(() => ({ dswHid: document.getElementById('ab-deck-sw').hidden, fabHid: document.getElementById('deck-tfa-fab').hidden }));
+      if (!homeHid || !homeHid.dswHid || !homeHid.fabHid) fail(`[${W}] v3.10.0 홈에서 덱/아카데미 전환 버튼이 숨겨지지 않음 (${JSON.stringify(homeHid)})`);
+    }
     }
     if (['items'].some(need)) {
     await go('items'); await pg.waitForTimeout(600);
@@ -1259,12 +1316,36 @@ function fresh(file, key, hours) {
       }
 
       }
-      if (['tfa'].some(needWeb)) {
-      // TFT 아카데미 2단 보기
+      if (['meta', 'tfa'].some(needWeb)) {
+      // TFT 아카데미 2단 보기 + v3.10.0 PC 상단 전환·교차 점프(아코디언 펼치기)·모바일 플로팅 버튼 숨김
       await go('tfa'); await pg.waitForTimeout(700);
-      const tf2 = await pg.evaluate(() => ({ lVis: !document.getElementById('tfa-list').hidden, dVis: !document.getElementById('tfa-detail').hidden, hex: document.querySelectorAll('#tfa-detail .hexboard .hx').length }));
+      const tf2 = await pg.evaluate(() => ({
+        lVis: !document.getElementById('tfa-list').hidden,
+        dVis: !document.getElementById('tfa-detail').hidden,
+        hex: document.querySelectorAll('#tfa-detail .hexboard .hx').length,
+        dswVis: !document.getElementById('ab-deck-sw').hidden,
+        dswOn: (document.querySelector('#ab-deck-sw button.on') || {}).dataset?.to || '',
+        fabDisp: getComputedStyle(document.getElementById('deck-tfa-fab')).display,
+        mstats: document.querySelectorAll('#tfa-out .tfa-mstat').length,
+        xlink: (document.querySelector('#tfa-detail .dk-xlink') || {}).textContent || '',
+      }));
       if (!tf2.lVis || !tf2.dVis || tf2.hex < 20) soft(`[WEB/1280] TFT 아카데미 2단 레이아웃 이상 (list=${tf2.lVis}, det=${tf2.dVis}, hex=${tf2.hex})`);
-
+      if (!tf2.dswVis || tf2.dswOn !== 'tfa') fail(`[WEB/1280] v3.10.0 상단 스위치 이상 (${JSON.stringify(tf2)})`);
+      if (tf2.fabDisp !== 'none') fail(`[WEB/1280] v3.10.0 PC에서 모바일 플로팅 버튼이 숨겨지지 않음 (display=${tf2.fabDisp})`);
+      if (tf2.mstats < 10 || !/메타 덱 통계/.test(tf2.xlink)) fail(`[WEB/1280] v3.10.0 아카데미 실시간 통계/교차 링크 누락 (${JSON.stringify(tf2)})`);
+      await pg.evaluate(() => document.querySelector('#tfa-detail .dk-xlink')?.click()); await pg.waitForTimeout(500);
+      const pcX = await pg.evaluate(() => ({
+        metaVis: !document.getElementById('meta').hidden,
+        openAcc: document.querySelectorAll('#mt-rows .pcdk-open #mt-detail').length,
+        xlink: (document.querySelector('#mt-detail .dk-xlink') || {}).textContent || '',
+        dswOn: (document.querySelector('#ab-deck-sw button.on') || {}).dataset?.to || '',
+      }));
+      if (!pcX.metaVis || pcX.openAcc !== 1 || !/아카데미 공략/.test(pcX.xlink) || pcX.dswOn !== 'meta') fail(`[WEB/1280] v3.10.0 아카데미→메타 덱 PC 아코디언 교차 점프 실패 (${JSON.stringify(pcX)})`);
+      await pg.evaluate(() => document.querySelector('#mt-detail .dk-xlink')?.click()); await pg.waitForTimeout(450);
+      const pcBack = await pg.evaluate(() => ({ tfaVis: !document.getElementById('tfa').hidden, dVis: !document.getElementById('tfa-detail').hidden }));
+      if (!pcBack.tfaVis || !pcBack.dVis) fail(`[WEB/1280] v3.10.0 메타 덱→아카데미 PC 교차 점프 실패 (${JSON.stringify(pcBack)})`);
+      await pg.evaluate(() => document.querySelector('#ab-deck-sw button[data-to="meta"]')?.click()); await pg.waitForTimeout(350);
+      if (await pg.evaluate(() => document.getElementById('meta').hidden)) fail('[WEB/1280] v3.10.0 PC 상단 스위치(덱) 전환 실패');
       }
       if (!FAST && ['rank'].some(needWeb)) {
       // 직접 fetch로 한국 랭킹 + 전적 검색 + 개인 계정/친구 미노출 확인

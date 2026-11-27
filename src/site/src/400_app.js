@@ -414,8 +414,27 @@
     var rLink = document.querySelector('.bnav a[data-nav="rank"]');
     if (rLink) rLink.setAttribute("href", "#" + rankLast);
     var navId = id === "home" ? "home" : id === "s19" ? "dex" : isDeck ? "decks" : isRank ? "rank" : "more";
+    var isMT = id === "meta" || id === "tfa";
     var lab = links.filter(function (a) { return a.getAttribute("href") === "#" + id; })[0];
-    document.getElementById("ab-title").textContent = (id === "home" || id === "meta") ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
+    document.getElementById("ab-title").textContent = (id === "home" || isMT) ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
+    document.body.classList.toggle("on-mt", isMT);
+    var dsw = document.getElementById("ab-deck-sw");
+    if (dsw) {
+      dsw.hidden = !isMT;
+      dsw.querySelectorAll("button").forEach(function (b) {
+        var on = b.dataset.to === id;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+    }
+    var fab = document.getElementById("deck-tfa-fab");
+    if (fab) {
+      fab.hidden = !isMT;
+      if (isMT) {
+        fab.dataset.to = id === "meta" ? "tfa" : "meta";
+        fab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0-3 3m3-3 3 3M17 8v12m0 0 3-3m-3 3-3-3"/></svg><span>' + (id === "meta" ? "아카데미" : "메타 덱") + '</span>';
+      }
+    }
     document.querySelectorAll(".bnav a").forEach(function (a) { a.classList.toggle("on", a.dataset.nav === navId); });
     document.querySelectorAll(".pc-side-extra a").forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + id); });
     try { localStorage.setItem(TAB_KEY, id); } catch (e) {}
@@ -432,6 +451,11 @@
     }
     applyTab(id, scroll, restoreY);
   }
+  document.querySelectorAll("#ab-deck-sw button").forEach(function (b) {
+    b.addEventListener("click", function () { goTab(b.dataset.to); });
+  });
+  var _mtFab = document.getElementById("deck-tfa-fab");
+  if (_mtFab) _mtFab.addEventListener("click", function () { if (_mtFab.dataset.to) goTab(_mtFab.dataset.to); });
   // 아래 탭·더보기·서브 전환·글 속 링크 모두 같은 탭 전환으로
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest('a[href^="#"]');
@@ -501,7 +525,7 @@
     });
     fetch("guides.json").then(function (r) { return r.json(); }).then(function (g) { buildGuides(g); homeRender(); }).catch(function () {});
     fetch("version.json").then(function (r) { return r.json(); }).then(buildVersion).catch(function () {});
-    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); if (typeof agCmpRender === "function") agCmpRender(); }).catch(function () {
+    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); if (current === "meta" && mtCurId && !document.getElementById("mt-detail").hidden) metaShow(mtCurId, true); if (typeof agCmpRender === "function") agCmpRender(); }).catch(function () {
       var b = document.getElementById("tfa-out"); if (b) b.innerHTML = '<p class="empty">' + reloadErr() + '</p>';
     });
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.addEventListener("click", function () { tfaView = b.dataset.v; tfaSave(); tfaRender(); }); });

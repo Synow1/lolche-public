@@ -580,3 +580,34 @@ body.overlay .bnav a { height: 48px; font-size: var(--fs-2xs); gap: 1px; }
 body.overlay .bnav a svg { width: 19px; height: 19px; }
 body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%); }
 
+/* ---- v3.10.0: 메타 덱 ↔ TFT 아카데미 1탭 즉시 전환 · 같은 덱 교차 비교 ---- */
+body.on-mt .patch { display: none; }
+body.on-mt .ab-in { gap: 7px; }
+.ab-dsw { display: inline-flex; align-items: center; padding: 2px; border-radius: 999px; background: var(--sunk); border: 1px solid var(--border-subtle); flex: none; gap: 2px; }
+.ab-dsw[hidden] { display: none; }
+.ab-dsw button { all: unset; box-sizing: border-box; cursor: pointer; font-size: var(--fs-s); font-weight: 700; color: var(--muted); padding: 4px 10px; border-radius: 999px; white-space: nowrap; line-height: 1.25; transition: background-color .15s, color .15s; }
+.ab-dsw button.on { background: var(--elev2); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+.ab-dsw button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.deck-tfa-fab { position: fixed; right: 14px; bottom: calc(var(--bnh) + env(safe-area-inset-bottom, 0px) + 18px); z-index: 9; display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 46%, var(--border-elev2)); background: color-mix(in srgb, var(--elev2) 90%, transparent); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); color: var(--ink); font: inherit; font-size: var(--fs-s); font-weight: 800; white-space: nowrap; box-shadow: var(--hl), 0 8px 22px rgba(0,0,0,.28); cursor: pointer; transition: transform .12s ease; }
+.deck-tfa-fab[hidden] { display: none; }
+.deck-tfa-fab:active { transform: scale(.96); }
+.deck-tfa-fab svg { width: 15px; height: 15px; color: var(--accent); flex: none; }
+body.dc-open .deck-tfa-fab, body.spot-open .deck-tfa-fab { display: none; }
+body.overlay .deck-tfa-fab { bottom: calc(var(--bnh) + env(safe-area-inset-bottom, 0px) + 12px); right: 10px; padding: 6px 11px; font-size: var(--fs-xs); }
+
+.dk-toprow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 6px; }
+.dk-toprow .back { margin: 0; }
+.dk-xsw { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 999px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border-subtle)); color: var(--accent); font-size: var(--fs-s); font-weight: 800; white-space: nowrap; }
+.dk-xsw:active { transform: scale(.97); }
+.dk-xsw:focus-visible { outline: 2px solid var(--accent); }
+
+.dk-xlink { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 8px 0 10px; border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent2) 12%, var(--elev2)), var(--elev2) 58%); border: 1px solid color-mix(in srgb, var(--accent2) 34%, var(--border-elev2)); min-width: 0; transition: transform .12s ease, border-color .15s; }
+.dk-xlink:active { transform: scale(.985); }
+.dk-xlink:focus-visible { outline: 2px solid var(--accent); }
+.dk-xm { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.dk-xm b { font-size: var(--fs-m); font-weight: 800; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-xm small { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-xgo { flex: none; white-space: nowrap; font-size: var(--fs-xs); font-weight: 800; color: var(--accent2); }
+
+

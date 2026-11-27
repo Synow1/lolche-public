@@ -3,6 +3,7 @@
 <header class="appbar" id="appbar"><div class="wrap ab-in">
   <a class="brand" href="#home" aria-label="롤체 노트 홈"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z" fill="var(--accent)"/><path d="M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z" fill="var(--bg)"/><path d="M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z" fill="var(--accent)"/></svg><b id="ab-title">롤체 노트</b></a>
   <span class="patch" id="patch-badge" hidden></span>
+  <div class="ab-dsw" id="ab-deck-sw" role="tablist" aria-label="덱·아카데미 전환" hidden><button type="button" data-to="meta">덱</button><button type="button" data-to="tfa">아카데미</button></div>
   <button type="button" class="ab-btn ab-search" id="spot-btn" aria-label="통합 검색" title="통합 검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16.2 16.2 4.3 4.3"/></svg></button>
   <button type="button" class="ab-btn" id="ab-bubble" hidden aria-label="게임 위에 띄우기" title="게임 위에 띄우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="9" width="7" height="7" rx="1.5" fill="currentColor" stroke="none"/></svg></button>
 </div></header>
@@ -22,6 +23,7 @@
   <a href="#rank" data-nav="rank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-7"/></svg><span>전적</span></a>
   <a href="#more" data-nav="more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>더보기</span></a>
 </nav>
+<button type="button" class="deck-tfa-fab" id="deck-tfa-fab" hidden aria-label="덱·아카데미 빠른 전환"></button>
 
 <nav class="pc-side-extra" aria-label="도감 및 도구">
   <div class="pc-side-h">통계 · 도감</div>

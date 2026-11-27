@@ -27,13 +27,31 @@
     embRender();
   }
   function openDeck(id) {
-    if (current === "meta") { metaShow(id); return; }
+    var v = deckView(id), vid = v ? v.id : id;
+    function openPc() {
+      metaEnsureWide();
+      var rw = document.querySelector('#mt-rows .pcdk[data-id="' + vid + '"]');
+      if (!rw && (mtFilter !== "all" || (document.getElementById("mt-q") || {}).value)) {
+        mtFilter = "all";
+        var mq = document.getElementById("mt-q"); if (mq) mq.value = "";
+        document.querySelectorAll("#mt-filter button[data-f]").forEach(function (b) { b.classList.toggle("on", b.dataset.f === "all"); });
+        metaList();
+        rw = document.querySelector('#mt-rows .pcdk[data-id="' + vid + '"]');
+      }
+      if (rw) {
+        if (!rw.classList.contains("open")) rw._toggle(false);
+        else { var y0 = rw.getBoundingClientRect().top; if (y0 < 60 || y0 > innerHeight - 120) window.scrollBy(0, y0 - 80); }
+      } else metaShow(id, true);
+    }
+    if (current === "meta") { if (isWide()) openPc(); else metaShow(id); return; }
     var prev = current, y = window.scrollY, was = !document.getElementById("mt-detail").hidden ? mtCurId : null;
     navPush("tab", function () {
       if (was) metaShow(was, true); else metaBack();
       applyTab(prev, false, y);
     });
-    showTab("meta", false); metaShow(id, true); window.scrollTo(0, 0);
+    showTab("meta", false);
+    if (isWide()) openPc();
+    else { metaShow(id, true); window.scrollTo(0, 0); }
   }
   function embRender() {
     var out = document.getElementById("emb-out"); out.innerHTML = "";

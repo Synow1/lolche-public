@@ -425,7 +425,10 @@
     var dv = v.gboard ? Object.assign({}, v, { board: detailBoard, syn: detailSyn }) : v;
     box.classList.toggle("is-sub", !!v.sub);
     box.innerHTML = "";
-    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("deck", metaBack); }); box.appendChild(back);
+    var toprow = el("div", "dk-toprow");
+    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("deck", metaBack); }); toprow.appendChild(back);
+    var xsw = el("button", "dk-xsw", "아카데미 ⇄"); xsw.type = "button"; xsw.addEventListener("click", function () { goTab("tfa"); }); toprow.appendChild(xsw);
+    box.appendChild(toprow);
     if (v.subs && v.subs.length > 1) {  // 합쳐진 비슷한 덱 묶음: 칩마다 평균 등수를 보여주고 눌러서 따로 본다 (tfa-tab과 같은 방식)
       var vw = el("div", "mt-vars");
       vw.appendChild(el("div", "mt-vars-h", "비슷한 덱 " + v.subs.length + "개"));
@@ -471,6 +474,19 @@
         sp.appendChild(bv); sp.appendChild(el("span", null, x[0])); st.appendChild(sp);
       });
       box.appendChild(st);
+    }
+    var tHit = typeof tfaForMeta === "function" ? tfaForMeta(v) : null;
+    if (tHit) {
+      var tc = tHit.c, ttl = tc.tier === "X" ? tc.sub || "X" : tc.tier;
+      var txl = el("button", "dk-xlink"); txl.type = "button";
+      txl.appendChild(el("span", "dk-tbadge t-" + ttl + (tc.tier === "X" ? " x" : ""), ttl));
+      var txm = el("div", "dk-xm");
+      txm.appendChild(el("b", null, "아카데미 공략 · " + tc.title));
+      txm.appendChild(el("small", null, [tc.style, tc.diff, "배치 · 증강 · 운영 팁"].filter(Boolean).join(" · ")));
+      txl.appendChild(txm);
+      txl.appendChild(el("span", "dk-xgo", "공략 보기 ›"));
+      txl.addEventListener("click", function () { tfaOpenComp(tc.slug); });
+      box.appendChild(txl);
     }
     box.appendChild(synRow(detailSyn, true));
     var names = detailBoard.filter(function (b) { return !b.plant; }).map(function (b) { return b.u; });
@@ -877,7 +893,7 @@
       metaPending = null;
     }
   }
-  function buildMeta(data) { META = data; META_GRP = null; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
+  function buildMeta(data) { META = data; META_GRP = null; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); if (TFA && current === "tfa") setTimeout(tfaRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
 
   /* ---- 덱 통계 새로고침: 앱·PC 웹은 MetaTFT comps_stats를 바로 받아 숫자만 바꾼다 (보드·템은 그대로). ---- */
   var META_LIVE = "tft-guide-meta-live";

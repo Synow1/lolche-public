@@ -51,6 +51,70 @@
     });
   }
   var tfaCurSlug = null;
+  function metaForTfa(c) {
+    if (!c || !META || !META.decks || !META.decks.length) return null;
+    if (TFA && TFA.set && "TFTSet" + TFA.set !== SET_ID) return null;
+    var cu = {}; (c.board || []).forEach(function (b) { if (b && b.u && !b.plant) cu[b.u] = 1; });
+    var cm = c.main || "", isX = c.tier === "X", best = null;
+    META.decks.forEach(function (d) {
+      var du = {}, ov = 0, sameM = false, topU = "", topS = -1;
+      (d.board || []).forEach(function (b) {
+        if (!b || !b.u || b.plant) return;
+        du[b.u] = 1;
+        if (cu[b.u]) ov++;
+        var sc0 = ((b.i || []).length) * 10 + (b.s || 1);
+        if (sc0 > topS) { topS = sc0; topU = b.u; }
+        if (cm && b.u === cm && (b.i || []).length >= 2) sameM = true;
+      });
+      if (cm && topU === cm) sameM = true;
+      if (!(ov >= 4 || (sameM && ov >= 3))) return;
+      var hasReq = !!augReq(d);
+      var sc = ov * 2 + (sameM ? 3 : 0) + (isX === hasReq ? 1.5 : 0);
+      if (!best || sc > best.sc) best = { d: d, ov: ov, sc: sc };
+    });
+    return best;
+  }
+  function tfaForMeta(v) {
+    if (!v || !TFA || !TFA.comps || !TFA.comps.length) return null;
+    if (TFA.set && "TFTSet" + TFA.set !== SET_ID) return null;
+    var bd = v.gboard || v.board || [], du = {}, dItems = {};
+    bd.forEach(function (b) { if (b && b.u && !b.plant) { du[b.u] = 1; dItems[b.u] = (b.i || []).length; } });
+    var mc = mainOf(v), dm = mc ? mc.u : "", areq = augReq(v.st), best = null;
+    TFA.comps.forEach(function (c) {
+      var ov = 0;
+      (c.board || []).forEach(function (b) { if (b && b.u && !b.plant && du[b.u]) ov++; });
+      var cm = c.main || "";
+      var sameM = !!(cm && (cm === dm || (dItems[cm] || 0) >= 2));
+      if (!(ov >= 5 || (sameM && ov >= 4))) return;
+      var isX = c.tier === "X";
+      var augHit = !!(areq && (c.mainAug === areq || (c.augs || []).indexOf(areq) >= 0 || (c.title || "").indexOf(areq) >= 0));
+      var sc = ov * 2 + (sameM ? 3 : 0) + (augHit ? 4 : 0) + (!!areq === isX ? 1.2 : 0) + (!c.var ? 0.2 : 0);
+      if (!best || sc > best.sc) best = { c: c, ov: ov, sc: sc };
+    });
+    return best;
+  }
+  function tfaOpenComp(slug) {
+    var oldSlug = tfaCurSlug, det = document.getElementById("tfa-detail");
+    var was = det && !det.hidden ? oldSlug : null;
+    tfaView = "comps"; tfaF = "all"; tfaSave();
+    tfaCurSlug = slug;
+    if (current === "tfa") {
+      if (TFA && IDX) { tfaRender(); tfaShow(slug); }
+      return;
+    }
+    var prev = current, y = window.scrollY;
+    navPush("tab", function () {
+      if (was) tfaShow(was, true); else tfaBack();
+      applyTab(prev, false, y);
+    });
+    showTab("tfa", false);
+    if (TFA && IDX) { tfaRender(); tfaShow(slug, true); }
+    if (!isWide()) window.scrollTo(0, 0);
+    else {
+      var selRow = document.querySelector("#tfa-out .mt-row.sel");
+      if (selRow && selRow.scrollIntoView) selRow.scrollIntoView({ block: "nearest" });
+    }
+  }
   function tfaRender() {
     var box = document.getElementById("tfa-out"), tools = document.getElementById("tfa-tools"), secEl = document.getElementById("tfa");
     if (!box) return;
@@ -74,6 +138,7 @@
       tfaChips(tools, TFA_FILTER, tfaF, function (v) { tfaF = v; tfaSave(); tfaRender(); });
       var list = TFA.comps.filter(function (c) { return !c.var && tfaTabs(c).some(tfaMatch); }), last = null;
       if (list.length && !TFA.comps.some(function (c) { return !c.var && c.tier === "S"; })) box.appendChild(el("p", "emb-sub tfa-sub", "지금 S 티어 덱은 없어요"));
+      var curBasis = (document.getElementById("mt-basis") || {}).value || "emer";
       list.forEach(function (c) {
         if (c.tier !== last) {
           last = c.tier;
@@ -100,6 +165,14 @@
         mid.appendChild(nm);
         mid.appendChild(tfaUnitIcons(tfaOrder(c).filter(function (b) { return b.u !== c.main; })));
         r.appendChild(mid);
+        var mh = metaForTfa(c);
+        var ms = mh && (basisSt(mh.d, curBasis) || basisSt(mh.d, "all"));
+        if (ms) {
+          var num = el("div", "mt-num dk-kpi2 tfa-mstat");
+          num.appendChild(dkGrad(el("b", "dk-avg", ms[0].toFixed(2)), dkAvgT(ms[0])));
+          num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + ms[2].toFixed(1) + "%"), dkWinT(ms[2])));
+          r.appendChild(num);
+        }
         r.addEventListener("click", function () { tfaShow(c.slug); });
         box.appendChild(r);
       });
@@ -156,7 +229,10 @@
     var box = document.getElementById("tfa-detail"), wide = isWide();
     if (!wide && !noScroll && box.hidden) { var ly = window.scrollY; navPush("tfa", function () { tfaBack(); window.scrollTo(0, ly); }); }
     box.innerHTML = "";
-    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("tfa", tfaBack); }); box.appendChild(back);
+    var toprow = el("div", "dk-toprow");
+    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("tfa", tfaBack); }); toprow.appendChild(back);
+    var xsw = el("button", "dk-xsw", "메타 덱 ⇄"); xsw.type = "button"; xsw.addEventListener("click", function () { goTab("meta"); }); toprow.appendChild(xsw);
+    box.appendChild(toprow);
     var tabs = tfaTabs(c);
     if (tabs.length > 1) {  // 비슷한 덱 탭: 눌러도 기록을 새로 쌓지 않고 이 화면만 바꾼다
       var tb = el("div", "tfa-tabs"); tb.setAttribute("role", "tablist");
@@ -178,6 +254,20 @@
     t.appendChild(th);
     t.appendChild(el("p", null, [c.style, c.diff, c.main ? c.main + " 캐리" : ""].filter(Boolean).join(" · ")));
     head.appendChild(t); box.appendChild(head);
+    var mHit = metaForTfa(c);
+    if (mHit) {
+      var curB = (document.getElementById("mt-basis") || {}).value || "emer";
+      var mbt = basisTier(mHit.d, curB), mbs = basisSt(mHit.d, curB) || basisSt(mHit.d, "all");
+      var xl = el("button", "dk-xlink"); xl.type = "button";
+      xl.appendChild(el("span", "dk-tbadge t-" + mbt, mbt === "X" ? "-" : mbt));
+      var xm = el("div", "dk-xm");
+      xm.appendChild(el("b", null, "메타 덱 통계 · " + deckName(mHit.d)));
+      if (mbs) xm.appendChild(el("small", null, "평균 " + mbs[0].toFixed(2) + " · 순방 " + mbs[1] + "% · 승률 " + mbs[2].toFixed(1) + "%"));
+      xl.appendChild(xm);
+      xl.appendChild(el("span", "dk-xgo", "통계 보기 ›"));
+      xl.addEventListener("click", function () { openDeck(mHit.d.id); });
+      box.appendChild(xl);
+    }
     if (DB && GUIDES) box.appendChild(synRow(synOf(c.board), true));
     var names = c.board.map(function (b) { return b.u; }), code = codeOfNames(names), acts = el("div", "tb-actions");
     if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));

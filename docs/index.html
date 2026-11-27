@@ -1,7 +1,7 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="롤체 노트 — TFT 19시즌 프리즘 투어, 메타 덱, 아이템·증강 티어표, 전적 검색 및 덱파워 분석">
-<meta name="lolche-web" content="202611271410">
+<meta name="lolche-web" content="202611271439">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z' fill='%23E8B94F'/%3E%3Cpath d='M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z' fill='%23080B12'/%3E%3Cpath d='M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z' fill='%23E8B94F'/%3E%3C/svg%3E">
 </head><body>
 <title>롤체 노트</title>
@@ -2345,6 +2345,37 @@ body.overlay .bnav a { height: 48px; font-size: var(--fs-2xs); gap: 1px; }
 body.overlay .bnav a svg { width: 19px; height: 19px; }
 body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%); }
 
+/* ---- v3.10.0: 메타 덱 ↔ TFT 아카데미 1탭 즉시 전환 · 같은 덱 교차 비교 ---- */
+body.on-mt .patch { display: none; }
+body.on-mt .ab-in { gap: 7px; }
+.ab-dsw { display: inline-flex; align-items: center; padding: 2px; border-radius: 999px; background: var(--sunk); border: 1px solid var(--border-subtle); flex: none; gap: 2px; }
+.ab-dsw[hidden] { display: none; }
+.ab-dsw button { all: unset; box-sizing: border-box; cursor: pointer; font-size: var(--fs-s); font-weight: 700; color: var(--muted); padding: 4px 10px; border-radius: 999px; white-space: nowrap; line-height: 1.25; transition: background-color .15s, color .15s; }
+.ab-dsw button.on { background: var(--elev2); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+.ab-dsw button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.deck-tfa-fab { position: fixed; right: 14px; bottom: calc(var(--bnh) + env(safe-area-inset-bottom, 0px) + 18px); z-index: 9; display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 46%, var(--border-elev2)); background: color-mix(in srgb, var(--elev2) 90%, transparent); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); color: var(--ink); font: inherit; font-size: var(--fs-s); font-weight: 800; white-space: nowrap; box-shadow: var(--hl), 0 8px 22px rgba(0,0,0,.28); cursor: pointer; transition: transform .12s ease; }
+.deck-tfa-fab[hidden] { display: none; }
+.deck-tfa-fab:active { transform: scale(.96); }
+.deck-tfa-fab svg { width: 15px; height: 15px; color: var(--accent); flex: none; }
+body.dc-open .deck-tfa-fab, body.spot-open .deck-tfa-fab { display: none; }
+body.overlay .deck-tfa-fab { bottom: calc(var(--bnh) + env(safe-area-inset-bottom, 0px) + 12px); right: 10px; padding: 6px 11px; font-size: var(--fs-xs); }
+
+.dk-toprow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 6px; }
+.dk-toprow .back { margin: 0; }
+.dk-xsw { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 999px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border-subtle)); color: var(--accent); font-size: var(--fs-s); font-weight: 800; white-space: nowrap; }
+.dk-xsw:active { transform: scale(.97); }
+.dk-xsw:focus-visible { outline: 2px solid var(--accent); }
+
+.dk-xlink { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 8px 0 10px; border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent2) 12%, var(--elev2)), var(--elev2) 58%); border: 1px solid color-mix(in srgb, var(--accent2) 34%, var(--border-elev2)); min-width: 0; transition: transform .12s ease, border-color .15s; }
+.dk-xlink:active { transform: scale(.985); }
+.dk-xlink:focus-visible { outline: 2px solid var(--accent); }
+.dk-xm { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.dk-xm b { font-size: var(--fs-m); font-weight: 800; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-xm small { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-xgo { flex: none; white-space: nowrap; font-size: var(--fs-xs); font-weight: 800; color: var(--accent2); }
+
+
 /* ===== PC 웹 · 데스크톱 반응형 (1024px 이상) ===== */
 .pc-side-extra { display: none; }
 .s19-hgrid { display: contents; }
@@ -2907,13 +2938,20 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   body:not(.overlay) .ev-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   body:not(.overlay) .esp-news-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   body:not(.overlay) .ev-card { margin-bottom: 0; }
-  body:not(.overlay) .s19-ewarn, body:not(.overlay) .ag-best-b, body:not(.overlay) .ag-cmp-t small, body:not(.overlay) .ag-cmp-dks > small, body:not(.overlay) .ag-cmp-dk, body:not(.overlay) .lb-cmpbtn, body:not(.overlay) .lb-cmpsub, body:not(.overlay) .lb-cmpr, body:not(.overlay) .rk-rn, body:not(.overlay) .rk-rt4, body:not(.overlay) .rk-gf-cnt, body:not(.overlay) .ev-tags span, body:not(.overlay) .ev-kr, body:not(.overlay) .ev-kpis span, body:not(.overlay) .esp-news-box > summary small, body:not(.overlay) .esp-news-d, body:not(.overlay) .esp-news-k, body:not(.overlay) .esp-news-desc, body:not(.overlay) .hm-esp-b, body:not(.overlay) .hm-esp-m small, body:not(.overlay) #esports .esp-win small, body:not(.overlay) #esports .now-row small, body:not(.overlay) #esports .ev-meta { font-size: 12px; }
+  body:not(.overlay).on-mt .patch:not([hidden]) { display: inline-flex; }
+  body:not(.overlay).on-mt .ab-in { gap: 10px; }
+  body:not(.overlay) .deck-tfa-fab { display: none !important; }
+  body:not(.overlay) #meta .mt-detail .dk-toprow,
+  body:not(.overlay) #tfa .mt-detail .dk-toprow { display: none; }
+  body:not(.overlay) .dk-xlink:hover { border-color: var(--accent2); }
+  body:not(.overlay) .s19-ewarn, body:not(.overlay) .ag-best-b, body:not(.overlay) .ag-cmp-t small, body:not(.overlay) .ag-cmp-dks > small, body:not(.overlay) .ag-cmp-dk, body:not(.overlay) .lb-cmpbtn, body:not(.overlay) .lb-cmpsub, body:not(.overlay) .lb-cmpr, body:not(.overlay) .rk-rn, body:not(.overlay) .rk-rt4, body:not(.overlay) .rk-gf-cnt, body:not(.overlay) .ev-tags span, body:not(.overlay) .ev-kr, body:not(.overlay) .ev-kpis span, body:not(.overlay) .esp-news-box > summary small, body:not(.overlay) .esp-news-d, body:not(.overlay) .esp-news-k, body:not(.overlay) .esp-news-desc, body:not(.overlay) .hm-esp-b, body:not(.overlay) .hm-esp-m small, body:not(.overlay) #esports .esp-win small, body:not(.overlay) #esports .now-row small, body:not(.overlay) #esports .ev-meta, body:not(.overlay) .ab-dsw button, body:not(.overlay) .dk-xm small, body:not(.overlay) .dk-xgo { font-size: 12px; }
 }
 </style>
 
 <header class="appbar" id="appbar"><div class="wrap ab-in">
   <a class="brand" href="#home" aria-label="롤체 노트 홈"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 1.8 28.3 8.9v14.2L16 30.2 3.7 23.1V8.9z" fill="var(--accent)"/><path d="M16 7.2 23.6 11.6v8.8L16 24.8l-7.6-4.4v-8.8z" fill="var(--bg)"/><path d="M11.6 19h8.8l.8-6.2-3 2.1L16 11l-2.2 3.9-3-2.1z" fill="var(--accent)"/></svg><b id="ab-title">롤체 노트</b></a>
   <span class="patch" id="patch-badge" hidden></span>
+  <div class="ab-dsw" id="ab-deck-sw" role="tablist" aria-label="덱·아카데미 전환" hidden><button type="button" data-to="meta">덱</button><button type="button" data-to="tfa">아카데미</button></div>
   <button type="button" class="ab-btn ab-search" id="spot-btn" aria-label="통합 검색" title="통합 검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16.2 16.2 4.3 4.3"/></svg></button>
   <button type="button" class="ab-btn" id="ab-bubble" hidden aria-label="게임 위에 띄우기" title="게임 위에 띄우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="9" width="7" height="7" rx="1.5" fill="currentColor" stroke="none"/></svg></button>
 </div></header>
@@ -2933,6 +2971,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
   <a href="#rank" data-nav="rank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-7"/></svg><span>전적</span></a>
   <a href="#more" data-nav="more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>더보기</span></a>
 </nav>
+<button type="button" class="deck-tfa-fab" id="deck-tfa-fab" hidden aria-label="덱·아카데미 빠른 전환"></button>
 
 <nav class="pc-side-extra" aria-label="도감 및 도구">
   <div class="pc-side-h">통계 · 도감</div>
@@ -3106,7 +3145,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
 <section id="meta">
   <div class="mt-list" id="mt-list-view">
-    <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" class="on" aria-selected="true">덱</a><a href="#units" aria-selected="false">챔피언</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" aria-selected="false">상징</a></div>
+    <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" class="on" aria-selected="true">덱</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#units" aria-selected="false">챔피언</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" aria-selected="false">상징</a></div>
     <div class="mt-upd" id="mt-upd"><span id="mt-upd-t"></span><select id="mt-days" aria-label="통계 기간" hidden><option value="1">최근 1일</option><option value="2">최근 2일</option><option value="3" selected>최근 3일</option><option value="4">최근 4일</option><option value="5">최근 5일</option><option value="6">최근 6일</option><option value="7">최근 7일</option></select><button type="button" id="mt-upd-btn" hidden>새로고침</button></div>
     <div class="mt-bar">
       <div class="mt-frow">
@@ -3142,7 +3181,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 <section id="tfa">
   <h2 class="sr-title">TFT 아카데미</h2>
   <div id="tfa-list">
-    <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#units" aria-selected="false">챔피언</a><a href="#tfa" class="on" aria-selected="true">아카데미</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" aria-selected="false">상징</a></div>
+    <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#tfa" class="on" aria-selected="true">아카데미</a><a href="#units" aria-selected="false">챔피언</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" aria-selected="false">상징</a></div>
     <div class="mt-upd"><span id="tfa-note"></span></div>
       <p class="emb-sub tfa-intro">북미 프로 Dishsoap과 Frodan의 TFT Academy 티어표예요. 덱을 누르면 배치, 아이템, 증강, 운영 방법을 볼 수 있어요.</p>
       <div class="seg2" id="tfa-view" role="group" aria-label="보기"><button type="button" data-v="comps">덱</button><button type="button" data-v="augs">증강</button><button type="button" data-v="items">아이템</button></div>
@@ -3363,7 +3402,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
 <section id="parts">
   <h2 class="sr-title">재료 → 덱</h2>
-  <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#units" aria-selected="false">챔피언</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#parts" class="on" aria-selected="true">재료</a><a href="#emb" aria-selected="false">상징</a></div>
+  <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#units" aria-selected="false">챔피언</a><a href="#parts" class="on" aria-selected="true">재료</a><a href="#emb" aria-selected="false">상징</a></div>
   <p class="emb-sub">보유한 재료, 기물, 상징을 고르면 가장 잘 맞는 덱과 최적 완성템 조합을 찾아드려요. 같은 재료는 여러 번 누르세요.</p>
   <div class="pt-pick" id="pt-pick"></div>
   <div class="pt-tray" id="pt-tray"></div>
@@ -3378,7 +3417,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 
 <section id="emb">
   <h2 class="sr-title">상징 → 덱</h2>
-  <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#units" aria-selected="false">챔피언</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" class="on" aria-selected="true">상징</a></div>
+  <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#units" aria-selected="false">챔피언</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" class="on" aria-selected="true">상징</a></div>
   <p class="emb-sub">보유한 상징을 선택하면 추천 덱과 어울리는 챔피언을 보여드려요. 여러 개를 함께 선택할 수 있어요</p>
   <div class="emb-pick" id="emb-pick"></div>
   <div id="emb-out"><p class="empty">불러오는 중</p></div>
@@ -3781,7 +3820,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
 </section>
 <section id="units">
   <h2 class="sr-title">챔피언 통계</h2>
-  <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#units" class="on" aria-selected="true">챔피언</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" aria-selected="false">상징</a></div>
+  <div class="seg deck-seg" role="tablist" aria-label="덱 메뉴"><a href="#meta" aria-selected="false">덱</a><a href="#tfa" aria-selected="false">아카데미</a><a href="#units" class="on" aria-selected="true">챔피언</a><a href="#parts" aria-selected="false">재료</a><a href="#emb" aria-selected="false">상징</a></div>
   <div class="mt-upd" id="un-upd"><span id="un-upd-t"></span><button type="button" id="un-upd-btn" hidden>새로고침</button></div>
   <div class="un-bar">
     <div class="mt-chips" id="un-cost" role="group" aria-label="코스트 거르기">
@@ -5106,6 +5145,70 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     });
   }
   var tfaCurSlug = null;
+  function metaForTfa(c) {
+    if (!c || !META || !META.decks || !META.decks.length) return null;
+    if (TFA && TFA.set && "TFTSet" + TFA.set !== SET_ID) return null;
+    var cu = {}; (c.board || []).forEach(function (b) { if (b && b.u && !b.plant) cu[b.u] = 1; });
+    var cm = c.main || "", isX = c.tier === "X", best = null;
+    META.decks.forEach(function (d) {
+      var du = {}, ov = 0, sameM = false, topU = "", topS = -1;
+      (d.board || []).forEach(function (b) {
+        if (!b || !b.u || b.plant) return;
+        du[b.u] = 1;
+        if (cu[b.u]) ov++;
+        var sc0 = ((b.i || []).length) * 10 + (b.s || 1);
+        if (sc0 > topS) { topS = sc0; topU = b.u; }
+        if (cm && b.u === cm && (b.i || []).length >= 2) sameM = true;
+      });
+      if (cm && topU === cm) sameM = true;
+      if (!(ov >= 4 || (sameM && ov >= 3))) return;
+      var hasReq = !!augReq(d);
+      var sc = ov * 2 + (sameM ? 3 : 0) + (isX === hasReq ? 1.5 : 0);
+      if (!best || sc > best.sc) best = { d: d, ov: ov, sc: sc };
+    });
+    return best;
+  }
+  function tfaForMeta(v) {
+    if (!v || !TFA || !TFA.comps || !TFA.comps.length) return null;
+    if (TFA.set && "TFTSet" + TFA.set !== SET_ID) return null;
+    var bd = v.gboard || v.board || [], du = {}, dItems = {};
+    bd.forEach(function (b) { if (b && b.u && !b.plant) { du[b.u] = 1; dItems[b.u] = (b.i || []).length; } });
+    var mc = mainOf(v), dm = mc ? mc.u : "", areq = augReq(v.st), best = null;
+    TFA.comps.forEach(function (c) {
+      var ov = 0;
+      (c.board || []).forEach(function (b) { if (b && b.u && !b.plant && du[b.u]) ov++; });
+      var cm = c.main || "";
+      var sameM = !!(cm && (cm === dm || (dItems[cm] || 0) >= 2));
+      if (!(ov >= 5 || (sameM && ov >= 4))) return;
+      var isX = c.tier === "X";
+      var augHit = !!(areq && (c.mainAug === areq || (c.augs || []).indexOf(areq) >= 0 || (c.title || "").indexOf(areq) >= 0));
+      var sc = ov * 2 + (sameM ? 3 : 0) + (augHit ? 4 : 0) + (!!areq === isX ? 1.2 : 0) + (!c.var ? 0.2 : 0);
+      if (!best || sc > best.sc) best = { c: c, ov: ov, sc: sc };
+    });
+    return best;
+  }
+  function tfaOpenComp(slug) {
+    var oldSlug = tfaCurSlug, det = document.getElementById("tfa-detail");
+    var was = det && !det.hidden ? oldSlug : null;
+    tfaView = "comps"; tfaF = "all"; tfaSave();
+    tfaCurSlug = slug;
+    if (current === "tfa") {
+      if (TFA && IDX) { tfaRender(); tfaShow(slug); }
+      return;
+    }
+    var prev = current, y = window.scrollY;
+    navPush("tab", function () {
+      if (was) tfaShow(was, true); else tfaBack();
+      applyTab(prev, false, y);
+    });
+    showTab("tfa", false);
+    if (TFA && IDX) { tfaRender(); tfaShow(slug, true); }
+    if (!isWide()) window.scrollTo(0, 0);
+    else {
+      var selRow = document.querySelector("#tfa-out .mt-row.sel");
+      if (selRow && selRow.scrollIntoView) selRow.scrollIntoView({ block: "nearest" });
+    }
+  }
   function tfaRender() {
     var box = document.getElementById("tfa-out"), tools = document.getElementById("tfa-tools"), secEl = document.getElementById("tfa");
     if (!box) return;
@@ -5129,6 +5232,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       tfaChips(tools, TFA_FILTER, tfaF, function (v) { tfaF = v; tfaSave(); tfaRender(); });
       var list = TFA.comps.filter(function (c) { return !c.var && tfaTabs(c).some(tfaMatch); }), last = null;
       if (list.length && !TFA.comps.some(function (c) { return !c.var && c.tier === "S"; })) box.appendChild(el("p", "emb-sub tfa-sub", "지금 S 티어 덱은 없어요"));
+      var curBasis = (document.getElementById("mt-basis") || {}).value || "emer";
       list.forEach(function (c) {
         if (c.tier !== last) {
           last = c.tier;
@@ -5155,6 +5259,14 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         mid.appendChild(nm);
         mid.appendChild(tfaUnitIcons(tfaOrder(c).filter(function (b) { return b.u !== c.main; })));
         r.appendChild(mid);
+        var mh = metaForTfa(c);
+        var ms = mh && (basisSt(mh.d, curBasis) || basisSt(mh.d, "all"));
+        if (ms) {
+          var num = el("div", "mt-num dk-kpi2 tfa-mstat");
+          num.appendChild(dkGrad(el("b", "dk-avg", ms[0].toFixed(2)), dkAvgT(ms[0])));
+          num.appendChild(dkGrad(el("span", "dk-top4", "승률 " + ms[2].toFixed(1) + "%"), dkWinT(ms[2])));
+          r.appendChild(num);
+        }
         r.addEventListener("click", function () { tfaShow(c.slug); });
         box.appendChild(r);
       });
@@ -5211,7 +5323,10 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var box = document.getElementById("tfa-detail"), wide = isWide();
     if (!wide && !noScroll && box.hidden) { var ly = window.scrollY; navPush("tfa", function () { tfaBack(); window.scrollTo(0, ly); }); }
     box.innerHTML = "";
-    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("tfa", tfaBack); }); box.appendChild(back);
+    var toprow = el("div", "dk-toprow");
+    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("tfa", tfaBack); }); toprow.appendChild(back);
+    var xsw = el("button", "dk-xsw", "메타 덱 ⇄"); xsw.type = "button"; xsw.addEventListener("click", function () { goTab("meta"); }); toprow.appendChild(xsw);
+    box.appendChild(toprow);
     var tabs = tfaTabs(c);
     if (tabs.length > 1) {  // 비슷한 덱 탭: 눌러도 기록을 새로 쌓지 않고 이 화면만 바꾼다
       var tb = el("div", "tfa-tabs"); tb.setAttribute("role", "tablist");
@@ -5233,6 +5348,20 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     t.appendChild(th);
     t.appendChild(el("p", null, [c.style, c.diff, c.main ? c.main + " 캐리" : ""].filter(Boolean).join(" · ")));
     head.appendChild(t); box.appendChild(head);
+    var mHit = metaForTfa(c);
+    if (mHit) {
+      var curB = (document.getElementById("mt-basis") || {}).value || "emer";
+      var mbt = basisTier(mHit.d, curB), mbs = basisSt(mHit.d, curB) || basisSt(mHit.d, "all");
+      var xl = el("button", "dk-xlink"); xl.type = "button";
+      xl.appendChild(el("span", "dk-tbadge t-" + mbt, mbt === "X" ? "-" : mbt));
+      var xm = el("div", "dk-xm");
+      xm.appendChild(el("b", null, "메타 덱 통계 · " + deckName(mHit.d)));
+      if (mbs) xm.appendChild(el("small", null, "평균 " + mbs[0].toFixed(2) + " · 순방 " + mbs[1] + "% · 승률 " + mbs[2].toFixed(1) + "%"));
+      xl.appendChild(xm);
+      xl.appendChild(el("span", "dk-xgo", "통계 보기 ›"));
+      xl.addEventListener("click", function () { openDeck(mHit.d.id); });
+      box.appendChild(xl);
+    }
     if (DB && GUIDES) box.appendChild(synRow(synOf(c.board), true));
     var names = c.board.map(function (b) { return b.u; }), code = codeOfNames(names), acts = el("div", "tb-actions");
     if (code) acts.appendChild(codeButton(code, "팀 코드 복사", "codebtn big", codeMiss(names)));
@@ -5733,7 +5862,10 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     var dv = v.gboard ? Object.assign({}, v, { board: detailBoard, syn: detailSyn }) : v;
     box.classList.toggle("is-sub", !!v.sub);
     box.innerHTML = "";
-    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("deck", metaBack); }); box.appendChild(back);
+    var toprow = el("div", "dk-toprow");
+    var back = el("button", "back", "‹ 목록"); back.type = "button"; back.addEventListener("click", function () { navBack("deck", metaBack); }); toprow.appendChild(back);
+    var xsw = el("button", "dk-xsw", "아카데미 ⇄"); xsw.type = "button"; xsw.addEventListener("click", function () { goTab("tfa"); }); toprow.appendChild(xsw);
+    box.appendChild(toprow);
     if (v.subs && v.subs.length > 1) {  // 합쳐진 비슷한 덱 묶음: 칩마다 평균 등수를 보여주고 눌러서 따로 본다 (tfa-tab과 같은 방식)
       var vw = el("div", "mt-vars");
       vw.appendChild(el("div", "mt-vars-h", "비슷한 덱 " + v.subs.length + "개"));
@@ -5779,6 +5911,19 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
         sp.appendChild(bv); sp.appendChild(el("span", null, x[0])); st.appendChild(sp);
       });
       box.appendChild(st);
+    }
+    var tHit = typeof tfaForMeta === "function" ? tfaForMeta(v) : null;
+    if (tHit) {
+      var tc = tHit.c, ttl = tc.tier === "X" ? tc.sub || "X" : tc.tier;
+      var txl = el("button", "dk-xlink"); txl.type = "button";
+      txl.appendChild(el("span", "dk-tbadge t-" + ttl + (tc.tier === "X" ? " x" : ""), ttl));
+      var txm = el("div", "dk-xm");
+      txm.appendChild(el("b", null, "아카데미 공략 · " + tc.title));
+      txm.appendChild(el("small", null, [tc.style, tc.diff, "배치 · 증강 · 운영 팁"].filter(Boolean).join(" · ")));
+      txl.appendChild(txm);
+      txl.appendChild(el("span", "dk-xgo", "공략 보기 ›"));
+      txl.addEventListener("click", function () { tfaOpenComp(tc.slug); });
+      box.appendChild(txl);
     }
     box.appendChild(synRow(detailSyn, true));
     var names = detailBoard.filter(function (b) { return !b.plant; }).map(function (b) { return b.u; });
@@ -6185,7 +6330,7 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
       metaPending = null;
     }
   }
-  function buildMeta(data) { META = data; META_GRP = null; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
+  function buildMeta(data) { META = data; META_GRP = null; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); if (TFA && current === "tfa") setTimeout(tfaRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
 
   /* ---- 덱 통계 새로고침: 앱·PC 웹은 MetaTFT comps_stats를 바로 받아 숫자만 바꾼다 (보드·템은 그대로). ---- */
   var META_LIVE = "tft-guide-meta-live";
@@ -7639,13 +7784,31 @@ body.overlay .bnav a.on::before { top: 5px; height: 24px; width: min(44px, 74%);
     embRender();
   }
   function openDeck(id) {
-    if (current === "meta") { metaShow(id); return; }
+    var v = deckView(id), vid = v ? v.id : id;
+    function openPc() {
+      metaEnsureWide();
+      var rw = document.querySelector('#mt-rows .pcdk[data-id="' + vid + '"]');
+      if (!rw && (mtFilter !== "all" || (document.getElementById("mt-q") || {}).value)) {
+        mtFilter = "all";
+        var mq = document.getElementById("mt-q"); if (mq) mq.value = "";
+        document.querySelectorAll("#mt-filter button[data-f]").forEach(function (b) { b.classList.toggle("on", b.dataset.f === "all"); });
+        metaList();
+        rw = document.querySelector('#mt-rows .pcdk[data-id="' + vid + '"]');
+      }
+      if (rw) {
+        if (!rw.classList.contains("open")) rw._toggle(false);
+        else { var y0 = rw.getBoundingClientRect().top; if (y0 < 60 || y0 > innerHeight - 120) window.scrollBy(0, y0 - 80); }
+      } else metaShow(id, true);
+    }
+    if (current === "meta") { if (isWide()) openPc(); else metaShow(id); return; }
     var prev = current, y = window.scrollY, was = !document.getElementById("mt-detail").hidden ? mtCurId : null;
     navPush("tab", function () {
       if (was) metaShow(was, true); else metaBack();
       applyTab(prev, false, y);
     });
-    showTab("meta", false); metaShow(id, true); window.scrollTo(0, 0);
+    showTab("meta", false);
+    if (isWide()) openPc();
+    else { metaShow(id, true); window.scrollTo(0, 0); }
   }
   function embRender() {
     var out = document.getElementById("emb-out"); out.innerHTML = "";
@@ -13382,8 +13545,27 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     var rLink = document.querySelector('.bnav a[data-nav="rank"]');
     if (rLink) rLink.setAttribute("href", "#" + rankLast);
     var navId = id === "home" ? "home" : id === "s19" ? "dex" : isDeck ? "decks" : isRank ? "rank" : "more";
+    var isMT = id === "meta" || id === "tfa";
     var lab = links.filter(function (a) { return a.getAttribute("href") === "#" + id; })[0];
-    document.getElementById("ab-title").textContent = (id === "home" || id === "meta") ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
+    document.getElementById("ab-title").textContent = (id === "home" || isMT) ? "롤체 노트" : lab ? lab.textContent : "롤체 노트";
+    document.body.classList.toggle("on-mt", isMT);
+    var dsw = document.getElementById("ab-deck-sw");
+    if (dsw) {
+      dsw.hidden = !isMT;
+      dsw.querySelectorAll("button").forEach(function (b) {
+        var on = b.dataset.to === id;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+    }
+    var fab = document.getElementById("deck-tfa-fab");
+    if (fab) {
+      fab.hidden = !isMT;
+      if (isMT) {
+        fab.dataset.to = id === "meta" ? "tfa" : "meta";
+        fab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0-3 3m3-3 3 3M17 8v12m0 0 3-3m-3 3-3-3"/></svg><span>' + (id === "meta" ? "아카데미" : "메타 덱") + '</span>';
+      }
+    }
     document.querySelectorAll(".bnav a").forEach(function (a) { a.classList.toggle("on", a.dataset.nav === navId); });
     document.querySelectorAll(".pc-side-extra a").forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + id); });
     try { localStorage.setItem(TAB_KEY, id); } catch (e) {}
@@ -13400,6 +13582,11 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     }
     applyTab(id, scroll, restoreY);
   }
+  document.querySelectorAll("#ab-deck-sw button").forEach(function (b) {
+    b.addEventListener("click", function () { goTab(b.dataset.to); });
+  });
+  var _mtFab = document.getElementById("deck-tfa-fab");
+  if (_mtFab) _mtFab.addEventListener("click", function () { if (_mtFab.dataset.to) goTab(_mtFab.dataset.to); });
   // 아래 탭·더보기·서브 전환·글 속 링크 모두 같은 탭 전환으로
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest('a[href^="#"]');
@@ -13469,7 +13656,7 @@ function (l) { u2.appendChild(el("li", null, l)); }); s2.appendChild(u2);
     });
     fetch("guides.json").then(function (r) { return r.json(); }).then(function (g) { buildGuides(g); homeRender(); }).catch(function () {});
     fetch("version.json").then(function (r) { return r.json(); }).then(buildVersion).catch(function () {});
-    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); if (typeof agCmpRender === "function") agCmpRender(); }).catch(function () {
+    fetch("tfa.json").then(function (r) { return r.json(); }).then(function (d) { TFA = d; if (current === "tfa") tfaRender(); if (current === "meta" && mtCurId && !document.getElementById("mt-detail").hidden) metaShow(mtCurId, true); if (typeof agCmpRender === "function") agCmpRender(); }).catch(function () {
       var b = document.getElementById("tfa-out"); if (b) b.innerHTML = '<p class="empty">' + reloadErr() + '</p>';
     });
     document.querySelectorAll("#tfa-view button").forEach(function (b) { b.addEventListener("click", function () { tfaView = b.dataset.v; tfaSave(); tfaRender(); }); });

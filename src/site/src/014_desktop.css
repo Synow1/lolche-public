@@ -560,5 +560,11 @@
   body:not(.overlay) .ev-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   body:not(.overlay) .esp-news-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   body:not(.overlay) .ev-card { margin-bottom: 0; }
-  body:not(.overlay) .s19-ewarn, body:not(.overlay) .ag-best-b, body:not(.overlay) .ag-cmp-t small, body:not(.overlay) .ag-cmp-dks > small, body:not(.overlay) .ag-cmp-dk, body:not(.overlay) .lb-cmpbtn, body:not(.overlay) .lb-cmpsub, body:not(.overlay) .lb-cmpr, body:not(.overlay) .rk-rn, body:not(.overlay) .rk-rt4, body:not(.overlay) .rk-gf-cnt, body:not(.overlay) .ev-tags span, body:not(.overlay) .ev-kr, body:not(.overlay) .ev-kpis span, body:not(.overlay) .esp-news-box > summary small, body:not(.overlay) .esp-news-d, body:not(.overlay) .esp-news-k, body:not(.overlay) .esp-news-desc, body:not(.overlay) .hm-esp-b, body:not(.overlay) .hm-esp-m small, body:not(.overlay) #esports .esp-win small, body:not(.overlay) #esports .now-row small, body:not(.overlay) #esports .ev-meta { font-size: 12px; }
+  body:not(.overlay).on-mt .patch:not([hidden]) { display: inline-flex; }
+  body:not(.overlay).on-mt .ab-in { gap: 10px; }
+  body:not(.overlay) .deck-tfa-fab { display: none !important; }
+  body:not(.overlay) #meta .mt-detail .dk-toprow,
+  body:not(.overlay) #tfa .mt-detail .dk-toprow { display: none; }
+  body:not(.overlay) .dk-xlink:hover { border-color: var(--accent2); }
+  body:not(.overlay) .s19-ewarn, body:not(.overlay) .ag-best-b, body:not(.overlay) .ag-cmp-t small, body:not(.overlay) .ag-cmp-dks > small, body:not(.overlay) .ag-cmp-dk, body:not(.overlay) .lb-cmpbtn, body:not(.overlay) .lb-cmpsub, body:not(.overlay) .lb-cmpr, body:not(.overlay) .rk-rn, body:not(.overlay) .rk-rt4, body:not(.overlay) .rk-gf-cnt, body:not(.overlay) .ev-tags span, body:not(.overlay) .ev-kr, body:not(.overlay) .ev-kpis span, body:not(.overlay) .esp-news-box > summary small, body:not(.overlay) .esp-news-d, body:not(.overlay) .esp-news-k, body:not(.overlay) .esp-news-desc, body:not(.overlay) .hm-esp-b, body:not(.overlay) .hm-esp-m small, body:not(.overlay) #esports .esp-win small, body:not(.overlay) #esports .now-row small, body:not(.overlay) #esports .ev-meta, body:not(.overlay) .ab-dsw button, body:not(.overlay) .dk-xm small, body:not(.overlay) .dk-xgo { font-size: 12px; }
 }
