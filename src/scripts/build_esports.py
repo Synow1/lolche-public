@@ -28,22 +28,28 @@ ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "esports"  # Liquipedia 페이지 (국적용, 커밋해 둔다)
 OUT = ROOT / "site" / "esports.json"
 API = "https://api.metatft.com/public/"
-def _apac_set():
-    """APAC 공식 사이트 세트: 지금 세트(setinfo) 사이트가 열려 있으면 그것, 아니면 하나 전 세트 (새 세트 첫 대회 전까지).
-    set17.apactft.com처럼 지난 사이트는 최신으로 넘어가니(리다이렉트) 받은 주소가 그대로인지 본다."""
+def _apac_info():
+    """APAC 공식 사이트 호스트와 실제 담고 있는 세트 번호를 판별한다.
+    apactft.com은 새 세트 직전에 set18 -> set19로 도메인만 먼저 넘기고 내용(8~11월 대회)은 Set 18 그대로 둘 때가 있다."""
     import setinfo
-    for n in (setinfo.NUM, setinfo.NUM - 1):
+    host = f"https://set{setinfo.LIVE_NUM}.apactft.com/"
+    for n in (setinfo.NUM, setinfo.LIVE_NUM, setinfo.LIVE_NUM - 1):
         try:
-            r = urllib.request.urlopen(urllib.request.Request(f"https://set{n}.apactft.com/", headers={"User-Agent": "Mozilla/5.0"}), timeout=20)
-            if f"set{n}.apactft.com" in r.geturl():
-                return n
+            r = urllib.request.urlopen(urllib.request.Request(f"https://set{n}.apactft.com/tpc1?_rsc=1", headers={"User-Agent": "Mozilla/5.0", "RSC": "1"}), timeout=20)
+            t = r.read().decode("utf-8", "replace")
+            host = re.sub(r"/tpc1.*$", "/", r.geturl())
+            m = re.search(r"(\d{1,2})/(\d{1,2})/(\d{4})\s*-\s*(\d{1,2})/(\d{1,2})/(\d{4})", t)
+            if m:
+                d1, m1, y1 = int(m.group(1)), int(m.group(2)), int(m.group(3))
+                start = f"{y1:04d}-{m1:02d}-{d1:02d}"
+                real_set = 18 if start < "2026-12-01" else setinfo.NUM
+                return real_set, host
         except Exception:
             continue
-    return setinfo.NUM - 1
+    return setinfo.LIVE_NUM, host
 
 
-APAC_SET = _apac_set()
-APAC = f"https://set{APAC_SET}.apactft.com/"
+APAC_SET, APAC = _apac_info()
 APAC_EVENTS = [  # (주소, 대회 종류, 이벤트 이름)
     ("tpc1", "tpc", "TPC 1"), ("tpc2", "tpc", "TPC 2"), ("tpc3", "tpc", "TPC 3"),
     ("tactician-s-trials-1", "trials", "시험 1"), ("tactician-s-trials-2", "trials", "시험 2"),
@@ -323,7 +329,7 @@ def apply_official(table, order, key=None):
 WORLDS = [(3, "Galaxies"), (4, "Fates"), (5, "Reckoning"), (6, "Gizmos & Gadgets"), (7, "Dragonlands"),
           (8, "Monsters Attack!"), (9, "Runeterra Reforged"), (10, "Remix Rumble"), (11, "Inkborn Fables"),
           (12, "Magic n' Mayhem"), (13, "Into the Arcane"), (14, "Cyber City"), (15, "K.O. Coliseum"),
-          (16, "Lore & Legends"), (17, "Space Gods"), (18, "Enchanted Wilds")]
+          (16, "Lore & Legends"), (17, "Space Gods"), (18, "Enchanted Wilds"), (19, "Prismatic Tour")]
 
 
 def sheet_stages(setn):
@@ -738,7 +744,10 @@ def lq_pages():
             d = json.loads(f.read_text())["parse"]
         except Exception:
             continue
-        title, w = d.get("title", ""), d["wikitext"]["*"]
+        title = d.get("title", "")
+        w = (d.get("wikitext") or {}).get("*", "")
+        if not w:
+            continue
         setn = next((n for name, n in sets.items() if title.startswith(name + "/")), None)
         region = next((r for r in ("AMER", "EMEA", "APAC", "CN") if f"/{r}/" in title), None)
         sd = re.search(r"\|sdate=\s*(\d{4}-\d{2}-\d{2})", w)
@@ -899,6 +908,319 @@ def lq_events_fill(tours):
         print("Liquipedia 게임 기록으로 채움", t["name"], list(tabs))
 
 
+# ---------- 전체 대회 자동 추적 (Liquipedia Portal·쇼매치 + 커스텀 카탈로그 + 라이엇 한국 이스포츠 소식) ----------
+CATALOG_FILE = RAW / "events_catalog.json"
+RIOT_NEWS_URL = "https://teamfighttactics.leagueoflegends.com/ko-kr/news/esports/"
+RIOT_NEWS_CACHE = RAW / "riot_news.json"
+_MONTHS = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+           "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
+_LQ_LAST_HIT = 0.0
+
+
+def lq_page_fresh_html(pg, max_h=20):
+    """Liquipedia HTML 파싱 결과를 20시간 캐시로 받는다. 실제 네트워크 호출 사이에는 31초 간격을 지킨다."""
+    global _LQ_LAST_HIT
+    slug = re.sub(r"[^A-Za-z0-9_]+", "_", pg.replace("/", "_").replace(":", "_")).strip("_")
+    f = RAW / f"portal_{slug}.json"
+    old = None
+    if f.exists():
+        try:
+            old = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            old = None
+    at = (old or {}).get("fetched")
+    if old and at:
+        try:
+            if (datetime.now(timezone.utc) - datetime.fromisoformat(at)).total_seconds() < max_h * 3600:
+                return old
+        except Exception:
+            pass
+    wait = 31.0 - (time.time() - _LQ_LAST_HIT)
+    if _LQ_LAST_HIT > 0 and wait > 0:
+        time.sleep(wait)
+    try:
+        u = "https://liquipedia.net/tft/api.php?" + urllib.parse.urlencode({"action": "parse", "page": pg, "format": "json", "prop": "text"})
+        _LQ_LAST_HIT = time.time()
+        d = json.loads(get(u, {"User-Agent": "lolche-note/1.0 (personal study app)"}))
+        if "parse" in d:
+            d["fetched"] = datetime.now(timezone.utc).isoformat(timespec="minutes")
+            f.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+            print("Liquipedia 목록 받음", pg)
+            return d
+    except Exception as e:
+        print("Liquipedia 목록 캐시 사용", pg, e)
+    return old
+
+
+def lq_parse_date(txt):
+    """Liquipedia 날짜 표기('Dec 11–13, 2026', 'Oct 23 – Nov 01, 2026', 'Nov 23, 2026') -> (start_iso, end_iso)."""
+    s = re.sub(r"\s+", " ", (txt or "").replace("\u2013", "-").replace("\u2014", "-").replace("–", "-")).strip()
+    if not s:
+        return "", ""
+    # Dec 11-13, 2026
+    m = re.match(r"([A-Za-z]{3})\s+(\d{1,2})\s*-\s*(\d{1,2}),\s*(\d{4})", s)
+    if m and m.group(1).lower() in _MONTHS:
+        mo, d1, d2, y = _MONTHS[m.group(1).lower()], int(m.group(2)), int(m.group(3)), int(m.group(4))
+        return f"{y:04d}-{mo:02d}-{d1:02d}", f"{y:04d}-{mo:02d}-{d2:02d}"
+    # Oct 23 - Nov 01, 2026
+    m = re.match(r"([A-Za-z]{3})\s+(\d{1,2})\s*-\s*([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})", s)
+    if m and m.group(1).lower() in _MONTHS and m.group(3).lower() in _MONTHS:
+        m1, d1, m2, d2, y = _MONTHS[m.group(1).lower()], int(m.group(2)), _MONTHS[m.group(3).lower()], int(m.group(4)), int(m.group(5))
+        y1 = y - 1 if m1 > m2 else y
+        return f"{y1:04d}-{m1:02d}-{d1:02d}", f"{y:04d}-{m2:02d}-{d2:02d}"
+    # Dec 28, 2025 - Jan 03, 2026
+    m = re.match(r"([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})\s*-\s*([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})", s)
+    if m and m.group(1).lower() in _MONTHS and m.group(4).lower() in _MONTHS:
+        m1, d1, y1, m2, d2, y2 = _MONTHS[m.group(1).lower()], int(m.group(2)), int(m.group(3)), _MONTHS[m.group(4).lower()], int(m.group(5)), int(m.group(6))
+        return f"{y1:04d}-{m1:02d}-{d1:02d}", f"{y2:04d}-{m2:02d}-{d2:02d}"
+    # Nov 23, 2026
+    m = re.match(r"([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})", s)
+    if m and m.group(1).lower() in _MONTHS:
+        mo, d1, y = _MONTHS[m.group(1).lower()], int(m.group(2)), int(m.group(3))
+        iso = f"{y:04d}-{mo:02d}-{d1:02d}"
+        return iso, iso
+    # Dec 2026
+    m = re.match(r"([A-Za-z]{3})\s+(\d{4})", s)
+    if m and m.group(1).lower() in _MONTHS:
+        mo, y = _MONTHS[m.group(1).lower()], int(m.group(2))
+        return f"{y:04d}-{mo:02d}-01", f"{y:04d}-{mo:02d}-28"
+    return "", ""
+
+
+def _lq_clean_val(s):
+    s = re.sub(r"\s+", " ", (s or "")).strip()
+    if not s or s in ("-", "—", "TBA") or re.search(r"\bTBD\b", s, re.I):
+        return ""
+    return s
+
+
+def lq_parse_listing(html_txt, default_tier="", min_end=""):
+    """Liquipedia table2 토너먼트 목록(Portal:Tournaments, Showmatch_Tournaments) 파싱."""
+    import html as H
+    clean = lambda x: re.sub(r"\s+", " ", H.unescape(re.sub(r"<[^>]+>", " ", x))).strip()
+    out = []
+    for tr in re.findall(r'<tr class="table2[^"<>]*row--body[^"]*">(.*?)</tr>', html_txt or "", re.S):
+        tds = re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S)
+        if len(tds) < 9:
+            continue
+        tier_raw = clean(tds[0]) or default_tier
+        tier = "Showmatch" if default_tier == "Showmatch" or re.search(r"showmatch", tier_raw, re.I) else re.sub(r"-Tier$", "", tier_raw).strip() or "Event"
+        m_a = re.search(r'<a[^>]+href="/tft/([^"]+)"[^>]*>(.*?)</a>', tds[2], re.S)
+        lq_page = urllib.parse.unquote(m_a.group(1)) if m_a else ""
+        name = clean(m_a.group(2)) if m_a else clean(tds[2])
+        if not name:
+            continue
+        start, end = lq_parse_date(clean(tds[3]))
+        if not start:
+            continue
+        if min_end and (end or start) < min_end:
+            continue
+        prize = _lq_clean_val(clean(tds[4]))
+        loc = clean(tds[5])
+        pnum = _lq_clean_val(clean(tds[6]))
+        winner = _lq_clean_val(clean(tds[7]))
+        runner = _lq_clean_val(clean(tds[8]))
+        out.append({"name": name, "lq_page": lq_page, "tier": tier, "start": start, "end": end or start,
+                    "prize": prize, "loc": loc, "players": pnum, "winner": winner, "runner": runner})
+    return out
+
+
+def _infer_meta(ev):
+    """자동 수집된 Liquipedia 대회의 지역·분류·세트 추정."""
+    nm = (ev.get("name") or "") + " " + (ev.get("lq_page") or "")
+    loc = (ev.get("loc") or "").lower()
+    low = nm.lower()
+    # 세트 추정
+    setn = None
+    m = re.search(r"\bset\s*(\d{1,2})\b|\bs(\d{2})\b", low)
+    if m:
+        setn = int(m.group(1) or m.group(2))
+    else:
+        for n, wname in WORLDS:
+            if wname.lower() in low:
+                setn = n
+                break
+    # 지역 추정
+    if re.search(r"\bkorea\b|\bseoul\b|\bsoop\b|\blvup\b", low) or "korea" in loc or "seoul" in loc:
+        reg = "KR"
+    elif re.search(r"\bcn\b|\btoc\b|\bjoc\b|\bjcc\b|\bchina\b|hangzhou|guangzhou|shanghai", low) or "china" in loc:
+        reg = "CN"
+    elif re.search(r"\bapac\b|japan|vietnam|taiwan|oceania|thailand|singapore", low) or any(x in loc for x in ("japan", "vietnam", "asia-pacific", "taiwan", "thailand", "macau")):
+        reg = "APAC"
+    elif re.search(r"\bemea\b|europe|france|paris|germany|poland|spain|turkey", low) or any(x in loc for x in ("europe", "france", "paris", "germany", "spain", "poland")):
+        reg = "EMEA"
+    elif re.search(r"\bamer\b|north america|brazil|latin america|las vegas", low) or any(x in loc for x in ("americas", "north america", "united states", "brazil", "canada")):
+        reg = "WORLD" if "open" in low or "invitational" in low else "AMER"
+    else:
+        reg = "WORLD"
+    # 분류 추정
+    if "tft open" in low or "vegas open" in low or "paris open" in low or "macao open" in low:
+        cat = "open" if "showmatch" not in low and ev.get("tier") != "Showmatch" else "event"
+        if cat == "open":
+            reg = "WORLD"
+    elif "esports world cup" in low or re.search(r"\bewc\b", low):
+        cat, reg = "ewc", "WORLD"
+    elif "superbrawl" in low or "4v4" in low or "squad" in low:
+        cat = "team"
+    elif reg == "KR":
+        cat = "kr"
+    elif ev.get("tier") == "Showmatch" or any(k in low for k in ("showmatch", "invitational", "pbe", "gauntlet", "bash", "carousel", "mastermind")):
+        cat = "event"
+    elif any(k in low for k in ("regional finals", "tpc", "pro circuit", "trials", "toc ", "joc ", "national championship")):
+        cat = "circuit"
+    else:
+        cat = "event"
+    return reg, cat, setn
+
+
+def lq_discover_events():
+    """Liquipedia Portal:Tournaments(예정·진행 중·최근) + Showmatch_Tournaments(최근 1년) 자동 수집."""
+    out = []
+    seen = set()
+    for pg, d_tier, min_end in (("Portal:Tournaments", "", ""), ("Showmatch_Tournaments", "Showmatch", "2025-12-01")):
+        d = lq_page_fresh_html(pg, max_h=20)
+        if not d:
+            continue
+        html_txt = ((d.get("parse") or {}).get("text") or {}).get("*", "")
+        for ev in lq_parse_listing(html_txt, default_tier=d_tier, min_end=min_end):
+            key = (ev["lq_page"] or norm(ev["name"])).lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(ev)
+    return out
+
+
+def build_all_events(tours, wd_list):
+    """커스텀 카탈로그(events_catalog.json) + Liquipedia 자동 수집 병합.
+    - 카탈로그 항목은 Liquipedia에서 우승자·준우승·상금·인원이 새로 확정되면 자동 갱신.
+    - 카탈로그·기존 공식 대회(tournaments/worlds)에 없는 신규 대회를 자동 추가."""
+    catalog = json.loads(CATALOG_FILE.read_text(encoding="utf-8")) if CATALOG_FILE.exists() else []
+    merged = [dict(x) for x in catalog]
+    by_slug = {(x.get("lq_page") or "").lower(): x for x in merged if x.get("lq_page")}
+    by_name = {norm(x.get("en") or x.get("name")): x for x in merged}
+
+    # 기존 tournaments / worlds와 중복 체크용 (이미 시트 표가 있는 공식 TPC·지역 결승·월즈)
+    covered_worlds = {w["set"] for w in wd_list if w.get("top")} | {s["set"] for s in SCHEDULE if s.get("set")}
+    tour_spans = [(t.get("set"), t.get("region"), t.get("kind"), t.get("start") or "", t.get("end") or "") for t in tours]
+
+    discovered = lq_discover_events()
+    added = 0
+    for ev in discovered:
+        slug_k = (ev.get("lq_page") or "").lower()
+        nm_k = norm(ev["name"])
+        hit = by_slug.get(slug_k) or by_name.get(nm_k)
+        if hit:
+            # 확정된 결과·정보 자동 반영 (TBD 제외)
+            if ev["winner"] and not hit.get("winner"):
+                hit["winner"] = ev["winner"]
+            if ev["runner"] and not hit.get("runner"):
+                hit["runner"] = ev["runner"]
+            if ev["prize"] and not hit.get("prize"):
+                hit["prize"] = ev["prize"]
+            if ev["players"] and not hit.get("players"):
+                hit["players"] = ev["players"]
+            if ev["start"] and not hit.get("start"):
+                hit["start"], hit["end"] = ev["start"], ev["end"]
+            continue
+
+        low = ev["name"].lower()
+        reg, cat, setn = _infer_meta(ev)
+        # 이미 역대 월즈/진행 중 월즈 카드로 노출 중인 Tactician's Crown(단 쇼매치는 제외)은 중복 생략
+        if "tactician's crown" in low and "showmatch" not in low and (setn in covered_worlds or not setn):
+            continue
+        # 이미 MetaTFT/APAC 시트 표로 노출 중인 지역 결승·TPC·시험(AMER/EMEA/APAC)은 중복 생략
+        if reg in ("AMER", "EMEA", "APAC") and any(
+            ts == setn and tr == reg and ts_s and ts_e and ev["start"] <= ts_e and ev["end"] >= ts_s
+            and (("regional finals" in low and tk == "finals") or ("pro circuit" in low and tk == "tpc") or ("trials" in low and tk == "trials"))
+            for ts, tr, tk, ts_s, ts_e in tour_spans
+        ):
+            continue
+
+        ev_id = "lq-" + re.sub(r"[^a-z0-9]+", "-", (ev["lq_page"] or ev["name"]).lower()).strip("-")[:48]
+        lq_url = "https://liquipedia.net/tft/" + urllib.parse.quote(ev["lq_page"]) if ev["lq_page"] else ""
+        item = {
+            "id": ev_id,
+            "name": ev["name"],
+            "en": ev["name"],
+            "cat": cat,
+            "tier": ev["tier"],
+            "region": reg,
+            "set": setn,
+            "start": ev["start"],
+            "end": ev["end"],
+            "loc": ev["loc"],
+            "prize": ev["prize"],
+            "players": ev["players"],
+            "winner": ev["winner"],
+            "runner": ev["runner"],
+            "kr_note": "",
+            "summary": "Liquipedia에서 자동 수집된 대회예요.",
+            "schedule_kst": [],
+            "format": [],
+            "links": ([["Liquipedia", lq_url]] if lq_url else []),
+            "lq_page": ev["lq_page"],
+            "auto": True,
+        }
+        merged.append(item)
+        by_slug[slug_k] = item
+        by_name[nm_k] = item
+        added += 1
+
+    today_kst = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+    def sort_key(x):
+        s, e = x.get("start") or "0000-00-00", x.get("end") or x.get("start") or "0000-00-00"
+        if s <= today_kst <= e:
+            return (0, s, e)  # 진행 중 먼저
+        if today_kst < s:
+            return (1, s, e)  # 예정 가까운 순
+        return (2, "".join(chr(255 - ord(c)) for c in e), "")  # 종료 최신 순
+    merged.sort(key=sort_key)
+    print(f"전체 이스포츠 이벤트: 총 {len(merged)}개 (카탈로그 {len(catalog)} + 자동 수집 {added})")
+    return merged
+
+
+def riot_kr_esports_news(limit=12):
+    """라이엇 한국 공식 TFT 이스포츠 소식 수집 (실패 시 캐시 유지)."""
+    old = []
+    if RIOT_NEWS_CACHE.exists():
+        try:
+            old = json.loads(RIOT_NEWS_CACHE.read_text(encoding="utf-8"))
+        except Exception:
+            old = []
+    try:
+        h = get(RIOT_NEWS_URL, {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36", "Accept-Language": "ko-KR,ko;q=0.9"})
+        m = re.search(r'id="__NEXT_DATA__"[^>]*>(.*?)</script>', h, re.S)
+        if not m:
+            return old[:limit]
+        nd = json.loads(m.group(1))
+        blades = (((nd.get("props") or {}).get("pageProps") or {}).get("page") or {}).get("blades") or []
+        out = []
+        for bl in blades:
+            for it in bl.get("items") or []:
+                title = (it.get("title") or "").strip()
+                act = (it.get("action") or {}).get("payload") or {}
+                url = (act.get("url") or "").strip()
+                if not title or not url:
+                    continue
+                if url.startswith("/"):
+                    url = "https://teamfighttactics.leagueoflegends.com" + url
+                desc = (((it.get("description") or {}).get("body") or "") if isinstance(it.get("description"), dict) else str(it.get("description") or "")).strip()
+                desc = re.sub(r"<[^>]+>", "", desc).strip()
+                dt = (it.get("publishedAt") or "")[:10]
+                kind = "video" if "youtube.com" in url or "youtu.be" in url else "article"
+                out.append({"date": dt, "title": title, "desc": desc[:140], "url": url, "kind": kind})
+        if out:
+            out.sort(key=lambda x: x["date"], reverse=True)
+            out = out[:limit]
+            RIOT_NEWS_CACHE.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+            print(f"라이엇 한국 이스포츠 소식: {len(out)}건 (최신 {out[0]['date']})")
+            return out
+    except Exception as e:
+        print("라이엇 이스포츠 소식 캐시 사용", e)
+    return old[:limit]
+
+
 def main():
     RAW.mkdir(parents=True, exist_ok=True)
     tours = apac()
@@ -914,12 +1236,12 @@ def main():
             points[f"{pt['season']}|{pt['region']}"].append({"n": p["name"], "rank": pt["ranking"], "pts": pt["points"]})
     # MetaTFT에 없는 선수는 순위가 비어 보인다 (APAC 23·26위 등). Liquipedia 순위 순서로 빈 순위를 채운다 (점수는 없음)
     # Liquipedia 순서는 단계별(직행·1주차·플레이인)이라 순위와 꼭 같지 않다. MetaTFT에 없는 이름만 골라 빈 순위에 순서대로 넣는다
-    norm = lambda x: re.sub(r"[^0-9a-z]", "", unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower())
+    norm_ascii = lambda x: re.sub(r"[^0-9a-z]", "", unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower())
     for k, order in lq_point_order().items():
         rows = points.get(k, [])
         have = {r["rank"] for r in rows}
-        known = [norm(r["n"]) for r in rows]
-        extra = [n for n in order if not any(m == norm(n) or m.endswith(norm(n)) for m in known)]
+        known = [norm_ascii(r["n"]) for r in rows]
+        extra = [n for n in order if not any(m == norm_ascii(n) or m.endswith(norm_ascii(n)) for m in known)]
         holes = [i for i in range(1, max(have | {0}) + 1) if i not in have]
         for i, name in zip(holes, extra):
             points[k].append({"n": name, "rank": i, "pts": None})
@@ -931,12 +1253,16 @@ def main():
         low = {k.lower(): v for k, v in fl.items()}
         for p in roster["players"]:
             p["f"] = next((low[n.lower()] for n in [p["n"]] + p.get("al", []) if low.get(n.lower())), "") or ("cn" if p["reg"] == "CN" else "")
+    wd_list = worlds({k.split(" ")[-1] if len(k.split(" ")) > 1 and k.split(" ")[0].isupper() else k: v for k, v in fl.items()} | fl)
+    events_all = build_all_events(tours, wd_list)
+    news = riot_kr_esports_news(12)
     data = {"updated": datetime.now(timezone.utc).isoformat(timespec="minutes"), "tournaments": tours, "schedule": SCHEDULE,
-            "worlds": worlds({k.split(" ")[-1] if len(k.split(" ")) > 1 and k.split(" ")[0].isupper() else k: v for k, v in fl.items()} | fl),
+            "worlds": wd_list, "events_all": events_all, "news": news,
             "propoints": points, "flags": fl, "crown": roster}
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"site/esports.json: 대회 {len(tours)}개, {OUT.stat().st_size // 1024}KB, 국적 {len(data['flags'])}명")
+    print(f"site/esports.json: 대회 {len(tours)}개, 전체 이벤트 {len(events_all)}개, 소식 {len(news)}건, {OUT.stat().st_size // 1024}KB, 국적 {len(data['flags'])}명")
 
 
 if __name__ == "__main__":
     main()
+

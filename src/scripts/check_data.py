@@ -69,7 +69,10 @@ def check_site():
         bad.append(f"guides.json 덱 {n(gd.get('decks'))}개")
 
     # 월즈 명단: Liquipedia 크라운 본 페이지에 이름이 다 있는데 '미정'으로 남기면 안 됨 (2026-11-13 중국 JOC 4명)
-    cr = (load("site/esports.json") or {}).get("crown") or {}
+    esp = load("site/esports.json") or {}
+    if n(esp.get("events_all")) < 10:
+        bad.append(f"esports.json 전체 이벤트 {n(esp.get('events_all'))}개 (최소 10)")
+    cr = esp.get("crown") or {}
     if cr.get("pending"):
         import glob, json as _j, re as _r
         for f in glob.glob(str(ROOT / "data/esports/lq_*Tacticians_Crown.json")):

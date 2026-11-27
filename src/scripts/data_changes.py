@@ -60,6 +60,8 @@ def digest():
         for w in e.get("worlds", []):
             if w.get("top"): ch[f"WORLDS|{w['set']}"] = w["top"][0][0]
         d["esports"] = ch
+        d["events_all"] = {x["id"]: {"n": x.get("name", ""), "w": x.get("winner", ""), "s": x.get("start", ""), "e": x.get("end", "")}
+                           for x in e.get("events_all", []) if x.get("id")}
     return d
 
 
@@ -102,8 +104,19 @@ def diff(old, new):
     add("meta", "덱", tier_moves(old.get("meta", {}), new.get("meta", {}), "", only_top=True))
     add("items", "아이템", tier_moves(old.get("items", {}), new.get("items", {}), "", only_top=True))
     oe, ne = old.get("esports", {}), new.get("esports", {})
-    add("esports", "이스포츠", [("월즈 S" + k.split("|")[1] if k.startswith("WORLDS|") else k.split("|")[0].replace(" WORLD 월즈", " 월즈") + " " + k.split("|")[1]).strip() + f" 우승 {v}"
-                               for k, v in ne.items() if oe.get(k) != v])
+    esp_lines = [("월즈 S" + k.split("|")[1] if k.startswith("WORLDS|") else k.split("|")[0].replace(" WORLD 월즈", " 월즈") + " " + k.split("|")[1]).strip() + f" 우승 {v}"
+                 for k, v in ne.items() if oe.get(k) != v]
+    if "events_all" in old:
+        oev, nev = old.get("events_all", {}), new.get("events_all", {})
+        today_kst = datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+        for k, v in nev.items():
+            ov = oev.get(k)
+            if not ov:
+                if (v.get("e") or v.get("s") or "") >= today_kst:
+                    esp_lines.append(f"새 대회 일정: {v['n']} ({v.get('s', '')[5:].replace('-', '/')})")
+            elif v.get("w") and ov.get("w") != v.get("w"):
+                esp_lines.append(f"{v['n']} 우승 {v['w']}")
+    add("esports", "이스포츠", esp_lines)
     for it in items:
         it["lines"] = [" ".join(x.split()) for x in it["lines"]]
     return items

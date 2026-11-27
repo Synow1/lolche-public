@@ -263,8 +263,8 @@ body.dc-open { overflow: hidden; }
 /* 이름 칸을 좁혀 게임 칸을 더 (2026-11-15 사용자: "판수가 더 잘 보여야지, 이름이 너무 많이 가림") */
 .sht .c-rk { font-size: var(--fs-xs); }
 .sht .esp-p .flag { margin-right: 2px; }
-.esp-head.go, .wd-head.go { position: relative; padding-right: 26px; }
-.esp-head.go::after, .wd-head.go::after { content: ""; position: absolute; right: 12px; top: 50%; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-top: 2px solid var(--muted); transform: translateY(-50%) rotate(45deg); }
+.esp-head.go, .wd-head.go, .ev-head.go { position: relative; padding-right: 26px; }
+.esp-head.go::after, .wd-head.go::after, .ev-head.go::after { content: ""; position: absolute; right: 12px; top: 50%; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-top: 2px solid var(--muted); transform: translateY(-50%) rotate(45deg); }
 .fs-view .dc-vt { font-size: 19px; }
 /* 목록 안 월즈 카드: 금색으로 강조 */
 #esp-list .wd-card, #esp-list .wd { background: linear-gradient(135deg, color-mix(in srgb, #d99a16 22%, var(--surface)), var(--surface) 70%); box-shadow: inset 0 0 0 1px color-mix(in srgb, #d99a16 45%, transparent); }

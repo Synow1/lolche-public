@@ -39,25 +39,110 @@ def live_patch():
     return metatft, lolchess
 
 
-def esports_window(today):
+def _all_events():
+    evs = []
+    seen = set()
+    for p in (ROOT / "site" / "esports.json", ROOT / "data" / "esports" / "events_catalog.json"):
+        try:
+            raw = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        arr = raw.get("events_all", []) if isinstance(raw, dict) else (raw if isinstance(raw, list) else [])
+        for x in arr:
+            k = x.get("id") or x.get("name")
+            if k and k not in seen:
+                seen.add(k)
+                evs.append(x)
+    return evs
+
+
+def esports_window(today, last_done=""):
+    # 최소 2일마다 Liquipedia Portal·쇼매치·라이엇 공식 소식 자동 탐색 (신규 이벤트·오픈·쇼매치 누락 방지)
+    if not last_done:
+        return True
+    try:
+        if (today - date.fromisoformat(last_done[:10])).days >= 2:
+            return True
+    except Exception:
+        return True
     try:
         d = json.loads((ROOT / "site" / "esports.json").read_text(encoding="utf-8"))
     except FileNotFoundError:
-        return False
-    spans = [(e["start"], e["end"]) for t in d["tournaments"] for e in t["events"] if e.get("start") and e.get("end")]
-    spans += [(x["start"], x["end"]) for x in d.get("schedule", [])]
-    for s, e in spans:  # 끝나고 4일까지는 매일 (미주 결승은 한국 시각으로 하루 늦고, MetaTFT에 결승 기록이 늦게 올라온다)
-        if (date.fromisoformat(s[:10]) - today).days <= 3 and (today - date.fromisoformat(e[:10])).days <= 4:
-            return True
+        return True
+    spans = [(e["start"], e["end"]) for t in d.get("tournaments", []) for e in t.get("events", []) if e.get("start") and e.get("end")]
+    spans += [(x["start"], x["end"]) for x in d.get("schedule", []) if x.get("start") and x.get("end")]
+    evs = _all_events()
+    spans += [(x["start"], x.get("end") or x["start"]) for x in evs if x.get("start")]
+    for s, e in spans:  # 끝나고 4일까지는 매일 (미주·유럽 결승은 한국 시각으로 하루 늦고, 결과 반영이 늦을 수 있다)
+        try:
+            if (date.fromisoformat(s[:10]) - today).days <= 3 and (today - date.fromisoformat(e[:10])).days <= 4:
+                return True
+        except Exception:
+            continue
     cr = d.get("crown") or {}  # 월즈 진출자 명단: 대회 3주 전부터 다 채워질 때까지 매일 (2026-11-08: 11/6 명단에서 멈춰 36명 확정을 놓침)
     if cr.get("start") and 0 <= (date.fromisoformat(cr["start"][:10]) - today).days <= 21:
         return True
-    for t in d["tournaments"]:  # 끝났는데 우승자가 아직 없는 결승·TPC는 2주까지 계속 확인
+    for t in d.get("tournaments", []):  # 끝났는데 우승자가 아직 없는 결승·TPC는 2주까지 계속 확인
         last = t["events"][-1] if t.get("events") else None
         if last and t.get("kind") in ("finals", "tpc", "crown") and not last.get("champion") and last.get("end") \
                 and 0 <= (today - date.fromisoformat(last["end"][:10])).days <= 14:
             return True
+    for x in evs:  # 이벤트·오픈·쇼매치도 끝난 뒤 우승자 미확정이면 2주까지 확인
+        ed = (x.get("end") or x.get("start") or "")[:10]
+        if ed and not x.get("winner"):
+            try:
+                if 0 <= (today - date.fromisoformat(ed)).days <= 14:
+                    return True
+            except Exception:
+                pass
     return False
+
+
+def esports_soon(today):
+    """오늘 진행 중이거나 3일 안에 시작하는 대회 요약 (클로드 매일 점검 알림용)."""
+    out = []
+    for x in _all_events():
+        s, e = (x.get("start") or "")[:10], (x.get("end") or x.get("start") or "")[:10]
+        if not s:
+            continue
+        try:
+            ds, de = (date.fromisoformat(s) - today).days, (date.fromisoformat(e) - today).days
+        except Exception:
+            continue
+        if ds <= 0 <= de:
+            out.append({"name": x["name"], "status": "live", "start": s, "end": e, "tier": x.get("tier", "")})
+        elif 1 <= ds <= 3:
+            out.append({"name": x["name"], "status": f"D-{ds}", "start": s, "end": e, "tier": x.get("tier", "")})
+    return out
+
+
+def riot_esports_news_latest():
+    """라이엇 한국 공식 TFT 이스포츠 최신 공지 8건 (네트워크 실패 시 None)."""
+    try:
+        req = urllib.request.Request(
+            "https://teamfighttactics.leagueoflegends.com/ko-kr/news/esports/",
+            headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36", "Accept-Language": "ko-KR,ko;q=0.9"},
+        )
+        h = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        m = re.search(r'id="__NEXT_DATA__"[^>]*>(.*?)</script>', h, re.S)
+        if not m:
+            return None
+        nd = json.loads(m.group(1))
+        blades = (((nd.get("props") or {}).get("pageProps") or {}).get("page") or {}).get("blades") or []
+        out = []
+        for bl in blades:
+            for it in bl.get("items") or []:
+                title = (it.get("title") or "").strip()
+                url = (((it.get("action") or {}).get("payload") or {}).get("url") or "").strip()
+                if not title or not url:
+                    continue
+                if url.startswith("/"):
+                    url = "https://teamfighttactics.leagueoflegends.com" + url
+                out.append({"date": (it.get("publishedAt") or "")[:10], "title": title, "url": url})
+        out.sort(key=lambda x: x["date"], reverse=True)
+        return out[:8] if out else None
+    except Exception:
+        return None
 
 
 def pbe_release():
@@ -99,7 +184,7 @@ def main():
     actions = []
     old_set = str(st.get("metatft") or st.get("patch") or "").split(".")[0]
     if live != st.get("patch"):
-        keep = {k: st[k] for k in ("set_started",) if k in st}
+        keep = {k: st[k] for k in ("set_started", "esports_done", "esports_news_urls") if k in st}
         st = {"patch": live, "detected": today.isoformat(), "metatft": metatft, "lolchess": lolchess, **keep}
         actions.append("notify")
     # 새 세트: MetaTFT 통계 패치 앞자리가 바뀐 날 (setinfo.py가 이 값으로 세트를 정한다). 지난 세트 이름·아이콘(oldsets)을 다시 만들고,
@@ -116,7 +201,14 @@ def main():
         actions.append("quick")
     if days >= 1 and not st.get("full_done"):
         actions.append("full")
-    if esports_window(today) and st.get("esports_done") != today.isoformat():
+    rn = riot_esports_news_latest()
+    esports_news_new = []
+    if rn:
+        prev_urls = st.get("esports_news_urls")
+        if prev_urls is not None:
+            esports_news_new = [x for x in rn if x["url"] not in prev_urls]
+        st["esports_news_urls"] = [x["url"] for x in rn]
+    if esports_news_new or (esports_window(today, st.get("esports_done", "")) and st.get("esports_done") != today.isoformat()):
         actions.append("esports")
     if st.get("friends_done") != today.isoformat():
         actions.append("friends")
@@ -138,8 +230,10 @@ def main():
         st["tftflow_labels"] = tf
     STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1))
     print(json.dumps({"patch": live, "tftflow_new": tf_new, "metatft": metatft, "lolchess": lolchess, "detected": st["detected"], "pbe": st.get("pbe_release", ""), "pbe_since": st.get("pbe_since", ""),
+                      "esports_soon": esports_soon(today), "esports_news_new": esports_news_new,
                       "days": days, "actions": actions, "checked": datetime.now().isoformat(timespec="minutes")}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
     main()
+

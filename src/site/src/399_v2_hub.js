@@ -135,6 +135,8 @@
         });
       }
     }
+    // 2.8) 진행 중 · 예정 이스포츠 요약
+    homeRenderEsports();
     // 3) 최근 데이터 변화 요약
     var cw = document.getElementById("hm-chg-wrap"), cb = document.getElementById("hm-chg");
     if (cw && cb && V2_CHG && V2_CHG.log && V2_CHG.log.length) {
@@ -151,6 +153,41 @@
         });
       }
     }
+  }
+
+  function homeRenderEsports() {
+    var wrap = document.getElementById("hm-esp-wrap"), box = document.getElementById("hm-esp");
+    if (!wrap || !box || !ESP) return;
+    var list = (ESP.events_all || []).filter(function (ev) {
+      var st = evStatus(ev);
+      return st === "live" || (st === "up" && ev.start && dday(ev.start) <= 30);
+    });
+    // S-Tier · 주요(featured) · 진행 중 우선 정렬 후 최대 3건
+    list.sort(function (a, b) {
+      var sa = evStatus(a) === "live" ? 0 : 1, sb = evStatus(b) === "live" ? 0 : 1;
+      var fa = (a.tier === "S" ? 0 : a.featured ? 1 : 2), fb = (b.tier === "S" ? 0 : b.featured ? 1 : 2);
+      return fa - fb || sa - sb || (a.start || "").localeCompare(b.start || "");
+    });
+    list = list.slice(0, 3);
+    wrap.hidden = !list.length;
+    if (!list.length) return;
+    box.innerHTML = "";
+    list.forEach(function (ev) {
+      var st = evStatus(ev);
+      var r = el("button", "hm-esp-row" + (ev.tier === "S" ? " major" : "")); r.type = "button";
+      r.appendChild(el("span", "hm-esp-b " + (st === "live" ? "live" : "soon"), st === "live" ? "LIVE" : "D-" + dday(ev.start)));
+      var mid = el("div", "hm-esp-m");
+      mid.appendChild(el("b", null, ev.name));
+      var sub = [fmtRange(ev.start, ev.end), ev.prize, ev.players || ev.loc].filter(Boolean).join(" · ");
+      mid.appendChild(el("small", null, sub));
+      r.appendChild(mid);
+      r.addEventListener("click", function () {
+        goTab("esports");
+        if (typeof espView === "function") espView("events");
+        if (typeof espOpenEvent === "function") espOpenEvent(ev);
+      });
+      box.appendChild(r);
+    });
   }
 
   function homeInit() {

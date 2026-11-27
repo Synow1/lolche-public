@@ -204,6 +204,13 @@ function fresh(file, key, hours) {
     if (await q(() => document.querySelectorAll('#hm-s19-kpi .hm-k').length) !== 4) fail('홈: 19시즌 KPI 4칸이 안 보임');
     if (await q(() => document.querySelectorAll('#hm-decks .mt-row.dk').length) < 3) fail('홈: 18시즌 상위 덱 카드가 안 보임');
     {
+      const hmEsp = await q(() => ({ vis: !document.getElementById('hm-esp-wrap').hidden, n: document.querySelectorAll('#hm-esp .hm-esp-row').length }));
+      const espData = JSON.parse(fs.readFileSync(path.join(SITE, 'esports.json'), 'utf8'));
+      const todayIso = new Date(Date.now() + 9 * 36e5).toISOString().slice(0, 10);
+      const hasSoon = (espData.events_all || []).some(e => (e.end || e.start || '') >= todayIso && ((new Date(e.start + 'T00:00:00') - new Date(todayIso + 'T00:00:00')) / 864e5) <= 30);
+      if (hasSoon && (!hmEsp || !hmEsp.vis || hmEsp.n < 1)) fail('홈(v3.9.0): 진행 중·예정 이스포츠 배너(#hm-esp-wrap)가 안 보임 ' + JSON.stringify(hmEsp));
+    }
+    {
       const navs = await q(() => [...document.querySelectorAll('.bnav a')].map(a => a.dataset.nav));
       if (!navs || navs.join(',') !== 'home,decks,dex,rank,more') fail('아래 메뉴: v3.0 5탭(home,decks,dex,rank,more)이 아님 (' + (navs || []).join(',') + ')');
       // 통합 스포트라이트 검색 (초성 포함)
@@ -739,6 +746,48 @@ function fresh(file, key, hours) {
       await pg.evaluate(() => { const b = document.querySelector('.fs-view .dc-back'); if (b) b.click(); }); await pg.waitForTimeout(400);
       if (hasSt) { const n = await pg.evaluate(() => { const hs = [...document.querySelectorAll('#esp-list article.wd .wd-head')]; return hs.length; }); if (!n) fail('이스포츠: 역대 월즈 목록이 비어 있음'); } }
     await pg.evaluate(() => document.querySelector('#esp-view [data-v=events]').click()); await pg.waitForTimeout(300);
+    // v3.9.0 전체 이스포츠 이벤트 추적 · 필터 · 베이거스 오픈 상세 · 라이엇 공식 소식 검사
+    {
+      const evCheck = await pg.evaluate(async () => {
+        const nowN = document.querySelectorAll('#esp-now .now-row').length;
+        const newsBox = document.querySelector('#esp-news-wrap .esp-news-box');
+        const newsN = newsBox ? newsBox.querySelectorAll('.esp-news-item').length : 0;
+        const counts = {};
+        for (const r of ['OPEN', 'EVENT', 'KR', '']) {
+          const btn = document.querySelector(`#esp-reg button[data-r="${r}"]`);
+          if (btn) btn.click();
+          await new Promise(ok => setTimeout(ok, 120));
+          counts[r || 'ALL'] = document.querySelectorAll('#esp-list .ev-card').length;
+        }
+        const vg = document.querySelector('#esp-list .ev-card[data-evid="vegas-open-2026"] .ev-head');
+        let detail = null;
+        if (vg) {
+          vg.click();
+          await new Promise(ok => setTimeout(ok, 300));
+          const v = document.querySelector('.fs-view');
+          if (v) {
+            detail = {
+              kpis: v.querySelectorAll('.ev-kpis > div').length,
+              sched: v.querySelectorAll('.ev-sched li').length,
+              fmt: v.querySelectorAll('.ev-fmt li').length,
+              links: v.querySelectorAll('.ev-links a').length,
+              nan: /NaN|undefined/.test(v.textContent),
+              sw: Math.max(document.documentElement.scrollWidth, v.scrollWidth)
+            };
+            const bk = v.querySelector('.dc-back'); if (bk) bk.click();
+            await new Promise(ok => setTimeout(ok, 200));
+          }
+        }
+        return { nowN, newsN, counts, detail, stillOpen: !!document.querySelector('.fs-view') };
+      });
+      if (evCheck.nowN < 1) fail('이스포츠(v3.9.0): 진행 중·예정 대회(#esp-now)가 비어 있음');
+      if (evCheck.newsN < 3) fail(`이스포츠(v3.9.0): 라이엇 공식 소식이 ${evCheck.newsN}건뿐 (3건 이상이어야 함)`);
+      if ((evCheck.counts.OPEN || 0) < 2 || (evCheck.counts.EVENT || 0) < 3 || (evCheck.counts.KR || 0) < 2) fail('이스포츠(v3.9.0): 오픈·이벤트·국내 필터 카드가 비어 있음 ' + JSON.stringify(evCheck.counts));
+      if (!evCheck.detail || evCheck.detail.kpis < 3 || evCheck.detail.sched < 3 || evCheck.detail.links < 3) fail('이스포츠(v3.9.0): 베이거스 오픈 상세(지표·KST 일정·링크)가 누락됨 ' + JSON.stringify(evCheck.detail));
+      if (evCheck.detail && evCheck.detail.nan) fail('이스포츠(v3.9.0): 이벤트 상세에 NaN/undefined 글자');
+      if (evCheck.detail && evCheck.detail.sw > 360) fail(`이스포츠(v3.9.0): 이벤트 상세가 화면보다 넓음 ${evCheck.detail.sw}px`);
+      if (evCheck.stillOpen) fail('이스포츠(v3.9.0): 이벤트 상세에서 뒤로가 안 닫힘');
+    }
     await pg.evaluate(() => document.querySelector('#esp-view [data-v=points]').click()); await pg.waitForTimeout(400);
     if (await pg.evaluate(() => document.querySelectorAll('#esp-pts tr').length) < 5) fail('이스포츠: 포인트 보기에 표가 없음');
     await pg.evaluate(() => { localStorage.removeItem('tft-guide-espview'); });

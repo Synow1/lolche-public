@@ -258,6 +258,6 @@
   /* ---- 이스포츠: site/esports.json (scripts/build_esports.py) ---- */
   var ESP = null, espRegion = "", espOpen = null;
   var SET_NAME = __SET_NAMES__;  // data/sets.json (조립 때 채움)
-  var KIND_NAME = { crown: "전략가의 왕관 (월즈)", finals: "지역별 결승", tpc: "프로 서킷", cup: "전략가의 컵", trials: "전략가의 시험" };
+  var KIND_NAME = { crown: "전략가의 왕관 (월즈)", finals: "지역별 결승", tpc: "프로 서킷", cup: "전략가의 컵", trials: "전략가의 시험", open: "TFT 오픈", ewc: "EWC", team: "4v4 팀전", event: "이벤트 · 쇼매치", kr: "국내 대회", circuit: "지역 공식" };
   var CUP18 = { "TPC 1": "협곡야수 컵", "TPC 2": "나무정령 컵", "TPC 3": "개화 컵" };
   var FLAG = { kr: "🇰🇷", jp: "🇯🇵", tw: "🇹🇼", vn: "🇻🇳", hk: "🇭🇰", sg: "🇸🇬", au: "🇦🇺", nz: "🇳🇿", ph: "🇵🇭", th: "🇹🇭", cn: "🇨🇳", us: "🇺🇸", ca: "🇨🇦", br: "🇧🇷", de: "🇩🇪", fr: "🇫🇷", es: "🇪🇸", gb: "🇬🇧", pl: "🇵🇱", it: "🇮🇹", my: "🇲🇾", id: "🇮🇩" };

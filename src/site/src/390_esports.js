@@ -21,7 +21,7 @@
   function evStatus(e) { var t = todayStr(); if (e.start && t < e.start) return "up"; if (e.end && t <= e.end) return "live"; return "done"; }
   // 올해면 "7/11", 다른 해면 "2025/7/11" (2026-11-15 사용자: "년도 다르면 년도 써줘")
   function fmtDay(iso, noYear) { if (!iso) return ""; var p = iso.slice(5, 10).split("-"), y = iso.slice(0, 4); return (!noYear && y !== todayStr().slice(0, 4) ? y + "/" : "") + (+p[0]) + "/" + (+p[1]); }
-  function fmtRange(a, b) { return fmtDay(a) + "~" + fmtDay(b, (a || "").slice(0, 4) === (b || "").slice(0, 4)); }
+  function fmtRange(a, b) { if (!a) return ""; if (!b || a === b) return fmtDay(a); return fmtDay(a) + "~" + fmtDay(b, (a || "").slice(0, 4) === (b || "").slice(0, 4)); }
   function dday(iso) { var a = new Date(iso + "T00:00:00"), b = new Date(todayStr() + "T00:00:00"); return Math.round((a - b) / 864e5); }
   function playerCell(name) {
     var c = el("span", "esp-p"), fl = flagOf(name);
@@ -165,6 +165,164 @@
     head.classList.add("go"); head.addEventListener("click", function () { espOpenFull(t); });
     return card;
   }
+  var EV_CAT = { open: "TFT 오픈", ewc: "EWC", team: "4v4 팀전", event: "이벤트", kr: "국내", circuit: "지역 공식" };
+  var EV_TIER = { S: "S-Tier", A: "A-Tier", B: "B-Tier", C: "C-Tier", D: "D-Tier", Showmatch: "쇼매치", Event: "이벤트" };
+  function espOpenEvent(ev) {
+    var st = evStatus(ev);
+    var subParts = [];
+    if (ev.set) subParts.push("S" + ev.set + " " + (SET_NAME[ev.set] || ""));
+    if (ev.start) subParts.push(fmtRange(ev.start, ev.end));
+    if (ev.loc) subParts.push(ev.loc);
+    fsOpen(ev.name, subParts.join(" · "), function (b) {
+      // 상단 상태·티어·분류 배지
+      var tags = el("div", "ev-tags ev-dtags");
+      if (st === "live") tags.appendChild(el("span", "live", "진행 중"));
+      else if (st === "up") tags.appendChild(el("span", "soon", "D-" + dday(ev.start)));
+      else tags.appendChild(el("span", "ev-done", "종료"));
+      if (ev.tier) tags.appendChild(el("span", "ev-tier t-" + String(ev.tier).toLowerCase(), EV_TIER[ev.tier] || ev.tier));
+      if (ev.cat && EV_CAT[ev.cat]) tags.appendChild(el("span", "ev-cat", EV_CAT[ev.cat]));
+      if (ev.region && ev.region !== "WORLD") tags.appendChild(el("span", "ev-set", ev.region));
+      b.appendChild(tags);
+
+      // 핵심 지표 타일 (일정 · 상금 · 규모 · 장소)
+      var kpis = [];
+      if (ev.start) kpis.push(["일정", fmtRange(ev.start, ev.end)]);
+      if (ev.prize) kpis.push(["상금", ev.prize]);
+      if (ev.players) kpis.push(["규모", ev.players]);
+      if (ev.loc) kpis.push(["장소", ev.loc]);
+      if (kpis.length) {
+        var kg = el("div", "ev-kpis");
+        kpis.forEach(function (k) {
+          var cell = el("div");
+          cell.appendChild(el("span", null, k[0]));
+          cell.appendChild(el("b", null, k[1]));
+          kg.appendChild(cell);
+        });
+        b.appendChild(kg);
+      }
+
+      // 우승 · 준우승 포디움
+      if (ev.winner || ev.runner) {
+        var pod = el("div", "ev-pod");
+        if (ev.winner) {
+          var r1 = el("div", "ev-pod-r win");
+          var l1 = el("span", "ev-pod-k"); l1.appendChild(cupIcon()); l1.appendChild(document.createTextNode("우승"));
+          r1.appendChild(l1); r1.appendChild(playerCell(ev.winner));
+          pod.appendChild(r1);
+        }
+        if (ev.runner) {
+          var r2 = el("div", "ev-pod-r");
+          r2.appendChild(el("span", "ev-pod-k", "준우승"));
+          r2.appendChild(playerCell(ev.runner));
+          pod.appendChild(r2);
+        }
+        b.appendChild(pod);
+      }
+
+      // 한국 포인트 강조
+      if (ev.kr_note) {
+        var kr = el("div", "ev-krbox");
+        kr.appendChild(el("b", null, "한국 관련 포인트"));
+        kr.appendChild(el("p", null, ev.kr_note));
+        b.appendChild(kr);
+      }
+
+      // 개요
+      if (ev.summary) b.appendChild(el("p", "ev-desc", ev.summary));
+
+      // 한국 시각(KST) 일정표
+      if (ev.schedule_kst && ev.schedule_kst.length) {
+        var sh = el("div", "ev-sec");
+        sh.appendChild(el("h4", null, "일정 (한국 시각 기준)"));
+        var ul = el("ul", "ev-sched");
+        ev.schedule_kst.forEach(function (row) {
+          var li = el("li");
+          li.appendChild(el("b", null, row[0]));
+          li.appendChild(el("span", null, row[1]));
+          ul.appendChild(li);
+        });
+        sh.appendChild(ul);
+        b.appendChild(sh);
+      }
+
+      // 진행 방식 · 주요 정보
+      if (ev.format && ev.format.length) {
+        var fm = el("div", "ev-sec");
+        fm.appendChild(el("h4", null, "진행 방식 · 주요 정보"));
+        var ul2 = el("ul", "ev-fmt");
+        ev.format.forEach(function (line) { ul2.appendChild(el("li", null, line)); });
+        fm.appendChild(ul2);
+        b.appendChild(fm);
+      }
+
+      // 공식 링크 · 중계
+      if (ev.links && ev.links.length) {
+        var lk = el("div", "ev-sec");
+        lk.appendChild(el("h4", null, "공식 링크 · 중계"));
+        var row = el("div", "ev-links");
+        ev.links.forEach(function (pair) {
+          var a = el("a", "ev-link", pair[0]);
+          a.href = pair[1]; a.target = "_blank"; a.rel = "noopener noreferrer";
+          row.appendChild(a);
+        });
+        lk.appendChild(row);
+        b.appendChild(lk);
+      }
+    });
+  }
+  function evCard(ev) {
+    var st = evStatus(ev);
+    var major = ev.tier === "S" || ev.cat === "open" || ev.cat === "ewc";
+    var card = el("article", "ev-card" + (major ? " ev-major" : "") + (st === "live" ? " ev-live" : ""));
+    card.dataset.evid = ev.id || "";
+    var head = el("button", "ev-head go"); head.type = "button";
+    var left = el("div", "ev-left");
+    var tags = el("div", "ev-tags");
+    if (st === "live") tags.appendChild(el("span", "live", "진행 중"));
+    else if (st === "up") tags.appendChild(el("span", "soon", "D-" + dday(ev.start)));
+    if (ev.tier) tags.appendChild(el("span", "ev-tier t-" + String(ev.tier).toLowerCase(), EV_TIER[ev.tier] || ev.tier));
+    if (ev.cat && EV_CAT[ev.cat]) tags.appendChild(el("span", "ev-cat", EV_CAT[ev.cat]));
+    if (ev.set) tags.appendChild(el("span", "ev-set", "S" + ev.set));
+    left.appendChild(tags);
+    left.appendChild(el("b", "ev-title", ev.name));
+    var meta = [fmtRange(ev.start, ev.end), ev.loc, ev.prize, ev.players].filter(Boolean).join(" · ");
+    left.appendChild(el("small", "ev-meta", meta));
+    if (ev.kr_note) left.appendChild(el("small", "ev-kr", ev.kr_note));
+    head.appendChild(left);
+    if (ev.winner) {
+      var w = el("div", "esp-win"), ws = el("small"); ws.appendChild(cupIcon()); ws.appendChild(document.createTextNode("우승")); w.appendChild(ws);
+      w.appendChild(playerCell(ev.winner)); head.appendChild(w);
+    }
+    head.addEventListener("click", function () { espOpenEvent(ev); });
+    card.appendChild(head);
+    return card;
+  }
+  function espNews() {
+    var wrap = document.getElementById("esp-news-wrap");
+    if (!wrap) return;
+    var list = (ESP && ESP.news) || [];
+    wrap.innerHTML = "";
+    wrap.hidden = !list.length;
+    if (!list.length) return;
+    var det = el("details", "esp-news-box");
+    var sum = el("summary");
+    sum.appendChild(document.createTextNode("라이엇 공식 이스포츠 소식 "));
+    sum.appendChild(el("small", null, "최신 " + list.length + "건 · " + fmtDay(list[0].date)));
+    det.appendChild(sum);
+    var box = el("div", "esp-news-list");
+    list.forEach(function (n) {
+      var a = el("a", "esp-news-item"); a.href = n.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      var top = el("div", "esp-news-top");
+      top.appendChild(el("span", "esp-news-d", fmtDay(n.date)));
+      top.appendChild(el("span", "esp-news-k" + (n.kind === "video" ? " vid" : ""), n.kind === "video" ? "영상" : "공지"));
+      top.appendChild(el("b", "esp-news-t", n.title));
+      a.appendChild(top);
+      if (n.desc) a.appendChild(el("small", "esp-news-desc", n.desc));
+      box.appendChild(a);
+    });
+    det.appendChild(box);
+    wrap.appendChild(det);
+  }
   function espNow() {
     var box = document.getElementById("esp-now"); box.innerHTML = "";
     var items = [];
@@ -175,27 +333,54 @@
       });
     });
     (ESP.schedule || []).forEach(function (x) { if (dday(x.end) >= 0) items.push({ t: { name: x.name, region: "WORLD", kind: "crown", set: x.set }, e: { ev: x.label || "", start: x.start, end: x.end, stages: [] }, s: evStatus(x), sched: true }); });
-    items.sort(function (a, b) { return (a.s === "live" ? 0 : 1) - (b.s === "live" ? 0 : 1) || a.e.start.localeCompare(b.e.start); });
-    if (!items.length) { box.hidden = true; return; }
+    (ESP.events_all || []).forEach(function (ev) {
+      var s = evStatus(ev);
+      if (s === "live" || (s === "up" && ev.start && dday(ev.start) <= 30)) items.push({ ev: ev, e: { start: ev.start, end: ev.end }, s: s, custom: true });
+    });
+    items.sort(function (a, b) {
+      var pa = a.s === "live" ? 0 : 1, pb = b.s === "live" ? 0 : 1;
+      if (pa !== pb) return pa - pb;
+      if (a.custom && b.custom) {
+        var fa = a.ev.tier === "S" ? 0 : a.ev.featured ? 1 : 2, fb = b.ev.tier === "S" ? 0 : b.ev.featured ? 1 : 2;
+        if (fa !== fb && a.e.start === b.e.start) return fa - fb;
+      }
+      return (a.e.start || "").localeCompare(b.e.start || "");
+    });
+    box.hidden = !items.length;
+    if (!items.length) return;
     items.forEach(function (x) {
       var r = el("button", "now-row"); r.type = "button";
       r.appendChild(el("span", x.s === "live" ? "live" : "soon", x.s === "live" ? "LIVE" : "D-" + dday(x.e.start)));
       var mid = el("div");
-      mid.appendChild(el("b", null, (x.t.region === "WORLD" ? "" : x.t.region + " ") + KIND_NAME[x.t.kind] + (x.e.ev ? " · " + evName(x.t, x.e.ev) : "")));
-      var sub = fmtRange(x.e.start, x.e.end);
-      // 아직 경기가 없는 단계(전원 0점)는 건너뛰고 점수가 있는 마지막 단계의 1위
-      var st = (x.e.stages || []).filter(function (g) { return g.table.length && g.table[0].pts > 0; }).pop();
-      if (st) sub += " · " + (x.e.stages.length > 1 ? st.name + " " : "") + "1위 " + st.table[0].n + " " + st.table[0].pts + "점";
-      else if (x.sched && ESP.crown && ESP.crown.players) sub += " · 진출 " + ESP.crown.players.length + "명 확정";
-      else if (x.e.players && x.e.players.length) sub += " · " + x.e.players.length + "명 · 한국 " + x.e.players.filter(function (p) { return (flagOf(p[1]) || p[0]) === "kr"; }).length + "명";
-      mid.appendChild(el("small", null, sub));
-      r.appendChild(mid);
-      if (x.sched) r.addEventListener("click", function () { var h = document.querySelector("#esp-list .wd-card .esp-head"); if (h) h.click(); });
-      else r.addEventListener("click", function () {
-        espOpenFull(x.t);
-      });
+      if (x.custom) {
+        var ev = x.ev;
+        mid.appendChild(el("b", null, ev.name));
+        var sub2 = [fmtRange(ev.start, ev.end), ev.prize, ev.players || ev.loc].filter(Boolean).join(" · ");
+        mid.appendChild(el("small", null, sub2));
+        r.appendChild(mid);
+        r.addEventListener("click", function () { espOpenEvent(ev); });
+      } else {
+        mid.appendChild(el("b", null, (x.t.region === "WORLD" ? "" : x.t.region + " ") + KIND_NAME[x.t.kind] + (x.e.ev ? " · " + evName(x.t, x.e.ev) : "")));
+        var sub = fmtRange(x.e.start, x.e.end);
+        // 아직 경기가 없는 단계(전원 0점)는 건너뛰고 점수가 있는 마지막 단계의 1위
+        var st = (x.e.stages || []).filter(function (g) { return g.table.length && g.table[0].pts > 0; }).pop();
+        if (st) sub += " · " + (x.e.stages.length > 1 ? st.name + " " : "") + "1위 " + st.table[0].n + " " + st.table[0].pts + "점";
+        else if (x.sched && ESP.crown && ESP.crown.players) sub += " · 진출 " + ESP.crown.players.length + "명 확정";
+        else if (x.e.players && x.e.players.length) sub += " · " + x.e.players.length + "명 · 한국 " + x.e.players.filter(function (p) { return (flagOf(p[1]) || p[0]) === "kr"; }).length + "명";
+        mid.appendChild(el("small", null, sub));
+        r.appendChild(mid);
+        if (x.sched) r.addEventListener("click", function () { var h = document.querySelector("#esp-list .wd-card .esp-head"); if (h) h.click(); });
+        else r.addEventListener("click", function () { espOpenFull(x.t); });
+      }
       box.appendChild(r);
     });
+  }
+  function espMatchFilter(x, f) {
+    if (!f) return true;
+    if (f === "OPEN") return x.cat === "open" || x.cat === "ewc";
+    if (f === "EVENT") return x.cat === "event" || x.cat === "team" || x.tier === "Showmatch";
+    if (f === "KR") return x.cat === "kr" || x.r === "KR" || !!x.krNote;
+    return x.r === f;
   }
   function espList() {
     var box = document.getElementById("esp-list"); box.innerHTML = "";
@@ -203,10 +388,24 @@
     var cw = (ESP.schedule || []).filter(function (x) { return dday(x.end) >= -3 && dday(x.start) <= 30; })[0];
     // 끝나서 역대 월즈 기록(단계별)이 생기면 실시간 카드 대신 그 카드 하나만 (같은 월즈 카드가 둘 뜨지 않게)
     if (cw && dday(cw.end) < 0 && (ESP.worlds || []).some(function (w) { return w.set === cw.set && w.stages && w.stages.length; })) cw = null;
-    if (cw) items.push({ d: cw.start, el: crownCard(cw), r: "WORLD" });
-    ESP.tournaments.filter(function (t) { return t.kind !== "crown"; }).forEach(function (t) { items.push({ d: t.start, el: espCard(t), r: t.region }); });
-    (ESP.worlds || []).filter(function (w) { return w.top.length; }).forEach(function (w) { items.push({ d: w.start || "", el: wdCard(w), r: "WORLD" }); });
-    items.filter(function (x) { return !espRegion || x.r === espRegion; }).sort(function (a, b) { return (b.d || "").localeCompare(a.d || ""); }).forEach(function (x) { box.appendChild(x.el); });
+    if (cw) items.push({ p: 0, d: cw.start, el: crownCard(cw), r: "WORLD", cat: "worlds" });
+    (ESP.events_all || []).forEach(function (ev) {
+      var st = evStatus(ev);
+      items.push({ p: st === "live" ? 1 : st === "up" ? 2 : 3, d: st === "up" ? (ev.start || "") : (ev.end || ev.start || ""), el: evCard(ev), r: ev.region || "WORLD", cat: ev.cat || "event", tier: ev.tier || "", krNote: ev.kr_note || "" });
+    });
+    ESP.tournaments.filter(function (t) { return t.kind !== "crown"; }).forEach(function (t) {
+      var stats = t.events.map(evStatus);
+      var pr = stats.indexOf("live") >= 0 ? 1 : stats.indexOf("up") >= 0 ? 2 : 3;
+      items.push({ p: pr, d: t.end || t.start || "", el: espCard(t), r: t.region, cat: "circuit" });
+    });
+    (ESP.worlds || []).filter(function (w) { return w.top.length; }).forEach(function (w) { items.push({ p: 3, d: w.end || w.start || "", el: wdCard(w), r: "WORLD", cat: "worlds" }); });
+    var shown = items.filter(function (x) { return espMatchFilter(x, espRegion); }).sort(function (a, b) {
+      if (a.p !== b.p) return a.p - b.p;
+      if (a.p === 1 || a.p === 2) return (a.d || "").localeCompare(b.d || "");
+      return (b.d || "").localeCompare(a.d || "");
+    });
+    if (!shown.length) { box.appendChild(el("p", "empty", "해당 조건의 대회가 없어요")); return; }
+    shown.forEach(function (x) { box.appendChild(x.el); });
   }
   // 이번 월즈 카드: 누르면 전체 화면에 실시간 순위·진출자를 옮겨 붙인다 (닫으면 제자리로)
   function crownCard(cw) {
@@ -782,7 +981,8 @@
     document.querySelectorAll("#esp-ptreg button").forEach(function (b) {
       b.addEventListener("click", function () { document.querySelectorAll("#esp-ptreg button").forEach(function (x) { x.classList.toggle("on", x === b); }); espPoints(b.dataset.r); });
     });
-    espNow(); lvDraw(); espCrown(); espList(); espPoints("APAC"); espWorlds(); apacAt = Date.now(); apacLive(); lvLoad();
+    espNow(); espNews(); lvDraw(); espCrown(); espList(); espPoints("APAC"); espWorlds(); apacAt = Date.now(); apacLive(); lvLoad();
+    if (typeof homeRenderEsports === "function") homeRenderEsports();
     // 프로 포인트는 접어 둔다 (월즈 기간엔 실시간 순위·진출자가 먼저). 펼침 상태는 기억
     // 보기 전환 (월즈 · 대회 · 포인트 · 안내): 한 화면에 다 늘어놓으면 너무 길다 (2026-11-14 사용자). 월즈 기간·진출자 발표 뒤엔 월즈가 처음
     var saved = null; try { saved = localStorage.getItem("tft-guide-espview"); } catch (e) {}
