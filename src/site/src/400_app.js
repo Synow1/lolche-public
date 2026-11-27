@@ -372,8 +372,8 @@
   var current = null;
   function goTab(id) {  // 버튼·링크로 탭을 옮길 때: 뒤로가기로 직전 탭·스크롤 위치로 정확히 복원
     if (current === id) {
-      if (!isWide() && id === "meta" && !document.getElementById("mt-detail").hidden) { navBack("deck", metaBack); return; }
-      if (!isWide() && id === "tfa" && !document.getElementById("tfa-detail").hidden) { navBack("tfa", tfaBack); return; }
+      if (!isWide() && id === "meta" && (document.getElementById("mt-list-view").hidden || !document.getElementById("mt-detail").hidden)) { navBack("deck", metaBack); return; }
+      if (!isWide() && id === "tfa" && (document.getElementById("tfa-list").hidden || !document.getElementById("tfa-detail").hidden)) { navBack("tfa", tfaBack); return; }
       window.scrollTo(0, 0);
       return;
     }
@@ -401,10 +401,23 @@
     if (restoreY != null) window.scrollTo(0, restoreY);
     else if (scroll) window.scrollTo(0, same ? 0 : TAB_Y[id] || 0);  // 다른 탭에서 돌아오면 보던 위치, 같은 탭을 다시 누르면 맨 위
     if (id === "home") { setTimeout(homeRender, 0); if (window.v2PrismKick) setTimeout(window.v2PrismKick, 60); }
-    if (id === "meta" && isWide() && META) setTimeout(metaEnsureWide, 0);
+    if (id === "meta") {
+      var ml = document.getElementById("mt-list-view"), md = document.getElementById("mt-detail");
+      if (isWide()) {
+        if (ml) ml.hidden = false;
+        if (META) setTimeout(metaEnsureWide, 0);
+      } else {
+        if (ml && md && ml.hidden && md.hidden) ml.hidden = false;
+        if (META && metaReady && !document.querySelector("#mt-rows > *")) metaList();
+      }
+    }
     if (id === "units") setTimeout(unitsRender, 0);
     if (id === "traits") setTimeout(traitsRender, 0);
-    if (id === "tfa") setTimeout(tfaRender, 0);
+    if (id === "tfa") {
+      var tl = document.getElementById("tfa-list"), td = document.getElementById("tfa-detail");
+      if (!isWide() && tl && td && tl.hidden && td.hidden) tl.hidden = false;
+      setTimeout(tfaRender, 0);
+    }
     if (id === "s19") setTimeout(s19Render, 0);
     var isDeck = DECK_TABS.indexOf(id) >= 0, isRank = RANK_TABS.indexOf(id) >= 0;
     if (isDeck) { deckLast = id; try { localStorage.setItem(DECK_KEY, id); } catch (e) {} }
@@ -446,7 +459,7 @@
     if (id === "parts") setTimeout(ptRender, 0);
   }
   function showTab(id, scroll, restoreY) {
-    if (restoreY == null && !reduce && !navigator.webdriver && current && current !== id && document.startViewTransition) {
+    if (scroll && restoreY == null && !reduce && !navigator.webdriver && current && current !== id && document.startViewTransition) {
       try { document.startViewTransition(function () { applyTab(id, scroll); }); return; } catch (e) {}
     }
     applyTab(id, scroll, restoreY);

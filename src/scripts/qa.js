@@ -1839,10 +1839,11 @@ function fresh(file, key, hours) {
       const mi = document.querySelector('#mt-detail .dk-memo-inp');
       if (fb && !fb.classList.contains('on')) fb.click();
       if (mi) { mi.value = '8렙 리롤 테스트'; mi.dispatchEvent(new Event('blur')); }
-      return { hasSvg: !!svg, favOn: !!(fb && fb.classList.contains('on')), sw: document.documentElement.scrollWidth };
+      return { hasSvg: !!svg, favOn: !!(fb && fb.classList.contains('on')), detVis: !document.getElementById('mt-detail').hidden, sw: document.documentElement.scrollWidth };
     });
     if (!dtl.hasSvg) fail('v3.8.0 7일 트렌드: 덱 상세에 추세 SVG 그래프가 없음');
     if (!dtl.favOn) fail('v3.8.0 즐겨찾기: 덱 상세 ★ 토글이 작동하지 않음');
+    if (!dtl.detVis) fail('v3.10.1 회귀: 모바일 덱 상세에서 ★ 즐겨찾기 클릭 후 상세 화면이 사라짐');
     if (dtl.sw > 360) fail(`v3.8.0 덱 상세(트렌드·메모): 가로 밀림 ${dtl.sw}px`);
     await pg.evaluate(() => document.querySelector('#mt-detail .back').click()); await pg.waitForTimeout(300);
     await pg.evaluate(() => document.querySelector('#mt-filter [data-f=fav]').click()); await pg.waitForTimeout(300);
@@ -1883,6 +1884,57 @@ function fresh(file, key, hours) {
 
     if (errs.length) fail('v3.8.0 종합 점검: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
     await pg.close();
+  });
+  // v3.10.1 회귀 검사: 이전 세션 saved.id + 비동기(db/s19/guides) 지연 도착 시 덱 탭 빈 화면 방지
+  task(['meta', 'home'], async () => {
+    const firstId = String((JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).decks || [])[0]?.id || '');
+    if (!firstId) return;
+    for (const startTab of ['home', 'meta']) {
+      const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+      const errs = []; pg.on('pageerror', e => errs.push(String(e)));
+      await pg.addInitScript(({ firstId, startTab }) => {
+        window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} };
+        try {
+          localStorage.setItem('tft-guide-tab', startTab);
+          localStorage.setItem('tft-guide-decktab', 'meta');
+          localStorage.setItem('tft-guide-meta', JSON.stringify({ id: firstId, f: 'all', b: 'emer', o: 'avg' }));
+        } catch (e) {}
+      }, { firstId, startTab });
+      await pg.route('https://lolche.local/**', async (r) => {
+        const u = new URL(r.request().url());
+        if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
+        if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+        if (['/db.json', '/s19.json', '/guides.json'].includes(u.pathname)) await new Promise(res => setTimeout(res, 250));
+        const f = path.join(SITE, decodeURIComponent(u.pathname));
+        return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+      });
+      await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(1400);
+      if (startTab === 'home') {
+        await pg.evaluate(() => document.querySelector('.bnav a[data-nav="decks"]').click()); await pg.waitForTimeout(400);
+        const st = await pg.evaluate(() => ({
+          secVis: !document.getElementById('meta').hidden,
+          listVis: !document.getElementById('mt-list-view').hidden,
+          detVis: !document.getElementById('mt-detail').hidden,
+          rows: document.querySelectorAll('#mt-rows .mt-row').length,
+        }));
+        if (!st.secVis || !st.listVis || st.rows < 15) fail(`v3.10.1 회귀(홈→덱탭): 덱 목록이 안 보임 ${JSON.stringify(st)}`);
+      } else {
+        const st = await pg.evaluate(() => ({
+          secVis: !document.getElementById('meta').hidden,
+          listVis: !document.getElementById('mt-list-view').hidden,
+          detVis: !document.getElementById('mt-detail').hidden,
+          detTxt: (document.getElementById('mt-detail').textContent || '').trim().length,
+        }));
+        if (!st.secVis || (!st.listVis && !st.detVis) || (st.detVis && st.detTxt < 40)) fail(`v3.10.1 회귀(덱탭 직행+지연 로딩): 빈 화면 발생 ${JSON.stringify(st)}`);
+        if (st.detVis) {
+          await pg.evaluate(() => document.querySelector('#mt-detail .back')?.click()); await pg.waitForTimeout(300);
+          const bk = await pg.evaluate(() => ({ listVis: !document.getElementById('mt-list-view').hidden, rows: document.querySelectorAll('#mt-rows .mt-row').length }));
+          if (!bk.listVis || bk.rows < 15) fail(`v3.10.1 회귀(덱 상세→목록): 목록 복귀 실패 ${JSON.stringify(bk)}`);
+        }
+      }
+      if (errs.length) fail(`v3.10.1 회귀(${startTab}): 페이지 오류 ` + errs.slice(0, 2).join(' ; '));
+      await pg.close();
+    }
   });
   // 동시에 4개씩 (대부분 I/O·대기 시간이라 겹쳐 돌리면 빨라진다)
   { let next = 0; await Promise.all([0, 1, 2, 3].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }

@@ -88,9 +88,11 @@
     if (y < 60 || y > innerHeight - 120) window.scrollBy(0, y - 80);
   }
   // 펼친 칸에 옮겨 둔 #mt-detail은 목록을 다시 그리기 전에 제자리로 (지우면 같이 사라진다)
+  // 모바일에서 #mt-detail이 이미 #meta 직속으로 열려 있을 때는 숨기지 않는다 (안 그러면 목록·상세가 둘 다 숨겨져 빈 화면이 됨)
   function pcHome(scope) {
     var md = document.getElementById("mt-detail"), sec = document.getElementById("meta");
-    if (md && sec && (!scope || scope.contains(md))) { md.hidden = true; sec.appendChild(md); }
+    if (!md || !sec) return;
+    if (scope ? scope.contains(md) : md.parentNode !== sec) { md.hidden = true; sec.appendChild(md); }
   }
   /* ---- 덱 즐겨찾기(★) · 한 줄 메모 · 7일 추세 배지/그래프 (v3.8.0) ---- */
   var MT_FAV_KEY = "tft-guide-deck-fav", MT_MEMO_KEY = "tft-guide-deck-memo";
@@ -328,6 +330,10 @@
     } else if (wideNow && mtCurId) {  // PC: 펼쳐 두었던 덱은 다시 그려도 펼친 채로
       var openRow = box.querySelector('.pcdk[data-id="' + mtCurId + '"]');
       if (openRow) openRow._toggle(true);
+    }
+    if (!wideNow) {
+      var ml = document.getElementById("mt-list-view"), md = document.getElementById("mt-detail");
+      if (ml && md && ml.hidden && md.hidden) ml.hidden = false;
     }
   }
 
@@ -886,11 +892,20 @@
     } else mtDays = 3;  // PBE 통계엔 티어 구분이 없음 (pickify가 만든 .dd 상자째 숨김)
     document.getElementById("mt-q").addEventListener("input", metaList);
     metaList();
-    if (metaPending && deckView(metaPending)) {
-      var pv = deckView(metaPending);
-      if (isWide()) { mtCurId = pv.id; var rw = document.querySelector('#mt-rows .pcdk[data-id="' + pv.id + '"]'); if (rw) rw._toggle(true); }
-      else metaShow(metaPending, true);
-      metaPending = null;
+    metaRestorePending();
+  }
+  function metaRestorePending() {
+    if (!metaPending || !deckView(metaPending)) return;
+    var pv = deckView(metaPending);
+    metaPending = null;
+    if (isWide()) {
+      mtCurId = pv.id;
+      var rw = document.querySelector('#mt-rows .pcdk[data-id="' + pv.id + '"]');
+      if (rw) rw._toggle(true);
+    } else if (current === "meta") {
+      metaShow(pv.id, true);
+    } else {
+      metaSave();  // 다른 탭(홈 등)으로 새로 켰을 때는 지난 세션 상세 대신 덱 목록부터 열리도록 정리
     }
   }
   function buildMeta(data) { META = data; META_GRP = null; PT_NEED = null; DK_VEC = null; if (current === "parts") setTimeout(ptRender, 0); if (TFA && current === "tfa") setTimeout(tfaRender, 0); metaLoadLive(); if (DB) tbNear(); setPatch(); metaInit(); metaUpdLabel(); embInit(); if (typeof homeRender === "function") homeRender(); }
@@ -976,8 +991,9 @@
     req.then(function (L) {
       if (!L) return;
       try { localStorage.setItem(META_LIVE, JSON.stringify(L)); } catch (e) {}
+      var detOpen = !isWide() && mtCurId && !document.getElementById("mt-detail").hidden;
       metaApply(L); metaUpdLabel(); metaList();
-      if (!isWide() && mtCurId && !document.getElementById("mt-detail").hidden) metaShow(mtCurId, true);
+      if (detOpen) metaShow(mtCurId, true);
       if (typeof homeRender === "function") homeRender();
     }).catch(function (e) {
       // 기간을 바꾸다 실패하면 지금 보이는 숫자의 기간으로 되돌린다

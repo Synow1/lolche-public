@@ -142,7 +142,7 @@
     if (!metaReady) return;
     metaList();
     if (typeof homeRender === "function") homeRender();
-    if (metaPending && deckView(metaPending)) { metaShow(metaPending, true); metaPending = null; }
+    metaRestorePending();
   }
   var VER = null;
   function buildVersion(v) {
