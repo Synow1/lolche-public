@@ -250,6 +250,7 @@
 @media (prefers-reduced-motion: reduce) { .pw-p.q1 b, .pwc-big.q1, .pw-p.q0 b, .pwc-big.q0 { animation: none; } }
 .pw-old { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
 .pw-hi { font-size: var(--fs-xs); font-weight: 800; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.pw-hi.c7 { color: #fff; background: linear-gradient(90deg, #ff4d8d, #9b6bff); }
 .pw-hi.c5 { color: #fff; background: linear-gradient(90deg, #d99a16, #ff6b3d); }
 .pw-hi.c4 { color: #fff; background: linear-gradient(90deg, #8b5cf6, #c04bd6); }
 .pw-hi.syn { color: #fff; background: linear-gradient(90deg, #14a38b, #2f78c4); }

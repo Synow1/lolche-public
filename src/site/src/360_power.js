@@ -20,24 +20,27 @@
     var M = pwModel(setNum);
     var nitem = 0, umax = 0, SKP = (M && M.sk) || {}, UPP = (M && M.up) || {}, IPP = (M && M.ip) || {};
     var W = M && !M.off ? M.w : null, C = (M && M.cost) || {}, val = 0, g = { "레벨": 0, "유닛": 0, "템": 0, "캐리 템": 0, "시너지": 0 };
-    var LOGK = { "c:4:3": 0, "c:5:3": 0, "kc:4:3": 0, "kc:5:3": 0 };  // 4·5코 3성은 개수를 log2(1+n)로 (build_power.py와 같게)
+    var LOGK = { "c:4:3": 0, "c:5:3": 0, "c:7:3": 0, "kc:4:3": 0, "kc:5:3": 0, "kc:7:3": 0 };  // 4·5·7코 3성+는 개수를 log2(1+n)로 (build_power.py와 같게)
     var UQ = {}; ((M && M.uq) || []).forEach(function (t) { UQ[t] = 1; });
     var grp = function (k) { var p = k.split(":"); return (p[0] === "t" || p[0] === "tn") && UQ[p[1]] ? "유닛" : PW_GRP[p[0]]; };  // 고유 특성은 '유닛'으로 (build_power.py group_of와 같게)
     var add = function (k, v) { if (k in LOGK) { LOGK[k] += v; return; } if (W && W[k] && v) g[grp(k)] += W[k] * v; };
+    var realU = 0;
     units.forEach(function (u) {
-      var id = pwKey(u.character_id), st = u.tier || 1, c = C[id] || (apiUnit(u.character_id, setNum) || {}).cost || 1;
+      var id = pwKey(u.character_id), st = u.tier || 1, c = C[id] != null ? C[id] : ((apiUnit(u.character_id, setNum) || {}).cost || 1);
       var its = (u.itemNames || u.items || []).map(pwKey), seen = {}, uniq = 0;
-      val += c * Math.pow(3, st - 1);
-      add("u:" + id + ":" + st, 1); add("c:" + c + ":" + st, 1);
+      if (c > 0) val += c * Math.pow(3, st - 1);
+      add("u:" + id + ":" + st, 1);
       if (st >= 3 && SKP[id]) add("sk3", SKP[id]);  // 3성 스킬 배율 (build_power.py feats와 같게)
       var pa = (UPP[id] || [])[Math.min(st, 3) - 1]; if (pa) { add("usum", 4.5 - pa); umax = Math.max(umax, 4.5 - pa); }
+      var stC = c >= 4 ? Math.min(st, 3) : Math.min(st, 4);
+      if (c > 0) { add("c:" + c + ":" + stC, 1); realU++; }
       its.forEach(function (it) {
         add("i:" + it, 1); add("ic:" + pwItemKind(it), 1); if (IPP[it]) add("isum", 4.5 - IPP[it]);
         if (!seen[it]) { seen[it] = 1; uniq++; add("ui:" + id + ":" + it, 1); }
       });
       add("dup", its.length - uniq);
       nitem += its.length;
-      if (its.length >= 3) { add("k:" + id + ":" + st, 1); add("kc:" + c + ":" + st, 1); }
+      if (its.length >= 3) { add("k:" + id + ":" + st, 1); if (c > 0) add("kc:" + c + ":" + stC, 1); }
     });
     if (!W) return { val: val };
     Object.keys(LOGK).forEach(function (k) { var n = LOGK[k]; if (n && W && W[k]) g[PW_GRP[k.split(":")[0]]] += W[k] * Math.log2(1 + n); });
@@ -54,17 +57,22 @@
       }
     });
     add("nt:" + Math.min(nt, 9), 1); add("tsum", tsum); add("tmax", tmax);
-    // 라이엇 기록에 켜진 일반 시너지가 없는데 보드가 큰 판 (소환 유닛 등 기록 오류): 시너지 점수는 평균으로 (build_power.py no_traits와 같게)
-    if (nt === 0 && units.length >= 5) g["시너지"] = (M.base || {})["시너지"] || 0;
+    // 라이엇 기록에 켜진 일반 시너지가 없는데 실제 유닛이 5명 이상인 판 (기록 오류): 시너지 점수는 평균으로 (build_power.py no_traits와 같게)
+    if (nt === 0 && realU >= 5) g["시너지"] = (M.base || {})["시너지"] || 0;
     var lv = Math.min(10, Math.max(4, level || 0));
-    var sd = Math.max(-2, Math.min(2, units.length - lv));
+    var sd = Math.max(-2, Math.min(2, realU - lv));
     add("lv:" + lv, 1); add("sl:" + sd, 1); add("ls:" + lv + ":" + sd, 1); add("val", val / 10);
-    // 압도적인 덱 보정 (build_power.py dominance·adj_shift와 같게): 4코 3성, 프리즘 시너지. 덱파워 구간별로 더하는 점수 표(M.adj)
+    // 압도적인 덱 보정 (build_power.py dominance·adj_shift와 같게): 4코 3성, 프리즘 시너지(tier_current·인원 동시 검사)
     var ADJ = M.adj || {}, CH = M.chroma || {}, n4 = 0, dom = [];
-    units.forEach(function (u) { var id = pwKey(u.character_id), c = C[id] || (apiUnit(u.character_id, setNum) || {}).cost || 1; if (c === 4 && (u.tier || 1) >= 3) n4++; });
+    units.forEach(function (u) { var id = pwKey(u.character_id), c = C[id] != null ? C[id] : ((apiUnit(u.character_id, setNum) || {}).cost || 1); if (c === 4 && (u.tier || 1) >= 3) n4++; });
     if (n4 === 1 && val - 36 * n4 < 45) dom.push(["a4w", "유닛"]);  // 4코 3성 1개 + 나머지 약함 (build_power.py dominance와 같게)
     else { if (n4) dom.push(["a4:1", "유닛"]); if (n4 >= 2) dom.push(["a4:2", "유닛"]); }
-    if ((traits || []).some(function (t) { var tc = t.tier_current != null ? t.tier_current : t.tierCurrent, n = t.num_units != null ? t.num_units : t.numUnits, m = CH[pwKey(t.name)]; return tc > 0 && n && m && n >= m; })) dom.push(["ap", "시너지"]);
+    if ((traits || []).some(function (t) {
+      var tc = t.tier_current != null ? t.tier_current : t.tierCurrent, n = t.num_units != null ? t.num_units : t.numUnits, m = CH[pwKey(t.name)];
+      if (!tc || tc <= 0 || !m) return false;
+      var mt = Array.isArray(m) ? m[0] : 0, mn = Array.isArray(m) ? m[1] : m;
+      return (!mt || tc >= mt) && (!mn || (n && n >= mn));
+    })) dom.push(["ap", "시너지"]);
     if (dom.length && ADJ._sd) {
       var s0 = M.b0; Object.keys(g).forEach(function (k) { s0 += g[k]; });
       var pwb = 100 + (M.scale || 24) * (ADJ._mu - s0) / ADJ._sd, best = null;
@@ -85,7 +93,7 @@
       top = j === 0 ? 0.005 : Math.min(1, j / 100);
     }
     var big = [];  // 4코·5코·7코 3성 (극고점)
-    units.forEach(function (u) { var c = C[pwKey(u.character_id)] || (apiUnit(u.character_id, setNum) || {}).cost || 1; if (c >= 4 && (u.tier || 1) >= 3) big.push({ name: (apiUnit(u.character_id, setNum) || {}).name || pwKey(u.character_id), cost: c }); });
+    units.forEach(function (u) { var id = pwKey(u.character_id), c = C[id] != null ? C[id] : ((apiUnit(u.character_id, setNum) || {}).cost || 1); if (c >= 4 && (u.tier || 1) >= 3) big.push({ name: (apiUnit(u.character_id, setNum) || {}).name || id, cost: c }); });
     var pred = pwPredOf(s, M);
     var power = Math.round(Math.round((100 + (M.scale || 24) * (M.mu - s) / M.sd) * 1e6) / 1e6);  // build_power.py와 같게 (소수 6자리에서 자르고 반올림)
     if (M.f5 != null) power = big.some(function (b) { return b.cost >= 5; }) ? Math.max(power, M.f5) : pwCap5(power, M.f5, M);  // 5코+ 3성 덱은 항상 위
@@ -195,7 +203,7 @@
       sm.appendChild(document.createTextNode(pwProbTxt(r))); p.appendChild(sm);
       w.appendChild(p);
       var bg = {}; (r.big || []).forEach(function (b) { var k = b.cost + "|" + b.name; bg[k] = (bg[k] || 0) + 1; });
-      Object.keys(bg).sort().reverse().forEach(function (k) { var x = k.split("|"); w.appendChild(el("span", "pw-hi c" + Math.min(+x[0], 5), "★★★ " + x[0] + "코 " + x[1] + (bg[k] > 1 ? " ×" + bg[k] : ""))); });
+      Object.keys(bg).sort().reverse().forEach(function (k) { var x = k.split("|"); w.appendChild(el("span", "pw-hi c" + (+x[0] >= 7 ? 7 : Math.min(+x[0], 5)), "★★★ " + x[0] + "코 " + x[1] + (bg[k] > 1 ? " ×" + bg[k] : ""))); });
       var TA = (M && M.ta) || {};
       synOfMatch(traits, mtBoard(units, mSet), mSet).forEach(function (x) {
         if (x.style === "unique") return;
@@ -262,7 +270,8 @@
     var defs = document.createElementNS(ns, "defs"); defs.innerHTML = '<linearGradient id="pwRb" x1="0" x2="1"><stop offset="0" stop-color="#ff4d6d"/><stop offset=".3" stop-color="#ffb43d"/><stop offset=".55" stop-color="#3ddc84"/><stop offset=".8" stop-color="#3db8ff"/><stop offset="1" stop-color="#9b6bff"/></linearGradient>'; svg.appendChild(defs);
     [100 - 2 * sc, 100 - sc, 100, 100 + sc, 100 + 2 * sc].forEach(function (v) { mk("line", { x1: X(v), x2: X(v), y1: T, y2: Yb, class: "pwd-grid" }); mk("text", { x: X(v), y: Yb + 13, class: "pwd-ax", "text-anchor": "middle" }, v); });
     var share = function (lim) { return bins.reduce(function (a, b) { return a + (pwPredOfPower(b[0] + st / 2, M) <= lim ? b[1] : 0); }, 0) / D.n * 100; };
-    var cap = el("p", "pwd-cap"), def = "S" + (M.set || "") + " 평균 100 (" + (M.n || 0).toLocaleString() + "판) · 예상 1.5등 이내 " + share(1.5).toFixed(1) + "% · 1.3등 이내 " + share(1.3).toFixed(1) + "%";
+    var cap = el("p", "pwd-cap"), verTag = M.pbe ? ("S" + (M.set || "") + " PBE") : ("S" + (M.set || "") + (M.patch && M.patch.length ? " (" + M.patch[0] + ")" : ""));
+    var def = verTag + " 평균 100 (" + (M.n || 0).toLocaleString() + "판) · 예상 1.5등 이내 " + share(1.5).toFixed(1) + "% · 1.3등 이내 " + share(1.3).toFixed(1) + "%";
     cap.textContent = def;
     var on = null;
     bins.forEach(function (b) {
@@ -299,7 +308,8 @@
       if (!PW_TOP_S19 || !POWER_S19) { box.innerHTML = ""; box.appendChild(el("p", "empty", "불러오는 중")); return; }
       var s19Set = +(POWER_S19.set || guideSetNum());
       var list19 = (PW_TOP_S19.top.all || []).map(function (g) { return { pw: g.pw, who: g.who, tier: g.tier || "PBE", reg: "pbe1", pl: g.pl, level: g.lv, t: g.t, set: s19Set, units: pwRawUnits(g.u), traits: pwRawTraits(g.tr) }; });
-      note.textContent = "19시즌 PBE " + (POWER_S19.n || 0).toLocaleString() + "판 학습 · " + updAt(PW_TOP_S19.updated) + " · 출처 롤체지지 PBE";
+      var b19 = POWER_S19.pbe_build && POWER_S19.pbe_build.since ? (" " + POWER_S19.pbe_build.since.replace(/^\d{4}-0?/, "").replace(/-0?/, "/") + " 빌드") : "";
+      note.textContent = s19Set + "시즌 PBE" + b19 + " · " + updAt(PW_TOP_S19.updated) + " · 출처 롤체지지 PBE";
       box.innerHTML = "";
       if (!list19.length) { box.appendChild(el("p", "empty", "아직 기록이 없어요")); return; }
       list19.forEach(function (g, i) { box.appendChild(pwCard(g, i)); });
@@ -314,7 +324,8 @@
       });
       var topSet = (POWER && POWER.set) || liveSetNum();
       var list = (PW_TOP.top[pwBand] || []).map(function (g) { return { pw: g.pw, who: g.who, tier: g.tier, reg: "kr", pl: g.pl, level: g.lv, t: g.t, set: topSet, units: pwRawUnits(g.u), traits: pwRawTraits(g.tr) }; });
-      note.textContent = "최근 7일 · " + updAt(PW_TOP.updated) + " · 출처 롤체지지";
+      var pTag = POWER && POWER.patch && POWER.patch.length ? (POWER.patch[0] + " 패치 ") : "";
+      note.textContent = pTag + "최근 7일 · " + updAt(PW_TOP.updated) + " · 출처 롤체지지";
       box.innerHTML = "";
       if (!list.length) { box.appendChild(el("p", "empty", "아직 기록이 없어요")); return; }
       list.forEach(function (g, i) { box.appendChild(pwCard(g, i)); });

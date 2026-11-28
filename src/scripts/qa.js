@@ -1999,6 +1999,99 @@ function fresh(file, key, hours) {
     if (errs.length) fail('v3.10.2 회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
     await pg.close();
   });
+  // v3.11.0 덱파워 전면 재검토(세트별 사전지식 격리·7코/4성 단조성·퀘스트 프리즘·5코3성 경계·최신 가중 학습) 회귀 검사
+  task(['power', 'rank'], async () => {
+    const isPbe = !!JSON.parse(fs.readFileSync(path.join(SITE, 'meta.json'), 'utf8')).pbe;
+    const checkModel = (fname, expectPbe) => {
+      const p = path.join(SITE, fname);
+      if (!fs.existsSync(p)) return null;
+      const M = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (M.off) return M;
+      if (M.model !== 'plackett-luce-weighted') fail(`v3.11.0 ${fname}: model=${M.model} (가중 Plackett-Luce 아님)`);
+      if (!M.score_recent || M.score_recent.spearman == null) fail(`v3.11.0 ${fname}: 최신 20% 전향 검증(score_recent) 누락`);
+      if (expectPbe && M.pbe !== true) fail(`v3.11.0 ${fname}: pbe=${M.pbe} (true여야 함)`);
+      if (M.f5 != null && (M.f5 < 220 || M.f5 > 280)) fail(`v3.11.0 ${fname}: f5=${M.f5} (220~280 범위 이탈)`);
+      const W = M.w || {};
+      const zeroW = Object.keys(W).filter(k => /^(c|kc):0:/.test(k));
+      if (zeroW.length) fail(`v3.11.0 ${fname}: 0코스트 소환물 코스트 가중치 잔존 (${zeroW.join(', ')})`);
+      for (const pre of ['c', 'kc']) {
+        for (const c of [1, 2, 3, 4, 5, 7]) {
+          for (const st of [2, 3, 4]) {
+            const lo = W[`${pre}:${c}:${st - 1}`], hi = W[`${pre}:${c}:${st}`];
+            if (lo != null && hi != null && hi > lo + 1e-4) fail(`v3.11.0 ${fname}: 성급 역전 ${pre}:${c}:${st}(${hi}) > ${pre}:${c}:${st - 1}(${lo})`);
+          }
+        }
+        for (const [loC, hiC] of [[4, 5], [5, 7]]) {
+          const lo = W[`${pre}:${loC}:3`], hi = W[`${pre}:${hiC}:3`];
+          if (lo != null && hi != null && hi > lo + 1e-4) fail(`v3.11.0 ${fname}: 고코 3성 역전 ${pre}:${hiC}:3(${hi}) > ${pre}:${loC}:3(${lo})`);
+        }
+      }
+      const adj = M.adj || {};
+      for (const ak of ['a4:1', 'a4:2', 'ap']) {
+        if ((adj[ak] || []).some(pt => pt[1] < -1e-6)) fail(`v3.11.0 ${fname}: 압도 보정 ${ak}에 음수 페널티 존재`);
+      }
+      if (String(M.set) === '18') {
+        const badTa = Object.keys(M.ta || {}).filter(k => /19/.test(k));
+        const badCh = Object.keys(M.chroma || {}).filter(k => /19/.test(k));
+        if (badTa.length || badCh.length) fail(`v3.11.0 ${fname}: 18시즌 모델에 19시즌 사전 지식 혼입 (ta=${badTa.slice(0, 3)}, chroma=${badCh.slice(0, 3)})`);
+        if (Object.keys(M.ta || {}).length < 50 || Object.keys(M.sk || {}).length < 50) fail(`v3.11.0 ${fname}: 18시즌 사전 지식 비어 있음`);
+      }
+      if (String(M.set) === '19') {
+        for (const [ck, cv] of Object.entries(M.chroma || {})) {
+          if (!Array.isArray(cv) || cv.length < 2 || cv[0] < 1) fail(`v3.11.0 ${fname}: 19시즌 프리즘 chroma[${ck}]에 tier_current 조건 누락 (${JSON.stringify(cv)})`);
+        }
+      }
+      return M;
+    };
+    checkModel('power.json', false);
+    const p19 = isPbe ? checkModel('power_s19.json', true) : null;
+    if (p19 && !p19.off) {
+      const top19 = JSON.parse(fs.readFileSync(path.join(SITE, 'power_top_s19.json'), 'utf8'));
+      const rows19 = (top19.top && top19.top.all) || [];
+      if (rows19.length < 10) fail(`v3.11.0 power_top_s19.json: 상위 보드 ${rows19.length}개뿐`);
+      if (rows19.some(r => r.pw > 450)) fail(`v3.11.0 power_top_s19.json: 덱파워 폭주 보드 존재 (max=${Math.max(...rows19.map(r => r.pw))})`);
+    }
+    const top18 = JSON.parse(fs.readFileSync(path.join(SITE, 'power_top.json'), 'utf8'));
+    const all18 = (top18.top && top18.top.all) || [];
+    if (all18.some(r => r.pw > 450)) fail(`v3.11.0 power_top.json: 덱파워 폭주 보드 존재 (max=${Math.max(...all18.map(r => r.pw))})`);
+
+    const pg = await b.newPage({ viewport: { width: 360, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+    const errs = []; pg.on('pageerror', e => errs.push(String(e)));
+    await pg.addInitScript(() => { window.LolcheApp = { version: () => 'qa', canOverlay: () => false, startBubble() {}, stopBubble() {}, copy() {}, hidePanel() {} }; });
+    await pg.route('https://lolche.local/**', async (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname === '/index.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body>' + fs.readFileSync(process.env.QA_HTML || path.join(SITE, 'tft-guide.html'), 'utf8') });
+      if (u.pathname === '/proxy') return r.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      const f = path.join(SITE, decodeURIComponent(u.pathname));
+      return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' });
+    });
+    await pg.goto('https://lolche.local/index.html'); await pg.waitForTimeout(1600);
+    await pg.evaluate(() => { const a = document.createElement('a'); a.href = '#power'; document.body.appendChild(a); a.click(); a.remove(); }); await pg.waitForTimeout(800);
+    const liveUi = await pg.evaluate(() => ({
+      cap: (document.querySelector('#pw-chart .pwd-cap') || {}).textContent || '',
+      note: (document.getElementById('pw-note') || {}).textContent || '',
+      cards: document.querySelectorAll('#pw-list .pwc').length,
+      sw: document.documentElement.scrollWidth,
+    }));
+    if (!/\(\d+\.\d+/.test(liveUi.cap) || !/패치/.test(liveUi.note)) fail('v3.11.0 덱파워 본섭 UI: 패치 표시 누락 ' + JSON.stringify(liveUi));
+    if (liveUi.sw > 360) fail(`v3.11.0 덱파워 본섭 UI: 가로 밀림 ${liveUi.sw}px`);
+    // 덱파워 항목별 펼치기
+    await pg.evaluate(() => document.querySelector('#pw-list .pwc .pw-p')?.click()); await pg.waitForTimeout(250);
+    if (!await pg.evaluate(() => !!document.querySelector('#pw-list .pw-bd .pw-pt'))) fail('v3.11.0 덱파워 항목별 점수(.pw-bd)가 안 열림');
+    if (isPbe) {
+      await pg.evaluate(() => document.querySelector('#pw-src [data-s="s19"]')?.click()); await pg.waitForTimeout(600);
+      const pbeUi = await pg.evaluate(() => ({
+        cap: (document.querySelector('#pw-chart .pwd-cap') || {}).textContent || '',
+        note: (document.getElementById('pw-note') || {}).textContent || '',
+        cards: document.querySelectorAll('#pw-list .pwc').length,
+        sw: document.documentElement.scrollWidth,
+      }));
+      if (!/PBE/.test(pbeUi.cap) || !/PBE/.test(pbeUi.note) || pbeUi.cards < 5) fail('v3.11.0 덱파워 PBE UI: PBE 표기/카드 누락 ' + JSON.stringify(pbeUi));
+      if (pbeUi.sw > 360) fail(`v3.11.0 덱파워 PBE UI: 가로 밀림 ${pbeUi.sw}px`);
+    }
+    if (errs.length) fail('v3.11.0 회귀 검사: 페이지 오류 ' + errs.slice(0, 2).join(' ; '));
+    await pg.close();
+  });
   // 동시에 4개씩 (대부분 I/O·대기 시간이라 겹쳐 돌리면 빨라진다)
   { let next = 0; await Promise.all([0, 1, 2, 3].map(async () => { while (next < tasks.length) { const fn = tasks[next++]; try { await fn(); } catch (e) { fail('검사 중 오류: ' + String(e.message || e).split('\n')[0].slice(0, 160)); } } })); }
   await b.close();

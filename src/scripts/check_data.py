@@ -126,9 +126,32 @@ def check_site():
     if raw_frac:
         bad.append(f"s19.json 시너지 수치가 소수·0 그대로 {len(raw_frac)}곳 (예: {raw_frac[0]})")
 
-    pw = load("site/power.json") or {}
-    if not pw.get("off") and n(pw.get("w")) < 100:
-        bad.append(f"power.json 가중치 {n(pw.get('w'))}개")
+    for pfile, expect_pbe in (("site/power.json", False), ("site/power_s19.json", True)):
+        if expect_pbe and not setinfo.PBE:
+            continue
+        pw = load(pfile)
+        if not pw or pw.get("off"):
+            continue
+        lbl = Path(pfile).name
+        w = pw.get("w") or {}
+        if n(w) < 100:
+            bad.append(f"{lbl} 가중치 {n(w)}개")
+        if expect_pbe and pw.get("pbe") is not True:
+            bad.append(f"{lbl} pbe 플래그가 True가 아님 ({pw.get('pbe')})")
+        f5 = pw.get("f5")
+        if f5 is not None and not (200 <= f5 <= 300):
+            bad.append(f"{lbl} 5코 3성 경계 f5 비정상 ({f5})")
+        if str(pw.get("set")) == "18":
+            ch = pw.get("chroma") or {}
+            ta = pw.get("ta") or {}
+            if any("19" in k for k in ch) or any("19:" in k for k in ta):
+                bad.append(f"{lbl} 18시즌 모델에 19시즌 사전 지식 혼입")
+        if "c:5:3" in w and "c:7:3" in w and w["c:7:3"] > w["c:5:3"] + 1e-4:
+            bad.append(f"{lbl} 7코 3성({w['c:7:3']})이 5코 3성({w['c:5:3']})보다 약함")
+        adj = pw.get("adj") or {}
+        for ak in ("a4:1", "a4:2", "ap"):
+            if any(pt[1] < -1e-6 for pt in (adj.get(ak) or [])):
+                bad.append(f"{lbl} 압도 보정 {ak}에 음수 페널티 존재")
     return bad
 
 

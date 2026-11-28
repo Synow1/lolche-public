@@ -60,10 +60,10 @@ def get(path, tries=3):
     return None
 
 
-def load():
-    """있는 판 읽기. 다른 세트 판·KEEP_DAYS보다 오래된 판은 빼고, 뺀 게 있으면 파일을 다시 쓴다."""
+def load(keep_days=KEEP_DAYS):
+    """있는 판 읽기. 다른 세트 판·keep_days보다 오래된 판은 빼고, 뺀 게 있으면 파일을 다시 쓴다."""
     have, dropped = {}, 0
-    cut = (time.time() - KEEP_DAYS * 86400) * 1000
+    cut = (time.time() - keep_days * 86400) * 1000
     if OUT.exists():
         try:
             with gzip.open(OUT, "rt", encoding="utf-8") as f:
@@ -82,12 +82,12 @@ def load():
         with gzip.open(OUT, "wt", encoding="utf-8") as f:
             for m in have.values():
                 f.write(json.dumps(m, ensure_ascii=False, separators=(",", ":")) + "\n")
-        print(f"옛 판 {dropped}개 지움 (다른 세트이거나 {KEEP_DAYS}일 넘음)")
+        print(f"옛 판 {dropped}개 지움 (다른 세트이거나 {keep_days}일 넘음)")
     return have
 
 
 def main():
-    args = [a for a in sys.argv[1:] if a != "--pbe"]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
     pbe = "--pbe" in sys.argv[1:]
     goal = int(args[0]) if len(args) > 0 else (1500 if pbe else 4000)
     cap = int(args[1]) if len(args) > 1 else (160 if pbe else 600)
@@ -96,9 +96,10 @@ def main():
         import setinfo
         OUT = ROOT / "data" / "power" / f"boards_s{setinfo.NUM}.jsonl.gz"
         SEASON = f"set{setinfo.NUM}"
+    keep_days = 14 if pbe else KEEP_DAYS
     shard = "pbe1" if pbe else "kr"
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    have = load()
+    have = load(keep_days)
     print(f"[{'PBE ' + SEASON if pbe else SEASON}] 있던 판", len(have))
     goal += len(have)
     cnt = [0] * 8
@@ -110,15 +111,18 @@ def main():
     for s in seeds:
         queue[4 if pbe else 2].append(s)
         seen.add(s)
-    # 모아 둔 최근 판(3일)에 나온 사람들도 후보로 (매일 같은 사람만 다시 찾으면 새 판이 거의 안 나옴). 티어 묶음별로 섞어서
+    # 모아 둔 최근 판(2일)에 나온 사람들도 후보로 (너무 많이 쌓으면 방금 찾은 오늘 패치 활동 유저보다 밀리므로 묶음별 상한)
     import random
     newest = max((m["t"] for m in have.values()), default=0)
-    pool = [(b[5], b[2]) for m in have.values() if m["t"] >= newest - 3 * 86400000 for b in m["b"] if len(b) > 5 and b[5] and (pbe or b[2] is not None)]
+    pool = [(b[5], b[2]) for m in have.values() if m["t"] >= newest - 2 * 86400000 for b in m["b"] if len(b) > 5 and b[5] and (pbe or b[2] is not None)]
     random.shuffle(pool)
     for rid, t in pool:
         if rid not in seen:
+            bk = 4 if pbe else (0 if t <= 1 else min(7, t - 1))
+            if len(queue[bk]) >= (80 if pbe else 120):
+                continue
             seen.add(rid)
-            queue[4 if pbe else (0 if t <= 1 else min(7, t - 1))].append(rid)
+            queue[bk].append(rid)
     if not pbe:
         # 랭커 몇 명도 씨앗으로 (마스터+)
         lbd = get(f"leaderboards/summoners/kr?page=1&queueId=1100&season={SEASON}") or {}
@@ -148,7 +152,9 @@ def main():
                 continue
             sms = {x["puuid"]: x for x in d.get("summoners", [])}
             lgs = {x["puuid"]: x for x in d.get("summonerLeagues", []) if x.get("queueId") == 1100}
-            # 받은 판 사람들을 다음 후보로 (이미 있는 판이어도 — 사람은 새로 나옴). 티어 묶음별로
+            # 방금 받은 최신 판에 등장한 활동 유저를 우선 탐색할 수 있게 큐에 추가
+            fresh_ms = d.get("matches", [])
+            has_recent = any(m.get("gameCreatedAt", 0) >= (time.time() - 2 * 86400) * 1000 for m in fresh_ms)
             for x in sms.values():
                 if not x.get("gameName") or not x.get("tagLine"):
                     continue
@@ -157,13 +163,20 @@ def main():
                     continue
                 if pbe:
                     seen.add(r2)
-                    queue[4].append(r2)
+                    if has_recent:
+                        queue[4].insert(0, r2)
+                    else:
+                        queue[4].append(r2)
                 else:
                     l = lgs.get(x["puuid"])
                     if not l or l.get("tier") not in BUCKET:
                         continue
                     seen.add(r2)
-                    queue[BUCKET[l["tier"]]].append(r2)
+                    bk2 = BUCKET[l["tier"]]
+                    if has_recent:
+                        queue[bk2].insert(0, r2)
+                    else:
+                        queue[bk2].append(r2)
             for m in d.get("matches", []):
                 old = have.get(m["matchId"])
                 if old and any(len(b) < 6 for b in old["b"]) and len(m.get("participants", [])) == 8:  # 이름 없이 모은 옛 판 -> 이름 채우기
@@ -184,7 +197,7 @@ def main():
                     if not known:
                         continue
                     lt = round(sum(known) / len(known), 2)
-                if m["gameCreatedAt"] < (time.time() - KEEP_DAYS * 86400) * 1000:
+                if m["gameCreatedAt"] < (time.time() - keep_days * 86400) * 1000:
                     continue
                 rec = {"id": m["matchId"], "s": SEASON, "p": m.get("patchVersion") or (SEASON.replace("set", "") + ".1"), "t": m["gameCreatedAt"], "lt": lt,
                        "b": [[p["placement"], p["level"], tiers[i],
